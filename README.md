@@ -2,6 +2,8 @@
 
 7 大板块 × 官方真实数据 × 每日自动更新。纯静态站点，无构建步骤。
 
+**在线访问: https://archimond31.github.io/us-macro-observer/** (GitHub Pages, 每日 UTC 01:00 自动刷新)
+
 ## 快速开始
 
 ```bash
