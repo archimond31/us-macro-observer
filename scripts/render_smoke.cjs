@@ -192,8 +192,23 @@ for (const c of chartInstances) {
 results.push(['图表配置完整性 (' + chartInstances.length + ' 个)', badCharts === 0 ? 'OK' : 'FAIL: ' + badCharts + ' 个配置不完整']);
 if (badCharts) failures++;
 
-/* 数据要点抽验(真实数据锚点) — const 声明不挂到全局对象,须在 vm 内取值 */
+/* 数值合理性: trendData 中 unit='%' 的变化幅度不得超过 ±300% (防止"点位差冒充百分比"类错误) */
 const D = vm.runInContext('DATA', sandbox);
+const crazy = [];
+for (const sec of SECTIONS) {
+  const td = (D[sec] || {}).trendData || [];
+  for (const t of td) {
+    if (t.unit !== '%') continue;
+    for (const k of ['d', 'w', 'm', 'h6']) {
+      const v = (t.changes || {})[k];
+      if (typeof v === 'number' && Math.abs(v) > 300) crazy.push(sec + '.' + t.name + '.' + k + '=' + v + '%');
+    }
+  }
+}
+results.push(['数值合理性(%变化≤300)', crazy.length === 0 ? 'OK' : 'FAIL: ' + crazy.join(', ')]);
+if (crazy.length) failures++;
+
+/* 数据要点抽验(真实数据锚点) — const 声明不挂到全局对象,须在 vm 内取值 */
 const anchors = [];
 try {
   anchors.push(['meta.lastUpdated', D.meta.lastUpdated]);

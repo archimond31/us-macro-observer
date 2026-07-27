@@ -268,7 +268,9 @@ def reg(key, series, is_pct=False, unit='', digits=2):
     }
 
 print('\n-- 计算变化与分位 --')
-for k in FRED_IDS.values(): reg(k, S[k])
+# FRED 中的资产价格序列用百分比变化(与 Yahoo 资产口径一致), 利率/余额类仍用点位/绝对差
+FRED_PCT_ASSETS = {'spx', 'ndx_comp', 'dji', 'wti', 'dxy_broad', 'btc', 'eth'}
+for k in FRED_IDS.values(): reg(k, S[k], is_pct=(k in FRED_PCT_ASSETS))
 for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 # 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致
 YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m'}
