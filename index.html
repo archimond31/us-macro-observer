@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Macro Observer · 美国宏观数据观察</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1 class="logo">US Macro</h1>
+      <p class="logo-sub">观察平台</p>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" data-section="assets">
+        <span class="nav-icon">&#128202;</span>
+        <span class="nav-label">大类资产</span>
+      </a>
+      <a class="nav-item" data-section="rates">
+        <span class="nav-icon">&#128200;</span>
+        <span class="nav-label">利率</span>
+      </a>
+      <a class="nav-item" data-section="fed">
+        <span class="nav-icon">&#127974;</span>
+        <span class="nav-label">美联储</span>
+      </a>
+      <a class="nav-item" data-section="liquidity">
+        <span class="nav-icon">&#128167;</span>
+        <span class="nav-label">流动性</span>
+      </a>
+      <a class="nav-item" data-section="economy">
+        <span class="nav-icon">&#128202;</span>
+        <span class="nav-label">经济数据</span>
+      </a>
+      <a class="nav-item" data-section="credit">
+        <span class="nav-icon">&#128179;</span>
+        <span class="nav-label">信用市场</span>
+      </a>
+      <a class="nav-item" data-section="volatility">
+        <span class="nav-icon">&#9889;</span>
+        <span class="nav-label">波动率</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <p class="data-source-label">数据源</p>
+      <p class="data-source-val" id="dataSourceText">FRED / Yahoo Finance</p>
+      <p class="data-source-label">最后更新</p>
+      <p class="data-source-val" id="lastUpdated">--</p>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h2 class="page-title" id="sectionTitle">大类资产</h2>
+        <p class="page-subtitle" id="sectionSubtitle">Multi-Asset Dashboard</p>
+      </div>
+      <div class="topbar-right">
+        <div class="status-badge" id="marketStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">市场开盘中</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section containers -->
+    <div class="content" id="content">
+      <!-- Dynamic content goes here -->
+    </div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

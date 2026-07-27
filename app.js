@@ -1,0 +1,971 @@
+/* ============================================================
+ * app.js — US Macro Observer 应用逻辑 (v3 专业分析师版)
+ * ============================================================ */
+
+const charts = {};
+const COLORS = {
+  up: '#e63946', down: '#2a9d8f', neutral: '#6b7280', accent: '#4361ee',
+  grid: '#e5e7eb', text: '#6b7280',
+  series: ['#4361ee', '#2a9d8f', '#f59e0b', '#e63946', '#7209b7', '#3a86ff', '#e85d75', '#06b6d4']
+};
+const SECTION_CONFIG = {
+  assets:     { title: '大类资产',   subtitle: 'Multi-Asset · 跨资产信号' },
+  rates:      { title: '利率',       subtitle: 'Rates · 曲线形态与实际利率拆解' },
+  fed:        { title: '美联储',     subtitle: 'Fed · 政策路径与沟通追踪' },
+  liquidity:  { title: '流动性',     subtitle: 'Liquidity · 缓冲与价格信号' },
+  economy:    { title: '经济数据',   subtitle: 'Economy · 增长/就业/通胀三角' },
+  credit:     { title: '信用市场',   subtitle: 'Credit · 利差分层与违约周期' },
+  volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('lastUpdated').textContent = DATA.meta.lastUpdated;
+  document.getElementById('dataSourceText').textContent = DATA.meta.dataSource;
+  updateMarketStatus();
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', (e) => { e.preventDefault(); switchSection(item.dataset.section); });
+  });
+  switchSection('assets');
+});
+
+function updateMarketStatus() {
+  const now = new Date();
+  const etHour = now.getUTCHours() - 5;
+  const day = now.getUTCDay();
+  const isOpen = day >= 1 && day <= 5 && etHour >= 9 && etHour < 16;
+  const badge = document.getElementById('marketStatus');
+  if (isOpen) {
+    badge.className = 'status-badge';
+    badge.querySelector('.status-text').textContent = '市场开盘中';
+  } else {
+    badge.className = 'status-badge closed';
+    badge.querySelector('.status-text').textContent = '市场已收盘';
+  }
+}
+
+function switchSection(section) {
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.section === section));
+  const c = SECTION_CONFIG[section];
+  document.getElementById('sectionTitle').textContent = c.title;
+  document.getElementById('sectionSubtitle').textContent = c.subtitle;
+  Object.keys(charts).forEach(k => { if (charts[k]) { charts[k].destroy(); delete charts[k]; } });
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const renderers = {
+    assets: renderAssets, rates: renderRates, fed: renderFed,
+    liquidity: renderLiquidity, economy: renderEconomy,
+    credit: renderCredit, volatility: renderVolatility
+  };
+  renderers[section](content);
+}
+
+/* ================= 通用组件 ================= */
+
+// Regime 横幅
+function regimeBanner(r, extraClass) {
+  const cls = r.signal === 'risk-off' ? 'risk-off' : r.signal === 'risk-on' ? 'risk-on' : 'mixed';
+  const sigLabel = r.signal === 'risk-off' ? '对风险资产利空' : r.signal === 'risk-on' ? '对风险资产利多' : '信号混杂';
+  return '<div class="regime-banner ' + cls + ' ' + (extraClass || '') + '">' +
+    '<div class="regime-left">' +
+      '<div class="regime-label">当前 Regime · ' + sigLabel + '</div>' +
+      '<div class="regime-name">' + r.label + '</div>' +
+      '<div class="regime-conf">' + r.confidence + '</div>' +
+    '</div>' +
+    '<div class="regime-right">' + r.description + '</div>' +
+  '</div>';
+}
+
+// 关键信号列表
+function signalList(signals) {
+  let html = '<div class="signal-list">';
+  signals.forEach(s => {
+    const badgeLabel = s.direction === 'bearish' ? '利空' : s.direction === 'bullish' ? '利多' : '中性';
+    html += '<div class="signal-item">' +
+      '<span class="signal-badge ' + s.direction + '">' + badgeLabel + '</span>' +
+      '<div class="signal-body">' +
+        '<div class="signal-title">' + s.title + '</div>' +
+        '<div class="signal-meaning">' + s.meaning + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  return html + '</div>';
+}
+
+// 指标卡 v3：含分位条 + 信号点 + 经济含义 + 四尺度变化
+function metricCardsV3(metrics) {
+  let html = '<div class="metric-grid">';
+  metrics.forEach(m => {
+    const changeCls = m.dir || 'neutral';
+    const arrow = m.dir === 'up' ? '&#9650;' : m.dir === 'down' ? '&#9660;' : '&#9644;';
+    const pct = typeof m.percentile === 'number' ? m.percentile : 50;
+    html += '<div class="metric-card-v3">' +
+      '<div class="metric-top">' +
+        '<div class="metric-label">' + m.label + (m.tag ? ' <span class="metric-tag">' + m.tag + '</span>' : '') + '</div>' +
+        (m.signal ? '<span class="metric-signal-dot ' + m.signal + '" title="' + (m.signal === 'bearish' ? '利空风险资产' : m.signal === 'bullish' ? '利多风险资产' : '中性') + '"></span>' : '') +
+      '</div>' +
+      '<div class="metric-value">' + m.value + '</div>' +
+      '<div class="metric-change ' + changeCls + '">' + arrow + ' ' + m.change + ' <span style="color:var(--text-tertiary);font-weight:400">日</span></div>' +
+      tfRow(m.changes) +
+      '<div class="metric-pct-track">' +
+        '<div class="metric-pct-fill" style="width:' + pct + '%"></div>' +
+        '<div class="metric-pct-marker" style="left:' + pct + '%"></div>' +
+      '</div>' +
+      '<div class="metric-pct-labels"><span>1年低分位</span><span>当前 ' + pct + ' 分位</span><span>高分位</span></div>' +
+      (m.meaning ? '<div class="metric-meaning">' + m.meaning + '</div>' : '') +
+    '</div>';
+  });
+  return html + '</div>';
+}
+
+// 四尺度变化行（日/周/月/半年）
+function tfRow(changes) {
+  if (!changes) return '';
+  const cells = [
+    { label: '周', val: changes.w },
+    { label: '月', val: changes.m },
+    { label: '半年', val: changes.h6 }
+  ];
+  let html = '<div class="tf-row">';
+  cells.forEach(c => {
+    const cls = tfClass(c.val);
+    html += '<div class="tf-cell"><div class="tf-label">' + c.label + '</div><div class="tf-val ' + cls + '">' + c.val + '</div></div>';
+  });
+  // 第四格：趋势形状
+  html += '<div class="tf-cell"><div class="tf-label">形态</div>' + tfShape(changes) + '</div>';
+  return html + '</div>';
+}
+
+// 变化值 → 颜色class
+function tfClass(val) {
+  if (typeof val !== 'string') return 'zero';
+  if (val === '—' || val === '0' || val.indexOf('0bp') === 0 || val.indexOf('0%') === 0 || val.indexOf('0pt') === 0) return 'zero';
+  if (val.charAt(0) === '+') return 'pos';
+  if (val.charAt(0) === '-') return 'neg';
+  return 'zero';
+}
+
+// 趋势形状：半年→月→周→日 的四点迷你形态图
+function tfShape(changes) {
+  const nums = [parseTfNum(changes.h6), parseTfNum(changes.m), parseTfNum(changes.w)];
+  const maxAbs = Math.max(Math.abs(nums[0]), Math.abs(nums[1]), Math.abs(nums[2]), 0.001);
+  let html = '<span class="trend-shape">';
+  nums.forEach(v => {
+    const h = Math.max(Math.abs(v) / maxAbs * 100, 12);
+    const color = v > 0 ? 'var(--up)' : v < 0 ? 'var(--down)' : '#b6bcc9';
+    html += '<i style="height:' + h + '%;background:' + color + '"></i>';
+  });
+  html += '<i class="now" style="height:100%"></i></span>';
+  return html;
+}
+
+function parseTfNum(val) {
+  if (typeof val !== 'string') return 0;
+  const n = parseFloat(val.replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+// 分析师观点框
+function analystBox(text) {
+  return '<div class="analyst-box">' +
+    '<div class="analyst-box-title">分析师观点 Analyst View</div>' +
+    '<div class="analyst-box-body">' + text + '</div>' +
+  '</div>';
+}
+
+// 观察清单
+function watchList(items) {
+  let html = '<div class="section-h">下一步观察什么 <span class="section-h-sub">触发条件 → 市场含义</span></div><div class="watch-list">';
+  items.forEach(w => {
+    html += '<div class="watch-item">' +
+      '<div class="watch-trigger">' + w.trigger + '</div>' +
+      '<div class="watch-implication">' + w.implication + '</div>' +
+      '<div class="watch-status">' + w.status + '</div>' +
+    '</div>';
+  });
+  return html + '</div>';
+}
+
+// 分区标题
+function sectionH(title, sub) {
+  return '<div class="section-h">' + title + (sub ? ' <span class="section-h-sub">' + sub + '</span>' : '') + '</div>';
+}
+
+function table(headers, rows) {
+  let html = '<div class="table-card"><table class="data-table"><thead><tr>';
+  headers.forEach(h => { html += '<th>' + h + '</th>'; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    row.forEach(cell => {
+      if (typeof cell === 'object' && cell !== null) {
+        const cls = cell.dir === 'up' ? 'pos' : cell.dir === 'down' ? 'neg' : '';
+        html += '<td class="' + cls + '">' + cell.text + '</td>';
+      } else {
+        html += '<td>' + cell + '</td>';
+      }
+    });
+    html += '</tr>';
+  });
+  return html + '</tbody></table></div>';
+}
+
+function chartCard(title, sub, id, h) {
+  return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div></div><div class="chart-body ' + (h || '') + '"><canvas id="' + id + '"></canvas></div></div>';
+}
+function sectionCard(title, sub, inner) {
+  return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div></div><div style="padding:4px 4px">' + inner + '</div></div>';
+}
+
+function baseOpts(yUnit) {
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        display: true, position: 'top',
+        labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12, padding: 12 }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4',
+        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 10, cornerRadius: 6
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: COLORS.grid, drawBorder: false },
+        ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 8 }
+      },
+      y: {
+        grid: { color: COLORS.grid, drawBorder: false },
+        ticks: {
+          color: COLORS.text, font: { size: 10 },
+          callback: function (v) {
+            if (yUnit === '%') return v.toFixed(1) + '%';
+            if (yUnit === 'T$') return v.toFixed(2) + 'T';
+            return v;
+          }
+        }
+      }
+    }
+  };
+  if (yUnit === '%') {
+    opts.plugins.tooltip.callbacks = {
+      label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%'; }
+    };
+  }
+  return opts;
+}
+
+function sparkline(data, dir) {
+  const max = Math.max.apply(null, data), min = Math.min.apply(null, data), range = max - min || 1;
+  const color = dir === 'up' ? COLORS.up : dir === 'down' ? COLORS.down : COLORS.neutral;
+  let bars = '';
+  data.slice(-20).forEach(v => {
+    const h = Math.max(((v - min) / range) * 100, 5);
+    bars += '<div class="mini-bar" style="height:' + h + '%;background:' + color + ';opacity:0.7;"></div>';
+  });
+  return '<div class="mini-bars">' + bars + '</div>';
+}
+
+function dirTag(direction) {
+  const label = direction === 'bearish' ? '利空' : direction === 'bullish' ? '利多' : '中性';
+  return '<span class="dir-tag ' + direction + '">' + label + '</span>';
+}
+
+/* ================= 多尺度趋势判定 =================
+ * 输入四个尺度的数值变化（同单位、带符号）
+ * 逻辑：
+ *  1. 周与月同向 → 趋势延续；周速率/月速率(折算) > 1.5 → 加速
+ *  2. 周与月反向 → 反转预警（短期方向与中期背离）
+ *  3. 半年与月反向 → 中期趋势正在切换
+ *  4. 全尺度绝对值都小 → 横盘
+ */
+function computeTrend(ch) {
+  const w = ch.w, m = ch.m, h6 = ch.h6;
+  const eps = 1e-9;
+  const monthlyPace = Math.abs(m);
+  const weeklyPace = Math.abs(w) * 4; // 周变化折算成月速率
+  const flatThresh = Math.max(Math.abs(h6) * 0.02, 0.05); // 横盘阈值：半年变化的2%
+
+  if (Math.abs(w) < flatThresh && Math.abs(m) < flatThresh) {
+    return { cls: 'flat', arrow: '&#9644;', label: '横盘' };
+  }
+  const sameWM = (w > eps && m > eps) || (w < -eps && m < -eps);
+  const sameMH = (m > eps && h6 > eps) || (m < -eps && h6 < -eps);
+  const dirUp = w > 0;
+
+  if (!sameWM) {
+    // 周月反向 = 反转预警
+    return dirUp
+      ? { cls: 'reverse-up', arrow: '&#8599;', label: '反转向上' }
+      : { cls: 'reverse-dn', arrow: '&#8600;', label: '反转向下' };
+  }
+  // 周月同向
+  const accel = weeklyPace > monthlyPace * 1.5 && monthlyPace > flatThresh;
+  if (!sameMH) {
+    // 半年与月反向 = 中期趋势切换中
+    return dirUp
+      ? { cls: 'reverse-up', arrow: '&#8599;', label: '趋势反转中' }
+      : { cls: 'reverse-dn', arrow: '&#8600;', label: '趋势反转中' };
+  }
+  if (dirUp) {
+    return accel
+      ? { cls: 'accel-up', arrow: '&#8648;', label: '加速上行' }
+      : { cls: 'steady-up', arrow: '&#8593;', label: '稳步上行' };
+  }
+  return accel
+    ? { cls: 'accel-dn', arrow: '&#8650;', label: '加速下行' }
+    : { cls: 'steady-dn', arrow: '&#8595;', label: '稳步下行' };
+}
+
+// 趋势追踪表
+function trendTable(trendData) {
+  let html = '<div class="table-card trend-table"><table class="data-table"><thead><tr>' +
+    '<th>指标</th><th>当前值</th><th>日</th><th>周</th><th>月</th><th>半年</th><th>趋势判定</th><th>解读</th>' +
+    '</tr></thead><tbody>';
+  trendData.forEach(t => {
+    const trend = computeTrend(t.changes);
+    html += '<tr>' +
+      '<td style="font-weight:500">' + t.name + '</td>' +
+      '<td style="font-variant-numeric:tabular-nums">' + t.current + '</td>' +
+      '<td>' + fmtChange(t.changes.d, t.unit) + '</td>' +
+      '<td>' + fmtChange(t.changes.w, t.unit) + '</td>' +
+      '<td>' + fmtChange(t.changes.m, t.unit) + '</td>' +
+      '<td>' + fmtChange(t.changes.h6, t.unit) + '</td>' +
+      '<td><span class="trend-badge ' + trend.cls + '"><span class="trend-arrow">' + trend.arrow + '</span>' + trend.label + '</span></td>' +
+      '<td style="font-size:11px;color:var(--text-secondary);max-width:280px">' + t.meaning + '</td>' +
+    '</tr>';
+  });
+  return html + '</tbody></table></div>';
+}
+
+function fmtChange(v, unit) {
+  if (v === null || v === undefined || v !== v) return '<span class="tf-val zero">—</span>';
+  if (v === 0) return '<span class="tf-val zero">0</span>';
+  const sign = v > 0 ? '+' : '';
+  const cls = v > 0 ? 'pos' : 'neg';
+  return '<span class="tf-val ' + cls + '">' + sign + v + unit + '</span>';
+}
+
+/* ================= 1. 大类资产 ================= */
+function renderAssets(c) {
+  const d = DATA.assets;
+  let html = '';
+  // 全局 regime（仅资产页显示全局）
+  html += regimeBanner({ label: DATA.globalRegime.name, signal: DATA.globalRegime.signal, confidence: DATA.globalRegime.confidence, description: DATA.globalRegime.description });
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '按对风险资产的影响方向排序');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('资产走势对比', '近30日归一化(起点=100)', 'assetsPerf', 'tall') +
+    chartCard('跨资产相关性矩阵', '共同交易日日度收益真实相关 · 股债/油股符号变化是regime信号', 'corr', 'tall') +
+  '</div>';
+  html += chartCard('大类资产热力图', '日涨跌幅 · 红=涨 绿=跌', 'heatmap', 'short');
+  html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('全部资产行情', '');
+  html += table(['代码', '名称', '最新价', '日涨跌幅'], d.table.map(r => [r.ticker, r.name, r.price, { text: r.change, dir: r.dir }]));
+  c.innerHTML = html;
+
+  const sl = d.chartData.labels.slice(-30), se = d.chartData.series;
+  charts.assetsPerf = new Chart(document.getElementById('assetsPerf'), {
+    type: 'line',
+    data: {
+      labels: sl,
+      datasets: Object.keys(se).map((n, i) => ({
+        label: n,
+        data: se[n].slice(-30).map(v => Math.round((v / se[n][0]) * 10000) / 100),
+        borderColor: COLORS.series[i], backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('')
+  });
+  renderCorr(document.getElementById('corr').parentElement, d.correlation);
+  renderAssetHeat(document.getElementById('heatmap').parentElement, d.table);
+}
+
+function renderCorr(container, cd) {
+  const a = cd.assets, m = cd.matrix, n = a.length, cs = 42, lw = 60, lh = 30;
+  let svg = '<svg viewBox="0 0 ' + (lw + n * cs + 20) + ' ' + (lh + n * cs + 40) + '" width="100%" style="max-width:' + (lw + n * cs + 20) + 'px">';
+  a.forEach((x, i) => { svg += '<text x="' + (lw + i * cs + cs / 2) + '" y="' + (lh - 8) + '" text-anchor="middle" font-size="10" fill="' + COLORS.text + '">' + x + '</text>'; });
+  a.forEach((x, i) => {
+    svg += '<text x="' + (lw - 8) + '" y="' + (lh + i * cs + cs / 2 + 4) + '" text-anchor="end" font-size="10" fill="' + COLORS.text + '">' + x + '</text>';
+    a.forEach((y, j) => {
+      const v = m[i][j], int = Math.abs(v);
+      const bg = v > 0 ? 'rgba(230,57,70,' + (0.1 + int * 0.7) + ')' : 'rgba(42,157,143,' + (0.1 + int * 0.7) + ')';
+      svg += '<rect x="' + (lw + j * cs) + '" y="' + (lh + i * cs) + '" width="' + (cs - 2) + '" height="' + (cs - 2) + '" rx="3" fill="' + bg + '"/>';
+      svg += '<text x="' + (lw + j * cs + cs / 2) + '" y="' + (lh + i * cs + cs / 2 + 4) + '" text-anchor="middle" font-size="10" fill="' + (int > 0.5 ? '#fff' : COLORS.text) + '">' + v.toFixed(2) + '</text>';
+    });
+  });
+  svg += '</svg>';
+  container.innerHTML = '<div style="overflow-x:auto">' + svg + '</div>' + (cd.note ? '<p style="font-size:12px;color:' + COLORS.up + ';margin-top:8px">' + cd.note + '</p>' : '');
+}
+
+function renderAssetHeat(container, tbl) {
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0">';
+  tbl.forEach(r => {
+    const ch = parseFloat(r.change), int = Math.min(Math.abs(ch) / 3, 1);
+    let bg = '#eef0f4';
+    if (r.dir === 'up') bg = 'rgba(230,57,70,' + (0.15 + int * 0.6) + ')';
+    if (r.dir === 'down') bg = 'rgba(42,157,143,' + (0.15 + int * 0.6) + ')';
+    const tc = int > 0.4 ? '#fff' : COLORS.text;
+    html += '<div style="background:' + bg + ';border-radius:6px;padding:10px 14px;text-align:center;min-width:100px">' +
+      '<div style="font-size:11px;color:' + tc + ';opacity:0.9">' + r.name + '</div>' +
+      '<div style="font-size:14px;font-weight:600;color:' + tc + '">' + (ch > 0 ? '+' : '') + ch.toFixed(2) + '%</div></div>';
+  });
+  container.innerHTML = html + '</div>';
+}
+
+/* ================= 2. 利率 ================= */
+function renderRates(c) {
+  const d = DATA.rates;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('国债收益率曲线', '今日 vs 1月前 vs 1年前 · 熊陡=长端领涨', 'yc', 'tall') +
+    chartCard('名义 vs 实际利率', '实际利率是估值的真实折现率', 'rateTrend', 'tall') +
+  '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('利差与通胀预期', (d.chartNotes || {}).spreadNote || '10Y-2Y利差与Breakeven通胀预期', 'spreadChart', 'tall') +
+  '</div>';
+  html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || '日/周/月/半年变化 → 识别趋势确立、加速与反转');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('关键期限利率拆解', '名义利率 = 实际利率 + 通胀预期');
+  html += table(['期限', '名义利率', '日变动', '实际利率', '通胀预期', '数据源'], d.detailedTable.map(r => [r.maturity, r.rate, r.change, r.realRate, r.breakeven, r.source]));
+  c.innerHTML = html;
+
+  const yc = d.yieldCurve;
+  charts.yc = new Chart(document.getElementById('yc'), {
+    type: 'line',
+    data: {
+      labels: yc.maturities,
+      datasets: [
+        { label: '今日', data: yc.today, borderColor: COLORS.up, backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 4, tension: 0.4 },
+        { label: '1月前', data: yc.oneMonthAgo, borderColor: COLORS.accent, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [5, 3], pointRadius: 2, tension: 0.4 },
+        { label: '1年前', data: yc.oneYearAgo, borderColor: COLORS.neutral, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [5, 3], pointRadius: 2, tension: 0.4 }
+      ]
+    },
+    options: baseOpts('%')
+  });
+
+  const cd = d.chartData;
+  charts.rateTrend = new Chart(document.getElementById('rateTrend'), {
+    type: 'line',
+    data: {
+      labels: cd.labels,
+      datasets: Object.keys(cd.series).map((n, i) => ({
+        label: n, data: cd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('%')
+  });
+
+  const sd = d.spreadData;
+  charts.spread = new Chart(document.getElementById('spreadChart'), {
+    type: 'line',
+    data: {
+      labels: sd.labels,
+      datasets: Object.keys(sd.series).map((n, i) => ({
+        label: n, data: sd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: i === 0 ? COLORS.series[i] + '15' : 'transparent',
+        borderWidth: 2, fill: i === 0, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('%')
+  });
+}
+
+/* ================= 3. 美联储 ================= */
+function renderFed(c) {
+  const d = DATA.fed;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('美联储资产负债表', '总资产/国债/MBS(万亿美元) · QT持续推进', 'fedBs', 'tall') +
+    chartCard('鹰鸽指数', (d.chartNotes || {}).hawkNote || ('0=极度鸽派 / 10=极度鹰派 · 当前 ' + d.hawkishDovish.score + ' ' + d.hawkishDovish.label), 'hawkDov', 'tall') +
+  '</div>';
+  html += sectionCard('FOMC 会议时间线', '油价表态是7月会议的唯一看点', renderFomcTimeline(d.fomcTimeline));
+  html += '<div style="height:16px"></div>';
+  html += sectionCard('官员讲话追踪', '鹰鸽分化公开化=政策不确定性上升', renderSpeeches(d.speeches));
+  html += '<div style="height:16px"></div>';
+  html += sectionCard('利率路径预期', d.hawkishDovish.ratePath.note, renderRatePath(d.hawkishDovish.ratePath));
+  html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).probNote || '日/周/月/半年变化 → 识别政策预期重定价');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('政策工具箱状态', '');
+  html += table(['项目', '数值', '变动', '备注'], d.policyTable.map(r => [r.item, r.value, r.change, r.note]));
+  c.innerHTML = html;
+
+  const cd = d.chartData;
+  charts.fedBs = new Chart(document.getElementById('fedBs'), {
+    type: 'line',
+    data: {
+      labels: cd.labels,
+      datasets: Object.keys(cd.series).map((n, i) => ({
+        label: n, data: cd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: i === 0 ? COLORS.series[i] + '15' : 'transparent',
+        borderWidth: 2, fill: i === 0, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('T$')
+  });
+  renderHawkDovGauge(d.hawkishDovish);
+}
+
+function renderFomcTimeline(tl) {
+  let html = '<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 0">';
+  tl.forEach(e => {
+    const dotColor = e.type === 'decision' ? '#e63946' : e.type === 'meeting' ? '#4361ee' : e.type === 'rate' ? '#f59e0b' : '#7209b7';
+    html += '<div style="min-width:200px;border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#f8faff">' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="width:8px;height:8px;border-radius:50%;background:' + dotColor + '"></span><span style="font-size:11px;color:' + COLORS.text + '">' + e.date + '</span></div>' +
+      '<div style="font-size:13px;font-weight:500;margin-bottom:4px">' + e.event + '</div>' +
+      '<div style="font-size:11px;color:' + COLORS.neutral + '">' + e.status + '</div></div>';
+  });
+  return html + '</div>';
+}
+
+function renderSpeeches(sp) {
+  let html = '<div>';
+  sp.forEach(s => {
+    const stColor = s.stance === 'hawkish' ? '#e63946' : s.stance === 'dovish' ? '#2a9d8f' : '#6b7280';
+    const stLabel = s.stance === 'hawkish' ? '鹰派' : s.stance === 'dovish' ? '鸽派' : '中性';
+    const stBg = s.stance === 'hawkish' ? '#fde8ea' : s.stance === 'dovish' ? '#e4f4ef' : '#eef0f4';
+    html += '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0">' +
+      '<div style="min-width:50px"><div style="font-size:12px;color:' + COLORS.text + '">' + s.date + '</div></div>' +
+      '<div style="flex:1"><div style="font-size:13px;font-weight:500">' + s.speaker + '</div>' +
+      '<div style="font-size:12px;color:' + COLORS.text + ';margin-top:2px">' + s.title + '</div>' +
+      '<div style="font-size:12px;color:' + COLORS.neutral + ';margin-top:4px;line-height:1.6">' + s.key + '</div></div>' +
+      '<div style="text-align:center;min-width:56px"><span style="padding:3px 10px;border-radius:12px;background:' + stBg + ';color:' + stColor + ';font-size:11px">' + stLabel + '</span>' +
+      '<div style="font-size:11px;color:' + COLORS.neutral + ';margin-top:4px">' + s.hawkishScore + '/10</div></div></div>';
+  });
+  return html + '</div>';
+}
+
+function renderRatePath(rp) {
+  let html = '<div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px">下次会议: ' + rp.nextMeeting + '</span></div>';
+  const probs = [
+    { label: '维持不变', val: rp.holdProb, color: '#6b7280' },
+    { label: '降息25bp', val: rp.cut25bpProb, color: '#2a9d8f' },
+    { label: '降息50bp', val: rp.cut50bpProb, color: '#4361ee' }
+  ];
+  html += '<div style="display:flex;gap:12px">';
+  probs.forEach(p => {
+    html += '<div style="flex:1;text-align:center">' +
+      '<div style="height:8px;background:#eef0f4;border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + p.val + '%;background:' + p.color + ';border-radius:4px"></div></div>' +
+      '<div style="font-size:11px;color:' + COLORS.text + '">' + p.label + '</div>' +
+      '<div style="font-size:16px;font-weight:600;color:' + p.color + '">' + p.val + '%</div></div>';
+  });
+  return html + '</div></div>';
+}
+
+function renderHawkDovGauge(hd) {
+  const canvas = document.getElementById('hawkDov');
+  charts.hawkDov = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [hd.score, 10 - hd.score],
+        backgroundColor: ['#e63946', '#e4f4ef'],
+        borderWidth: 0, circumference: 180, rotation: 270
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      cutout: '70%'
+    },
+    plugins: [{
+      id: 'hdCenter',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        const cx = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+        const cy = chart.chartArea.bottom - 10;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillStyle = hd.score > 5 ? '#e63946' : '#2a9d8f';
+        ctx.fillText(hd.score.toFixed(1), cx, cy - 20);
+        ctx.font = '13px sans-serif';
+        ctx.fillStyle = COLORS.text;
+        ctx.fillText(hd.label, cx, cy);
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = COLORS.neutral;
+        ctx.fillText('0 鸽 ← → 鹰 10', cx, cy + 16);
+        ctx.restore();
+      }
+    }]
+  });
+  const container = canvas.parentElement.parentElement;
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">';
+  hd.officials.forEach(o => {
+    const sc = o.stance === 'hawkish' ? '#e63946' : o.stance === 'dovish' ? '#2a9d8f' : '#6b7280';
+    const lb = o.stance === 'hawkish' ? '鹰' : o.stance === 'dovish' ? '鸽' : '中';
+    html += '<div style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;background:#f5f7fa">' +
+      '<span style="font-size:11px;color:' + COLORS.text + '">' + o.name + '</span>' +
+      '<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:' + sc + ';color:#fff">' + lb + o.score + '</span></div>';
+  });
+  container.innerHTML += html + '</div>';
+}
+
+/* ================= 4. 流动性 ================= */
+function renderLiquidity(c) {
+  const d = DATA.liquidity;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += sectionCard('净流动性公式', 'RRP耗尽后，QT与TGA的每一美元都直击准备金', renderNetLiqFormula(d.formula));
+  html += '<div style="height:16px"></div>';
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('流动性构成走势', '净流动性/准备金/TGA(万亿美元)', 'liqChart', 'tall') +
+    chartCard('LPI 流动性压力指数', '规则型监测(0-10) · 结构紧但价格未确认', 'lpiChart', 'tall') +
+  '</div>';
+  html += renderLPIComponents(d.lpi);
+  html += renderConfirmConds(d.lpi.confirmationConditions);
+  html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || '日/周/月/半年变化 → 识别流动性收缩斜率');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('各组件变动追踪', '信号列=对风险资产影响方向');
+  html += table(['组成项', '当前值', '周变动', '月变动', '数据源', '信号'], d.weeklyChanges.map(r => [r.component, r.current, r.weekChange, r.monthChange, r.source, dirTag(r.signal)]));
+  c.innerHTML = html;
+
+  const cd = d.chartData;
+  charts.liq = new Chart(document.getElementById('liqChart'), {
+    type: 'line',
+    data: {
+      labels: cd.labels,
+      datasets: Object.keys(cd.series).map((n, i) => ({
+        label: n, data: cd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('T$')
+  });
+  renderLPIGauge(d.lpi);
+}
+
+function renderNetLiqFormula(f) {
+  let html = '<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:12px 0">';
+  f.components.forEach((comp, i) => {
+    const valStr = comp.value < 0.01 ? comp.value.toFixed(4) : comp.value.toFixed(2);
+    html += '<div style="text-align:center;min-width:130px">' +
+      '<div style="font-size:11px;color:' + COLORS.text + '">' + comp.name + '</div>' +
+      '<div style="font-size:20px;font-weight:700;color:' + comp.color + '">' + comp.sign + valStr + comp.unit + '</div>' +
+      '<div style="font-size:10px;color:' + COLORS.neutral + '">' + comp.note + '</div></div>';
+    if (i < f.components.length - 1) {
+      html += '<div style="font-size:22px;color:' + COLORS.neutral + '">' + (f.components[i + 1].sign === '−' ? '−' : '+') + '</div>';
+    }
+  });
+  html += '<div style="font-size:22px;color:' + COLORS.neutral + '">=</div>';
+  html += '<div style="text-align:center;min-width:130px;padding:10px 18px;border:2px solid #4361ee;border-radius:8px;background:#e8ecff">' +
+    '<div style="font-size:11px;color:#4361ee">净流动性</div>' +
+    '<div style="font-size:24px;font-weight:700;color:#4361ee">$' + f.netLiquidity.toFixed(2) + 'T</div>' +
+    '<div style="font-size:10px;color:' + COLORS.neutral + '">4周收缩 $58B，斜率变陡</div></div>';
+  return html + '</div>';
+}
+
+function renderLPIGauge(lpi) {
+  const canvas = document.getElementById('lpiChart');
+  charts.lpi = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [3, 2, 2, 3],
+        backgroundColor: ['#2a9d8f', '#f59e0b', '#e63946', '#7f1d1d'],
+        borderWidth: 0, circumference: 180, rotation: 270
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      cutout: '70%'
+    },
+    plugins: [{
+      id: 'lpiC',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        const cx = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+        const cy = chart.chartArea.bottom - 10;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText(lpi.score.toFixed(1), cx, cy - 20);
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = COLORS.text;
+        ctx.fillText(lpi.level, cx, cy);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = COLORS.neutral;
+        ctx.fillText('趋势 ' + lpi.trend, cx, cy + 18);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+function renderLPIComponents(lpi) {
+  let html = '<div class="chart-row one-col"><div class="chart-card"><div class="chart-header"><div><div class="chart-title">LPI 三大组成</div><div class="chart-subtitle">结构性缓冲45% + 融资确认35% + 风险传导20%</div></div></div><div style="padding:0 4px">';
+  lpi.components.forEach(comp => {
+    const pct = (comp.score / 10) * 100;
+    const color = comp.score < 3 ? '#2a9d8f' : comp.score < 5 ? '#f59e0b' : '#e63946';
+    html += '<div style="margin-bottom:14px">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+      '<span style="font-size:13px;font-weight:500">' + comp.name + '<span style="color:' + COLORS.neutral + ';font-weight:400"> (' + comp.weight + ')</span></span>' +
+      '<span style="font-size:13px;font-weight:600;color:' + color + '">' + comp.score.toFixed(1) + '/10</span></div>' +
+      '<div style="height:8px;background:#eef0f4;border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px"></div></div>' +
+      '<div style="font-size:11px;color:' + COLORS.text + ';margin-top:3px">' + comp.note + '</div></div>';
+  });
+  return html + '</div></div></div>';
+}
+
+function renderConfirmConds(conds) {
+  let html = '<div class="chart-row one-col"><div class="chart-card"><div class="chart-header"><div><div class="chart-title">系统性压力确认条件</div><div class="chart-subtitle">价格信号触发前，结构性紧张不构成交易主线</div></div></div><div style="padding:4px 0">';
+  conds.forEach(cnd => {
+    const near = cnd.status === '接近触发';
+    const sc = cnd.triggered ? '#e63946' : near ? '#f59e0b' : '#2a9d8f';
+    const sb = cnd.triggered ? '#fde8ea' : near ? '#fdf3e2' : '#e4f4ef';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0">' +
+      '<div><div style="font-size:13px;font-weight:500">' + cnd.name + '</div>' +
+      '<div style="font-size:11px;color:' + COLORS.text + '">当前: ' + cnd.current + '</div></div>' +
+      '<span style="padding:3px 10px;border-radius:12px;background:' + sb + ';color:' + sc + ';font-size:12px">' + cnd.status + '</span></div>';
+  });
+  return html + '</div></div></div>';
+}
+
+/* ================= 5. 经济数据 ================= */
+function renderEconomy(c) {
+  const d = DATA.economy;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  const cn = d.chartNotes || {};
+  html += '<div class="chart-row two-col">' +
+    chartCard('通胀三线图 (真实同比)', cn.inflNote || 'CPI/核心CPI/核心PCE 同比走势', 'inflChart', 'tall') +
+    chartCard('GDP 增长: 名义 vs 实际', cn.gdpNote || '季度同比', 'gdpChart', 'tall') +
+  '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('就业市场', cn.empNote || '非农月增 + 失业率', 'empChart', 'tall') +
+  '</div>';
+  html += sectionCard('CPI 通胀分项拆解 (真实同比)', cn.breakdownSub || '分项同比 vs 上月', renderInflationBreakdown(d.inflationBreakdown));
+  html += sectionH('多尺度趋势追踪', cn.trendNote || '月度指标: 月格=上月Δ, 半年格=6个月Δ');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('消费数据追踪', '消费占GDP约68%，是增长的锚');
+  html += table(['指标', '最新值', '前值', '趋势', '备注'], d.consumptionTable.map(r => [r.indicator, r.value, r.prev, { text: r.trend === 'up' ? '&#9650;' : '&#9660;', dir: r.trend }, r.note]));
+  c.innerHTML = html;
+
+  const id = d.inflationChart;
+  charts.infl = new Chart(document.getElementById('inflChart'), {
+    type: 'line',
+    data: {
+      labels: id.labels,
+      datasets: Object.keys(id.series).map((n, i) => ({
+        label: n, data: id.series[n], borderColor: COLORS.series[i],
+        backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, tension: 0.3
+      }))
+    },
+    options: baseOpts('%')
+  });
+
+  const gd = d.gdpChart;
+  charts.gdp = new Chart(document.getElementById('gdpChart'), {
+    type: 'bar',
+    data: {
+      labels: gd.labels,
+      datasets: Object.keys(gd.series).map((n, i) => ({
+        label: n, data: gd.series[n],
+        backgroundColor: COLORS.series[i] + '90', borderColor: COLORS.series[i], borderWidth: 1, borderRadius: 3
+      }))
+    },
+    options: baseOpts('%')
+  });
+
+  const ed = d.employmentChart;
+  charts.emp = new Chart(document.getElementById('empChart'), {
+    type: 'bar',
+    data: {
+      labels: ed.labels,
+      datasets: [
+        {
+          label: '非农就业变动(K)', data: ed.series['非农就业变动(K)'],
+          backgroundColor: 'rgba(67,97,238,0.6)', borderRadius: 3, yAxisID: 'y'
+        },
+        {
+          label: '失业率(%)', data: ed.series['失业率(%)'], type: 'line',
+          borderColor: '#e63946', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 } } },
+        tooltip: { backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4', padding: 10 }
+      },
+      scales: {
+        x: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text } },
+        y: { position: 'left', grid: { color: COLORS.grid }, ticks: { color: COLORS.text }, title: { display: true, text: 'K', color: COLORS.text } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: COLORS.text, callback: function (v) { return v + '%'; } } }
+      }
+    }
+  });
+}
+
+function renderInflationBreakdown(items) {
+  let html = '<div>';
+  if (!items || !items.length) return '<div style="padding:12px;color:' + COLORS.text + ';font-size:12px">分项数据暂缺</div>';
+  items.forEach(it => {
+    const pct = Math.min(Math.abs(parseFloat(it.yoy)) / 6 * 100, 100);  // 条形=|同比|占6%比例
+    const color = it.trend === 'up' ? '#e63946' : it.trend === 'down' ? '#2a9d8f' : '#6b7280';
+    const trendLabel = it.trend === 'up' ? '↑ 加速' : it.trend === 'down' ? '↓ 回落' : '→ 持平';
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f0f0">' +
+      '<div style="min-width:150px"><div style="font-size:13px;font-weight:500">' + it.component + '</div>' +
+      '<div style="font-size:11px;color:' + COLORS.neutral + '">' + it.note + '</div></div>' +
+      '<div style="min-width:56px;text-align:right;font-size:13px;font-weight:600">' + it.yoy + '</div>' +
+      '<div style="min-width:64px;text-align:right;font-size:11px;color:' + color + '">' + trendLabel + '</div>' +
+      '<div style="min-width:60px;text-align:right;font-size:12px;color:' + COLORS.text + '" title="同比的上月变化">' + it.contribution + '</div>' +
+      '<div style="flex:1;height:6px;background:#eef0f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px"></div></div></div>';
+  });
+  return html + '</div>';
+}
+
+/* ================= 6. 信用市场 ================= */
+function renderCredit(c) {
+  const d = DATA.credit;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('各评级利差走势', 'CCC已率先走阔——信用分层的早期信号', 'creditChart', 'tall') +
+    chartCard('利差阶梯：当前 vs 历史中位', (d.chartNotes || {}).ladderNote || 'vs中位为负=利差窄于历史中枢', 'ladderChart', 'tall') +
+  '</div>';
+  html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || 'HY vs CCC 内部背离是关键信号');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('各评级利差明细', 'vs中位为负=利差窄于历史中枢');
+  html += table(['评级', '当前OAS', '历史中位', 'vs中位', '5年违约率', '备注'], d.ratingTable.map(r => [r.rating, r.oas, r.median, r.vsMedian, r.default5y, r.note]));
+  c.innerHTML = html;
+
+  const cd = d.chartData;
+  charts.credit = new Chart(document.getElementById('creditChart'), {
+    type: 'line',
+    data: {
+      labels: cd.labels,
+      datasets: Object.keys(cd.series).map((n, i) => ({
+        label: n, data: cd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('%')
+  });
+
+  const ld = d.ladder;
+  charts.ladder = new Chart(document.getElementById('ladderChart'), {
+    type: 'bar',
+    data: {
+      labels: ld.ratings,
+      datasets: [
+        { label: '当前OAS', data: ld.oas, backgroundColor: '#4361ee', borderRadius: 4 },
+        { label: '历史中位', data: ld.histMedian, backgroundColor: '#c8cdd8', borderRadius: 4 },
+        { label: '历史P10(最紧)', data: ld.histP10, backgroundColor: '#2a9d8f', borderRadius: 4 }
+      ]
+    },
+    options: baseOpts('%')
+  });
+}
+
+/* ================= 7. 波动率 ================= */
+function renderVolatility(c) {
+  const d = DATA.volatility;
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  const vn = d.chartNotes || {};
+  html += '<div class="chart-row two-col">' +
+    chartCard('跨资产波动率走势 (归一化)', vn.volNote || '起点=100, 比较相对变化', 'volChart', 'tall') +
+    chartCard('VIX 期限结构', vn.tsNote || 'Contango=未定价即时风险', 'termStruct', 'tall') +
+  '</div>';
+  html += sectionCard('跨资产波动率仪表盘', vn.dashNote || '压力区定位冲击源头', renderCrossAssetVol(d.crossAsset));
+  html += sectionH('多尺度趋势追踪', vn.trendNote || '日/周/月/半年变化 → 识别波动率趋势');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  html += sectionH('波动率 Regime 表', '');
+  html += table(['指标', '数值', '当前状态', '参考区间', '备注'], d.regimeTable.map(r => [r.indicator, r.value, r.current, r.range, r.note]));
+  c.innerHTML = html;
+
+  const cd = d.chartData;
+  charts.vol = new Chart(document.getElementById('volChart'), {
+    type: 'line',
+    data: {
+      labels: cd.labels,
+      datasets: Object.keys(cd.series).map((n, i) => ({
+        label: n, data: cd.series[n], borderColor: COLORS.series[i],
+        backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+      }))
+    },
+    options: baseOpts('')
+  });
+
+  const ts = d.termStructure;
+  charts.termStruct = new Chart(document.getElementById('termStruct'), {
+    type: 'bar',
+    data: {
+      labels: ts.labels,
+      datasets: [{
+        label: 'VIX期限结构', data: ts.values,
+        backgroundColor: ts.values.map((v, i) => 'rgba(67,97,238,' + (0.3 + i / ts.values.length * 0.5) + ')'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text } },
+        y: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text } }
+      }
+    }
+  });
+}
+
+function renderCrossAssetVol(ca) {
+  let html = '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>波动率指标</th><th>当前值</th><th>1年分位</th><th>正常水平</th><th>压力线</th><th>状态</th></tr></thead><tbody>';
+  ca.labels.forEach((label, i) => {
+    const cur = ca.current[i], rank = ca.pctRank30d[i], norm = ca.normal[i], stress = ca.stress[i];
+    let status, statusColor;
+    if (cur >= stress) { status = '压力区'; statusColor = '#e63946'; }
+    else if (cur >= norm) { status = '中性'; statusColor = '#f59e0b'; }
+    else { status = '低位'; statusColor = '#2a9d8f'; }
+    html += '<tr><td>' + label + '</td><td style="font-weight:600">' + cur + '</td>' +
+      '<td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:#eef0f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + rank + '%;background:' + statusColor + ';border-radius:3px"></div></div><span style="font-size:11px;color:' + COLORS.neutral + '">' + rank + '%</span></div></td>' +
+      '<td>' + norm + '</td><td>' + stress + '</td>' +
+      '<td><span style="padding:2px 8px;border-radius:10px;background:' + statusColor + '20;color:' + statusColor + ';font-size:11px">' + status + '</span></td></tr>';
+  });
+  return html + '</tbody></table></div><div style="font-size:12px;color:' + COLORS.neutral + ';margin-top:8px">' + (ca.note || '') + '</div>';
+}

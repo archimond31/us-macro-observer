@@ -1,0 +1,466 @@
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-page: #f0f2f5;
+  --bg-sidebar: #1a1d29;
+  --bg-card: #ffffff;
+  --bg-hover: #f5f7fa;
+  --bg-tag: #eef0f4;
+
+  --text-primary: #1a1d29;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --text-sidebar: #c4c9d4;
+  --text-sidebar-active: #ffffff;
+  --text-sidebar-dim: #6b7280;
+
+  --border: #e5e7eb;
+  --border-card: #f0f0f0;
+
+  --up: #e63946;
+  --down: #2a9d8f;
+  --neutral: #6b7280;
+  --accent: #4361ee;
+  --accent-light: #e8ecff;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --sidebar-w: 200px;
+}
+
+html { font-size: 14px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* ===== Layout ===== */
+.app { display: flex; min-height: 100vh; }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.logo {
+  font-size: 18px; font-weight: 700;
+  color: #fff; letter-spacing: -0.3px;
+}
+.logo-sub {
+  font-size: 11px; color: var(--text-sidebar-dim);
+  margin-top: 2px; letter-spacing: 0.5px;
+}
+
+.nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  color: var(--text-sidebar);
+  text-decoration: none; font-size: 13px;
+  cursor: pointer; transition: all .15s;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: rgba(67,97,238,0.2); color: var(--text-sidebar-active); }
+.nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.data-source-label {
+  font-size: 10px; color: var(--text-sidebar-dim);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.data-source-val {
+  font-size: 12px; color: var(--text-sidebar);
+  margin-bottom: 8px;
+}
+
+/* ===== Main ===== */
+.main {
+  flex: 1; margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 28px; background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.page-title { font-size: 20px; font-weight: 600; }
+.page-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.status-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  background: #e8f5e9; font-size: 12px;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #4caf50;
+}
+.status-badge.closed { background: #fce4ec; }
+.status-badge.closed .status-dot { background: #f44336; }
+
+/* ===== Content ===== */
+.content { padding: 24px 28px; max-width: 1400px; }
+
+/* ===== Metric Cards ===== */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  transition: box-shadow .2s;
+}
+.metric-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.metric-label {
+  font-size: 12px; color: var(--text-secondary);
+  margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.metric-value {
+  font-size: 22px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.metric-change {
+  font-size: 12px; margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.metric-change.up { color: var(--up); }
+.metric-change.down { color: var(--down); }
+.metric-change.neutral { color: var(--neutral); }
+
+.metric-tag {
+  display: inline-block; padding: 1px 6px;
+  border-radius: 4px; font-size: 10px;
+  background: var(--bg-tag); color: var(--text-secondary);
+}
+
+/* ===== Chart Container ===== */
+.chart-row {
+  display: grid; gap: 16px; margin-bottom: 20px;
+}
+.chart-row.two-col { grid-template-columns: 1fr 1fr; }
+.chart-row.one-col { grid-template-columns: 1fr; }
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.chart-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.chart-title { font-size: 14px; font-weight: 600; }
+.chart-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.chart-body { position: relative; height: 280px; }
+.chart-body.tall { height: 340px; }
+.chart-body.short { height: 200px; }
+
+/* ===== Data Table ===== */
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.table-title { font-size: 14px; font-weight: 600; }
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.data-table th {
+  text-align: left; padding: 10px 16px;
+  font-weight: 500; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-card);
+  font-variant-numeric: tabular-nums;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--bg-hover); }
+.data-table .ticker { font-family: monospace; font-weight: 500; }
+.data-table .pos { color: var(--up); }
+.data-table .neg { color: var(--down); }
+
+/* ===== Info Note ===== */
+.info-note {
+  background: #fef9e7;
+  border: 1px solid #f9e79f;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 13px; color: #7d6608;
+  line-height: 1.7;
+}
+.info-note strong { color: #5d4e0a; }
+
+/* ===== Mini Bar ===== */
+.mini-bars {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 32px; margin-top: 8px;
+}
+.mini-bar {
+  flex: 1; border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+/* ===== Yield Curve ===== */
+.curve-legend {
+  display: flex; gap: 16px; font-size: 11px;
+  color: var(--text-secondary);
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 10px; height: 2px; border-radius: 1px; }
+
+/* ===== Util ===== */
+.loading { text-align: center; padding: 40px; color: var(--text-tertiary); }
+.text-up { color: var(--up); }
+.text-down { color: var(--down); }
+.text-neutral { color: var(--neutral); }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .nav-label, .logo-sub, .sidebar-footer { display: none; }
+  .logo { font-size: 14px; }
+  .main { margin-left: 60px; }
+  .chart-row.two-col { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 16px; }
+}
+
+/* ============================================================
+ * 专业分析师组件 (v3)
+ * ============================================================ */
+
+/* --- Regime 横幅 --- */
+.regime-banner {
+  display: flex; align-items: stretch; gap: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden; margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+.regime-left {
+  flex: 0 0 220px; padding: 20px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.regime-label { font-size: 11px; opacity: .85; letter-spacing: .5px; }
+.regime-name { font-size: 20px; font-weight: 600; margin-top: 4px; }
+.regime-conf { font-size: 11px; margin-top: 8px; opacity: .8; }
+.regime-right {
+  flex: 1; padding: 16px 20px; background: var(--bg-card);
+  font-size: 13px; line-height: 1.7; color: var(--text-primary);
+}
+.regime-banner.risk-off .regime-left { background: #fde8ea; color: #a32d2d; }
+.regime-banner.risk-on  .regime-left { background: #e4f4ef; color: #0f6e56; }
+.regime-banner.mixed    .regime-left { background: #fdf3e2; color: #854f0b; }
+
+/* --- 关键信号 TOP --- */
+.signal-list { display: grid; gap: 10px; margin-bottom: 20px; }
+.signal-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius-md); padding: 14px 16px;
+}
+.signal-badge {
+  flex: 0 0 auto; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 500; margin-top: 1px;
+}
+.signal-badge.bearish { background: #fde8ea; color: #a32d2d; }
+.signal-badge.bullish { background: #e4f4ef; color: #0f6e56; }
+.signal-badge.mixed   { background: #fdf3e2; color: #854f0b; }
+.signal-body { flex: 1; }
+.signal-title { font-size: 13px; font-weight: 600; }
+.signal-meaning { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.6; }
+
+/* --- 指标卡 v3（含分位条+含义） --- */
+.metric-card-v3 {
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg); padding: 16px;
+  display: flex; flex-direction: column;
+}
+.metric-top { display: flex; justify-content: space-between; align-items: center; }
+.metric-signal-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.metric-signal-dot.bearish { background: #e63946; }
+.metric-signal-dot.bullish { background: #2a9d8f; }
+.metric-signal-dot.mixed   { background: #f59e0b; }
+.metric-pct-track {
+  height: 5px; background: #eef0f4; border-radius: 3px;
+  margin-top: 10px; position: relative;
+}
+.metric-pct-fill { height: 100%; border-radius: 3px; background: #c8cdd8; }
+.metric-pct-marker {
+  position: absolute; top: -3px; width: 2px; height: 11px;
+  background: var(--text-primary); border-radius: 1px;
+}
+.metric-pct-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text-tertiary); margin-top: 3px;
+}
+.metric-meaning {
+  font-size: 11px; color: var(--text-secondary);
+  margin-top: 8px; line-height: 1.5;
+}
+
+/* --- 分析师观点框 --- */
+.analyst-box {
+  background: linear-gradient(135deg, #f6f8ff 0%, #fef9f0 100%);
+  border: 1px solid #dfe5f5;
+  border-radius: var(--radius-lg);
+  padding: 18px 22px; margin-bottom: 20px;
+}
+.analyst-box-title {
+  font-size: 13px; font-weight: 600; color: #3c4a7a;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.analyst-box-title::before {
+  content: ''; width: 3px; height: 14px;
+  background: #4361ee; border-radius: 2px;
+}
+.analyst-box-body { font-size: 13px; line-height: 1.8; color: #2c3350; }
+
+/* --- 观察清单 --- */
+.watch-list { display: grid; gap: 8px; }
+.watch-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius-md); padding: 12px 16px;
+  font-size: 13px;
+}
+.watch-trigger { flex: 1; font-weight: 500; }
+.watch-trigger .watch-threshold { color: var(--accent); font-weight: 600; font-family: monospace; }
+.watch-implication {
+  flex: 1.2; color: var(--text-secondary); font-size: 12px;
+  border-left: 2px solid var(--border); padding-left: 12px;
+}
+.watch-status {
+  flex: 0 0 auto; font-size: 11px; padding: 2px 8px;
+  border-radius: 10px; background: var(--bg-tag); color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* --- 全局宏观总览条 --- */
+.macro-overview {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.macro-pillar {
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  border-top: 3px solid var(--neutral);
+}
+.macro-pillar.risk-off { border-top-color: #e63946; }
+.macro-pillar.risk-on  { border-top-color: #2a9d8f; }
+.macro-pillar.mixed    { border-top-color: #f59e0b; }
+.macro-pillar-title { font-size: 11px; color: var(--text-secondary); }
+.macro-pillar-value { font-size: 15px; font-weight: 600; margin-top: 4px; }
+.macro-pillar-note  { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; line-height: 1.5; }
+
+/* --- 分区小标题 --- */
+.section-h {
+  font-size: 14px; font-weight: 600;
+  margin: 24px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-h .section-h-sub { font-size: 11px; color: var(--text-tertiary); font-weight: 400; }
+
+/* --- 表格信号标签 --- */
+.dir-tag {
+  display: inline-block; padding: 1px 7px; border-radius: 4px;
+  font-size: 11px; font-weight: 500;
+}
+.dir-tag.bearish { background: #fde8ea; color: #a32d2d; }
+.dir-tag.bullish { background: #e4f4ef; color: #0f6e56; }
+.dir-tag.mixed   { background: #fdf3e2; color: #854f0b; }
+
+/* ============================================================
+ * 多尺度趋势追踪 (v3.1)
+ * ============================================================ */
+
+/* --- 指标卡内四尺度变化行 --- */
+.tf-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 4px; margin-top: 8px;
+  border-top: 1px dashed var(--border); padding-top: 8px;
+}
+.tf-cell { text-align: center; }
+.tf-label { font-size: 9px; color: var(--text-tertiary); letter-spacing: .5px; }
+.tf-val { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.tf-val.pos { color: var(--up); }
+.tf-val.neg { color: var(--down); }
+.tf-val.zero { color: var(--text-tertiary); }
+
+/* --- 趋势判定徽章 --- */
+.trend-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 10px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.trend-badge .trend-arrow { font-size: 12px; }
+.trend-badge.accel-up    { background: #fde8ea; color: #a32d2d; }
+.trend-badge.steady-up   { background: #fdf3e2; color: #854f0b; }
+.trend-badge.reverse-up  { background: #e8ecff; color: #3c4a9e; }
+.trend-badge.reverse-dn  { background: #e8ecff; color: #3c4a9e; }
+.trend-badge.steady-dn   { background: #e4f4ef; color: #0f6e56; }
+.trend-badge.accel-dn    { background: #dcf0ea; color: #085041; }
+.trend-badge.flat        { background: #eef0f4; color: #6b7280; }
+
+/* --- 趋势形状迷你图（4点） --- */
+.trend-shape {
+  display: inline-flex; align-items: flex-end; gap: 2px;
+  height: 18px; vertical-align: middle;
+}
+.trend-shape i {
+  display: block; width: 5px; border-radius: 1px;
+  background: #b6bcc9;
+}
+.trend-shape i.now { background: var(--text-primary); }
+
+/* --- 趋势追踪表 --- */
+.trend-table .data-table th { font-size: 11px; }
+.trend-table .data-table td { font-size: 12px; padding: 9px 14px; }
+
+/* --- 趋势概览条（板块级） --- */
+.trend-overview {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.trend-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: 20px; padding: 6px 14px 6px 10px; font-size: 12px;
+}
+.trend-chip .trend-chip-name { color: var(--text-secondary); }
+.trend-chip .trend-chip-dir { font-weight: 600; font-variant-numeric: tabular-nums; }
