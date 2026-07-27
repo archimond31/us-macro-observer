@@ -182,8 +182,8 @@ FRED_IDS = {
     'DGS10': 'dgs10', 'DGS20': 'dgs20', 'DGS30': 'dgs30',
     'DFII5': 'tips5', 'DFII10': 'tips10', 'DFII30': 'tips30', 'T10YIE': 'bei10',
     'DFEDTARU': 'ffr_up', 'DFEDTARL': 'ffr_lo', 'IORB': 'iorb', 'DPCREDIT': 'disc',
-    # 美联储资产负债表 (周度)
-    'WALCL': 'walcl', 'TREAST': 'treast', 'MBSST': 'mbst', 'WRESBAL': 'resbal',
+    # 美联储资产负债表 (周度) — MBSST 已下架, MBS 持仓用 WSHOMCB
+    'WALCL': 'walcl', 'TREAST': 'treast', 'WSHOMCB': 'mbst', 'WRESBAL': 'resbal',
     # 流动性
     'RRPONTSYD': 'rrp',
     # 信用 (ICE BofA OAS)
@@ -236,6 +236,19 @@ for sym, key in YH_IDS.items():
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
 
+# 与上次运行合并: 本次拉取失败(空)的序列沿用昨日缓存, 避免瞬时故障导致前端数据回退为空
+try:
+    PREV = json.load(open('raw_series.json'))
+    healed = []
+    for k in list(S.keys()):
+        if not S[k] and PREV.get(k):
+            S[k] = PREV[k]
+            healed.append(k)
+    if healed:
+        print(f'  [缓存回补] {len(healed)} 个序列沿用上次数据: {", ".join(healed)}')
+except Exception:
+    pass
+
 # 保存原始数据供检查
 with open('raw_series.json', 'w') as f:
     json.dump({k: v for k, v in S.items()}, f)
@@ -257,7 +270,9 @@ def reg(key, series, is_pct=False, unit='', digits=2):
 print('\n-- 计算变化与分位 --')
 for k in FRED_IDS.values(): reg(k, S[k])
 for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
-for k in YH_IDS.values(): reg(k, S[k], is_pct=True)
+# 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致
+YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m'}
+for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
 
 # 净流动性(同单位 $B) = WALCL($M→$B) - RRP($B) - TGA($B)
 # WALCL 为周三快照, RRP/TGA 为日度 → 按最近邻(±4天)对齐, 避免交集过稀
