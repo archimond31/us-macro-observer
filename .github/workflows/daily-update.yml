@@ -31,11 +31,11 @@ jobs:
           node-version: '22'
 
       - name: Fetch real data (FRED / Treasury / NY Fed / Yahoo)
-        run: python scripts/build_data.py
+        run: python build_data.py
         working-directory: scripts
 
       - name: Generate data.js
-        run: python scripts/gen_datajs.py
+        run: python gen_datajs.py
         working-directory: scripts
 
       - name: Render smoke test (7 sections, fail fast)
