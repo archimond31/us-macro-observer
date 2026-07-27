@@ -1,0 +1,54 @@
+# ============================================================
+# 每日数据自动更新 workflow
+# 每天 UTC 01:00 (北京 09:00 / 美东 20:00) 运行:
+#   美股收盘 + FRED 日度数据发布完成后拉取, 保证数据完整
+# 流水线: build_data.py (取数) → gen_datajs.py (生成 data.js)
+#         → render_smoke.cjs (无头渲染冒烟测试, 失败则中止)
+# 配合 GitHub Pages 即实现公网每日自动更新
+# ============================================================
+name: Daily Macro Data Update
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # UTC 01:00 = 北京 09:00
+  workflow_dispatch:      # 允许手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fetch real data (FRED / Treasury / NY Fed / Yahoo)
+        run: python scripts/build_data.py
+        working-directory: scripts
+
+      - name: Generate data.js
+        run: python scripts/gen_datajs.py
+        working-directory: scripts
+
+      - name: Render smoke test (7 sections, fail fast)
+        run: node scripts/render_smoke.cjs
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "macro-bot"
+          git config user.email "macro-bot@users.noreply.github.com"
+          git add data.js scripts/computed.json scripts/raw_series.json
+          if git diff --staged --quiet; then
+            echo "数据无变化，跳过提交"
+          else
+            git commit -m "data: daily update $(date -u +%Y-%m-%d)"
+            git push
+          fi
