@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Macro Observer · 专业评估与优化建议</title>
+<style>
+:root {
+  --bg: #f8f9fb; --surface: #ffffff; --border: #e5e7eb;
+  --text: #1a1d29; --text-2: #6b7280; --text-3: #9ca3af;
+  --blue: #4361ee; --blue-bg: #eef2ff;
+  --red: #e63946; --green: #2a9d8f; --amber: #f59e0b;
+  --purple: #7209b7;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Noto Sans SC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+h1 .sub { font-size: 14px; font-weight: 400; color: var(--text-2); }
+h2 { font-size: 22px; font-weight: 600; margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+h3 { font-size: 17px; font-weight: 600; margin: 28px 0 12px; color: var(--blue); }
+h4 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+p { margin-bottom: 12px; color: #374151; }
+.intro-box { background: var(--blue-bg); border-left: 4px solid var(--blue); padding: 16px 20px; border-radius: 8px; margin: 20px 0; }
+
+.priority-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 16px 0; }
+.priority-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.priority-card.p1 { border-top: 4px solid var(--red); }
+.priority-card.p2 { border-top: 4px solid var(--amber); }
+.priority-card.p3 { border-top: 4px solid var(--green); }
+.priority-tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+.priority-tag.p1 { background: #fde8ea; color: var(--red); }
+.priority-tag.p2 { background: #fdf3e2; color: var(--amber); }
+.priority-tag.p3 { background: #e4f4ef; color: var(--green); }
+.priority-card h4 { font-size: 16px; margin-bottom: 6px; }
+.priority-card .gap { font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+.priority-card ul { list-style: none; padding: 0; }
+.priority-card li { font-size: 13px; padding: 4px 0; color: #374151; }
+.priority-card li::before { content: "▸ "; color: var(--blue); }
+.priority-card code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; color: var(--purple); }
+
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+th { background: #f3f4f6; padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: #fafbfc; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.tag-fred { background: #eef2ff; color: var(--blue); }
+.tag-yahoo { background: #fdf3e2; color: var(--amber); }
+.tag-new { background: #fde8ea; color: var(--red); }
+.tag-calc { background: #e4f4ef; color: var(--green); }
+
+.section-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 16px 0; }
+.section-box .header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.section-box .num { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.section-box h3 { margin: 0; }
+
+.impact-bar { display: flex; gap: 2px; margin-top: 8px; }
+.impact-bar .seg { flex: 1; height: 6px; border-radius: 3px; }
+.impact-bar .seg.on { background: var(--blue); }
+.impact-bar .seg.off { background: #e5e7eb; }
+.impact-label { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+.roadmap { margin: 20px 0; }
+.roadmap-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.roadmap-item:last-child { border-bottom: none; }
+.roadmap-phase { min-width: 80px; font-size: 12px; font-weight: 600; color: var(--blue); padding-top: 2px; }
+.roadmap-content { flex: 1; }
+.roadmap-content h4 { font-size: 15px; margin-bottom: 4px; }
+.roadmap-content p { font-size: 13px; color: var(--text-2); margin: 0; }
+
+.score-bar { display: inline-flex; align-items: center; gap: 8px; }
+.score-bar .bar { width: 100px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+.score-bar .fill { height: 100%; border-radius: 4px; }
+
+.summary-stat { display: flex; gap: 24px; margin: 16px 0; }
+.stat-card { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+.stat-card .num { font-size: 28px; font-weight: 700; color: var(--blue); }
+.stat-card .label { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+
+code.inline { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+.footer { margin-top: 60px; padding: 20px; text-align: center; font-size: 13px; color: var(--text-3); border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>US Macro Observer · 专业评估与优化建议
+  <div class="sub">从宏观分析师视角审视数据覆盖度、分析框架与投资决策支持能力</div>
+</h1>
+
+<div class="intro-box">
+  <p><strong>评估方法：</strong>对照专业宏观研究机构（Bridgewater, GS, JPM, MS）的标准宏观分析框架，逐板块审查数据覆盖度、分析逻辑链完整性、信号可操作性三个维度。评估基准为"能否支撑日常宏观研判与投资决策"。</p>
+  <p><strong>总体评价：</strong>平台已覆盖7大板块、86个真实数据序列，数据质量和架构远超个人项目水平。Regime判定框架、多尺度趋势追踪、LPI流动性压力指数等设计体现了扎实的宏观分析功底。以下建议聚焦于"从可用到专业级"的关键差距。</p>
+</div>
+
+<div class="summary-stat">
+  <div class="stat-card"><div class="num">86</div><div class="label">当前数据序列</div></div>
+  <div class="stat-card"><div class="num">7</div><div class="label">分析板块</div></div>
+  <div class="stat-card"><div class="num">~30</div><div class="label">建议新增序列</div></div>
+  <div class="stat-card"><div class="num">8</div><div class="label">建议新增分析模块</div></div>
+</div>
+
+<h2>一、当前覆盖度评估</h2>
+
+<table>
+  <thead>
+    <tr><th>板块</th><th>当前序列数</th><th>覆盖评分</th><th>主要缺口</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>大类资产</td><td>12</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:80%;background:var(--green)"></span></span>8/10</span></td><td>缺估值指标、铜金比、信用-股票背离追踪</td></tr>
+    <tr><td>利率</td><td>14</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:90%;background:var(--green)"></span></span>9/10</span></td><td>缺5y5y远期通胀预期、SOFR期货隐含路径</td></tr>
+    <tr><td>美联储</td><td>8</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:75%;background:var(--amber)"></span></span>7.5/10</span></td><td>鹰鸽指数/讲话为分析师策展，非数据驱动</td></tr>
+    <tr><td>流动性</td><td>6</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:90%;background:var(--green)"></span></span>9/10</span></td><td>净流动性公式+LPI设计出色，缺BTFP/Ways&Means</td></tr>
+    <tr><td>经济数据</td><td>14</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:65%;background:var(--amber)"></span></span>6.5/10</span></td><td><strong>最大缺口</strong>：缺JOLTS、薪资、PMI、住房、Sahm Rule</td></tr>
+    <tr><td>信用市场</td><td>10</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:85%;background:var(--green)"></span></span>8.5/10</span></td><td>违约率为硬编码，缺CDS、杠杆贷款、CCC-IG分层追踪</td></tr>
+    <tr><td>波动率</td><td>8</td><td><span class="score-bar"><span class="bar"><span class="fill" style="width:88%;background:var(--green)"></span></span>8.8/10</span></td><td>覆盖全面，缺VIX期限结构完整曲线(4M/6M/1Y)</td></tr>
+  </tbody>
+</table>
+
+<h2>二、数据补充建议（按优先级）</h2>
+
+<div class="priority-grid">
+  <div class="priority-card p1">
+    <span class="priority-tag p1">P1 · 高影响</span>
+    <h4>劳动力市场深化</h4>
+    <div class="gap">当前仅有失业率+非农+初请，缺关键领先指标</div>
+    <ul>
+      <li><code>JTSJOL</code> JOLTS职位空缺 — 美联储最关注的劳动力需求指标</li>
+      <li><code>JTS3000QUR</code> 辞职率(Quits Rate) — 自愿离职=对劳动力市场有信心</li>
+      <li><code>CES0500000008</code> 时薪同比 — 工资-通胀螺旋的核心验证</li>
+      <li><code>CIVPART</code> 劳动参与率 — 区分失业率下降是好是坏</li>
+      <li><code>CCSA</code> 持续申请失业金 — 比初请更滞后的确认信号</li>
+      <li><code>IURSA</code> 续请失业金率(Insured Unemployment Rate)</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：5/10</div>
+  </div>
+
+  <div class="priority-card p1">
+    <span class="priority-tag p1">P1 · 高影响</span>
+    <h4>衰退信号与周期定位</h4>
+    <div class="gap">当前有收益率曲线但缺主动衰退概率模型</div>
+    <ul>
+      <li><code>计算</code> Sahm Rule — 失业率3M均值 vs 12M低点，>0.5=衰退信号</li>
+      <li><code>计算</code> 3M-10Y利差 — 比10Y-2Y更可靠的衰退先行指标</li>
+      <li><code>USSLIND</code> 费城联储领先经济指标(LEI) — 月度领先指标</li>
+      <li><code>SAHMREALTIME</code> Sahm Rule实时衰退指标</li>
+      <li><code>RECPROUSM156N</code> 衰退概率(纽约联储模型) — 月度衰退概率</li>
+      <li><code>STLFSI3</code> 圣路易斯金融压力指数 — 补充NFCI</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：7/10</div>
+  </div>
+
+  <div class="priority-card p1">
+    <span class="priority-tag p1">P1 · 高影响</span>
+    <h4>通胀预期多维度</h4>
+    <div class="gap">当前仅有10Y Breakeven，缺远期和市场+调查预期</div>
+    <ul>
+      <li><code>T5YIFR</code> 5y5y远期通胀预期 — 剥离短期波动，看长期通胀锚定</li>
+      <li><code>MICH</code> 密歇根1年通胀预期 — 消费者调查，影响消费行为</li>
+      <li><code>EXPINF10YR</code> 克利夫兰联储10年通胀预期 — 模型估计</li>
+      <li><code>DNSMEPI</code> 纽约联储企业通胀预期 — 企业端视角</li>
+      <li><code>计算</code> 通胀意外指数 — 实际CPI vs 预期偏差追踪</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：6/10</div>
+  </div>
+
+  <div class="priority-card p2">
+    <span class="priority-tag p2">P2 · 中等影响</span>
+    <h4>住房市场</h4>
+    <div class="gap">CPI住房分项已有，缺住房市场本身（经济领先指标）</div>
+    <ul>
+      <li><code>MORTGAGE30US</code> 30年抵押贷款利率 — 影响购房负担能力</li>
+      <li><code>HOUST</code> 新屋开工 — 住房投资是GDP领先指标</li>
+      <li><code>CSUSHPINSA</code> Case-Shiller房价指数 — 财富效应传导</li>
+      <li><code>PERMITNSA</code> 建筑许可 — 新屋开工的先行指标</li>
+      <li><code>EXHOSLUSM495S</code> 成屋销售 — 住房市场成交量</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：5/10</div>
+  </div>
+
+  <div class="priority-card p2">
+    <span class="priority-tag p2">P2 · 中等影响</span>
+    <h4>制造业与调查指标</h4>
+    <div class="gap">缺PMI等软数据——经济转折点最先出现的信号</div>
+    <ul>
+      <li><code>NAPM</code> ISM制造业PMI — 50荣枯线是市场敏感信号</li>
+      <li><code>NAPMSI</code> ISM非制造业PMI — 服务业占GDP 80%</li>
+      <li><code>UMCSENT</code> 密歇根消费者信心(已有) — 可深化1yr/5yr预期</li>
+      <li><code>DGORDER</code> 耐用品订单(已有) — 可增核心资本品订单</li>
+      <li><code>AMBAREL</code> 达拉斯联储制造业调查 — 区域领先指标</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：5/10</div>
+  </div>
+
+  <div class="priority-card p2">
+    <span class="priority-tag p2">P2 · 中等影响</span>
+    <h4>财政与国债供给</h4>
+    <div class="gap">TGA已有但缺赤字/利息支出——长端利率的根本驱动</div>
+    <ul>
+      <li><code>FYFSGDA188S</code> 联邦赤字/GDP — 财政可持续性</li>
+      <li><code>A091RC1Q027SBEA</code> 净利息支出 — 国债供给的内生驱动</li>
+      <li><code>GFDEBTN</code> 联邦债务总额 — 供给压力</li>
+      <li><code>TREAS</code> 国债发行计划(Treasury Borrowing Announcement)</li>
+      <li><code>计算</code> 利息支出/税收收入 — 财政锚定指标</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：6/10</div>
+  </div>
+
+  <div class="priority-card p3">
+    <span class="priority-tag p3">P3 · 价值增量</span>
+    <h4>跨资产估值框架</h4>
+    <div class="gap">有价格但缺估值——价格是结果，估值是决策依据</div>
+    <ul>
+      <li><code>计算</code> 股权风险溢价(ERP) = 盈利收益率 - 10Y实际利率</li>
+      <li><code>MULTPL</code> Shiller CAPE — 10年周期调整市盈率(需多源)</li>
+      <li><code>计算</code> Fed Model = 盈利收益率 vs 10Y名义利率</li>
+      <li><code>计算</code> 铜金比 — 经济周期与避险需求交叉信号</li>
+      <li><code>计算</code> 油金比 — 通胀周期与避险的交叉信号</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：4/10</div>
+  </div>
+
+  <div class="priority-card p3">
+    <span class="priority-tag p3">P3 · 价值增量</span>
+    <h4>利率衍生品与货币政策路径</h4>
+    <div class="gap">鹰鸽指数为分析师策展，可用市场定价替代</div>
+    <ul>
+      <li>SOFR期货隐含利率路径 — CME FedWatch替代</li>
+      <li><code>计算</code> EFFR-SOFR利差 — 融资市场结构信号</li>
+      <li><code>计算</code> FRA-OIS利差 — 银行间信用压力</li>
+      <li>30Y SOFR期货量仓 — 长端政策预期定价</li>
+    </ul>
+    <div class="impact-bar"><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg on"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div><div class="seg off"></div></div>
+    <div class="impact-label">对宏观决策的影响权重：4/10</div>
+  </div>
+</div>
+
+<h2>三、分析框架优化建议</h2>
+
+<div class="section-box">
+  <div class="header"><div class="num">1</div><h3>衰退概率仪表盘（新建模块）</h3></div>
+  <p><strong>当前状态：</strong>收益率曲线利差散落在利率板块，Sahm Rule未计算，衰退概率模型缺失。</p>
+  <p><strong>建议：</strong>新建独立"衰退信号"仪表盘，聚合所有衰退先行指标：</p>
+  <table>
+    <thead><tr><th>信号</th><th>计算方法</th><th>触发阈值</th><th>历史平均领先</th></tr></thead>
+    <tbody>
+      <tr><td>10Y-2Y利差</td><td>已有</td><td>转负</td><td>12-18个月</td></tr>
+      <tr><td>3M-10Y利差</td><td>已有数据，加计算</td><td>转负</td><td>10-14个月</td></tr>
+      <tr><td>Sahm Rule</td><td>失业率3M均值-12M低点</td><td>>0.5pp</td><td>同步或领先1-3月</td></tr>
+      <tr><td>纽约联储衰退概率</td><td><code>RECPROUSUSM156N</code></td><td>>40%</td><td>6-12个月</td></tr>
+      <tr><td>收益率曲线3M-10Y概率</td><td><code>T10Y3M</code></td><td>转负</td><td>12-18个月</td></tr>
+      <tr><td>Conference Board LEI</td><td><code>USSLIND</code></td><td>连续3月下行</td><td>7个月</td></tr>
+      <tr><td>初请失业金4周均值</td><td>已有数据</td><td>突破325K</td><td>2-4个月</td></tr>
+    </tbody>
+  </table>
+  <p>设计为红绿灯面板：每个信号绿/黄/红三色，底部给出综合衰退概率评分（加权平均），并标注当前处于经济周期的哪个阶段（扩张早期/扩张后期/放缓/衰退/复苏）。</p>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">2</div><h3>通胀分析深化模块</h3></div>
+  <p><strong>当前状态：</strong>CPI分项拆解做得好（能源/食品/住房/核心服务/核心商品），但缺"通胀温度计"。</p>
+  <p><strong>建议新增：</strong></p>
+  <ul style="padding-left:20px;margin:8px 0">
+    <li><strong>通胀分项贡献度图：</strong>用CPI分项权重×同比变化，计算各分项对总CPI的拉动贡献（气泡图或堆叠柱状图）</li>
+    <li><strong>通胀预期三重交叉：</strong>市场预期(Breakeven) + 调查预期(UMich) + 模型预期(Cleveland Fed) 三线对比，三者背离=信号</li>
+    <li><strong>核心CPI 3月/6月年化：</strong>3个月和6个月年化环比，比同比更敏感，美联储内部最看重的口径</li>
+    <li><strong>工资-通胀追踪：</strong>时薪同比 vs 核心服务CPI同比叠加，验证工资-通胀螺旋是否存在</li>
+    <li><strong>超级核心通胀(Supercore)：</strong>核心服务(除住房) — 鲍威尔最关注的口径</li>
+  </ul>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">3</div><h3>劳动力市场综合面板</h3></div>
+  <p><strong>当前状态：</strong>散落在经济数据板块，仅失业率+非农+初请三条线。</p>
+  <p><strong>建议：</strong>在经济数据板块内新增"劳动力市场"子面板，形成"需求-供给-价格"三角框架：</p>
+  <table>
+    <thead><tr><th>维度</th><th>指标</th><th>含义</th><th>FRED代码</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">需求侧</td><td>JOLTS职位空缺</td><td>企业招聘需求</td><td><code>JTSJOL</code></td></tr>
+      <tr><td>招聘率</td><td>实际新雇佣速度</td><td><code>JTS3000HIL</code></td></tr>
+      <tr><td>ISM就业分项</td><td>制造业就业景气</td><td><code>NAPMEMP</code></td></tr>
+      <tr><td rowspan="3">供给侧</td><td>劳动参与率</td><td>劳动力供给池大小</td><td><code>CIVPART</code></td></tr>
+      <tr><td>就业人口比</td><td>真实就业覆盖面</td><td><code>EMRATIO</code></td></tr>
+      <tr><td>非农就业(月增)</td><td>已有</td><td>—</td></tr>
+      <tr><td rowspan="3">价格侧</td><td>时薪同比</td><td>工资增长速度</td><td><code>CES0500000008</code></td></tr>
+      <tr><td>辞职率</td><td>自愿离职=议价能力</td><td><code>JTS3000QUR</code></td></tr>
+      <tr><td>初请+续请失业金</td><td>已有初请，加续请</td><td><code>CCSA</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">4</div><h3>数据日历与事件追踪</h3></div>
+  <p><strong>当前状态：</strong>FOMC时间线已有，但缺经济数据发布日历。</p>
+  <p><strong>建议新增：</strong>独立的"本周关键事件"面板，包括：</p>
+  <ul style="padding-left:20px;margin:8px 0">
+    <li><strong>经济数据日历：</strong>未来7天关键数据发布（CPI、非农、GDP、FOMC等），含预期值与实际值对比。可用 <a href="https://www.treasury.gov/resource-center/data-chart-center/interest-rates/">Treasury</a> 或 <a href="https://api.stlouisfed.org/fred/series/releases">FRED Releases API</a> 构建</li>
+    <li><strong>国债拍卖日历：</strong>2Y/5Y/7Y/10Y/30Y拍卖日期+规模，拍卖结果影响长端利率</li>
+    <li><strong>财报季标记：</strong>标普500主要成分股财报日期——影响指数波动</li>
+    <li><strong>数据意外追踪：</strong>实际值 vs 预期值偏差，持续追踪形成"经济意外指数"</li>
+  </ul>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">5</div><h3>跨资产估值与相对价值面板</h3></div>
+  <p><strong>当前状态：</strong>有资产价格和相关性矩阵，但缺估值视角。</p>
+  <p><strong>建议新增：</strong>在资产板块新增估值子模块：</p>
+  <ul style="padding-left:20px;margin:8px 0">
+    <li><strong>股权风险溢价(ERP)：</strong>标普盈利收益率(1/P/E) - 10Y实际利率(TIPS)，当前ERP处于历史什么分位</li>
+    <li><strong>Fed Model：</strong>标普盈利收益率 vs 10Y名义利率，背离=股债相对吸引力</li>
+    <li><strong>铜金比趋势：</strong>铜(经济周期) / 金(避险)，比价上升=风险偏好上升</li>
+    <li><strong>油金比趋势：</strong>油(通胀) / 金(避险)，比价方向=通胀-避险博弈</li>
+    <li><strong>股债性价比打分：</strong>多因子模型给出股 vs 债配置建议（基于ERP、估值分位、利率方向）</li>
+  </ul>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">6</div><h3>信号聚合与历史胜率</h3></div>
+  <p><strong>当前状态：</strong>各板块有keySignals和whatToWatch，但信号之间无聚合，无历史验证。</p>
+  <p><strong>建议新增：</strong></p>
+  <ul style="padding-left:20px;margin:8px 0">
+    <li><strong>全局风险评分：</strong>聚合所有板块信号，输出0-100的综合风险评分（类似GS Financial Conditions Index但更透明）</li>
+    <li><strong>信号变化追踪：</strong>记录每日信号变化（新增/消失/方向反转），避免分析师淹没在数据中</li>
+    <li><strong>历史信号回测：</strong>对关键信号（如VIX>20、10Y>4.5%、Sahm触发等）做历史回测——过去触发后标普/10Y/HY的1周/1月/3月表现</li>
+    <li><strong>Regime转换概率：</strong>当前regime维持/转换的概率，基于多指标综合计算</li>
+  </ul>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">7</div><h3>鹰鸽指数数据化</h3></div>
+  <p><strong>当前状态：</strong>FOMC官员讲话为分析师策展，鹰鸽分数为主观打分。这在专业平台上是明显的弱项——无法回溯、无法验证、无法自动化。</p>
+  <p><strong>建议替代方案（三选一）：</strong></p>
+  <table>
+    <thead><tr><th>方案</th><th>数据源</th><th>优势</th><th>劣势</th></tr></thead>
+    <tbody>
+      <tr><td>A. FedWatch隐含概率</td><td>CME FedWatch</td><td>纯市场定价，无主观偏差</td><td>需爬虫或API</td></tr>
+      <tr><td>B. 2Y利率变化代理</td><td>已有FRED数据</td><td>2Y=政策预期，上升=鹰派定价</td><td>不区分原因</td></tr>
+      <tr><td>C. NLP鹰鸽分类</td><td>FOMC声明/纪要文本</td><td>可回溯、可自动化</td><td>需NLP模型，较复杂</td></tr>
+    </tbody>
+  </table>
+  <p><strong>推荐方案B+部分C：</strong>用2Y利率周/月变化作为"市场鹰鸽温度计"（已有数据），同时用简单的关键词频率法分析FOMC声明文本变化（"inflation"/"employment"频率、语调变化），两者交叉验证。这样鹰鸽指数从策展变为数据驱动。</p>
+</div>
+
+<div class="section-box">
+  <div class="header"><div class="num">8</div><h3>信用市场深化</h3></div>
+  <p><strong>当前状态：</strong>OAS分层做得好，但违约率为硬编码3.2%，CDS缺失。</p>
+  <p><strong>建议：</strong></p>
+  <ul style="padding-left:20px;margin:8px 0">
+    <li><strong>违约率替换为真实数据：</strong><code>DRSFRMACBS</code> 商业银行违约率(季频) 或 FRED <code>BAMLH0A0HYM2</code>派生计算</li>
+    <li><strong>新增CDS利差：</strong>iTraxx/CDX指数（需Bloomberg或Markit，免费源有限）→ 可用 ETF价差替代：<code>HYG</code>-<code>LQD</code> 价差追踪</li>
+    <li><strong>杠杆贷款价格：</strong>用 <code>SRLN</code> 或 <code>BKLN</code> ETF追踪杠杆贷款市场</li>
+    <li><strong>CCC-IG分层利差趋势图：</strong>已有数据，建议加时间序列图（当前只在表格中）</li>
+    <li><strong>信用-股票背离追踪：</strong>HYG vs SPX 20日相关性变化，转负=信用开始领先于股票下跌</li>
+  </ul>
+</div>
+
+<h2>四、功能与UX优化建议</h2>
+
+<div class="priority-grid">
+  <div class="priority-card p2">
+    <span class="priority-tag p2">UX</span>
+    <h4>全局风险仪表盘（首页）</h4>
+    <div class="gap">当前大类资产页直接进入细节，缺概览</div>
+    <p style="font-size:13px">建议在首页或顶部加一个全局风险仪表盘：综合FCI、流动性、信用、波动率、经济数据的加权评分，以0-100量表呈现，配合颜色（绿/黄/橙/红），让用户3秒判断市场状态。</p>
+  </div>
+  <div class="priority-card p2">
+    <span class="priority-tag p2">UX</span>
+    <h4>时间区间切换器</h4>
+    <div class="gap">所有图表固定30日/90日窗口</div>
+    <p style="font-size:13px">建议为所有走势图加 1W/1M/3M/6M/1Y 切换按钮，让用户自行选择观察窗口。当前raw_series.json已有380日数据（月度760日、季度1500日），只需前端切换即可。</p>
+  </div>
+  <div class="priority-card p3">
+    <span class="priority-tag p3">UX</span>
+    <h4>关键阈值标注线</h4>
+    <div class="gap">图表上无历史关键位标注</div>
+    <p style="font-size:13px">在VIX图标注20/30线、在10Y利率图标注4.5%/5.0%线、在CCC利差图标注历史中位12%线。Chart.js支持annotation插件。</p>
+  </div>
+  <div class="priority-card p3">
+    <span class="priority-tag p3">UX</span>
+    <h4>信号变化日志</h4>
+    <div class="gap">每日更新但无变化记录</div>
+    <p style="font-size:13px">建议在data.js中存储"今日变化"列表：哪些指标方向反转、哪些阈值被突破、哪些信号新增/消失。用户打开即知"今天和昨天有什么不同"。</p>
+  </div>
+  <div class="priority-card p3">
+    <span class="priority-tag p3">UX</span>
+    <h4>导出与分享</h4>
+    <div class="gap">无法导出数据或截图</div>
+    <p style="font-size:13px">增加"导出CSV"按钮（从raw_series.json导出）和"分享当前视图"功能（URL带section参数），方便分析师使用。</p>
+  </div>
+  <div class="priority-card p3">
+    <span class="priority-tag p3">UX</span>
+    <h4>移动端适配</h4>
+    <div class="gap">当前sidebar+表格在手机上不可用</div>
+    <p style="font-size:13px">加响应式断点，移动端折叠sidebar为底部tab bar，表格横向滚动，卡片单列排列。</p>
+  </div>
+</div>
+
+<h2>五、数据质量与可靠性优化</h2>
+
+<table>
+  <thead><tr><th>问题</th><th>当前状态</th><th>建议</th><th>优先级</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>违约率硬编码</td>
+      <td>信用板块"违约率TTM 3.2%"为固定值</td>
+      <td>替换为FRED <code>DRSFRMACBS</code>或从ICE/Moodys公开数据获取</td>
+      <td><span class="tag tag-new">P1</span></td>
+    </tr>
+    <tr>
+      <td>信用利差历史中位/P10为硬编码</td>
+      <td>ladder表中histMedian/histP10为固定值</td>
+      <td>用raw_series.json中已有的历史数据计算真实分位数</td>
+      <td><span class="tag tag-new">P1</span></td>
+    </tr>
+    <tr>
+      <td>LPI评分为硬编码</td>
+      <td>流动性压力指数各组件分数固定</td>
+      <td>基于RRP/TGA/SOFR-IORB/SRF等真实值规则化计算</td>
+      <td><span class="tag tag-new">P2</span></td>
+    </tr>
+    <tr>
+      <td>FOMC讲话为策展内容</td>
+      <td>官员鹰鸽打分为主观判断</td>
+      <td>至少标注日期和来源；建议方案B用2Y替代</td>
+      <td><span class="tag tag-new">P2</span></td>
+    </tr>
+    <tr>
+      <td>利率路径概率固定</td>
+      <td>holdProb/cut25bpProb为固定值</td>
+      <td>可用2Y利率变化+曲线形态动态推算，或爬取CME FedWatch</td>
+      <td><span class="tag tag-new">P2</span></td>
+    </tr>
+    <tr>
+      <td>数据更新频率不够透明</td>
+      <td>月度/季度指标混在日度更新中</td>
+      <td>每个指标标注更新频率（日/周/月/季），避免误以为月度数据天天变</td>
+      <td><span class="tag tag-new">P3</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>六、实施路线图</h2>
+
+<div class="roadmap">
+  <div class="roadmap-item">
+    <div class="roadmap-phase">第一阶段<br>数据补缺</div>
+    <div class="roadmap-content">
+      <h4>补充P1级数据序列（劳动力市场+衰退信号+通胀预期）</h4>
+      <p>在 <code>build_data.py</code> 的 FRED_IDS 中新增约15个序列，在 <code>gen_datajs.py</code> 中新增计算逻辑（Sahm Rule、3M-10Y利差、通胀分项贡献度）。改动集中在数据层，不影响前端架构。预计新增 ~15 行FRED_ID映射 + ~60行计算逻辑。</p>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-phase">第二阶段<br>框架升级</div>
+    <div class="roadmap-content">
+      <h4>衰退概率仪表盘 + 劳动力市场子面板 + 通胀深化</h4>
+      <p>在经济数据板块内重构为子Tab（增长/就业/通胀/衰退），或新增第8个导航项"衰退信号"。需要前端改动但复用现有组件（metricCardsV3、trendTable）。</p>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-phase">第三阶段<br>数据质量</div>
+    <div class="roadmap-content">
+      <h4>消除所有硬编码值，替换为真实数据驱动</h4>
+      <p>违约率、信用历史分位、LPI评分、利率路径概率——全部改为从raw_series.json计算。这是从"展示平台"到"研究工具"的关键升级。</p>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-phase">第四阶段<br>分析与UX</div>
+    <div class="roadmap-content">
+      <h4>全局风险评分 + 数据日历 + 信号变化日志 + 时间区间切换</h4>
+      <p>需要较多前端新组件，但分析价值最高——把平台从"数据看板"提升为"决策支持工具"。</p>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-phase">第五阶段<br>进阶功能</div>
+    <div class="roadmap-content">
+      <h4>历史信号回测 + 鹰鸽指数NLP化 + 估值面板</h4>
+      <p>较重的功能，但对专业分析价值巨大。历史回测可先从简单统计开始（如"VIX突破20后标普1周表现"），NLP可用简单的词频统计开始。</p>
+    </div>
+  </div>
+</div>
+
+<h2>七、优先级排序总结</h2>
+
+<table>
+  <thead><tr><th>#</th><th>建议项</th><th>类型</th><th>预期价值</th><th>实施难度</th><th>ROI</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>劳动力市场序列(JOLTS/薪资/参与率/续请)</td><td>数据补充</td><td>极高</td><td>低(加FRED ID)</td><td><span class="tag" style="background:#e4f4ef;color:var(--green)">极高</span></td></tr>
+    <tr><td>2</td><td>Sahm Rule + 衰退概率模型</td><td>分析框架</td><td>极高</td><td>低(计算即可)</td><td><span class="tag" style="background:#e4f4ef;color:var(--green)">极高</span></td></tr>
+    <tr><td>3</td><td>信用历史分位/违约率去硬编码</td><td>数据质量</td><td>高</td><td>低</td><td><span class="tag" style="background:#e4f4ef;color:var(--green)">极高</span></td></tr>
+    <tr><td>4</td><td>3M-10Y利差 + 5y5y远期通胀</td><td>数据补充</td><td>高</td><td>低</td><td><span class="tag" style="background:#e4f4ef;color:var(--green)">极高</span></td></tr>
+    <tr><td>5</td><td>通胀分项贡献度 + 核心CPI 3/6月年化</td><td>分析框架</td><td>高</td><td>中</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">高</span></td></tr>
+    <tr><td>6</td><td>全局风险评分仪表盘</td><td>分析框架</td><td>高</td><td>中</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">高</span></td></tr>
+    <tr><td>7</td><td>住房市场序列(房贷利率/开工/房价)</td><td>数据补充</td><td>中</td><td>低</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">高</span></td></tr>
+    <tr><td>8</td><td>时间区间切换器</td><td>UX</td><td>中</td><td>低</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">高</span></td></tr>
+    <tr><td>9</td><td>数据日历与事件追踪</td><td>分析框架</td><td>中</td><td>中</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">中</span></td></tr>
+    <tr><td>10</td><td>跨资产估值面板(ERP/铜金比/油金比)</td><td>分析框架</td><td>中</td><td>中</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">中</span></td></tr>
+    <tr><td>11</td><td>鹰鸽指数数据化(2Y替代)</td><td>数据质量</td><td>中</td><td>低</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">中</span></td></tr>
+    <tr><td>12</td><td>财政/国债供给序列</td><td>数据补充</td><td>中</td><td>低</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">中</span></td></tr>
+    <tr><td>13</td><td>PMI/ISM调查指标</td><td>数据补充</td><td>中</td><td>低</td><td><span class="tag" style="background:#fdf3e2;color:var(--amber)">中</span></td></tr>
+    <tr><td>14</td><td>信号变化日志</td><td>UX</td><td>中</td><td>中</td><td><span class="tag" style="background:#fde8ea;color:var(--text-2)">中</span></td></tr>
+    <tr><td>15</td><td>历史信号回测</td><td>分析框架</td><td>高</td><td>高</td><td><span class="tag" style="background:#fde8ea;color:var(--text-2)">中</span></td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  US Macro Observer · 专业评估报告 · 生成于 2026-07-28<br>
+  评估范围：7板块 / 86序列 / 全部代码审查 · 评估基准：专业宏观研究标准
+</div>
+
+</div>
+</body>
+</html>

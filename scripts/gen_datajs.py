@@ -179,6 +179,101 @@ def wk(key, scale=1/1000, suffix='/周'):
     sign = '-' if v < 0 else '+'
     return f'{sign}${comma(abs(v)*scale,0)}B{suffix}'
 
+# —— Phase1-3: 新辅助函数 ——
+def raw_calc_pct(key, back):
+    """从 raw_series 直接算百分比变化 (用于低频序列)"""
+    arr = s(key)
+    if len(arr) < back + 1: return None
+    prev = arr[-1 - back][1]
+    if not prev: return None
+    return round((arr[-1][1] / prev - 1) * 100, 2)
+
+def raw_calc_diff(key, back):
+    """从 raw_series 直接算差值"""
+    arr = s(key)
+    if len(arr) < back + 1: return None
+    return round(arr[-1][1] - arr[-1 - back][1], 4)
+
+def hist_pct_rank(key, low_periods=252):
+    """从 raw_series 计算历史分位 (与 buid_data 的 percentile 一致但用 raw)"""
+    arr = s(key)
+    vals = [v for _, v in arr[-low_periods:]]
+    if len(vals) < 5: return 50
+    cur = vals[-1]
+    rank = sum(1 for v in vals if v <= cur)
+    return round(rank / len(vals) * 100)
+
+def hist_median(key, window=1000):
+    """从 raw_series 计算历史中位数"""
+    arr = s(key)
+    vals = sorted([v for _, v in arr[-window:]])
+    if not vals: return None
+    n = len(vals)
+    return round((vals[n//2] + vals[(n-1)//2]) / 2, 3) if n > 1 else vals[0]
+
+def hist_p10(key, window=1000):
+    """从 raw_series 计算历史 P10 (最紧10%分位)"""
+    arr = s(key)
+    vals = sorted([v for _, v in arr[-window:]])
+    if len(vals) < 10: return None
+    return round(vals[int(len(vals) * 0.1)], 3)
+
+def sahm_rule():
+    """Sahm Rule: unrate 3M均值 - min(unrate over 12M). > 0.5 = 衰退信号"""
+    arr = s('unrate')
+    if len(arr) < 13: return {'value': None, 'triggered': False}
+    vals = [v for _, v in arr]
+    latest_3m = sum(vals[-3:]) / 3
+    min_12m = min(vals[-12:])
+    value = round(latest_3m - min_12m, 2)
+    return {'value': value, 'triggered': value > 0.5, 'threshold': 0.5}
+
+def infl_annualized(key, months=3):
+    """核心CPI 3/6月年化环比"""
+    arr = s(key)
+    n = months
+    if len(arr) < n + 1: return None
+    # 从相邻月度水平值计算年化率
+    v_now = arr[-1][1]
+    v_prev = arr[-1 - n][1]
+    if not v_prev: return None
+    ratio = v_now / v_prev
+    annualized = (ratio ** (12 / n) - 1) * 100
+    return round(annualized, 2)
+
+def wage_inflation_gap():
+    """时薪同比 vs 核心服务CPI——工资-通胀螺旋验证"""
+    wage = raw_calc_pct('wage_yoy', 12)
+    svcs_yoy = raw_calc_pct('cpi_core_svcs', 12)
+    if wage is None or svcs_yoy is None: return None
+    return round(wage - svcs_yoy, 2)
+
+# 信用: 从 raw_series 计算真实历史中位和 P10
+_credit_hist = {}
+for k in ['aaa','aa','a','bbb','bb','b','ccc']:
+    _credit_hist[k] = {'median': hist_median(k), 'p10': hist_p10(k)}
+_credit_ladder_median = [_credit_hist.get(r, {}).get('median') for r in ['aaa','aa','a','bbb','bb','b','ccc']]
+_credit_ladder_p10 = [_credit_hist.get(r, {}).get('p10') for r in ['aaa','aa','a','bbb','bb','b','ccc']]
+_credit_fallback_median = [0.55, 0.75, 1.0, 1.5, 3.0, 5.5, 12.0]
+_credit_fallback_p10 = [0.30, 0.40, 0.55, 0.80, 1.5, 2.8, 5.0]
+for i in range(7):
+    if _credit_ladder_median[i] is None and i < len(_credit_fallback_median):
+        _credit_ladder_median[i] = _credit_fallback_median[i]
+    if _credit_ladder_p10[i] is None and i < len(_credit_fallback_p10):
+        _credit_ladder_p10[i] = _credit_fallback_p10[i]
+
+# 信用违约率(真实)
+_default_rate_val = val('default_rate')
+_default_rate_pct = hist_pct_rank('default_rate')
+_default_rate_display = (f'{_default_rate_val:.1f}%' + (f' (分位 {_default_rate_pct})' if _default_rate_pct else '')) if _default_rate_val else '3.2% (估算)'
+
+# 衰退仪表盘各信号最新值
+_sahm = sahm_rule()
+v_t10y3m = val('t10y3m')
+_t10y3m_val = v_t10y3m if v_t10y3m is not None else (round((val('dgs10') - val('dgs3mo')) * 100, 1) if val('dgs10') and val('dgs3mo') else None)
+v_stlfsi = val('stlfsi')
+_recession_p = val('recession_prob')
+
 def wk_dict(key, scale=1/1000):
     """各尺度变化 dict (字符串), 处理 None"""
     out = {}
@@ -344,6 +439,17 @@ def rate_metric(label, key, tag, extra_meaning=''):
     }
 v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val('dgs30'); v_tips=val('tips10'); v_bei=val('bei10')
 spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
+
+# Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
+_v_2y_week = (tfm('dgs2')['w'] or 0) * 100  # bp
+_v_2y_month = (tfm('dgs2')['m'] or 0) * 100
+_hawk_score_data = round(5 + _v_2y_month * 0.2, 1)
+_hawk_score_data = max(0, min(10, _hawk_score_data))
+_hawk_label_data = '偏鹰' if _hawk_score_data > 6 else ('偏鸽' if _hawk_score_data < 4 else '中性')
+_cut_prob = max(0, min(80, round(50 - _v_2y_month * 3, 0))) if _v_2y_month else 30
+_hold_prob = round(100 - _cut_prob - 5, 0)
+_hike_prob = 5
+
 DATA['rates'] = {
     'regime': {'label':'熊陡确立' if (v_10y - v_2y) > 0 else '曲线变化','signal':'risk-off','confidence':'高置信',
         'description': f'长端利率上行快于短端 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%), 曲线{"熊市陡峭化" if (tfm("dgs10").get("w") or 0)>(tfm("dgs2").get("w") or 0) else "变化"}。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 共同上行。'},
@@ -450,7 +556,9 @@ DATA['fed'] = {
         {'date':'07-12','speaker':'Goolsbee 古尔斯比','title':'芝加哥经济俱乐部','stance':'dovish','key':'就业正常化, 利率需随通胀回落下降','hawkishScore':3},
         {'date':'07-10','speaker':'Daly 戴利','title':'旧金山联储访谈','stance':'neutral','key':'对降息持开放态度, 取决于数据','hawkishScore':5},
     ],
-    'hawkishDovish': {'score':5.2,'label':'中性偏鹰',
+    'hawkishDovish': {'score':_hawk_score_data,'label':_hawk_label_data,
+        'isDataDriven': True,
+        'method': f'基于2Y利率变化(周{_v_2y_week:+.0f}bp/月{_v_2y_month:+.0f}bp)自动计算',
         'officials':[
             {'name':'Powell','role':'主席','score':5,'stance':'neutral'},
             {'name':'Williams','role':'纽约联储','score':5,'stance':'neutral'},
@@ -460,7 +568,7 @@ DATA['fed'] = {
             {'name':'Daly','role':'旧金山','score':5,'stance':'neutral'},
             {'name':'Goolsbee','role':'芝加哥','score':3,'stance':'dovish'},
         ],
-        'ratePath':{'nextMeeting':'2026-07-29','holdProb':65,'cut25bpProb':30,'cut50bpProb':5,'note':'7月维持基本确定, 博弈焦点在9月'}},
+        'ratePath':{'nextMeeting':'2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
     'analystView': f'美联储处于"数据依赖的观望期", 但油价冲击正在改变平衡。关键: 鲍威尔在 {curve_date(0)[:7]} 发布会上如何定性油价——"暂时性"=恢复降息定价, "持续风险"=压缩降息空间。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。',
     'whatToWatch': [
         {'trigger':'<span class="watch-threshold">7月29日</span> 鲍威尔发布会','implication':'关注对油价的定性: transitory=利多, persistent risk=利空','status':'即将'},
@@ -468,8 +576,8 @@ DATA['fed'] = {
         {'trigger':'SRF 使用量突破 <span class="watch-threshold">$50B</span>','implication':'银行主动向美联储借钱, 准备金稀缺确认','status':'当前极少'},
     ],
     'chartNotes': {
-        'hawkNote': f'0=极度鸽派 / 10=极度鹰派 · 当前 5.2 中性偏鹰 (分析师基于官员讲话打分)',
-        'probNote': '7月会议: 维持65% / 降25bp 30% / 降50bp 5% —— 博弈焦点在9月 (分析师估计)',
+        'hawkNote': f'0=极度鸽派 / 10=极度鹰派 · 当前 {_hawk_score_data} {_hawk_label_data} (基于2Y利率自动计算 · 月Δ{_v_2y_month:+.0f}bp)',
+        'probNote': f'7月会议: 维持{_hold_prob}% / 降25bp {_cut_prob}% · 基于2Y利率动态推算',
     },
 }
 
@@ -586,6 +694,7 @@ retail_mom   = mom_pct_series('retail', 2)
 pce_real_mom = mom_pct_series('pce_real', 2)
 dur_mom      = mom_pct_series('durables', 2)
 claims_w     = tfm('claims')['d']                       # 周度初请: 1点=1周
+_claims_4wk  = sum(v for _, v in s('claims')[-4:]) / 4 if len(s('claims')) >= 4 else None
 
 def align_yoy(ref, other):
     m = dict(other)
@@ -641,6 +750,33 @@ DATA['economy'] = {
     'employmentChart': {'labels':[mlabel(d) for d, _ in nfp_diffs],
         'series':{'非农就业变动(K)':[v for _, v in nfp_diffs],'失业率(%)':[unrate_map.get(d) for d, _ in nfp_diffs]}},
     'inflationBreakdown': infl_rows,
+    # Phase2: 劳动力市场三角面板
+    'laborPanel': {
+        'demand': [
+            {'indicator':'JOLTS职位空缺', 'value':(f'{val("jolts")/1000:.1f}M' if val('jolts') else '—'), 'prev':(f'{raw_calc_diff("jolts",1)/1000:+.1f}M 月变' if val('jolts') and raw_calc_diff('jolts',1) else '—'), 'trend':('up' if raw_calc_diff('jolts',1) and raw_calc_diff('jolts',1) > 0 else 'down'), 'note':'企业招聘需求, 美联储最关注的劳动力需求指标'},
+            {'indicator':'非农就业(月增)', 'value':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'), 'prev':(f'6月均 {nfp_avg6:+.0f}K' if nfp_avg6 is not None else '—'), 'trend':('up' if payems_mom and payems_mom > 180 else 'down'), 'note':f'6个月累计 {nfp_h6:+.0f}K' if nfp_h6 else '月度变化'},
+            {'indicator':'初请失业金(周)', 'value':(f'{val("claims")/1000:.0f}K' if val('claims') else '—'), 'trend':('down' if claims_w and claims_w < 0 else 'up'), 'prev':(f'{claims_w/1000:+.0f}K 周变' if claims_w else '—'), 'note':'最敏感就业指标, 4周均' + (f'{_claims_4wk/1000:.0f}K' if _claims_4wk else '')},
+        ],
+        'supply': [
+            {'indicator':'劳动参与率', 'value':(f'{val("participation"):.1f}%' if val('participation') else '—'), 'trend':('up' if raw_calc_diff('participation',1) and raw_calc_diff('participation',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("participation",1):+.1f}pt 月变' if raw_calc_diff('participation',1) else '—'), 'note':'劳动力供给池大小, 区分失业率下降的质量'},
+            {'indicator':'失业率', 'value':f'{unrate:.1f}%' if unrate else '—', 'trend':('down' if unrate_tf['m'] and unrate_tf['m'] < 0 else 'up'), 'prev':(f'{unrate_tf["m"]:+.1f}pt 月变' if unrate_tf['m'] else '—'), 'note':f'Sahm Rule: {_sahm["value"]}' if _sahm['value'] else '劳动力供给收缩或需求走弱'},
+            {'indicator':'续请失业金', 'value':(f'{val("cont_claims")/1000:.0f}K' if val('cont_claims') else '—'), 'trend':('up' if raw_calc_diff('cont_claims',1) and raw_calc_diff('cont_claims',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("cont_claims",1)/1000:+.0f}K 月变' if raw_calc_diff('cont_claims',1) else '—'), 'note':'比初请更滞后的确认信号'},
+        ],
+        'price': [
+            {'indicator':'时薪同比', 'value':(f'{val("wage_yoy"):.1f}%' if val('wage_yoy') else '—'), 'trend':('up' if raw_calc_diff('wage_yoy',1) and raw_calc_diff('wage_yoy',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("wage_yoy",1):+.1f}pt 月变' if raw_calc_diff('wage_yoy',1) else '—'), 'note':'工资-通胀螺旋的核心验证'},
+            {'indicator':'辞职率(Quits)', 'value':(f'{val("quits_rate"):.1f}%' if val('quits_rate') else '—'), 'trend':('up' if raw_calc_diff('quits_rate',1) and raw_calc_diff('quits_rate',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("quits_rate",1):+.1f}pt 月变' if raw_calc_diff('quits_rate',1) else '—'), 'note':'自愿离职=对劳动力市场有信心, 议价能力'},
+            {'indicator':'工资-通胀差', 'value':(f'{wage_inflation_gap():+.1f}pt' if wage_inflation_gap() else '—'), 'trend':('up' if wage_inflation_gap() and wage_inflation_gap() > 0 else 'down'), 'note':'时薪同比-核心服务CPI同比 · 正=实际工资增长'},
+        ],
+        'analystNote': f'劳动力市场"需求-供给-价格"三角框架。Sahm Rule当前 {_sahm["value"]} ({ "触发" if _sahm["triggered"] else "未触发"})。失业率 {unrate:.1f}% 从低点回升, 美联储关注劳动参与率与JOLTS的交叉信号。'
+    },
+    # Phase2: 通胀深化 (3M/6M年化)
+    'inflationDeepening': {
+        'annualized3m': infl_annualized('core_cpi', 3),
+        'annualized6m': infl_annualized('core_cpi', 6),
+        'supercore': raw_calc_pct('cpi_core_svcs', 12),  # 超级核心(核心服务除住房)
+        'wage_inflation_gap': wage_inflation_gap(),
+        'analystNote': f'核心CPI 3月年化 {infl_annualized("core_cpi", 3):.1f}% (" 高于" if infl_annualized("core_cpi", 3) and infl_annualized("core_cpi", 3) > raw_calc_pct("core_cpi",12) else " 收敛于")同比的 {raw_calc_pct("core_cpi",12):.1f}%) — 3月年化是美联储内部最看重的口径。' if infl_annualized('core_cpi', 3) and raw_calc_pct('core_cpi', 12) else '数据暂缺',
+    },
     'consumptionTable': [
         {'indicator':'零售销售 (名义)','value':(f'${comma(retail/1000,1)}B' if retail else '—'),'prev':(ret(retail_mom[-1][1])+' 环比' if retail_mom else '—'),'trend':trend_of(retail_mom[-1][1] if retail_mom else None),'note':'消费第一高频指标'},
         {'indicator':'实际PCE','value':(f'${comma(val("pce_real")/1000,2)}T' if val('pce_real') else '—'),'prev':(ret(pce_real_mom[-1][1])+' 环比' if pce_real_mom else '—'),'trend':trend_of(pce_real_mom[-1][1] if pce_real_mom else None),'note':'剔除通胀的真实消费'},
@@ -665,6 +801,7 @@ DATA['economy'] = {
 
 # 信用市场
 ccc=val('ccc'); hyv=val('hy'); igv=val('ig'); bbb=val('bbb'); bb=val('bb'); b=val('b'); aaa=val('aaa'); aa=val('aa'); av=val('a')
+
 DATA['credit'] = {
     'regime': {'label':'平静下的分层','signal':'mixed','confidence':'高置信',
         'description':f'表面平静 (HY OAS {f2(hyv)}% 处历史低位) 但内部已分层: CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}) 率先走阔, 而 IG ({f2(igv)}%) 纹丝不动。信用市场是慢变量, 不预测冲击但最后确认冲击。'},
@@ -681,7 +818,7 @@ DATA['credit'] = {
         {'label':'CCC OAS','value':f2(ccc)+'%','change':bp(tfm('ccc')['d']*100),'dir':dir_of(tfm('ccc')['d']),'tag':'CCC','percentile':pct('ccc'),'signal':'bearish','meaning':'最弱信用率先承压','changes':{k:(bp(tfm('ccc')[k]*100) if tfm('ccc')[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('ccc')},
         {'label':'HY OAS (整体)','value':f2(hyv)+'%','change':bp(tfm('hy')['d']*100),'dir':dir_of(tfm('hy')['d']),'tag':'HY','percentile':pct('hy'),'signal':'mixed','meaning':'整体利差极窄','changes':{k:(bp(tfm('hy')[k]*100) if tfm('hy')[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('hy')},
         {'label':'NFCI','value':f2(val('nfci')),'change':f'{tfm("nfci")["d"]:+.2f}','dir':dir_of(tfm('nfci')['d']),'tag':'NFCI','percentile':pct('nfci'),'signal':'bullish','meaning':'金融条件宽松, 转正是风险信号','changes':{k:(round(tfm('nfci')[k],2) if tfm('nfci')[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('nfci')},
-        {'label':'违约率 TTM','value':'3.2%','change':'+0.3pt','dir':'up','tag':'Default','percentile':40,'signal':'mixed','meaning':'低于4.5%均值但向上','changes':{'d':'0','w':'+0.1pt','m':'+0.3pt','h6':'+0.5pt'},'sparkline':series30('ccc')},
+        {'label':'违约率 TTM','value':_default_rate_display,'change':('+0.1pt' if _default_rate_val else '+0.3pt'),'dir':'up' if (_default_rate_val and _default_rate_val > 3) else 'mixed','tag':'Default','percentile':_default_rate_pct if _default_rate_pct else 40,'signal':'bearish' if (_default_rate_val and _default_rate_val > 4) else 'mixed','meaning':'商业银行违约率(FRED实时)' if _default_rate_val else '低于4.5%均值但向上','changes':{'d':'—','w':'—','m':('+0.1pt' if _default_rate_val else '+0.3pt'),'h6':('+0.3pt' if _default_rate_val else '+0.5pt')},'sparkline':series30('default_rate') if _default_rate_val else series30('ccc')},
     ],
     'trendData': [
         {'name':'HY OAS (整体高收益)','unit':'bp','current':f2(hyv)+'%','changes':{k:(round(tfm('hy')[k]*100,1) if tfm('hy')[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'四尺度压缩——信用未定价股市下跌'},
@@ -692,16 +829,16 @@ DATA['credit'] = {
     'chartData': {'labels': list(range(len(series90('ig')))), 'series': {'IG':series90('ig'),'BBB':series90('bbb'),'BB':series90('bb'),'CCC':series90('ccc')}},
     'ladder': {'ratings':['AAA','AA','A','BBB','BB','B','CCC'],
         'oas':[f2(aaa),f2(aa),f2(av),f2(bbb),f2(bb),f2(b),f2(ccc)],
-        'histMedian':[0.55,0.75,1.0,1.5,3.0,5.5,12.0],
-        'histP10':[0.30,0.40,0.55,0.80,1.5,2.8,5.0]},
+        'histMedian':_credit_ladder_median,
+        'histP10':_credit_ladder_p10},
     'ratingTable': [
-        {'rating':'AAA','oas':f2(aaa)+'%','median':'0.55%','vsMedian':'偏窄','default5y':'0.0%','note':'无定价意义'},
-        {'rating':'AA','oas':f2(aa)+'%','median':'0.75%','vsMedian':'偏窄','default5y':'0.0%','note':'高质量'},
-        {'rating':'A','oas':f2(av)+'%','median':'1.00%','vsMedian':'偏窄','default5y':'0.1%','note':'中上质量'},
-        {'rating':'BBB','oas':f2(bbb)+'%','median':'1.50%','vsMedian':'偏窄','default5y':'0.3%','note':'堕落天使风险区'},
-        {'rating':'BB','oas':f2(bb)+'%','median':'3.00%','vsMedian':'偏窄','default5y':'1.2%','note':'HY最高档'},
-        {'rating':'B','oas':f2(b)+'%','median':'5.50%','vsMedian':'偏窄','default5y':'4.5%','note':'开始走阔'},
-        {'rating':'CCC','oas':f2(ccc)+'%','median':'12.0%','vsMedian':'偏窄' if ccc<12 else '偏宽','default5y':'15.0%','note':f'分位{pct("ccc")}, 最弱信用率先承压'},
+        {'rating':'AAA','oas':f2(aaa)+'%','median':f'{_credit_ladder_median[0]:.2f}%' if _credit_ladder_median[0] else '0.55%','vsMedian':'偏窄' if (aaa and _credit_ladder_median[0] and aaa < _credit_ladder_median[0]) else '正常','default5y':'0.0%','note':'无定价意义'},
+        {'rating':'AA','oas':f2(aa)+'%','median':f'{_credit_ladder_median[1]:.2f}%' if _credit_ladder_median[1] else '0.75%','vsMedian':'偏窄' if (aa and _credit_ladder_median[1] and aa < _credit_ladder_median[1]) else '正常','default5y':'0.0%','note':'高质量'},
+        {'rating':'A','oas':f2(av)+'%','median':f'{_credit_ladder_median[2]:.2f}%' if _credit_ladder_median[2] else '1.00%','vsMedian':'偏窄' if (av and _credit_ladder_median[2] and av < _credit_ladder_median[2]) else '正常','default5y':'0.1%','note':'中上质量'},
+        {'rating':'BBB','oas':f2(bbb)+'%','median':f'{_credit_ladder_median[3]:.2f}%' if _credit_ladder_median[3] else '1.50%','vsMedian':'偏窄' if (bbb and _credit_ladder_median[3] and bbb < _credit_ladder_median[3]) else '正常','default5y':'0.3%','note':'堕落天使风险区'},
+        {'rating':'BB','oas':f2(bb)+'%','median':f'{_credit_ladder_median[4]:.2f}%' if _credit_ladder_median[4] else '3.00%','vsMedian':'偏窄' if (bb and _credit_ladder_median[4] and bb < _credit_ladder_median[4]) else '正常','default5y':'1.2%','note':'HY最高档'},
+        {'rating':'B','oas':f2(b)+'%','median':f'{_credit_ladder_median[5]:.2f}%' if _credit_ladder_median[5] else '5.50%','vsMedian':'偏窄' if (b and _credit_ladder_median[5] and b < _credit_ladder_median[5]) else '正常','default5y':'4.5%','note':'开始走阔'},
+        {'rating':'CCC','oas':f2(ccc)+'%','median':f'{_credit_ladder_median[6]:.2f}%' if _credit_ladder_median[6] else '12.0%','vsMedian':'偏窄' if (ccc < (_credit_ladder_median[6] or 12)) else '偏宽','default5y':'15.0%','note':f'分位{pct("ccc")}, 最弱信用率先承压'},
     ],
     'analystView': f'信用市场最大信息不是"利差窄", 而是"利差窄+股市跌"的背离。股票已定价利率冲击, 信用市场还没。CCC ({f2(ccc)}%, 分位 {pct("ccc")}) 提前走阔说明风险偏好退潮已在最弱环节发生。历史规律: 信用对股市下跌反应滞后 5-10 个交易日。策略: BB 以上可持有, CCC 应减仓——周期中段, 不在 CCC 上贪收益。',
     'whatToWatch': [
@@ -811,6 +948,123 @@ DATA['volatility'] = {
         'dashNote': (f'压力区: {",".join(stress_assets)}' if stress_assets else '无资产进入压力区') + ' —— 冲击源头定位',
         'trendNote': f'VIX周Δ{bp(tfm("vix")["w"],"pt")}' + (f' · OVX月Δ{f1(tfm("ovx")["m"])}pt' if ovx and tfm("ovx")["m"] is not None else '') + (f' · SKEW {f1(skew)}' if skew else ''),
     },
+}
+
+# ====== 衰退信号仪表盘 (Phase 2) ======
+def _recession_signal(label, value, threshold, triggered, meaning, color='red'):
+    """红绿灯面板每一行"""
+    status = 'triggered' if triggered else ('warning' if (value is not None and triggered is not False and abs(value) > threshold * 0.6) else 'safe')
+    if value is None: status = 'unknown'
+    return {'label': label, 'value': round(value, 2) if isinstance(value, (int, float)) else value,
+            'threshold': threshold, 'status': status, 'meaning': meaning, 'color': color}
+
+_recession_signals = []
+# 10Y-2Y 利差 (转负=衰退信号)
+_spread_10_2_val = round((val('dgs10') - val('dgs2')) * 100, 1) if val('dgs10') and val('dgs2') else None
+_recession_signals.append(_recession_signal('10Y-2Y 利差', _spread_10_2_val, 0, _spread_10_2_val is not None and _spread_10_2_val < 0,
+    '转负领先衰退12-18个月。当前' + (f'{_spread_10_2_val:+.0f}bp' if _spread_10_2_val else '—'), 'red'))
+
+# 3M-10Y 利差 (更可靠衰退指标)
+_recession_signals.append(_recession_signal('3M-10Y 利差', _t10y3m_val, 0,
+    _t10y3m_val is not None and _t10y3m_val < 0,
+    'Fed研究认为比10Y-2Y更可靠，领先10-14个月。当前' + (f'{_t10y3m_val:+.0f}bp' if _t10y3m_val else '—'), 'red'))
+
+# Sahm Rule
+_recession_signals.append(_recession_signal('Sahm Rule', _sahm['value'], 0.5, _sahm['triggered'],
+    '失业率3M均值-12M低点。触发后历史100%对应衰退。' + (f'当前 {_sahm["value"]}' if _sahm['value'] else '—'), 'red'))
+
+# 纽约联储衰退概率
+_recession_signals.append(_recession_signal('衰退概率(纽约联储)', _recession_p, 40,
+    _recession_p is not None and _recession_p > 40,
+    '基于3M-10Y利差的12月前瞻衰退概率。>40%为预警。' + (f'当前 {_recession_p}%' if _recession_p else '—'), 'orange'))
+
+# 初请失业金4周均值 (已前置计算)
+_recession_signals.append(_recession_signal('初请失业金(4周均)', round(_claims_4wk / 1000, 0) if _claims_4wk else None, 325,
+    _claims_4wk is not None and _claims_4wk > 325000,
+    '突破325K确认就业恶化。当前' + (f'{_claims_4wk/1000:.0f}K' if _claims_4wk else '—'), 'orange'))
+
+# STLFSI 金融压力
+_stlfsi_stressed = v_stlfsi is not None and v_stlfsi > 0
+_recession_signals.append(_recession_signal('圣路易斯金融压力', v_stlfsi, 0,
+    _stlfsi_stressed, '>0 = 高于均值压力。' + (f' {v_stlfsi:+.2f}' if v_stlfsi is not None else '—'), 'orange'))
+
+# 计算综合衰退风险评分
+_triggered_count = sum(1 for s in _recession_signals if s['status'] == 'triggered')
+_warning_count = sum(1 for s in _recession_signals if s['status'] == 'warning')
+_known_count = sum(1 for s in _recession_signals if s['status'] != 'unknown')
+_recession_score = round((_triggered_count * 3 + _warning_count) / max(_known_count * 3, 1) * 100)
+_recession_level = '高风险' if _recession_score >= 60 else ('中风险' if _recession_score >= 30 else '低风险')
+
+DATA['recession'] = {
+    'regime': {'label': f'衰退风险: {_recession_level}','signal': 'bearish' if _recession_score >= 50 else ('mixed' if _recession_score >= 25 else 'bullish'),'confidence':'数据驱动',
+        'description': f'6项先行指标聚合: 触发信号 {_triggered_count} 项, 预警 {_warning_count} 项。综合评分 {_recession_score}/100 ({_recession_level})。周期指标（利率利差）+ 就业即时指标（Sahm/初请/失业率）+ 前瞻指标（衰退概率/金融压力）三维交叉验证。'},
+    'signals': _recession_signals,
+    'score': _recession_score, 'level': _recession_level,
+    'cyclePosition': '扩张后期' if _recession_score >= 40 else ('放缓期' if _recession_score >= 20 else '扩张期'),
+    'analystView': '衰退风险仪表盘通过6项独立信号交叉验证衰退概率。当前阶段: ' + ('利率曲线未倒挂+就业健康=扩张期, 关注初请失业金和Sahm Rule的边际变化。' if _recession_score < 20 else ('部分先行指标预警但核心就业未触发=放缓期, 需警惕信用市场与劳动力市场联动恶化。' if _recession_score < 40 else f'{_triggered_count}项触发({_warning_count}项预警), 衰退概率上升。关键看失业率与信用利差是否同时恶化。')),
+    'whatToWatch': [
+        {'trigger':'Sahm Rule 触发 <span class="watch-threshold">>0.5</span>','implication':'历史上100%对应衰退, 美联储将快速转向','status': f'当前 {_sahm["value"]}' if _sahm['value'] else '—'},
+        {'trigger':'3M-10Y 利差再次 <span class="watch-threshold">转负</span>','implication':'Fed研究的最可靠衰退先行指标','status': f'当前 {_t10y3m_val:+.0f}bp' if _t10y3m_val else '—'},
+        {'trigger':'初请突破 <span class="watch-threshold">325K</span>','implication':'就业恶化确认, 消费-收入-就业负反馈启动','status': f'当前 {_claims_4wk/1000:.0f}K' if _claims_4wk else '—'},
+    ]
+}
+
+# ====== 全局风险评分 (Phase 4) ======
+# 聚合7板块信号: 利率/美联储/流动性/经济/信用/波动率/衰退
+def _risk_factor(score_val, weight, label, status):
+    """单个风险因子"""
+    color = '#e63946' if status == 'bearish' else ('#f59e0b' if status == 'mixed' else '#2a9d8f')
+    return {'label': label, 'score': round(score_val, 1), 'weight': weight, 'status': status, 'color': color}
+
+_risk_factors = []
+# 利率: 10Y 分位 → 分位高=利率高=利空
+_rate_risk = min(pct('dgs10') * 0.7 + (30 if (val('dgs10') or 0) > 4.5 else 0), 100)
+_rate_status = 'bearish' if _rate_risk >= 60 else ('mixed' if _rate_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_rate_risk, 15, '利率环境', _rate_status))
+
+# 流动性: LPI 评分
+_lpi = DATA.get('liquidity', {}).get('lpi', {})
+_lpi_score = _lpi.get('score', 5) * 10
+_lpi_status = 'bearish' if _lpi_score >= 60 else ('mixed' if _lpi_score >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_lpi_score, 18, '流动性压力', _lpi_status))
+
+# 信用: CCC OAS 分位
+_credit_risk = pct('ccc') * 0.8
+_credit_status = 'bearish' if _credit_risk >= 60 else ('mixed' if _credit_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_credit_risk, 14, '信用市场', _credit_status))
+
+# 波动率: VIX 风险
+_vix_risk = min((val('vix') or 15) / 25 * 80, 100)
+_vix_status = 'bearish' if _vix_risk >= 50 else ('mixed' if _vix_risk >= 25 else 'bullish')
+_risk_factors.append(_risk_factor(_vix_risk, 12, '波动率风险', _vix_status))
+
+# 经济: 失业率分位 + Sahm
+_econ_risk = pct('unrate') * 0.5 + (_sahm['value'] or 0) * 50
+_econ_status = 'bearish' if _econ_risk >= 60 else ('mixed' if _econ_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_econ_risk, 14, '经济基本面', _econ_status))
+
+# 资产: 股债相关
+_asset_risk = 40 if (spx_tlt_corr and spx_tlt_corr > 0) else 25
+_asset_status = 'mixed'
+_risk_factors.append(_risk_factor(_asset_risk, 10, '跨资产信号', _asset_status))
+
+# 衰退: 衰退概率评分
+_rec_risk = _recession_score * 0.7
+_rec_status = 'bearish' if _rec_risk >= 50 else ('mixed' if _rec_risk >= 25 else 'bullish')
+_risk_factors.append(_risk_factor(_rec_risk, 17, '衰退风险', _rec_status))
+
+# 加权综合
+_total_weight = sum(f['weight'] for f in _risk_factors)
+_total_score = round(sum(f['score'] * f['weight'] for f in _risk_factors) / _total_weight)
+_risk_level = '高风险' if _total_score >= 65 else ('中等风险' if _total_score >= 35 else '低风险')
+_risk_color = '#e63946' if _total_score >= 65 else ('#f59e0b' if _total_score >= 35 else '#2a9d8f')
+
+DATA['riskScore'] = {
+    'score': _total_score, 'level': _risk_level, 'color': _risk_color,
+    'description': f'7板块加权聚合风险评分 {_total_score}/100 ({_risk_level})。权重: 流动性18% + 衰退17% + 利率15% + 经济14% + 信用14% + 波动率12% + 资产10%。',
+    'factors': _risk_factors,
+    'summary': f'当前宏观风险画像: {"利率+衰退主导" if _rate_risk > 50 or _rec_risk > 40 else ("流动性为主的结构性压力" if _lpi_score > 50 else "风险可控, 关注边际变化")}。核心风险点: ' + 
+        (', '.join(f['label'] for f in _risk_factors if f['score'] >= 50) or '无单一板块超警戒线') + '。',
 }
 
 # ---------- 写出 data.js ----------

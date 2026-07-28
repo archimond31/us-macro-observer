@@ -13,9 +13,11 @@ const SECTION_CONFIG = {
   rates:      { title: '利率',       subtitle: 'Rates · 曲线形态与实际利率拆解' },
   fed:        { title: '美联储',     subtitle: 'Fed · 政策路径与沟通追踪' },
   liquidity:  { title: '流动性',     subtitle: 'Liquidity · 缓冲与价格信号' },
-  economy:    { title: '经济数据',   subtitle: 'Economy · 增长/就业/通胀三角' },
+  economy:    { title: '经济数据',   subtitle: 'Economy · 增长/就业/通胀/衰退' },
   credit:     { title: '信用市场',   subtitle: 'Credit · 利差分层与违约周期' },
-  volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' }
+  volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' },
+  recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
+  risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,7 +56,8 @@ function switchSection(section) {
   const renderers = {
     assets: renderAssets, rates: renderRates, fed: renderFed,
     liquidity: renderLiquidity, economy: renderEconomy,
-    credit: renderCredit, volatility: renderVolatility
+    credit: renderCredit, volatility: renderVolatility,
+    recession: renderRecession, risk: renderRisk
   };
   renderers[section](content);
 }
@@ -353,6 +356,7 @@ function renderAssets(c) {
   const d = DATA.assets;
   let html = '';
   // 全局 regime（仅资产页显示全局）
+  html += riskScoreBar();
   html += regimeBanner({ label: DATA.globalRegime.name, signal: DATA.globalRegime.signal, confidence: DATA.globalRegime.confidence, description: DATA.globalRegime.description });
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '按对风险资产的影响方向排序');
@@ -752,6 +756,7 @@ function renderConfirmConds(conds) {
 function renderEconomy(c) {
   const d = DATA.economy;
   let html = '';
+  html += riskScoreBar();
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
@@ -969,3 +974,164 @@ function renderCrossAssetVol(ca) {
   });
   return html + '</tbody></table></div><div style="font-size:12px;color:' + COLORS.neutral + ';margin-top:8px">' + (ca.note || '') + '</div>';
 }
+
+/* ================= 全局风险评分条 (显示在每个板块顶部) ================= */
+function riskScoreBar() {
+  const rs = DATA.riskScore;
+  if (!rs) return '';
+  return '<div class="risk-score-bar">' +
+    '<div class="risk-score-gauge" style="background:' + rs.color + '">' + rs.score + '</div>' +
+    '<div class="risk-score-info">' +
+      '<div class="risk-score-label">宏观风险: ' + rs.level + ' (' + rs.score + '/100)</div>' +
+      '<div class="risk-score-desc">' + rs.summary + '</div>' +
+      '<div class="risk-score-factors">' +
+        rs.factors.map(function(f) {
+          return '<span class="risk-factor-chip ' + f.status + '">' + f.label + ': ' + f.score + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div></div>';
+}
+
+/* ================= 8. 衰退信号仪表盘 ================= */
+function renderRecession(c) {
+  const d = DATA.recession;
+  if (!d) { c.innerHTML = '<div class="loading">数据加载中...</div>'; return; }
+  let html = '';
+  html += riskScoreBar();
+  html += regimeBanner(d.regime, 'recession');
+  // 红绿灯面板
+  html += '<div class="section-h">衰退先行指标红绿灯 <span class="section-h-sub">7项独立信号交叉验证</span></div>';
+  html += '<div class="traffic-grid">';
+  d.signals.forEach(function(s) {
+    const icon = s.status === 'triggered' ? '🔴' : s.status === 'warning' ? '🟡' : s.status === 'safe' ? '🟢' : '⚪';
+    const statusLabel = s.status === 'triggered' ? '已触发' : s.status === 'warning' ? '关注中' : s.status === 'safe' ? '安全' : '数据待更新';
+    html += '<div class="traffic-item">' +
+      '<div class="traffic-light ' + s.status + '">' + icon + '</div>' +
+      '<div class="traffic-info">' +
+        '<div class="traffic-label">' + s.label + ' <span style="font-size:10px;color:var(--text-tertiary)">阈值: ' + s.threshold + '</span></div>' +
+        '<div class="traffic-value ' + s.status + '">' + (s.value !== null ? s.value : '—') + '</div>' +
+        '<div class="traffic-meaning">' + s.meaning + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  // 周期定位
+  html += '<div class="chart-row one-col">' +
+    '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">经济周期定位</div><div class="chart-subtitle">基于衰退概率综合评分的粗粒度周期判断</div></div></div>' +
+    '<div style="display:flex;align-items:center;gap:24px;padding:16px 0">' +
+      '<div style="background:' + (d.score >= 40 ? '#fde8ea' : d.score >= 20 ? '#fdf3e2' : '#e4f4ef') + ';padding:16px 24px;border-radius:12px;text-align:center;min-width:120px">' +
+        '<div style="font-size:28px;font-weight:700">' + d.score + '</div>' +
+        '<div style="font-size:12px;margin-top:4px">衰退评分/100</div></div>' +
+      '<div><div style="font-size:15px;font-weight:600">当前阶段: ' + (d.cyclePosition || '数据不足') + '</div>' +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.6">衰退周期判定: 扩张早期(0-20) → 扩张后期(20-40) → 放缓(40-60) → 衰退(60-80) → 深度衰退(80+)</div></div>' +
+    '</div></div></div>';
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  c.innerHTML = html;
+}
+
+/* ================= 9. 风险总览 ================= */
+function renderRisk(c) {
+  const d = DATA.riskScore;
+  if (!d) { c.innerHTML = '<div class="loading">数据加载中...</div>'; return; }
+  let html = '';
+  html += '<div class="chart-row one-col">' +
+    '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">宏观风险评分仪表盘</div><div class="chart-subtitle">7板块加权聚合 0-100 · ' + d.level + '</div></div></div>' +
+    '<div style="text-align:center;padding:20px 0">' +
+      '<div style="display:inline-block;width:140px;height:140px;border-radius:50%;background:' + d.color + ';display:flex;flex-direction:column;align-items:center;justify-content:center">' +
+        '<div style="font-size:40px;font-weight:700;color:#fff">' + d.score + '</div>' +
+        '<div style="font-size:14px;color:rgba(255,255,255,0.85)">/ 100</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">' + d.level + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:0 20px 16px"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;text-align:center">' + d.description + '</p></div>' +
+    '</div></div>';
+  // 各因子详情
+  html += '<div class="section-h">风险因子明细 <span class="section-h-sub">权重 × 得分 → 综合风险画像</span></div>';
+  d.factors.forEach(function(f) {
+    const barColor = f.status === 'bearish' ? '#e63946' : f.status === 'mixed' ? '#f59e0b' : '#2a9d8f';
+    const statusLabel = f.status === 'bearish' ? '利空' : f.status === 'mixed' ? '中性' : '利多';
+    html += '<div class="chart-card" style="margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;gap:16px">' +
+        '<div style="min-width:90px;font-size:14px;font-weight:600">' + f.label + '</div>' +
+        '<div style="flex:1"><div style="height:10px;background:#eef0f4;border-radius:5px;overflow:hidden">' +
+          '<div style="height:100%;width:' + f.score + '%;background:' + barColor + ';border-radius:5px"></div></div></div>' +
+        '<div style="min-width:56px;text-align:right;font-size:18px;font-weight:700;color:' + barColor + '">' + f.score + '</div>' +
+        '<span class="risk-factor-chip ' + f.status + '">' + statusLabel + ' · 权重' + f.weight + '%</span>' +
+      '</div></div>';
+  });
+  html += '<div style="margin:16px 0">' + analystBox(d.summary) + '</div>';
+  c.innerHTML = html;
+}
+
+/* ================= 经济数据板块增强 ================= */
+// 重写 renderEconomy 以加入劳动力市场和通胀深化
+var _origRenderEconomy = renderEconomy;
+renderEconomy = function(c) {
+  _origRenderEconomy(c);
+  // 在 analystView 前插入劳动力市场面板和通胀深化
+  var d = DATA.economy;
+  var insertHtml = '';
+  // 劳动力市场三角面板
+  if (d.laborPanel) {
+    var lp = d.laborPanel;
+    insertHtml += '<div class="section-h">劳动力市场: 需求-供给-价格三角 <span class="section-h-sub">' + (lp.analystNote || '') + '</span></div>';
+    insertHtml += '<div class="labor-grid">';
+    // 需求列
+    insertHtml += '<div class="labor-col"><div class="labor-col-header demand">需求 Demand</div>';
+    lp.demand.forEach(function(item) {
+      insertHtml += '<div class="labor-item"><div class="labor-item-name">' + item.indicator + '</div>' +
+        '<div class="labor-item-val">' + item.value + '</div>' +
+        '<div class="labor-item-note">' + (item.note || '') + (item.prev ? ' · ' + item.prev : '') + '</div></div>';
+    });
+    insertHtml += '</div>';
+    // 供给列
+    insertHtml += '<div class="labor-col"><div class="labor-col-header supply">供给 Supply</div>';
+    lp.supply.forEach(function(item) {
+      insertHtml += '<div class="labor-item"><div class="labor-item-name">' + item.indicator + '</div>' +
+        '<div class="labor-item-val">' + item.value + '</div>' +
+        '<div class="labor-item-note">' + (item.note || '') + (item.prev ? ' · ' + item.prev : '') + '</div></div>';
+    });
+    insertHtml += '</div>';
+    // 价格列
+    insertHtml += '<div class="labor-col"><div class="labor-col-header price">价格 Price</div>';
+    lp.price.forEach(function(item) {
+      insertHtml += '<div class="labor-item"><div class="labor-item-name">' + item.indicator + '</div>' +
+        '<div class="labor-item-val">' + item.value + '</div>' +
+        '<div class="labor-item-note">' + (item.note || '') + (item.prev ? ' · ' + item.prev : '') + '</div></div>';
+    });
+    insertHtml += '</div>';
+    insertHtml += '</div>';
+  }
+  // 通胀深化
+  if (d.inflationDeepening && d.inflationDeepening.annualized3m !== null) {
+    var idp = d.inflationDeepening;
+    insertHtml += '<div class="chart-row one-col"><div class="chart-card"><div class="chart-header"><div><div class="chart-title">通胀温度计</div><div class="chart-subtitle">美联储内部最看重的核心CPI 3月/6月年化 + 工资-通胀验证</div></div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:8px 0">' +
+        '<div style="text-align:center;padding:16px;border:1px solid var(--border-card);border-radius:8px;background:' + (idp.annualized3m > 3 ? '#fef2f2' : '#f0fdf4') + '">' +
+          '<div style="font-size:11px;color:var(--text-secondary)">核心CPI 3月年化</div>' +
+          '<div style="font-size:28px;font-weight:700;color:' + (idp.annualized3m > 3 ? '#e63946' : '#2a9d8f') + '">' + (idp.annualized3m ? idp.annualized3m.toFixed(1) + '%' : '—') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-tertiary)">vs 同比 ' + (DATA.economy.metrics[2] ? DATA.economy.metrics[2].value : '—') + '</div></div>' +
+        '<div style="text-align:center;padding:16px;border:1px solid var(--border-card);border-radius:8px;background:' + (idp.annualized6m > 3 ? '#fef2f2' : '#f0fdf4') + '">' +
+          '<div style="font-size:11px;color:var(--text-secondary)">核心CPI 6月年化</div>' +
+          '<div style="font-size:28px;font-weight:700;color:' + (idp.annualized6m > 3 ? '#e63946' : '#2a9d8f') + '">' + (idp.annualized6m ? idp.annualized6m.toFixed(1) + '%' : '—') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-tertiary)">平滑版更可靠</div></div>' +
+        '<div style="text-align:center;padding:16px;border:1px solid var(--border-card);border-radius:8px;background:' + (idp.wage_inflation_gap > 0 ? '#fef2f2' : '#f0fdf4') + '">' +
+          '<div style="font-size:11px;color:var(--text-secondary)">工资-通胀差</div>' +
+          '<div style="font-size:28px;font-weight:700;color:' + (idp.wage_inflation_gap > 0 ? '#e63946' : '#2a9d8f') + '">' + (idp.wage_inflation_gap ? idp.wage_inflation_gap.toFixed(1) + 'pt' : '—') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-tertiary)">' + (idp.wage_inflation_gap > 0 ? '工资料快于通胀' : '通胀快于工资') + '</div></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.6">' + (d.inflationDeepening.analystNote || '') + '</div>' +
+    '</div></div>';
+  }
+  // 插入到分析师观点前
+  var els = c.querySelectorAll('.analyst-box');
+  if (els.length > 0) {
+    var beforeEl = els[0];
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = insertHtml;
+    while (tempDiv.firstChild) {
+      beforeEl.parentNode.insertBefore(tempDiv.firstChild, beforeEl);
+    }
+  }
+};

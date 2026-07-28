@@ -72,7 +72,7 @@ class El {
 }
 
 /* ---------- document / Chart 桩 ---------- */
-const SECTIONS = ['assets', 'rates', 'fed', 'liquidity', 'economy', 'credit', 'volatility'];
+const SECTIONS = ['assets', 'rates', 'fed', 'liquidity', 'economy', 'credit', 'volatility', 'recession', 'risk'];
 const idRegistry = {};
 const navItems = SECTIONS.map(s => { const e = new El('a'); e.dataset.section = s; e.classList.add('nav-item'); return e; });
 let domReadyCb = null;

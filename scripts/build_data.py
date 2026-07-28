@@ -207,11 +207,31 @@ FRED_IDS = {
     # CPI 分项 (用于通胀拆解)
     'CPIENGSL': 'cpi_energy', 'CPIUFDSL': 'cpi_food', 'CUSR0000SAH1': 'cpi_shelter',
     'CUSR0000SASLE': 'cpi_core_svcs', 'CUSR0000SACL1E': 'cpi_core_goods',
+    # Phase1: 劳动力市场
+    'JTSJOL': 'jolts', 'JTS3000QUR': 'quits_rate', 'CES0500000003': 'wage_yoy',
+    'CIVPART': 'participation', 'CCSA': 'cont_claims',
+    # Phase1: 衰退信号
+    'SAHMREALTIME': 'sahm_real', 'RECPROUSM156N': 'recession_prob',
+    'T10Y3M': 't10y3m', 'STLFSI4': 'stlfsi',
+    # Phase1: 通胀预期
+    'T5YIFR': 't5y5y', 'MICH': 'mich_infl',
+    # Phase1: 住房
+    'MORTGAGE30US': 'mortgage30', 'HOUST': 'housing_starts',
+    'CSUSHPINSA': 'case_shiller', 'PERMITNSA': 'permits',
+    # Phase1: 制造业/调查 (ISM PMI 为 ISM 专有数据, FRED 不免费提供; 改用工业产出替代)
+    'INDPRO': 'indpro',
+    # Phase1: 财政
+    'FYFSGDA188S': 'deficit_gdp', 'GFDEBTN': 'debt_total',
+    # Phase3: 信用违约率
+    'DRSFRMACBS': 'default_rate',
 }
 # 低频序列需要更长窗口: 季度序列 1500d (~16个季度, 支持同比); 月度序列 760d (~25个月)
-QUARTERLY = {'gdp', 'gdp_real'}
+QUARTERLY = {'gdp', 'gdp_real', 'deficit_gdp', 'default_rate'}
 MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real', 'retail',
-           'umich', 'durables', 'cpi_energy', 'cpi_food', 'cpi_shelter', 'cpi_core_svcs', 'cpi_core_goods'}
+           'umich', 'durables', 'cpi_energy', 'cpi_food', 'cpi_shelter', 'cpi_core_svcs', 'cpi_core_goods',
+           'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
+           'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
+           'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',}
 for fid, key in FRED_IDS.items():
     days = 1500 if key in QUARTERLY else (760 if key in MONTHLY else 380)
     S[key] = fred(fid, days=days)
