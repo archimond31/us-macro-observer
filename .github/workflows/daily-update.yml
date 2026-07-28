@@ -38,7 +38,7 @@ jobs:
         run: python gen_datajs.py
         working-directory: scripts
 
-      - name: Render smoke test (7 sections, fail fast)
+      - name: Render smoke test (9 sections, fail fast)
         run: node scripts/render_smoke.cjs
 
       - name: Commit and push if changed

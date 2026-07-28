@@ -7,10 +7,11 @@ gen_datajs.py — 把 computed.json (真实数值/分位/四尺度变化) + raw_
 输出: ../data.js  (const DATA = {...})
 依赖: build_data.py 先跑完, 生成 computed.json / raw_series.json
 """
-import json, datetime
+import json, datetime, sys
 
 C = json.load(open('computed.json'))
 RAW = json.load(open('raw_series.json'))
+print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, flush=True)
 
 def g(key):
     return C.get(key)
@@ -800,6 +801,7 @@ DATA['economy'] = {
 }
 
 # 信用市场
+print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)
 ccc=val('ccc'); hyv=val('hy'); igv=val('ig'); bbb=val('bbb'); bb=val('bb'); b=val('b'); aaa=val('aaa'); aa=val('aa'); av=val('a')
 
 DATA['credit'] = {
@@ -852,7 +854,10 @@ DATA['credit'] = {
     },
 }
 
+print('[gen_datajs] credit section OK', file=sys.stderr, flush=True)
+
 # 波动率 —— 全部真实序列: VIX/OVX/GVZ (FRED) + VVIX/MOVE/SKEW/VIX9D/VIX3M (Yahoo)
+print('[gen_datajs] generating volatility section...', file=sys.stderr, flush=True)
 vix=val('vix'); vvix=val('vvix'); move=val('move'); ovx=val('ovx'); gvz=val('gvz'); skew=val('skew')
 vix9d=val('vix9d'); vix3m=val('vix3m')
 
@@ -950,7 +955,10 @@ DATA['volatility'] = {
     },
 }
 
+print('[gen_datajs] volatility section OK', file=sys.stderr, flush=True)
+
 # ====== 衰退信号仪表盘 (Phase 2) ======
+print('[gen_datajs] generating recession section...', file=sys.stderr, flush=True)
 def _recession_signal(label, value, threshold, triggered, meaning, color='red'):
     """红绿灯面板每一行"""
     status = 'triggered' if triggered else ('warning' if (value is not None and triggered is not False and abs(value) > threshold * 0.6) else 'safe')
@@ -1009,7 +1017,10 @@ DATA['recession'] = {
     ]
 }
 
+print('[gen_datajs] recession section OK', file=sys.stderr, flush=True)
+
 # ====== 全局风险评分 (Phase 4) ======
+print('[gen_datajs] generating riskScore section...', file=sys.stderr, flush=True)
 # 聚合7板块信号: 利率/美联储/流动性/经济/信用/波动率/衰退
 def _risk_factor(score_val, weight, label, status):
     """单个风险因子"""
@@ -1067,6 +1078,8 @@ DATA['riskScore'] = {
         (', '.join(f['label'] for f in _risk_factors if f['score'] >= 50) or '无单一板块超警戒线') + '。',
 }
 
+print('[gen_datajs] riskScore section OK', file=sys.stderr, flush=True)
+
 # ---------- 写出 data.js ----------
 HEADER = """/* ============================================================
  * data.js — US Macro Observer (官方真实数据自动生成)
@@ -1079,5 +1092,4 @@ HEADER = """/* ============================================================
 out = HEADER + 'const DATA = ' + json.dumps(DATA, ensure_ascii=False, indent=2) + ';\n'
 with open('../data.js', 'w', encoding='utf-8', newline='\n') as f:
     f.write(out)
-print('data.js 已生成, 大小', len(out), '字符')
-print('板块:', list(DATA.keys()))
+print('[gen_datajs] DONE — data.js generated:', len(out), 'chars, sections:', list(DATA.keys()), file=sys.stderr, flush=True)
