@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-28 09:37
+ * 生成时间: 2026-07-28 07:17
  * ============================================================
  */
 const DATA = {
@@ -37,7 +37,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 -0.71% 横盘",
+        "title": "黄金 -0.55% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -237,18 +237,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,042.30",
-        "change": "-0.79%",
+        "value": "$4,048.60",
+        "change": "-0.64%",
         "dir": "down",
         "tag": "GC=F",
-        "percentile": 29,
+        "percentile": 30,
         "signal": "down",
-        "meaning": "当前位于近一年 29 分位",
+        "meaning": "当前位于近一年 30 分位",
         "changes": {
-          "d": "-0.79%",
-          "w": "-0.71%",
-          "m": "-0.89%",
-          "h6": "-20.42%"
+          "d": "-0.64%",
+          "w": "-0.55%",
+          "m": "-0.74%",
+          "h6": "-20.30%"
         },
         "sparkline": [
           4328.0,
@@ -280,7 +280,7 @@ const DATA = {
           4046.6001,
           4067.6001,
           4074.5,
-          4042.3
+          4048.6001
         ]
       },
       {
@@ -376,23 +376,23 @@ const DATA = {
           101.14,
           101.43,
           101.47,
-          101.534
+          101.532
         ]
       },
       {
         "label": "美元/日元",
-        "value": "163.84",
-        "change": "+0.14%",
+        "value": "163.73",
+        "change": "+0.07%",
         "dir": "up",
         "tag": "USDJPY=X",
         "percentile": 100,
         "signal": "up",
         "meaning": "当前位于近一年 100 分位",
         "changes": {
-          "d": "+0.14%",
-          "w": "+0.83%",
-          "m": "+1.27%",
-          "h6": "+5.56%"
+          "d": "+0.07%",
+          "w": "+0.76%",
+          "m": "+1.20%",
+          "h6": "+5.49%"
         },
         "sparkline": [
           160.419,
@@ -424,7 +424,7 @@ const DATA = {
           163.081,
           163.832,
           163.611,
-          163.838
+          163.726
         ]
       },
       {
@@ -672,12 +672,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,042.30",
+        "current": "$4,048.60",
         "changes": {
-          "d": -0.79,
-          "w": -0.71,
-          "m": -0.89,
-          "h6": -20.42
+          "d": -0.64,
+          "w": -0.55,
+          "m": -0.74,
+          "h6": -20.3
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
@@ -708,14 +708,14 @@ const DATA = {
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "163.84",
+        "current": "163.73",
         "changes": {
-          "d": 0.14,
-          "w": 0.83,
-          "m": 1.27,
-          "h6": 5.56
+          "d": 0.07,
+          "w": 0.76,
+          "m": 1.2,
+          "h6": 5.49
         },
-        "meaning": "半年 +6% 的上升趋势中, 近月 +1% 仍在加速"
+        "meaning": "半年 +5% 的上升趋势中, 近月 +1% 仍在加速"
       },
       {
         "name": "比特币",
@@ -798,8 +798,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,042.30",
-        "change": "-0.79%",
+        "price": "$4,048.60",
+        "change": "-0.64%",
         "dir": "down"
       },
       {
@@ -819,8 +819,8 @@ const DATA = {
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "163.84",
-        "change": "+0.14%",
+        "price": "163.73",
+        "change": "+0.07%",
         "dir": "up"
       },
       {
@@ -980,7 +980,7 @@ const DATA = {
           4046.6001,
           4067.6001,
           4074.5,
-          4042.3
+          4048.6001
         ],
         "BTC": [
           59367.05,
@@ -1077,7 +1077,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.42 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.98%) 与长债 (TLT -0.17%) 同步承压, 是典型的实际利率上行组合。黄金 (-0.71%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (18.58) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.98%) 与长债 (TLT -0.17%) 同步承压, 是典型的实际利率上行组合。黄金 (-0.55%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (18.58) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -3238,10 +3238,8 @@ const DATA = {
       }
     ],
     "hawkishDovish": {
-      "score": 9.4,
-      "label": "偏鹰",
-      "isDataDriven": true,
-      "method": "基于2Y利率变化(周+15bp/月+22bp)自动计算",
+      "score": 5.2,
+      "label": "中性偏鹰",
       "officials": [
         {
           "name": "Powell",
@@ -3288,11 +3286,10 @@ const DATA = {
       ],
       "ratePath": {
         "nextMeeting": "2026-07-29",
-        "holdProb": 95,
-        "cut25bpProb": 0,
+        "holdProb": 65,
+        "cut25bpProb": 30,
         "cut50bpProb": 5,
-        "hikeProb": 5,
-        "note": "基于2Y利率月变化(+22bp)动态推算 · 利率上行=降息概率下降"
+        "note": "7月维持基本确定, 博弈焦点在9月"
       }
     },
     "analystView": "美联储处于\"数据依赖的观望期\", 但油价冲击正在改变平衡。关键: 鲍威尔在 2026-07 发布会上如何定性油价——\"暂时性\"=恢复降息定价, \"持续风险\"=压缩降息空间。RRP 耗尽 ($1.38B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。",
@@ -3314,8 +3311,8 @@ const DATA = {
       }
     ],
     "chartNotes": {
-      "hawkNote": "0=极度鸽派 / 10=极度鹰派 · 当前 9.4 偏鹰 (基于2Y利率自动计算 · 月Δ+22bp)",
-      "probNote": "7月会议: 维持95% / 降25bp 0% · 基于2Y利率动态推算"
+      "hawkNote": "0=极度鸽派 / 10=极度鹰派 · 当前 5.2 中性偏鹰 (分析师基于官员讲话打分)",
+      "probNote": "7月会议: 维持65% / 降25bp 30% / 降50bp 5% —— 博弈焦点在9月 (分析师估计)"
     }
   },
   "liquidity": {
@@ -4598,84 +4595,6 @@ const DATA = {
         "note": "工资驱动, 最后一英里战场"
       }
     ],
-    "laborPanel": {
-      "demand": [
-        {
-          "indicator": "JOLTS职位空缺",
-          "value": "7.6M",
-          "prev": "+0.0M 月变",
-          "trend": "up",
-          "note": "企业招聘需求, 美联储最关注的劳动力需求指标"
-        },
-        {
-          "indicator": "非农就业(月增)",
-          "value": "+57K",
-          "prev": "6月均 +92K",
-          "trend": "down",
-          "note": "6个月累计 +552K"
-        },
-        {
-          "indicator": "初请失业金(周)",
-          "value": "187K",
-          "trend": "down",
-          "prev": "-22K 周变",
-          "note": "最敏感就业指标, 4周均208K"
-        }
-      ],
-      "supply": [
-        {
-          "indicator": "劳动参与率",
-          "value": "61.5%",
-          "trend": "down",
-          "prev": "-0.3pt 月变",
-          "note": "劳动力供给池大小, 区分失业率下降的质量"
-        },
-        {
-          "indicator": "失业率",
-          "value": "4.2%",
-          "trend": "down",
-          "prev": "-0.1pt 月变",
-          "note": "Sahm Rule: 0.17"
-        },
-        {
-          "indicator": "续请失业金",
-          "value": "1796K",
-          "trend": "down",
-          "prev": "-2K 月变",
-          "note": "比初请更滞后的确认信号"
-        }
-      ],
-      "price": [
-        {
-          "indicator": "时薪同比",
-          "value": "37.6%",
-          "trend": "up",
-          "prev": "+0.1pt 月变",
-          "note": "工资-通胀螺旋的核心验证"
-        },
-        {
-          "indicator": "辞职率(Quits)",
-          "value": "1.4%",
-          "trend": "up",
-          "prev": "+0.1pt 月变",
-          "note": "自愿离职=对劳动力市场有信心, 议价能力"
-        },
-        {
-          "indicator": "工资-通胀差",
-          "value": "+0.1pt",
-          "trend": "up",
-          "note": "时薪同比-核心服务CPI同比 · 正=实际工资增长"
-        }
-      ],
-      "analystNote": "劳动力市场\"需求-供给-价格\"三角框架。Sahm Rule当前 0.17 (未触发)。失业率 4.2% 从低点回升, 美联储关注劳动参与率与JOLTS的交叉信号。"
-    },
-    "inflationDeepening": {
-      "annualized3m": 2.29,
-      "annualized6m": 2.58,
-      "supercore": 3.42,
-      "wage_inflation_gap": 0.1,
-      "analystNote": "核心CPI 3月年化 2.3% (\" 高于\" if infl_annualized(\"core_cpi\", 3) and infl_annualized(\"core_cpi\", 3) > raw_calc_pct(\"core_cpi\",12) else \" 收敛于\")同比的 2.8%) — 3月年化是美联储内部最看重的口径。"
-    },
     "consumptionTable": [
       {
         "indicator": "零售销售 (名义)",
@@ -5102,36 +5021,50 @@ const DATA = {
       },
       {
         "label": "违约率 TTM",
-        "value": "1.9% (分位 94)",
-        "change": "+0.1pt",
-        "dir": "mixed",
+        "value": "3.2%",
+        "change": "+0.3pt",
+        "dir": "up",
         "tag": "Default",
-        "percentile": 94,
+        "percentile": 40,
         "signal": "mixed",
-        "meaning": "商业银行违约率(FRED实时)",
+        "meaning": "低于4.5%均值但向上",
         "changes": {
-          "d": "—",
-          "w": "—",
-          "m": "+0.1pt",
-          "h6": "+0.3pt"
+          "d": "0",
+          "w": "+0.1pt",
+          "m": "+0.3pt",
+          "h6": "+0.5pt"
         },
         "sparkline": [
-          1.95,
-          1.84,
-          1.79,
-          1.74,
-          1.72,
-          1.72,
-          1.7,
-          1.71,
-          1.73,
-          1.74,
-          1.78,
-          1.77,
-          1.78,
-          1.78,
-          1.79,
-          1.89
+          9.37,
+          9.44,
+          9.39,
+          9.46,
+          9.47,
+          9.47,
+          9.56,
+          9.64,
+          9.68,
+          9.73,
+          9.67,
+          9.7,
+          9.68,
+          9.71,
+          9.69,
+          9.67,
+          9.64,
+          9.75,
+          9.74,
+          9.7,
+          9.72,
+          9.73,
+          9.69,
+          9.7,
+          9.75,
+          9.77,
+          9.78,
+          9.81,
+          9.91,
+          9.96
         ]
       }
     ],
@@ -5669,53 +5602,53 @@ const DATA = {
         "9.96"
       ],
       "histMedian": [
-        0.34,
-        0.48,
-        0.65,
+        0.55,
+        0.75,
         1.0,
-        1.74,
-        3.04,
-        8.92
+        1.5,
+        3.0,
+        5.5,
+        12.0
       ],
       "histP10": [
         0.3,
-        0.43,
-        0.62,
-        0.94,
-        1.62,
-        2.86,
-        8.09
+        0.4,
+        0.55,
+        0.8,
+        1.5,
+        2.8,
+        5.0
       ]
     },
     "ratingTable": [
       {
         "rating": "AAA",
         "oas": "0.45%",
-        "median": "0.34%",
-        "vsMedian": "正常",
+        "median": "0.55%",
+        "vsMedian": "偏窄",
         "default5y": "0.0%",
         "note": "无定价意义"
       },
       {
         "rating": "AA",
         "oas": "0.59%",
-        "median": "0.48%",
-        "vsMedian": "正常",
+        "median": "0.75%",
+        "vsMedian": "偏窄",
         "default5y": "0.0%",
         "note": "高质量"
       },
       {
         "rating": "A",
         "oas": "0.67%",
-        "median": "0.65%",
-        "vsMedian": "正常",
+        "median": "1.00%",
+        "vsMedian": "偏窄",
         "default5y": "0.1%",
         "note": "中上质量"
       },
       {
         "rating": "BBB",
         "oas": "0.99%",
-        "median": "1.00%",
+        "median": "1.50%",
         "vsMedian": "偏窄",
         "default5y": "0.3%",
         "note": "堕落天使风险区"
@@ -5723,7 +5656,7 @@ const DATA = {
       {
         "rating": "BB",
         "oas": "1.68%",
-        "median": "1.74%",
+        "median": "3.00%",
         "vsMedian": "偏窄",
         "default5y": "1.2%",
         "note": "HY最高档"
@@ -5731,7 +5664,7 @@ const DATA = {
       {
         "rating": "B",
         "oas": "2.96%",
-        "median": "3.04%",
+        "median": "5.50%",
         "vsMedian": "偏窄",
         "default5y": "4.5%",
         "note": "开始走阔"
@@ -5739,8 +5672,8 @@ const DATA = {
       {
         "rating": "CCC",
         "oas": "9.96%",
-        "median": "8.92%",
-        "vsMedian": "偏宽",
+        "median": "12.0%",
+        "vsMedian": "偏窄",
         "default5y": "15.0%",
         "note": "分位99, 最弱信用率先承压"
       }
@@ -6732,142 +6665,5 @@ const DATA = {
       "dashNote": "压力区: OVX 原油 —— 冲击源头定位",
       "trendNote": "VIX周Δ-0.2pt · OVX月Δ20.4pt · SKEW 146.6"
     }
-  },
-  "recession": {
-    "regime": {
-      "label": "衰退风险: 低风险",
-      "signal": "bullish",
-      "confidence": "数据驱动",
-      "description": "6项先行指标聚合: 触发信号 0 项, 预警 0 项。综合评分 0/100 (低风险)。周期指标（利率利差）+ 就业即时指标（Sahm/初请/失业率）+ 前瞻指标（衰退概率/金融压力）三维交叉验证。"
-    },
-    "signals": [
-      {
-        "label": "10Y-2Y 利差",
-        "value": 36.0,
-        "threshold": 0,
-        "status": "safe",
-        "meaning": "转负领先衰退12-18个月。当前+36bp",
-        "color": "red"
-      },
-      {
-        "label": "3M-10Y 利差",
-        "value": 0.69,
-        "threshold": 0,
-        "status": "safe",
-        "meaning": "Fed研究认为比10Y-2Y更可靠，领先10-14个月。当前+1bp",
-        "color": "red"
-      },
-      {
-        "label": "Sahm Rule",
-        "value": 0.17,
-        "threshold": 0.5,
-        "status": "safe",
-        "meaning": "失业率3M均值-12M低点。触发后历史100%对应衰退。当前 0.17",
-        "color": "red"
-      },
-      {
-        "label": "衰退概率(纽约联储)",
-        "value": 0.54,
-        "threshold": 40,
-        "status": "safe",
-        "meaning": "基于3M-10Y利差的12月前瞻衰退概率。>40%为预警。当前 0.54%",
-        "color": "orange"
-      },
-      {
-        "label": "初请失业金(4周均)",
-        "value": 208.0,
-        "threshold": 325,
-        "status": "safe",
-        "meaning": "突破325K确认就业恶化。当前208K",
-        "color": "orange"
-      },
-      {
-        "label": "圣路易斯金融压力",
-        "value": -0.7,
-        "threshold": 0,
-        "status": "safe",
-        "meaning": ">0 = 高于均值压力。 -0.70",
-        "color": "orange"
-      }
-    ],
-    "score": 0,
-    "level": "低风险",
-    "cyclePosition": "扩张期",
-    "analystView": "衰退风险仪表盘通过6项独立信号交叉验证衰退概率。当前阶段: 利率曲线未倒挂+就业健康=扩张期, 关注初请失业金和Sahm Rule的边际变化。",
-    "whatToWatch": [
-      {
-        "trigger": "Sahm Rule 触发 <span class=\"watch-threshold\">>0.5</span>",
-        "implication": "历史上100%对应衰退, 美联储将快速转向",
-        "status": "当前 0.17"
-      },
-      {
-        "trigger": "3M-10Y 利差再次 <span class=\"watch-threshold\">转负</span>",
-        "implication": "Fed研究的最可靠衰退先行指标",
-        "status": "当前 +1bp"
-      },
-      {
-        "trigger": "初请突破 <span class=\"watch-threshold\">325K</span>",
-        "implication": "就业恶化确认, 消费-收入-就业负反馈启动",
-        "status": "当前 208K"
-      }
-    ]
-  },
-  "riskScore": {
-    "score": 49,
-    "level": "中等风险",
-    "color": "#f59e0b",
-    "description": "7板块加权聚合风险评分 49/100 (中等风险)。权重: 流动性18% + 衰退17% + 利率15% + 经济14% + 信用14% + 波动率12% + 资产10%。",
-    "factors": [
-      {
-        "label": "利率环境",
-        "score": 100.0,
-        "weight": 15,
-        "status": "bearish",
-        "color": "#e63946"
-      },
-      {
-        "label": "流动性压力",
-        "score": 38.0,
-        "weight": 18,
-        "status": "mixed",
-        "color": "#f59e0b"
-      },
-      {
-        "label": "信用市场",
-        "score": 79.2,
-        "weight": 14,
-        "status": "bearish",
-        "color": "#e63946"
-      },
-      {
-        "label": "波动率风险",
-        "score": 59.5,
-        "weight": 12,
-        "status": "bearish",
-        "color": "#e63946"
-      },
-      {
-        "label": "经济基本面",
-        "score": 35.5,
-        "weight": 14,
-        "status": "mixed",
-        "color": "#f59e0b"
-      },
-      {
-        "label": "跨资产信号",
-        "score": 40,
-        "weight": 10,
-        "status": "mixed",
-        "color": "#f59e0b"
-      },
-      {
-        "label": "衰退风险",
-        "score": 0.0,
-        "weight": 17,
-        "status": "bullish",
-        "color": "#2a9d8f"
-      }
-    ],
-    "summary": "当前宏观风险画像: 利率+衰退主导。核心风险点: 利率环境, 信用市场, 波动率风险。"
   }
 };
