@@ -1100,8 +1100,8 @@ idx_path = '../index.html'
 try:
     with open(idx_path, 'r', encoding='utf-8') as f:
         html = f.read()
-    # 替换 data.js 的版本号 (匹配 data.js?v=数字 或 纯 data.js)
-    html = re.sub(r'data\.js(\?v=\d+)?', f'data.js?v={ts}', html)
+    # 替换 data.js 的版本号 (吃掉整个查询字符串, 避免残留 ?v=initial 之类)
+    html = re.sub(r'data\.js(\?[^"]*)?', f'data.js?v={ts}', html)
     with open(idx_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(html)
     print(f'[gen_datajs] cache-bust updated: data.js?v={ts}', file=sys.stderr, flush=True)
