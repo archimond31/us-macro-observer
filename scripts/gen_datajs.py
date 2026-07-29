@@ -7,7 +7,7 @@ gen_datajs.py — 把 computed.json (真实数值/分位/四尺度变化) + raw_
 输出: ../data.js  (const DATA = {...})
 依赖: build_data.py 先跑完, 生成 computed.json / raw_series.json
 """
-import json, datetime, sys
+import json, datetime, sys, re
 
 C = json.load(open('computed.json'))
 RAW = json.load(open('raw_series.json'))
@@ -1093,3 +1093,17 @@ out = HEADER + 'const DATA = ' + json.dumps(DATA, ensure_ascii=False, indent=2) 
 with open('../data.js', 'w', encoding='utf-8', newline='\n') as f:
     f.write(out)
 print('[gen_datajs] DONE — data.js generated:', len(out), 'chars, sections:', list(DATA.keys()), file=sys.stderr, flush=True)
+
+# ---------- 缓存破坏: 更新 index.html 中 data.js 的版本号 ----------
+ts = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+idx_path = '../index.html'
+try:
+    with open(idx_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+    # 替换 data.js 的版本号 (匹配 data.js?v=数字 或 纯 data.js)
+    html = re.sub(r'data\.js(\?v=\d+)?', f'data.js?v={ts}', html)
+    with open(idx_path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(html)
+    print(f'[gen_datajs] cache-bust updated: data.js?v={ts}', file=sys.stderr, flush=True)
+except Exception as e:
+    print(f'[gen_datajs] WARNING — failed to update index.html: {e}', file=sys.stderr, flush=True)
