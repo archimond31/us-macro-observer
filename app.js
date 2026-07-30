@@ -251,7 +251,8 @@ function fmtDate(l, idx) {
     var parts = label.split('-');
     return parts[0].slice(2) + '/' + parts[1];
   }
-  return l;
+  // 非ISO日期标签(如 '1月', '26Q2')直接返回回查结果
+  return label;
 }
 
 function baseOpts(yUnit) {
