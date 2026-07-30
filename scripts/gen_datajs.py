@@ -622,7 +622,7 @@ DATA['rates'] = {
          'changes':{'d':round(((tfm("dgs10")["d"] or 0)-(tfm("dgs2")["d"] or 0))*100,1) if (tfm("dgs10")["d"] is not None and tfm("dgs2")["d"] is not None) else None,
                     'w':round(((tfm("dgs10")["w"] or 0)-(tfm("dgs2")["w"] or 0))*100,1) if (tfm("dgs10")["w"] is not None and tfm("dgs2")["w"] is not None) else None,
                     'm':round(((tfm("dgs10")["m"] or 0)-(tfm("dgs2")["m"] or 0))*100,1) if (tfm("dgs10")["m"] is not None and tfm("dgs2")["m"] is not None) else None,
-                    'h6':(round(((tfm("dgs10")["h6"] or 0)-(tfm("dgs2")["h6"] or 0))*100,1) if (tfm("dgs10")["h6"] is not None and tfm("dgs2")["h6"] is not None) else None},
+                    'h6':round(((tfm("dgs10")["h6"] or 0)-(tfm("dgs2")["h6"] or 0))*100,1) if (tfm("dgs10")["h6"] is not None and tfm("dgs2")["h6"] is not None) else None},
          'sparkline':[round((a-b),2) for a,b in zip(series90('dgs10')[-30:],series90('dgs2')[-30:])]},
         rate_metric('10Y 通胀预期','bei10','Breakeven'),
         rate_metric('SOFR','sofr','SOFR'),
