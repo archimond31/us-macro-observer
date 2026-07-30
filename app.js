@@ -639,7 +639,16 @@ function renderRates(c) {
         borderWidth: 2, fill: i === 0, pointRadius: 0, tension: 0.3
       }))
     },
-    options: baseOpts('%')
+    options: Object.assign(baseOpts('%'), {
+      scales: Object.assign({}, baseOpts('%').scales, {
+        y: Object.assign({}, baseOpts('%').scales.y, {
+          min: -3, max: 3,
+          ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
+            callback: function(v) { return v.toFixed(1) + '%'; }
+          })
+        })
+      })
+    })
   });
 }
 

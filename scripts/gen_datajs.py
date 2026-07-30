@@ -614,7 +614,16 @@ DATA['rates'] = {
         rate_metric('10Y 国债','dgs10','DGS10'),
         rate_metric('30Y 国债', _30y_key, '^TYX' if _30y_key=='tyx' else 'DGS30'),
         rate_metric('10Y 实际利率','tips10','TIPS'),
-        rate_metric('10Y-2Y 利差','dgs10','Spread', f'利差 {spread_10_2:+.0f}bp'),
+        {'label':'10Y-2Y 利差','value':f'{spread_10_2/100:.2f}%' if spread_10_2 is not None else '—',
+         'change':f'{((tfm("dgs10")["d"] or 0)-(tfm("dgs2")["d"] or 0))*100:+.1f}bp' if (tfm("dgs10")["d"] is not None and tfm("dgs2")["d"] is not None) else '—',
+         'dir':'up' if ((spread_10_2 or 0) > 0) else ('down' if ((spread_10_2 or 0) < 0) else 'neutral'),
+         'tag':'Spread','percentile':50,'signal':'mixed',
+         'meaning':f'曲线{"陡峭化" if (spread_10_2 or 0)>0 else ("倒挂" if (spread_10_2 or 0)<0 else "平坦")} · 利差 {spread_10_2:+.0f}bp',
+         'changes':{'d':round(((tfm("dgs10")["d"] or 0)-(tfm("dgs2")["d"] or 0))*100,1) if (tfm("dgs10")["d"] is not None and tfm("dgs2")["d"] is not None) else None,
+                    'w':round(((tfm("dgs10")["w"] or 0)-(tfm("dgs2")["w"] or 0))*100,1) if (tfm("dgs10")["w"] is not None and tfm("dgs2")["w"] is not None) else None,
+                    'm':round(((tfm("dgs10")["m"] or 0)-(tfm("dgs2")["m"] or 0))*100,1) if (tfm("dgs10")["m"] is not None and tfm("dgs2")["m"] is not None) else None,
+                    'h6':(round(((tfm("dgs10")["h6"] or 0)-(tfm("dgs2")["h6"] or 0))*100,1) if (tfm("dgs10")["h6"] is not None and tfm("dgs2")["h6"] is not None) else None},
+         'sparkline':[round((a-b),2) for a,b in zip(series90('dgs10')[-30:],series90('dgs2')[-30:])]},
         rate_metric('10Y 通胀预期','bei10','Breakeven'),
         rate_metric('SOFR','sofr','SOFR'),
     ],
@@ -635,7 +644,7 @@ DATA['rates'] = {
     'chartData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y名义': series90('dgs10'), '10Y实际': series90('tips10'), '2Y': series90('dgs2'), '30Y': series90(_30y_key)}},
     'spreadData': {'labels': _dates_for('dgs10'), 'series': {
-        '10Y-2Y利差': [round((a-b)*100,2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
+        '10Y-2Y利差': [round((a-b),2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
         '通胀预期(Breakeven)': series90('bei10')}},
     'detailedTable': [
         {'maturity':'2年','rate':f2(v_2y)+'%','change':rate_chg_bp('dgs2'),'realRate':f2(val('tips2') if val('tips2') else (val('tips10')-0.5))+'%','breakeven':f2(val('bei2') if val('bei2') else (v_2y-(val('tips10')-0.5)))+'%','source':'DGS2'},
@@ -650,7 +659,7 @@ DATA['rates'] = {
         {'trigger':'2Y 突破 <span class="watch-threshold">4.50%</span>','implication':'市场取消降息定价, 曲线熊平','status':f'距离 {max(0,4.50-v_2y):.2f}bp'},
     ],
     'chartNotes': {
-        'spreadNote': f'10Y-2Y 利差 {spread_10_2:+.0f}bp · Breakeven {f2(v_bei)}% (1年分位 {pct("bei10")})',
+        'spreadNote': f'10Y-2Y 利差 {spread_10_2/100:.2f}% ({spread_10_2:+.0f}bp) · Breakeven {f2(v_bei)}% (1年分位 {pct("bei10")})',
         'trendNote': f'10Y 周Δ{bp(tfm("dgs10")["w"]*100 if tfm("dgs10")["w"] is not None else None)} / 月Δ{bp(tfm("dgs10")["m"]*100 if tfm("dgs10")["m"] is not None else None)} / 半年Δ{bp(tfm("dgs10")["h6"]*100 if tfm("dgs10")["h6"] is not None else None)} · 2Y 周Δ{bp(tfm("dgs2")["w"]*100 if tfm("dgs2")["w"] is not None else None)}',
     },
 }
