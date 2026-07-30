@@ -16,6 +16,7 @@ const SECTION_CONFIG = {
   economy:    { title: '经济数据',   subtitle: 'Economy · 增长/就业/通胀/衰退' },
   credit:     { title: '信用市场',   subtitle: 'Credit · 利差分层与违约周期' },
   volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' },
+  crypto:     { title: '加密货币',   subtitle: 'Crypto · BTC/ETH/ETF/比率' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
   risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
@@ -57,7 +58,7 @@ function switchSection(section) {
     assets: renderAssets, rates: renderRates, fed: renderFed,
     liquidity: renderLiquidity, economy: renderEconomy,
     credit: renderCredit, volatility: renderVolatility,
-    recession: renderRecession, risk: renderRisk
+    crypto: renderCrypto, recession: renderRecession, risk: renderRisk
   };
   renderers[section](content);
 }
@@ -381,6 +382,9 @@ function renderAssets(c) {
     chartCard('跨资产相关性矩阵', '共同交易日日度收益真实相关 · 股债/油股符号变化是regime信号', 'corr', 'tall') +
   '</div>';
   html += chartCard('大类资产热力图', '日涨跌幅 · 红=涨 绿=跌', 'heatmap', 'short');
+  html += '<div class="chart-row one-col">' +
+    chartCard('美股指数走势（归一化）', d.usIndicesChart.note || '起点=100 · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
+    '</div>';
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
   html += analystBox(d.analystView);
@@ -404,6 +408,121 @@ function renderAssets(c) {
   });
   renderCorr(document.getElementById('corr').parentElement, d.correlation);
   renderAssetHeat(document.getElementById('heatmap').parentElement, d.table);
+  // 美股五大指数归一化走势
+  if (d.usIndicesChart && d.usIndicesChart.series && Object.keys(d.usIndicesChart.series).length > 0) {
+    const uid = d.usIndicesChart;
+    charts.usIndices = new Chart(document.getElementById('usIndices'), {
+      type: 'line',
+      data: {
+        labels: uid.labels,
+        datasets: Object.keys(uid.series).map((n, i) => ({
+          label: n, data: uid.series[n],
+          borderColor: COLORS.series[i % COLORS.series.length],
+          backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+        }))
+      },
+      options: baseOpts('%')
+    });
+  }
+}
+
+/* ================= 10. 加密货币 ================= */
+function renderCrypto(c) {
+  const d = DATA.crypto;
+  if (!d) { c.innerHTML = '<div class="loading">加密货币数据加载中...</div>'; return; }
+  let html = '';
+  html += regimeBanner(d.regime);
+  html += sectionH('关键信号', '');
+  html += signalList(d.keySignals);
+  html += metricCardsV3(d.metrics);
+  html += '<div class="chart-row two-col">' +
+    chartCard('BTC vs ETH 走势对比', '归一化(起点=100) · 相对强弱', 'btcEth', 'tall') +
+    chartCard('ETH/BTC 比率', 'Altcoin 季节性核心指标 · >0.05 ETH强势', 'ethBtc', 'tall') +
+    '</div>';
+  if (d.etfFlows && d.etfFlows.labels.length > 0) {
+    html += chartCard('现货 ETF 日度净流入/流出', 'BTC $M / ETH $M · 红=流入 绿=流出', 'etfFlow', 'short');
+  }
+  html += sectionH('多尺度趋势追踪', '');
+  html += trendTable(d.trendData);
+  html += analystBox(d.analystView);
+  html += watchList(d.whatToWatch);
+  c.innerHTML = html;
+
+  if (d.btcEthChart && d.btcEthChart.series) {
+    const be = d.btcEthChart;
+    charts.btcEth = new Chart(document.getElementById('btcEth'), {
+      type: 'line',
+      data: {
+        labels: be.labels,
+        datasets: Object.keys(be.series).map((n, i) => ({
+          label: n, data: be.series[n],
+          borderColor: n === 'BTC' ? '#f7931a' : '#627eea',
+          backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, tension: 0.3
+        }))
+      },
+      options: baseOpts('')
+    });
+  }
+  if (d.ethBtcChart && d.ethBtcChart.series && d.ethBtcChart.series['ETH/BTC']) {
+    const eb = d.ethBtcChart;
+    charts.ethBtc = new Chart(document.getElementById('ethBtc'), {
+      type: 'line',
+      data: {
+        labels: eb.labels,
+        datasets: [{
+          label: 'ETH/BTC', data: eb.series['ETH/BTC'],
+          borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true
+        }]
+      },
+      options: Object.assign(baseOpts(''), {
+        scales: Object.assign({}, baseOpts('').scales, {
+          y: Object.assign({}, baseOpts('').scales.y, {
+            ticks: Object.assign({}, baseOpts('').scales.y.ticks, {
+              callback: function(v) { return v.toFixed(4); }
+            })
+          })
+        }),
+        plugins: Object.assign({}, baseOpts('').plugins, {
+          tooltip: Object.assign({}, baseOpts('').plugins.tooltip, {
+            callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(5); } }
+          })
+        })
+      })
+    });
+  }
+  if (d.etfFlows && d.etfFlows.labels.length > 0) {
+    const ef = d.etfFlows;
+    charts.etfFlow = new Chart(document.getElementById('etfFlow'), {
+      type: 'bar',
+      data: {
+        labels: ef.labels,
+        datasets: [
+          { label: 'BTC ETF ($M)', data: ef.btc, backgroundColor: 'rgba(247,147,26,0.7)', borderColor: '#f7931a', borderWidth: 1, borderRadius: 3 },
+          { label: 'ETH ETF ($M)', data: ef.eth, backgroundColor: 'rgba(98,126,234,0.7)', borderColor: '#627eea', borderWidth: 1, borderRadius: 3 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12 } },
+          tooltip: {
+            backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4',
+            borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 10, cornerRadius: 6,
+            callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(1) + 'M$'; } }
+          }
+        },
+        scales: {
+          x: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 15 } },
+          y: {
+            grid: { color: COLORS.grid, drawBorder: false },
+            ticks: { color: COLORS.text, font: { size: 10 }, callback: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(0) + 'M'; } }
+          }
+        }
+      }
+    });
+  }
 }
 
 function renderCorr(container, cd) {

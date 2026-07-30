@@ -472,6 +472,38 @@ def trend_meaning(name, ch):
         if w<0 and m>0: return f'半年 {h6:+.0f}% 但近周转弱——顶部预警'
     return '多尺度方向不一, 趋势不明'
 
+def _build_us_indices_chart():
+    """构建美股五大指数归一化走势图数据 (起点=100, 类似用户截图)。
+    数据源优先级: Yahoo 实时 > FRED 滞后。取最近 ~500 个交易日(约2年)。
+    """
+    # 五大指数的 (显示名, 内部key序列, 颜色索引)
+    indices = [
+        ('标普500', 'spx'), ('纳斯达克100', 'ndx'),
+        ('道琼斯', 'dji_yahoo' if s('dji_yahoo') else 'dji'),
+        ('罗素2000', 'rut'), ('费城半导体', 'sox'),
+    ]
+    # 找最长公共长度 (以最短序列对齐)
+    raw_series = {}
+    for name, key in indices:
+        arr = s(key)
+        if arr:
+            raw_series[name] = [v for _, v in arr]
+    if len(raw_series) < 3:
+        return {'labels': [], 'series': {}, 'note': '数据不足'}
+    min_len = min(len(v) for v in raw_series.values())
+    # 取最近 500 点(约2年), 或全部如果不足
+    take = min(500, min_len)
+    labels = list(range(take))
+    series = {}
+    for name, key in indices:
+        if name not in raw_series:
+            continue
+        arr = raw_series[name][-take:]
+        base = next((x for x in arr if x), None)
+        if base and base != 0:
+            series[name] = [round(x / base * 100, 2) if x else None for x in arr]
+    return {'labels': labels, 'series': series, 'note': f'归一化(起点=100), 近{take}个交易日'}
+
 ASSET_MAP = [
     ('标普500','spx','^GSPC',2,''), ('纳斯达克100','ndx','^NDX',2,''),
     ('道琼斯','dji','^DJI',2,''), ('罗素2000','rut','^RUT',2,''),
@@ -527,7 +559,9 @@ DATA['assets'] = {
         {'trigger':'<span class="watch-threshold">10Y 突破 4.85%</span>','implication':'触及年内高点, 系统性 CTA 抛售债券, 利率上行自我强化','status':f'距离 {max(0,4.85-v_dgs10):.2f}bp'},
         {'trigger':'VIX 收盘站上 <span class="watch-threshold">20</span>','implication':'波动率目标基金强制减仓, 股市抛压自我强化','status':f'距离 {20-v_vix:.1f}'},
         {'trigger':'WTI 突破 <span class="watch-threshold">$90</span>','implication':'能源冲击确认, 通胀预期与利率进一步上行','status':f'距离 {max(0,90-v_wti):.1f}'},
-    ]
+    ],
+    # 美股五大指数归一化走势 (起点=100, 用较长序列展示相对强弱)
+    'usIndicesChart': _build_us_indices_chart(),
 }
 
 # ====== 利率 ======
@@ -1220,6 +1254,140 @@ DATA['riskScore'] = {
 }
 
 print('[gen_datajs] riskScore section OK', file=sys.stderr, flush=True)
+
+# ====== 加密货币板块 (Crypto) ======
+print('[gen_datajs] generating crypto section...', file=sys.stderr, flush=True)
+_v_btc = val('btc'); _v_eth = val('eth'); _v_ethbtc = val('eth_btc_ratio')
+_v_etf_btc = val('etf_btc_flow'); _v_etf_eth = val('etf_eth_flow')
+_btc_ch = asset_changes('btc') if _v_btc is not None else {}
+_eth_ch = asset_changes('eth') if _v_eth is not None else {}
+
+# BTC vs ETH 归一化对比 (同图)
+def _crypto_norm_chart():
+    btc_arr = s('btc'); eth_arr = s('eth')
+    if not (btc_arr and eth_arr):
+        return {'labels': [], 'series': {}}
+    take = min(500, len(btc_arr), len(eth_arr))
+    labels = list(range(take))
+    bv = [v for _, v in btc_arr[-take:]]; ev = [v for _, v in eth_arr[-take:]]
+    b0 = next((x for x in bv if x), 1); e0 = next((x for x in ev if x), 1)
+    return {
+        'labels': labels,
+        'series': {
+            'BTC': [round(x / b0 * 100, 2) if (b0 and x) else None for x in bv],
+            'ETH': [round(x / e0 * 100, 2) if (e0 and x) else None for x in ev],
+        },
+    }
+
+# ETH/BTC 比率走势
+def _ethbtc_chart():
+    arr = s('eth_btc_ratio')
+    if not arr:
+        return {'labels': [], 'series': {}}
+    take = min(500, len(arr))
+    return {
+        'labels': list(range(take)),
+        'series': {'ETH/BTC': [round(v, 6) for _, v in arr[-take:]]},
+    }
+
+# ETF 流量数据 (最近30天/条)
+def _etf_flow_data():
+    out = {'labels': [], 'btc': [], 'eth': []}
+    btc_raw = s('etf_btc_flow'); eth_raw = s('etf_eth_flow')
+    if not (btc_raw or eth_raw):
+        return out
+    # 取最近 30 条
+    n = 30
+    btc_l = (btc_raw or [])[-n:]; eth_l = (eth_raw or [])[-n:]
+    # 用日期做 labels
+    dates = [d for d, _ in btc_l] if btc_l else ([d for d, _ in eth_l] if eth_l else [])
+    out['labels'] = [d[5:] for d in dates]  # 'MM-DD' 格式
+    out['btc'] = [round(v, 1) for _, v in btc_l]
+    out['eth'] = [round(v, 1) for _, v in eth_l]
+    # 累计净流入
+    out['btc_cumsum'] = round(sum(v for _, v in btc_l), 0) if btc_l else None
+    out['eth_cumsum'] = round(sum(v for _, v in eth_l), 0) if eth_l else None
+    return out
+
+_etf_data = _etf_flow_data()
+
+DATA['crypto'] = {
+    'regime': {
+        'label': ('风险资产联动模式' if (_v_btc and _v_btc > 60000) else '震荡筑底'),
+        'signal': 'mixed', 'confidence': '中等置信',
+        'description': f'BTC ${comma(_v_btc,0) if _v_btc else "—"} · ETH ${comma(_v_eth,0) if _v_eth else "—"}'
+            + f' · ETH/BTC {_v_ethbtc:.4f}' if _v_ethbtc else ''
+            + '。加密市场与风险资产的联动性是关键观察变量——BTC 走强通常对应 risk-on，走弱则预示流动性收缩传导。',
+    },
+    'keySignals': [s for s in [
+        ({'title': f'BTC {_btc_ch.get("w", "—")} 周变动', 'meaning': 'BTC 是加密市场的 beta，其方向决定整个板块的风险偏好基调。', 'direction': dir_of(_btc_ch.get('w'))} if _btc_ch.get('w') is not None else None),
+        ({'title': f'ETH/BTC {_v_ethbtc:.4f}', 'meaning': 'ETH 相对 BTC 的强弱。比率上行=资金偏好高贝塔(ETH)，下行=避险(BTC dominance)。' if _v_ethbtc else '', 'direction': 'up' if (_v_ethbtc and _v_ethbtc > 0.045) else 'down'} if _v_ethbtc else None),
+        ({'title': f'BTC ETF {"净流入" if (_v_etf_btc and _v_etf_btc > 0) else "净流出" if _v_etf_btc else "暂无"} ${abs(_v_etf_btc):.0f}M' if _v_etf_btc is not None else 'BTC ETF 流量数据获取中', 'meaning': '现货 ETF 持续流入=机构配置需求，流出=获利了结或风险规避。', 'direction': 'bullish' if (_v_etf_btc and _v_etf_btc > 0) else ('bearish' if (_v_etf_btc and _v_etf_btc < 0) else 'mixed')} if _v_etf_btc is not None else None),
+    ] if s],
+    'metrics': [
+        m for m in [
+            {'label':'Bitcoin (BTC)','value':('$'+comma(_v_btc,0) if _v_btc else '—'),'change':ret(_btc_ch.get('d')),'dir':dir_of(_btc_ch.get('d')),'tag':'BTC','percentile':pct('btc') if _v_btc else 50,
+             'signal':dir_of(_btc_ch.get('w')),'meaning':f'加密市场总市值锚定, 近一年 {pct("btc")} 分位',
+             'changes':{k:ret(_btc_ch.get(k)) for k in ('d','w','m','h6')},'sparkline':series30('btc')},
+            {'label':'Ethereum (ETH)','value':('$'+comma(_v_eth,0) if _v_eth else '—'),'change':ret(_eth_ch.get('d')),'dir':dir_of(_eth_ch.get('d')),'tag':'ETH','percentile':pct('eth') if _v_eth else 50,
+             'signal':dir_of(_eth_ch.get('w')),'meaning':f'Smart Contract 平台龙头, 近一年 {pct("eth")} 分位',
+             'changes':{k:ret(_eth_ch.get(k)) for k in ('d','w','m','h6')},'sparkline':series30('eth')},
+            {'label':'ETH/BTC 比率','value':(f'{_v_ethbtc:.5f}' if _v_ethbtc else '—'),
+             'change':pctpt(tfm('eth_btc_ratio')['d']) if val('eth_btc_ratio') else '—',
+             'dir':dir_of(tfm('eth_btc_ratio')['d']) if val('eth_btc_ratio') else 'neutral',
+             'tag':'Ratio','percentile':pct('eth_btc_ratio') if _v_ethbtc else 50,
+             'signal':'bullish' if (_v_ethbtc and _v_ethbtc > 0.045) else ('bearish' if (_v_ethbtc and _v_ethbtc < 0.04) else 'mixed'),
+             'meaning':'ETH 相对 BTC 强弱 · >0.05=ETH强势区间 · <0.04=BTC极度主导',
+             'changes':{k:(round(tfm('eth_btc_ratio').get(k),5) if tfm('eth_btc_ratio').get(k) is not None else '—') for k in ('d','w','m','h6')},
+             'sparkline':series30('eth_btc_ratio')},
+            {'label':'BTC ETF 净流(日)','value':(f'{_v_etf_btc:+,.0f}M$' if _v_etf_btc is not None else '—'),
+             'change':(f'{_v_etf_btc:+,.0f}M' if _v_etf_btc is not None else '—'),
+             'dir':'up' if (_v_etf_btc and _v_etf_btc>0) else ('down' if (_v_etf_btc and _v_etf_btc<0) else 'neutral'),
+             'tag':'IBIT/FBTC等','percentile':None,
+             'signal':'bullish' if (_v_etf_btc and _v_etf_btc>0) else ('bearish' if (_v_etf_btc and _v_etf_btc<0) else 'mixed'),
+             'meaning':f'近30日累计 {_etf_data.get("btc_cumsum","—"):+,.0f}M$' if _etf_data.get("btc_cumsum") is not None else '日度现货ETF净流入(百万美元)',
+             'changes':{'d':'—','w':'—','m':'—','h6':'—'},'sparkline':[]},
+            {'label':'ETH ETF 净流(日)','value':(f'{_v_etf_eth:+,.0f}M$' if _v_etf_eth is not None else '—'),
+             'change':(f'{_v_etf_eth:+,.0f}M' if _v_etf_eth is not None else '—'),
+             'dir':'up' if (_v_etf_eth and _v_etf_eth>0) else ('down' if (_v_etf_eth and _v_etf_eth<0) else 'neutral'),
+             'tag':'ETHE/FETH等','percentile':None,
+             'signal':'bullish' if (_v_etf_eth and _v_etf_eth>0) else ('bearish' if (_v_etf_eth and _v_etf_eth<0) else 'mixed'),
+             'meaning':f'近30日累计 {_etf_data.get("eth_cumsum","—"):+,.0f}M$' if _etf_data.get("eth_cumsum") is not None else '日度现货ETF净流入(百万美元)',
+             'changes':{'d':'—','w':'—','m':'—','h6':'—'},'sparkline':[]},
+        ] if m
+    ],
+    # BTC vs ETH 归一化对比图
+    'btcEthChart': _crypto_norm_chart(),
+    # ETH/BTC 比率走势图
+    'ethBtcChart': _ethbtc_chart(),
+    # ETF 流量数据
+    'etfFlows': _etf_data,
+    'trendData': [
+        {'name':'Bitcoin','unit':'$','current':('$'+comma(_v_btc,0) if _v_btc else '—'),
+         'changes':{k:(round(_btc_ch[k],2) if _btc_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
+         'meaning':'数字黄金叙事 vs 风险资产 beta 的博弈'},
+        {'name':'Ethereum','unit':'$','current':('$'+comma(_v_eth,0) if _v_eth else '—'),
+         'changes':{k:(round(_eth_ch[k],2) if _eth_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
+         'meaning':'DeFi/NFT/AI 叙事驱动的周期性资产'},
+        {'name':'ETH/BTC','unit':'ratio','current':(f'{_v_ethbtc:.5f}' if _v_ethbtc else '—'),
+         'changes':{k:(round(tfm('eth_btc_ratio')[k],5) if tfm('eth_btc_ratio').get(k) is not None else None) for k in ('d','w','m','h6')},
+         'meaning':'Altcoin 季节性的核心指标'},
+    ],
+    'analystView': f'加密市场当前处于{"risk-on 联动" if (_v_btc and _v_btc > 65000) else "独立行情阶段"}。'
+        + (f' BTC ${comma(_v_btc,0)}' if _v_btc else '')
+        + (f' / ETH ${comma(_v_eth,0)}' if _v_eth else '')
+        + (f' (ETH/BTC {_v_ethbtc:.4f})' if _v_ethbtc else '')
+        + f'。ETF 方面: BTC ETF {"持续净流入(机构配置)" if (_v_etf_btc and _v_etf_btc > 0) else "出现净流出(警惕)"}'
+        + (f' · ETH ETF {"净流入" if (_v_etf_eth and _v_etf_eth > 0) else "净流出"}' if _v_etf_eth is not None else '')
+        + '。关键观察: 加密市场与纳斯达克的 correlation 在流动性收紧时趋向+1（risk-off 一锅端），在流动性宽松时脱钩（alpha 行情）。',
+    'whatToWatch': [
+        {'trigger': f'BTC 突破 <span class="watch-threshold">$100K</span>', 'implication': '新一轮零售 FOMO + 机构 FOMO 共振起点', 'status': f'距离 {max(0,100000-(_v_btc or 0)):,.0f}' if _v_btc else '—'},
+        {'trigger': f'ETH/BTC 跌破 <span class="watch-threshold">0.040</span>', 'implication': 'BTC dominance 极致, Altcoin 全面承压', 'status': f'当前 {_v_ethbtc:.4f}' if _v_ethbtc else '—'},
+        {'trigger': 'BTC ETF 连续 <span class="watch-threshold">3日净流出</span>', 'implication': '机构获利了结信号, 可能引发连锁抛售', 'status': f'今日 {_v_etf_btc:+,.0f}M' if _v_etf_btc is not None else '—'},
+    ],
+}
+
+print('[gen_datajs] crypto section OK', file=sys.stderr, flush=True)
 
 # ---------- 写出 data.js ----------
 HEADER = """/* ============================================================

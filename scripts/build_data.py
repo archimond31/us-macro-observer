@@ -147,6 +147,65 @@ def yahoo(symbol, rng='2y'):
         print(f'  [YH:{symbol}] FAIL {e}')
         return []
 
+# ---------- Crypto ETF 流量 (免费源: farside.co.uk) ----------
+# 抓取 BTC / ETH 现货 ETF 日度净流入(百万美元), 失败则返回空(不阻塞管线)
+def fetch_crypto_etf_flows(days=60):
+    """从 farside.co.uk 抓取 BTC/ETH ETF 净流入数据。返回 {'btc':[...], 'eth':[...]} 或 None。"""
+    try:
+        html = http_get('https://farside.co.uk/bitcoin-etf-data.htm', timeout=15, use_ua=True)
+        if not html or 'Total' not in html[:5000]:
+            print('  [ETF:farside] 页面异常, 跳过')
+            return None
+    except Exception as e:
+        print(f'  [ETF:farside] FAIL {e}')
+        return None
+    # 解析表格行: 每行格式如 "dd-mmm-yyyy | $xxx | $xxx | ... Total | $net"
+    # 用正则提取日期和 Total 列的数值
+    import re as _re
+    btc_rows, eth_rows = [], []
+    # BTC 表格: 找 "Bitcoin ETFs" 之后的 table
+    # 简化策略: 提取所有 "Total" 行附近的数字
+    pat = _re.compile(r'<td[^>]*>(\d{1,2}-[A-Za-z]{3}-\d{4})</td>.*?<td[^>]*>\$?([-\d,]+\.?\d*)</td>', _re.DOTALL)
+    # 更可靠: 按 行模式匹配日期+净流入
+    for m in _re.finditer(r'(\d{2}-\w{3}-\d{4})\s+</td>\s*<td[^>]*>\s*\$?([-\d,]+)\s*</td>', html):
+        dstr, val_str = m.group(1), m.group(2).replace(',', '')
+        try:
+            v = float(val_str)
+            # 转换日期: '24-Jul-2024' -> '2024-07-24'
+            parts = dstr.split('-')
+            _mon_map = {'Jan':'01','Feb':'02','Mar':'04','Apr':'04','May':'05','Jun':'06',
+                        'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}
+            ds = f'{parts[2]}-{_mon_map.get(parts[1],"01")}-{parts[0]}'
+            btc_rows.append((ds, v))
+        except (ValueError, IndexError):
+            continue
+    # ETH 表格类似
+    try:
+        eth_html = http_get('https://farside.co.uk/ethereum-etf-data.htm', timeout=15, use_ua=True)
+        if eth_html and 'Total' in eth_html[:5000]:
+            for m in _re.finditer(r'(\d{2}-\w{3}-\d{4})\s+</td>\s*<td[^>]*>\s*\$?([-\d,]+)\s*</td>', eth_html):
+                dstr, val_str = m.group(1), m.group(2).replace(',', '')
+                try:
+                    v = float(val_str)
+                    parts = dstr.split('-')
+                    _mon_map = {'Jan':'01','Feb':'02','Mar':'04','Apr':'04','May':'05','Jun':'06',
+                                'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}
+                    ds = f'{parts[2]}-{_mon_map.get(parts[1],"01")}-{parts[0]}'
+                    eth_rows.append((ds, v))
+                except (ValueError, IndexError):
+                    continue
+    except Exception as e:
+        print(f'  [ETF:farside:eth] FAIL {e}')
+
+    if btc_rows:
+        btc_rows.sort()
+        print(f'  [ETF:BTC] → {len(btc_rows)} 条流量记录, 最新 {btc_rows[-1]}')
+    if eth_rows:
+        eth_rows.sort()
+        print(f'  [ETF:ETH] → {len(eth_rows)} 条流量记录, 最新 {eth_rows[-1]}')
+    return {'btc': btc_rows[-days:] if btc_rows else [],
+            'eth': eth_rows[-days:] if eth_rows else []}
+
 # ---------- BEA 官方 API (需免费 key: apps.bea.gov/api/signup) ----------
 # 提供比 FRED GDPC1 更当前的"已发布实际 GDP":
 #   T10101 = 实际GDP环比年化% (Line 1 "Gross domestic product")
@@ -347,7 +406,8 @@ S['srf'] = nyfed_srf();        print(f'  NYFED SRF → {len(S["srf"])} pts, late
 S['tga'] = fetch_tga();        print(f'  DTS TGA → {len(S["tga"])} pts, latest {last(S["tga"])}')
 
 YH_IDS = {
-    '^NDX': 'ndx', '^RUT': 'rut', 'GC=F': 'gold', 'SI=F': 'silver',
+    '^NDX': 'ndx', '^RUT': 'rut', '^DJI': 'dji_yahoo', '^SOX': 'sox',
+    'GC=F': 'gold', 'SI=F': 'silver',
     'NG=F': 'natgas', 'HG=F': 'copper', 'DX-Y.NYB': 'dxy',
     'EURUSD=X': 'eurusd', 'GBPUSD=X': 'gbpusd', 'USDJPY=X': 'usdjpy', 'USDCNH=X': 'usdcnh',
     'TLT': 'tlt', 'IEF': 'ief', 'LQD': 'lqd', 'HYG': 'hyg', 'SPY': 'spy', 'QQQ': 'qqq',
@@ -358,6 +418,24 @@ for sym, key in YH_IDS.items():
     S[key] = yahoo(sym)
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
+
+# Crypto ETF 流量 (farside.co.uk 免费源, 失败不阻塞)
+_etf_flows = fetch_crypto_etf_flows()
+if _etf_flows:
+    S['etf_btc_flow'] = _etf_flows['btc']
+    S['etf_eth_flow'] = _etf_flows['eth']
+
+# ETH/BTC 比率序列 (从 FRED 的 BTC/ETH 原始价格计算)
+if S.get('btc') and S.get('eth'):
+    _btc_dict = {d: v for d, v in S['btc']}
+    _eth_dict = {d: v for d, v in S['eth']}
+    _ethbtc = []
+    for d in sorted(_btc_dict.keys()):
+        if d in _eth_dict and _btc_dict[d] and _eth_dict[d]:
+            _ethbtc.append((d, round(_eth_dict[d] / _btc_dict[d], 6)))
+    if _ethbtc:
+        S['eth_btc_ratio'] = _ethbtc
+        print(f'  [ETH/BTC] → {len(_ethbtc)} pts, latest {_ethbtc[-1]}')
 
 # 与上次运行合并: 本次拉取失败(空)的序列沿用昨日缓存, 避免瞬时故障导致前端数据回退为空
 try:
@@ -426,6 +504,15 @@ for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
 # GDPNow 本季实时预估 (单点, 注册供卡片展示; 无数据则跳过)
 if _gnow:
     reg('gdpnow', _gnow)
+
+# Crypto 专用序列: ETH/BTC 比率 + ETF 流量
+if S.get('eth_btc_ratio'):
+    reg('eth_btc_ratio', S['eth_btc_ratio'])
+if S.get('etf_btc_flow'):
+    # ETF 流量单位已经是 $M, 用绝对差
+    reg('etf_btc_flow', S['etf_btc_flow'], is_pct=False, unit='$M')
+if S.get('etf_eth_flow'):
+    reg('etf_eth_flow', S['etf_eth_flow'], is_pct=False, unit='$M')
 
 # 净流动性(同单位 $B) = WALCL($M→$B) - RRP($B) - TGA($B)
 # WALCL 为周三快照, RRP/TGA 为日度 → 按最近邻(±4天)对齐, 避免交集过稀
