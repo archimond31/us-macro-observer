@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-30 09:50",
+  "generated_at": "2026-07-30 10:30",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -702,7 +702,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 4123.10009765625,
+      "value": 4133.39990234375,
       "fallback": false
     },
     "silver": {
@@ -710,7 +710,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 58.064998626708984,
+      "value": 58.255001068115234,
       "fallback": false
     },
     "natgas": {
@@ -718,7 +718,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 2.736999988555908,
+      "value": 2.7300000190734863,
       "fallback": false
     },
     "copper": {
@@ -726,7 +726,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 6.448999881744385,
+      "value": 6.44350004196167,
       "fallback": false
     },
     "dxy": {
@@ -734,7 +734,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 100.8290023803711,
+      "value": 100.7020034790039,
       "fallback": false
     },
     "eurusd": {
@@ -742,7 +742,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 1.1470520496368408,
+      "value": 1.1475785970687866,
       "fallback": false
     },
     "gbpusd": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 1.3383656740188599,
+      "value": 1.338240146636963,
       "fallback": false
     },
     "usdjpy": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 163.3159942626953,
+      "value": 162.81500244140625,
       "fallback": false
     },
     "usdcnh": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 6.752399921417236,
+      "value": 6.752779960632324,
       "fallback": false
     },
     "tlt": {
@@ -862,7 +862,7 @@
       "source": "Yahoo:^VIX",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 19.440000534057617,
+      "value": 19.68000030517578,
       "fallback": false
     },
     "ovx": {
