@@ -30,9 +30,11 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Fetch real data (FRED / Treasury / NY Fed / Yahoo)
+      - name: Fetch real data (FRED / Treasury / NY Fed / Yahoo / BEA)
         run: python build_data.py
         working-directory: scripts
+        env:
+          BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
 
       - name: Generate data.js
         run: python gen_datajs.py

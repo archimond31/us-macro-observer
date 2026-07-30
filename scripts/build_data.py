@@ -2,16 +2,18 @@
 """
 build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 =================================================================
-数据源（全部免 API Key）:
+数据源:
   - FRED fredgraph.csv      利率/信用/波动率/经济/资产价格/美联储资产负债表
   - NY Fed Markets API      SOFR / RRP / SRF
   - Treasury FiscalData     TGA 余额
-  - Yahoo Finance (UA)      黄金/白银/ETF/外汇/NDX/RUT
+  - Yahoo Finance (UA)      黄金/白银/ETF/外汇/NDX/RUT/波动率/30Y
+  - BEA NIPA API (需 BEA_API_KEY)  最新实际GDP (T10101/5/6), 覆盖 FRED GDPC1 滞后
+  - Atlanta Fed GDPNow (免key)       本季实时预估 (端点可能变更, 失败静默跳过)
 
 自动计算: 日/周/月/半年变化 (1/5/21/126 个交易日)、1年历史分位数
 输出: ../data.js
 """
-import csv, io, json, sys, time, subprocess, re
+import csv, io, json, os, sys, time, subprocess, re
 from datetime import datetime, timedelta
 from html import unescape
 
@@ -145,6 +147,88 @@ def yahoo(symbol, rng='2y'):
         print(f'  [YH:{symbol}] FAIL {e}')
         return []
 
+# ---------- BEA 官方 API (需免费 key: apps.bea.gov/api/signup) ----------
+# 提供比 FRED GDPC1 更当前的"已发布实际 GDP":
+#   T10101 = 实际GDP环比年化% (Line 1 "Gross domestic product")
+#   T10105 = 名义GDP水平 (十亿$, 当前$)
+#   T10106 = 实际GDP水平 (十亿$, 链式2017$, 与 FRED GDPC1 同单位)
+# 单位与 FRED 完全一致, 可直接覆盖 S['gdp_real']/S['gdp']
+_QE = {'1': '03-31', '2': '06-30', '3': '09-30', '4': '12-31'}
+def _q_end(qtr):
+    """'2026Q2' -> '2026-06-30'"""
+    try:
+        return f'{qtr[:4]}-{_QE[qtr[5]]}'
+    except Exception:
+        return qtr
+
+def fetch_bea_gdp(key, years='2024,2025,2026'):
+    if not key:
+        return None
+    base = 'https://apps.bea.gov/api/data'
+    def get(table):
+        url = (f'{base}?UserID={key}&method=GetData&DatasetName=NIPA&TableName={table}'
+               f'&Frequency=Q&Year={years}&ResultFormat=JSON')
+        try:
+            txt = http_get(url, timeout=30)
+            j = json.loads(txt)
+            data = j['BEAAPI']['Results']['Data']
+        except Exception as e:
+            print(f'  [BEA] {table} 拉取失败: {e}')
+            return []
+        out = []
+        for row in data:
+            if row.get('LineNumber') == '1' and row.get('LineDescription') == 'Gross domestic product':
+                try:
+                    out.append((_q_end(row['TimePeriod']), float(row['DataValue'])))
+                except Exception:
+                    pass
+        return sorted(out)
+    real_q = get('T10101')     # 实际GDP环比年化%
+    nom_lv = get('T10105')     # 名义GDP水平
+    real_lv = get('T10106')     # 实际GDP水平
+    if not (real_lv or nom_lv or real_q):
+        return None
+    return {'real_qoq': real_q, 'nominal_level': nom_lv, 'real_level': real_lv}
+
+# ---------- Atlanta Fed GDPNow (本季实时预估, 免 key) ----------
+# 该站公开 JSON 端点多次变更, 这里多候选 URL + 柔性解析; 全部失败则静默跳过 (不阻塞管线)
+def fetch_gdpnow():
+    candidates = [
+        'https://www.atlantafed.org/research/controllers/summaryofcomments.json',
+        'https://www.atlantafed.org/research/controllers/gdpnowall.json',
+        'https://www.atlantafed.org/api/gdpnow/',
+    ]
+    for url in candidates:
+        try:
+            txt = http_get(url, timeout=12, use_ua=True)
+            j = json.loads(txt)
+        except Exception:
+            continue
+        now = asof = qtr = None
+        if isinstance(j, dict):
+            now = j.get('nowcast') or j.get('value')
+            asof = j.get('asofdate') or j.get('date') or j.get('asOfDate')
+            qtr = j.get('forecastquarter') or j.get('quarter')
+            sub = j.get('gdpnow')
+            if (now is None) and isinstance(sub, list) and sub:
+                now = sub[-1].get('nowcast') or sub[-1].get('value')
+                asof = asof or sub[-1].get('asofdate') or sub[-1].get('date')
+                qtr = qtr or sub[-1].get('quarter') or sub[-1].get('forecastquarter')
+        if now is None:
+            continue
+        try:
+            v = float(now)
+        except Exception:
+            continue
+        d = None
+        if asof:
+            try: d = datetime.strptime(asof, '%Y-%m-%d').strftime('%Y-%m-%d')
+            except Exception: d = None
+        d = d or datetime.now().strftime('%Y-%m-%d')
+        print(f'  [GDPNow] 本季预估 {v}% (截至 {asof}, {qtr or "?"})')
+        return [(d, v)]
+    return None
+
 # ---------- 计算 ----------
 def chg(series, back):
     """变化值: 最新 - back个点之前 (series按时间升序)"""
@@ -247,7 +331,7 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
            'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',}
 # 周度序列: WEI(实时周度经济指数) 每周六更新, 用更宽阈值避免误报"过期"
-WEEKLY = {'wei'}
+WEEKLY = {'wei', 'gdpnow'}
 # 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"
 SLOW_RELEASE = {'core_pce', 'pce', 'pce_real'}
 for fid, key in FRED_IDS.items():
@@ -288,6 +372,20 @@ try:
 except Exception:
     pass
 
+# BEA 官方最新实际GDP (覆盖 FRED GDPC1/GDP, 单位一致; 仅当配置了 BEA_API_KEY)
+_bea = fetch_bea_gdp(os.environ.get('BEA_API_KEY'))
+if _bea:
+    if _bea['real_level']:
+        S['gdp_real'] = _bea['real_level']
+    if _bea['nominal_level']:
+        S['gdp'] = _bea['nominal_level']
+    _bq = _bea['real_qoq'][-1][1] if _bea['real_qoq'] else '?'
+    print(f'  [BEA] 已用官方最新GDP覆盖 FRED (实际 {len(_bea["real_level"])} 季 / 名义 {len(_bea["nominal_level"])} 季, 环比年化最新 {_bq}%)')
+else:
+    print('  [BEA] 未配置 BEA_API_KEY, 沿用 FRED GDPC1 (可能滞后约2季度)')
+# Atlanta Fed GDPNow 本季实时预估 (免 key, 端点可能失效, 失败静默跳过)
+_gnow = fetch_gdpnow()
+
 # 保存原始数据供检查
 with open('raw_series.json', 'w') as f:
     json.dump({k: v for k, v in S.items()}, f)
@@ -324,6 +422,10 @@ for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 # 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致
 YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m', 'vix', 'ovx', 'gvz', 'tyx'}
 for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
+
+# GDPNow 本季实时预估 (单点, 注册供卡片展示; 无数据则跳过)
+if _gnow:
+    reg('gdpnow', _gnow)
 
 # 净流动性(同单位 $B) = WALCL($M→$B) - RRP($B) - TGA($B)
 # WALCL 为周三快照, RRP/TGA 为日度 → 按最近邻(±4天)对齐, 避免交集过稀
@@ -388,6 +490,17 @@ if R.get('ffr_up') and R['ffr_up'].get('stale') and S.get('ffr_eff'):
             HEALTH[key] = {'status': 'OK(fallback→FEDFUNDS)', 'source': 'FRED:FEDFUNDS→derive',
                            'last_date': d_eff, 'age': age, 'value': val, 'fallback': True}
         print(f'  [数据源自检] 联邦基金目标区间改用 FEDFUNDS 有效利率({eff}%)推导: {lo}%-{up}%')
+
+# BEA / GDPNow 数据源标注 (覆盖 FRED 后修正 health 的来源说明)
+if _bea:
+    for _k in ('gdp_real', 'gdp'):
+        if _k in HEALTH:
+            HEALTH[_k]['source'] = 'BEA:NIPA T10106/5 (override FRED:GDPC1/GDP)'
+    HEALTH['bea_gdp'] = {'status': 'OK', 'source': 'BEA:NIPA T10101/5/6',
+                         'note': f'实际 {len(_bea["real_level"])} 季 / 名义 {len(_bea["nominal_level"])} 季'}
+if _gnow:
+    HEALTH['gdpnow'] = {'status': 'OK', 'source': 'AtlantaFed:GDPNow',
+                        'last_date': _gnow[0][0], 'value': _gnow[0][1]}
 
 with open('data_health.json', 'w') as f:
     json.dump({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
