@@ -215,6 +215,7 @@ FRED_IDS = {
     # 经济
     'UNRATE': 'unrate', 'PAYEMS': 'payems', 'CPIAUCSL': 'cpi', 'CPILFESL': 'core_cpi',
     'PCEPILFE': 'core_pce', 'PCEPI': 'pce', 'GDP': 'gdp', 'GDPC1': 'gdp_real',
+    'WEI': 'wei',
     'PCEC96': 'pce_real', 'RSAFS': 'retail',
     'UMCSENT': 'umich', 'ICSA': 'claims', 'DGORDER': 'durables',
     # CPI 分项 (用于通胀拆解)
@@ -245,6 +246,8 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
            'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',}
+# 周度序列: WEI(实时周度经济指数) 每周六更新, 用更宽阈值避免误报"过期"
+WEEKLY = {'wei'}
 # 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"
 SLOW_RELEASE = {'core_pce', 'pce', 'pce_real'}
 for fid, key in FRED_IDS.items():
@@ -302,7 +305,7 @@ def reg(key, series, is_pct=False, unit='', digits=2):
     except Exception:
         _age = 0
     # 时效性阈值: 季度(250d) > 慢发布月度(60d) > 普通月度(40d) > 日度(5d)
-    _max_age = 250 if key in QUARTERLY else (60 if key in SLOW_RELEASE else (40 if key in MONTHLY else 5))
+    _max_age = 250 if key in QUARTERLY else (60 if key in SLOW_RELEASE else (40 if key in MONTHLY else (12 if key in WEEKLY else 5)))
     _stale = _age > _max_age
     R[key] = {
         'date': d, 'value': v, 'pct': percentile(series),

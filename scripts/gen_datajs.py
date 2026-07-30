@@ -771,6 +771,21 @@ pce_d1, pce_d6   = _delta(pce_ys, 1), _delta(pce_ys, 6)
 gdp_d1, gdp_d4   = _delta(gdp_ys, 1), _delta(gdp_ys, 4)
 gdpr_yoy         = gdpr_ys[-1][1] if gdpr_ys else None
 
+# 实际GDP 环比年化 (新闻口径): 与 FRED GDPC1 季度水平相邻两季计算 ((q_t/q_{t-1})^4 - 1)
+def qoq_annualized_series(arr):
+    out = []
+    for i in range(1, len(arr)):
+        p, c = arr[i-1][1], arr[i][1]
+        if p:
+            out.append((arr[i][0], ((c / p) ** 4 - 1) * 100))
+    return out
+gdp_qoq_ys  = qoq_annualized_series(s('gdp_real'))
+gdp_qoq     = gdp_qoq_ys[-1][1] if gdp_qoq_ys else None
+gdp_qoq_d1  = _delta(gdp_qoq_ys, 1) if len(gdp_qoq_ys) > 1 else None
+gdp_qoq_d2  = _delta(gdp_qoq_ys, 2) if len(gdp_qoq_ys) > 2 else None
+_gdp_date   = s('gdp_real')[-1][0] if s('gdp_real') else None
+_gdp_vintage = qlabel(_gdp_date) if _gdp_date else '—'
+
 # 月度序列的诚实四尺度: d/w 不适用, m=Δ1个月, h6=Δ6个月
 def monthly_tf(key, nd=2, mode='diff'):
     arr = s(key)
@@ -848,7 +863,7 @@ DATA['economy'] = {
         {'title':f'失业率 {f2(unrate)}% 爬升','meaning':'从低点回升, 劳动力市场温和走弱, 鸽派论据累积。','direction':'bullish'},
     ],
     'metrics': [
-        {'label':'GDP 同比 (名义)','value':(f2(gdp_yoy)+'%' if gdp_yoy else '—'),'change':pctpt(gdp_d1),'dir':dir_of(gdp_d1),'tag':'GDP','percentile':pct('gdp'),'signal':'bullish','meaning':'季度频率: 月格=上季Δ, 半年格=4季Δ','changes':{'d':'—','w':'—','m':pctpt(gdp_d1),'h6':pctpt(gdp_d4)},'sparkline':series30('gdp')},
+        {'label':'GDP 环比年化 (实际)','value':(f2(gdp_qoq)+'%' if gdp_qoq is not None else '—'),'change':pctpt(gdp_qoq_d1),'dir':dir_of(gdp_qoq_d1),'tag':'GDP','percentile':pct('gdp_real'),'signal':('bullish' if (gdp_qoq or 0) >= 2 else ('mixed' if (gdp_qoq or 0) > 0 else 'bearish')),'meaning':f'季度环比年化, 新闻口径; 数据截至 {_gdp_vintage}' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else ''),'changes':{'d':'—','w':'—','m':'—','h6':pctpt(gdp_qoq_d2)},'sparkline':[v for _, v in gdp_qoq_ys]},
         {'label':'CPI 同比','value':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'change':pctpt(cpi_d1),'dir':dir_of(cpi_d1),'tag':'CPI','percentile':pct('cpi'),'signal':'bearish','meaning':'月度频率: 月格=上月Δ, 半年格=6月Δ','changes':{'d':'—','w':'—','m':pctpt(cpi_d1),'h6':pctpt(cpi_d6)},'sparkline':[v for _, v in cpi_ys]},
         {'label':'核心 CPI 同比','value':(f2(core_cpi_yoy)+'%' if core_cpi_yoy else '—'),'change':pctpt(core_d1),'dir':dir_of(core_d1),'tag':'Core','percentile':pct('core_cpi'),'signal':'mixed','meaning':'服务粘性对冲商品通缩','changes':{'d':'—','w':'—','m':pctpt(core_d1),'h6':pctpt(core_d6)},'sparkline':[v for _, v in core_ys]},
         {'label':'核心 PCE 同比','value':(f2(core_pce_yoy)+'%' if core_pce_yoy else '—'),'change':pctpt(pce_d1),'dir':dir_of(pce_d1),'tag':'PCE','percentile':pct('core_pce'),'signal':'mixed','meaning':'美联储首选, 距目标仍有路程 (滞后1月)','changes':{'d':'—','w':'—','m':pctpt(pce_d1),'h6':pctpt(pce_d6)},'sparkline':[v for _, v in pce_ys]},
@@ -907,7 +922,7 @@ DATA['economy'] = {
     ],
     'chartNotes': {
         'inflNote': f'CPI {f2(cpi_yoy)}% (月Δ{pctpt(cpi_d1)}) / 核心CPI {f2(core_cpi_yoy)}% / 核心PCE {f2(core_pce_yoy)}% (滞后1月) · 真实同比序列',
-        'gdpNote': f'名义同比 {f2(gdp_yoy)}% vs 实际同比 {f2(gdpr_yoy)}% · 季度频率',
+        'gdpNote': f'实际环比年化 {f2(gdp_qoq)}% ({_gdp_vintage}) · 名义同比 {f2(gdp_yoy)}% · 实际同比 {f2(gdpr_yoy)}%' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else ''),
         'empNote': f'近3月非农: ' + (', '.join(f'{v:+.0f}K' for _, v in nfp_diffs[-3:]) if nfp_diffs else '—') + f' · 失业率 {f2(unrate)}%',
         'trendNote': f'CPI同比半年Δ{pctpt(cpi_d6)} · 非农6个月累计{(f"{nfp_h6:+.0f}K" if nfp_h6 is not None else "—")} · 失业率半年Δ{pctpt(unrate_tf["h6"])}',
         'breakdownSub': '分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ',
