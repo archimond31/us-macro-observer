@@ -131,6 +131,14 @@ def series30(key):
 def date_of(key):
     v = g(key); return v['date'] if v else None
 
+def _dates_for(ref_key):
+    """取参考序列最近 N 个日期作为 X 轴时间轴 (N=该序列 series90 长度)。无数据则退回索引。"""
+    arr = s(ref_key)
+    n = len(series90(ref_key))
+    if arr:
+        return [d for d, _ in arr[-n:]]
+    return list(range(n))
+
 META_DATE = date_of('spx') or date_of('dgs10') or '2026-07-24'
 
 # ---------- 格式化工具 ----------
@@ -473,36 +481,36 @@ def trend_meaning(name, ch):
     return '多尺度方向不一, 趋势不明'
 
 def _build_us_indices_chart():
-    """构建美股五大指数归一化走势图数据 (起点=100, 类似用户截图)。
+    """构建美股五大指数走势图数据 (归一化至起点=0%, 即累计收益率)。
     数据源优先级: Yahoo 实时 > FRED 滞后。取最近 ~500 个交易日(约2年)。
-    """
-    # 五大指数的 (显示名, 内部key序列, 颜色索引)
+    X轴改为时间轴(日期)。"""
     indices = [
         ('标普500', 'spx'), ('纳斯达克100', 'ndx'),
         ('道琼斯', 'dji_yahoo' if s('dji_yahoo') else 'dji'),
         ('罗素2000', 'rut'), ('费城半导体', 'sox'),
     ]
-    # 找最长公共长度 (以最短序列对齐)
     raw_series = {}
     for name, key in indices:
         arr = s(key)
         if arr:
-            raw_series[name] = [v for _, v in arr]
+            raw_series[name] = [(d, v) for d, v in arr]
     if len(raw_series) < 3:
         return {'labels': [], 'series': {}, 'note': '数据不足'}
     min_len = min(len(v) for v in raw_series.values())
-    # 取最近 500 点(约2年), 或全部如果不足
     take = min(500, min_len)
-    labels = list(range(take))
+    # 用参考序列(spx 优先)的日期作为 X 轴时间轴
+    ref_name = '标普500' if '标普500' in raw_series else list(raw_series.keys())[0]
+    dates = [d for d, _ in raw_series[ref_name][-take:]]
     series = {}
     for name, key in indices:
         if name not in raw_series:
             continue
         arr = raw_series[name][-take:]
-        base = next((x for x in arr if x), None)
+        base = next((v for _, v in arr if v), None)
         if base and base != 0:
-            series[name] = [round(x / base * 100, 2) if x else None for x in arr]
-    return {'labels': labels, 'series': series, 'note': f'归一化(起点=100), 近{take}个交易日'}
+            # 归一化至累计收益率(起点=0%), 而非起点=100
+            series[name] = [round((x / base - 1) * 100, 2) if x else None for _, x in arr]
+    return {'labels': dates, 'series': series, 'note': f'累计涨跌(起点=0%) · 近{take}个交易日'}
 
 ASSET_MAP = [
     ('标普500','spx','^GSPC',2,''), ('纳斯达克100','ndx','^NDX',2,''),
@@ -549,7 +557,7 @@ DATA['assets'] = {
     'metrics': metrics_assets,
     'trendData': trend_assets,
     'table': table_assets,
-    'chartData': {'labels': list(range(len(series30('spx')))), 'series': {
+    'chartData': {'labels': ([d for d, _ in s('spx')[-30:]] if s('spx') else list(range(30))), 'series': {
         'SPX': series30('spx'), 'WTI': series30('wti'), 'Gold': series30('gold'), 'BTC': series30('btc')}},
     'correlation': {'assets':[lb for lb, _ in CORR_KEYS],
         'matrix': corr_matrix,
@@ -560,7 +568,7 @@ DATA['assets'] = {
         {'trigger':'VIX 收盘站上 <span class="watch-threshold">20</span>','implication':'波动率目标基金强制减仓, 股市抛压自我强化','status':f'距离 {20-v_vix:.1f}'},
         {'trigger':'WTI 突破 <span class="watch-threshold">$90</span>','implication':'能源冲击确认, 通胀预期与利率进一步上行','status':f'距离 {max(0,90-v_wti):.1f}'},
     ],
-    # 美股五大指数归一化走势 (起点=100, 用较长序列展示相对强弱)
+    # 美股五大指数累计涨跌走势 (起点=0%, 用较长序列展示相对强弱)
     'usIndicesChart': _build_us_indices_chart(),
 }
 
@@ -621,9 +629,9 @@ DATA['rates'] = {
         'oneMonthAgo': curve_snapshot(21),
         'oneYearAgo': curve_snapshot(252),
     },
-    'chartData': {'labels': list(range(len(series90('dgs10')))), 'series': {
+    'chartData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y名义': series90('dgs10'), '10Y实际': series90('tips10'), '2Y': series90('dgs2'), '30Y': series90(_30y_key)}},
-    'spreadData': {'labels': list(range(len(series90('dgs10')))), 'series': {
+    'spreadData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y-2Y利差': [round((a-b)*100,2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
         '通胀预期(Breakeven)': series90('bei10')}},
     'detailedTable': [
@@ -671,7 +679,7 @@ DATA['fed'] = {
         {'name':'RRP 余额','unit':'$B','current':f'${f2(v_rrp2)}B','changes':{k:(round(tfm("rrp")[k],3) if tfm("rrp")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'缓冲实质归零的结构事件'},
         {'name':'TGA 余额','unit':'$B','current':f'${comma(v_tga2,1)}B' if v_tga2 else '—','changes':{k:(round(tfm("tga")[k],1) if tfm("tga")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'财政部现金, 上升则抽水'},
     ],
-    'chartData': {'labels': list(range(len(series90('walcl')))), 'series': {
+    'chartData': {'labels': _dates_for('walcl'), 'series': {
         '总资产': [round(x/1e6,2) for x in series90('walcl')], '国债': [round(x/1e6,2) for x in series90('treast')], 'MBS': [round(x/1e6,2) for x in series90('mbst')]}},
     'policyTable': [
         {'item':'联邦基金利率目标区间','value':f'{f2(val("ffr_lo"))}% - {f2(val("ffr_up"))}%','change':'维持','note':'2026年以来区间'},
@@ -748,7 +756,7 @@ DATA['liquidity'] = {
             {'name':'RRP 余额','value':round(v_rrpn/1000,4),'unit':'T$','sign':'−','color':'#2a9d8f','note':'NY Fed · 已耗尽'},
             {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'Treasury DTS · 变动中'},
         ]},
-    'chartData': {'labels': list(range(len(series90('netliq') if v_nl else series90('walcl')))), 'series': {
+    'chartData': {'labels': _dates_for('netliq' if v_nl else 'walcl'), 'series': {
         '净流动性': [round(x/1000,2) for x in series90('netliq')] if v_nl else [],
         '准备金': [round(x/1e6,2) for x in series90('resbal')],
         'TGA': [round(x/1000,2) for x in series90('tga')] if v_tgan else []}},
@@ -1003,7 +1011,7 @@ DATA['credit'] = {
         {'name':'IG OAS (投资级)','unit':'bp','current':f2(igv)+'%','changes':{k:(round(tfm('ig')[k]*100,1) if tfm('ig')[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'高质量信用纹丝不动'},
         {'name':'CCC-BB 分层利差','unit':'bp','current':f2(ccc-bb)+'%','changes':{k:(round((tfm('ccc')[k]-tfm('bb')[k])*100,1) if (tfm('ccc')[k] is not None and tfm('bb')[k] is not None) else None) for k in ('d','w','m','h6')},'meaning':'分层走阔——风险偏好退潮的结构证据'},
     ],
-    'chartData': {'labels': list(range(len(series90('ig')))), 'series': {'IG':series90('ig'),'BBB':series90('bbb'),'BB':series90('bb'),'CCC':series90('ccc')}},
+    'chartData': {'labels': _dates_for('ig'), 'series': {'IG':series90('ig'),'BBB':series90('bbb'),'BB':series90('bb'),'CCC':series90('ccc')}},
     'ladder': {'ratings':['AAA','AA','A','BBB','BB','B','CCC'],
         'oas':[f2(aaa),f2(aa),f2(av),f2(bbb),f2(bb),f2(b),f2(ccc)],
         'histMedian':_credit_ladder_median,
@@ -1037,11 +1045,11 @@ vix=val('vix'); vvix=val('vvix'); move=val('move'); ovx=val('ovx'); gvz=val('gvz
 vix9d=val('vix9d'); vix3m=val('vix3m')
 
 def rebase(arr):
-    """归一化到起点=100, 便于跨资产同图比较 (真实形状, 非伪造)"""
+    """归一化到累计收益率(起点=0%), 便于跨资产同图比较 (真实形状, 非伪造)"""
     if not arr: return []
     v0 = next((x for x in arr if x), None)
     if not v0: return []
-    return [round(x / v0 * 100, 1) if x else None for x in arr]
+    return [round((x / v0 - 1) * 100, 1) if x else None for x in arr]
 
 def pt_str(x, nd=2):
     if x is None: return '—'
@@ -1101,7 +1109,7 @@ DATA['volatility'] = {
     ] if s],
     'metrics': vol_metrics,
     'trendData': vol_trends,
-    'chartData': {'labels': list(range(len(series90('vix')))),
+    'chartData': {'labels': _dates_for('vix'),
         'series': {lb: rebase(series90(k)) for lb, k in [('VIX','vix'),('VVIX','vvix'),('MOVE','move'),('OVX','ovx')] if series90(k)}},
     'termStructure': {'labels':[lb for lb, _ in ts_points],'values':[round(v,1) for _, v in ts_points],'state':ts_state},
     'crossAsset': {'labels':[r[0] for r in ca_rows],'current':[round(r[1],1) for r in ca_rows],
@@ -1123,7 +1131,7 @@ DATA['volatility'] = {
         {'trigger':'OVX 突破 <span class="watch-threshold">50</span>','implication':'油价波动失控, 传导至所有资产保证金','status':(f'距离 {max(0,50-ovx):.0f}' if ovx else '—')},
     ],
     'chartNotes': {
-        'volNote': '四条曲线归一化(起点=100) · 形状真实, 便于比较相对变化',
+        'volNote': '四条曲线累计涨跌(起点=0%) · 形状真实, 便于比较相对变化',
         'tsNote': f'VIX期限结构: {ts_state} · 9D/1M/3M 真实读数',
         'dashNote': (f'压力区: {",".join(stress_assets)}' if stress_assets else '无资产进入压力区') + ' —— 冲击源头定位',
         'trendNote': f'VIX周Δ{bp(tfm("vix")["w"],"pt")}' + (f' · OVX月Δ{f1(tfm("ovx")["m"])}pt' if ovx and tfm("ovx")["m"] is not None else '') + (f' · SKEW {f1(skew)}' if skew else ''),
@@ -1262,31 +1270,31 @@ _v_etf_btc = val('etf_btc_flow'); _v_etf_eth = val('etf_eth_flow')
 _btc_ch = asset_changes('btc') if _v_btc is not None else {}
 _eth_ch = asset_changes('eth') if _v_eth is not None else {}
 
-# BTC vs ETH 归一化对比 (同图)
+# BTC vs ETH 归一化对比 (同图) — 累计收益率(起点=0%)
 def _crypto_norm_chart():
     btc_arr = s('btc'); eth_arr = s('eth')
     if not (btc_arr and eth_arr):
         return {'labels': [], 'series': {}}
     take = min(500, len(btc_arr), len(eth_arr))
-    labels = list(range(take))
+    dates = [d for d, _ in btc_arr[-take:]]
     bv = [v for _, v in btc_arr[-take:]]; ev = [v for _, v in eth_arr[-take:]]
     b0 = next((x for x in bv if x), 1); e0 = next((x for x in ev if x), 1)
     return {
-        'labels': labels,
+        'labels': dates,
         'series': {
-            'BTC': [round(x / b0 * 100, 2) if (b0 and x) else None for x in bv],
-            'ETH': [round(x / e0 * 100, 2) if (e0 and x) else None for x in ev],
+            'BTC': [round((x / b0 - 1) * 100, 2) if (b0 and x) else None for x in bv],
+            'ETH': [round((x / e0 - 1) * 100, 2) if (e0 and x) else None for x in ev],
         },
     }
 
-# ETH/BTC 比率走势
+# ETH/BTC 比率走势 — 时间轴 X 轴
 def _ethbtc_chart():
     arr = s('eth_btc_ratio')
     if not arr:
         return {'labels': [], 'series': {}}
     take = min(500, len(arr))
     return {
-        'labels': list(range(take)),
+        'labels': [d for d, _ in arr[-take:]],
         'series': {'ETH/BTC': [round(v, 6) for _, v in arr[-take:]]},
     }
 
@@ -1301,7 +1309,7 @@ def _etf_flow_data():
     btc_l = (btc_raw or [])[-n:]; eth_l = (eth_raw or [])[-n:]
     # 用日期做 labels
     dates = [d for d, _ in btc_l] if btc_l else ([d for d, _ in eth_l] if eth_l else [])
-    out['labels'] = [d[5:] for d in dates]  # 'MM-DD' 格式
+    out['labels'] = [d for d in dates]  # 完整日期 'YYYY-MM-DD', 前端统一格式化为时间轴
     out['btc'] = [round(v, 1) for _, v in btc_l]
     out['eth'] = [round(v, 1) for _, v in eth_l]
     # 累计净流入

@@ -234,6 +234,15 @@ function sectionCard(title, sub, inner) {
   return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div></div><div style="padding:4px 4px">' + inner + '</div></div>';
 }
 
+// 把 'YYYY-MM-DD' 日期标签格式化为 'YY/MM' 时间轴 (非日期标签原样返回)
+function fmtDate(l) {
+  if (typeof l === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(l)) {
+    const p = l.split('-');
+    return p[0].slice(2) + '/' + p[1];
+  }
+  return l;
+}
+
 function baseOpts(yUnit) {
   const opts = {
     responsive: true,
@@ -252,7 +261,7 @@ function baseOpts(yUnit) {
     scales: {
       x: {
         grid: { color: COLORS.grid, drawBorder: false },
-        ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 8 }
+        ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 8, callback: fmtDate }
       },
       y: {
         grid: { color: COLORS.grid, drawBorder: false },
@@ -378,12 +387,12 @@ function renderAssets(c) {
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
   html += '<div class="chart-row two-col">' +
-    chartCard('资产走势对比', '近30日归一化(起点=100)', 'assetsPerf', 'tall') +
+    chartCard('资产走势对比', '近30日累计涨跌(起点=0%)', 'assetsPerf', 'tall') +
     chartCard('跨资产相关性矩阵', '共同交易日日度收益真实相关 · 股债/油股符号变化是regime信号', 'corr', 'tall') +
   '</div>';
   html += chartCard('大类资产热力图', '日涨跌幅 · 红=涨 绿=跌', 'heatmap', 'short');
   html += '<div class="chart-row one-col">' +
-    chartCard('美股指数走势（归一化）', d.usIndicesChart.note || '起点=100 · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
+    chartCard('美股指数走势（累计涨跌）', d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
     '</div>';
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
@@ -400,11 +409,11 @@ function renderAssets(c) {
       labels: sl,
       datasets: Object.keys(se).map((n, i) => ({
         label: n,
-        data: se[n].slice(-30).map(v => Math.round((v / se[n][0]) * 10000) / 100),
+        data: se[n].slice(-30).map(v => Math.round((v / se[n][0] - 1) * 10000) / 100),
         borderColor: COLORS.series[i], backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
       }))
     },
-    options: baseOpts('')
+    options: baseOpts('%')
   });
   renderCorr(document.getElementById('corr').parentElement, d.correlation);
   renderAssetHeat(document.getElementById('heatmap').parentElement, d.table);
@@ -436,7 +445,7 @@ function renderCrypto(c) {
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
   html += '<div class="chart-row two-col">' +
-    chartCard('BTC vs ETH 走势对比', '归一化(起点=100) · 相对强弱', 'btcEth', 'tall') +
+    chartCard('BTC vs ETH 走势对比', '累计涨跌(起点=0%) · 相对强弱', 'btcEth', 'tall') +
     chartCard('ETH/BTC 比率', 'Altcoin 季节性核心指标 · >0.05 ETH强势', 'ethBtc', 'tall') +
     '</div>';
   if (d.etfFlows && d.etfFlows.labels.length > 0) {
@@ -460,7 +469,7 @@ function renderCrypto(c) {
           backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, tension: 0.3
         }))
       },
-      options: baseOpts('')
+      options: baseOpts('%')
     });
   }
   if (d.ethBtcChart && d.ethBtcChart.series && d.ethBtcChart.series['ETH/BTC']) {
@@ -514,7 +523,7 @@ function renderCrypto(c) {
           }
         },
         scales: {
-          x: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 15 } },
+          x: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 15, callback: fmtDate } },
           y: {
             grid: { color: COLORS.grid, drawBorder: false },
             ticks: { color: COLORS.text, font: { size: 10 }, callback: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(0) + 'M'; } }
@@ -1045,7 +1054,7 @@ function renderVolatility(c) {
   html += metricCardsV3(d.metrics);
   const vn = d.chartNotes || {};
   html += '<div class="chart-row two-col">' +
-    chartCard('跨资产波动率走势 (归一化)', vn.volNote || '起点=100, 比较相对变化', 'volChart', 'tall') +
+    chartCard('跨资产波动率走势 (累计涨跌)', vn.volNote || '起点=0%, 累计涨跌', 'volChart', 'tall') +
     chartCard('VIX 期限结构', vn.tsNote || 'Contango=未定价即时风险', 'termStruct', 'tall') +
   '</div>';
   html += sectionCard('跨资产波动率仪表盘', vn.dashNote || '压力区定位冲击源头', renderCrossAssetVol(d.crossAsset));
@@ -1067,7 +1076,7 @@ function renderVolatility(c) {
         backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
       }))
     },
-    options: baseOpts('')
+    options: baseOpts('%')
   });
 
   const ts = d.termStructure;
