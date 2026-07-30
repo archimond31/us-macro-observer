@@ -195,6 +195,7 @@ FRED_IDS = {
     'DGS10': 'dgs10', 'DGS20': 'dgs20', 'DGS30': 'dgs30',
     'DFII5': 'tips5', 'DFII10': 'tips10', 'DFII30': 'tips30', 'T10YIE': 'bei10',
     'DFEDTARU': 'ffr_up', 'DFEDTARL': 'ffr_lo', 'IORB': 'iorb', 'DPCREDIT': 'disc',
+    'FEDFUNDS': 'ffr_eff',  # 有效联邦基金利率 (比 DFEDTARU/L 更当前, 用于目标区间回退)
     # 美联储资产负债表 (周度) — MBSST 已下架, MBS 持仓用 WSHOMCB
     'WALCL': 'walcl', 'TREAST': 'treast', 'WSHOMCB': 'mbst', 'WRESBAL': 'resbal',
     # 流动性
@@ -244,6 +245,8 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
            'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',}
+# 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"
+SLOW_RELEASE = {'core_pce', 'pce', 'pce_real'}
 for fid, key in FRED_IDS.items():
     days = 1500 if key in QUARTERLY else (760 if key in MONTHLY else 380)
     S[key] = fred(fid, days=days)
@@ -298,7 +301,8 @@ def reg(key, series, is_pct=False, unit='', digits=2):
         _age = (datetime.now() - datetime.strptime(d, '%Y-%m-%d')).days
     except Exception:
         _age = 0
-    _max_age = 200 if key in QUARTERLY else (40 if key in MONTHLY else 5)
+    # 时效性阈值: 季度(250d) > 慢发布月度(60d) > 普通月度(40d) > 日度(5d)
+    _max_age = 250 if key in QUARTERLY else (60 if key in SLOW_RELEASE else (40 if key in MONTHLY else 5))
     _stale = _age > _max_age
     R[key] = {
         'date': d, 'value': v, 'pct': percentile(series),
@@ -344,6 +348,51 @@ def merge_netliq():
 S['netliq'] = merge_netliq()
 print(f'  NETLIQ → {len(S["netliq"])} pts, latest {last(S["netliq"])}')
 reg('netliq', S['netliq'])
+
+# ================= 数据源自检 (health check) =================
+# 对所有序列做新鲜度自检; 对已知主源停更/陈旧的指标, 自动切到备用源取最新数据
+HEALTH = {}
+def _src_of(k):
+    for fid, key in FRED_IDS.items():
+        if key == k: return 'FRED:' + fid
+    for sym, key in YH_IDS.items():
+        if key == k: return 'Yahoo:' + sym
+    return {'sofr': 'NYFed:SOFR', 'rrp_api': 'NYFed:RRP', 'srf': 'NYFed:SRF',
+            'tga': 'FRED:WTREGEN→DTS', 'netliq': 'derived'}.get(k, '?')
+
+def _age_of(d):
+    try: return (datetime.now() - datetime.strptime(d, '%Y-%m-%d')).days
+    except Exception: return 0
+
+for k, r in R.items():
+    if r is None:
+        HEALTH[k] = {'status': 'NO_DATA', 'source': _src_of(k)}
+        continue
+    HEALTH[k] = {'status': 'STALE' if r.get('stale') else 'OK', 'source': _src_of(k),
+                 'last_date': r['date'], 'age': r.get('age'), 'value': r.get('value'),
+                 'fallback': r.get('fallback', False)}
+
+# 联邦基金目标区间: DFEDTARU/DFEDTARL 已停更(2026-01), 用更当前的有效利率 FEDFUNDS 推导目标区间
+# 推导规则: 上限 = ceil(有效利率*4)/4, 下限 = 上限 - 0.25 (标准 25bp 区间)
+if R.get('ffr_up') and R['ffr_up'].get('stale') and S.get('ffr_eff'):
+    d_eff, eff = last(S['ffr_eff'])
+    if eff is not None:
+        up = ((eff * 4 + 0.999) // 1) / 4.0
+        lo = up - 0.25
+        for key, val in (('ffr_up', up), ('ffr_lo', lo)):
+            age = _age_of(d_eff)
+            R[key].update({'date': d_eff, 'value': val, 'stale': False, 'age': age, 'fallback': True})
+            HEALTH[key] = {'status': 'OK(fallback→FEDFUNDS)', 'source': 'FRED:FEDFUNDS→derive',
+                           'last_date': d_eff, 'age': age, 'value': val, 'fallback': True}
+        print(f'  [数据源自检] 联邦基金目标区间改用 FEDFUNDS 有效利率({eff}%)推导: {lo}%-{up}%')
+
+with open('data_health.json', 'w') as f:
+    json.dump({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
+               'series': HEALTH}, f, indent=2, default=str)
+_stale = [k for k, v in HEALTH.items() if v['status'] == 'STALE' or v['status'] == 'NO_DATA']
+print(f'[数据源自检] 共 {len(HEALTH)} 个序列, 健康 {len(HEALTH)-len(_stale)}, 需关注 {len(_stale)}')
+if _stale:
+    print(f'[数据源自检] 需关注: {", ".join(_stale)}')
 
 with open('computed.json', 'w') as f:
     json.dump(R, f, default=str)
