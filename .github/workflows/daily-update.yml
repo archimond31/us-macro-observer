@@ -35,6 +35,7 @@ jobs:
         working-directory: scripts
         env:
           BEA_API_KEY: ${{ secrets.BEA_API_KEY }}
+          COINGLASS_API_KEY: ${{ secrets.COINGLASS_API_KEY }}
 
       - name: Generate data.js
         run: python gen_datajs.py

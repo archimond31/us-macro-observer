@@ -9,6 +9,7 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
   - Yahoo Finance (UA)      黄金/白银/ETF/外汇/NDX/RUT/波动率/30Y
   - BEA NIPA API (需 BEA_API_KEY)  最新实际GDP (T10101/5/6), 覆盖 FRED GDPC1 滞后
   - Atlanta Fed GDPNow (免key)       本季实时预估 (端点可能变更, 失败静默跳过)
+  - CoinGlass API (需 COINGLASS_API_KEY)  BTC/ETH 现货 ETF 每日净流量 (flow-history, 替代被 Cloudflare 拦截的 farside)
 
 自动计算: 日/周/月/半年变化 (1/5/21/126 个交易日)、1年历史分位数
 输出: ../data.js
@@ -147,64 +148,61 @@ def yahoo(symbol, rng='2y'):
         print(f'  [YH:{symbol}] FAIL {e}')
         return []
 
-# ---------- Crypto ETF 流量 (免费源: farside.co.uk) ----------
-# 抓取 BTC / ETH 现货 ETF 日度净流入(百万美元), 失败则返回空(不阻塞管线)
-def fetch_crypto_etf_flows(days=60):
-    """从 farside.co.uk 抓取 BTC/ETH ETF 净流入数据。返回 {'btc':[...], 'eth':[...]} 或 None。"""
-    try:
-        html = http_get('https://farside.co.uk/bitcoin-etf-data.htm', timeout=15, use_ua=True)
-        if not html or 'Total' not in html[:5000]:
-            print('  [ETF:farside] 页面异常, 跳过')
-            return None
-    except Exception as e:
-        print(f'  [ETF:farside] FAIL {e}')
-        return None
-    # 解析表格行: 每行格式如 "dd-mmm-yyyy | $xxx | $xxx | ... Total | $net"
-    # 用正则提取日期和 Total 列的数值
-    import re as _re
-    btc_rows, eth_rows = [], []
-    # BTC 表格: 找 "Bitcoin ETFs" 之后的 table
-    # 简化策略: 提取所有 "Total" 行附近的数字
-    pat = _re.compile(r'<td[^>]*>(\d{1,2}-[A-Za-z]{3}-\d{4})</td>.*?<td[^>]*>\$?([-\d,]+\.?\d*)</td>', _re.DOTALL)
-    # 更可靠: 按 行模式匹配日期+净流入
-    for m in _re.finditer(r'(\d{2}-\w{3}-\d{4})\s+</td>\s*<td[^>]*>\s*\$?([-\d,]+)\s*</td>', html):
-        dstr, val_str = m.group(1), m.group(2).replace(',', '')
+# ---------- Crypto ETF 流量 (CoinGlass API, 需免费 key: coinglass.com) ----------
+# 抓取 BTC / ETH 现货 ETF 日度净流量(百万美元), 失败则返回空(不阻塞管线)
+def http_get_auth(url, api_key, params=None, timeout=20):
+    """带 API key header 的 curl 拉取 (CoinGlass 等需 header 鉴权的源)。"""
+    import urllib.parse as _up
+    if params:
+        url = url + ('&' if '?' in url else '?') + _up.urlencode(params)
+    last_err = None
+    for attempt in range(3):
         try:
-            v = float(val_str)
-            # 转换日期: '24-Jul-2024' -> '2024-07-24'
-            parts = dstr.split('-')
-            _mon_map = {'Jan':'01','Feb':'02','Mar':'04','Apr':'04','May':'05','Jun':'06',
-                        'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}
-            ds = f'{parts[2]}-{_mon_map.get(parts[1],"01")}-{parts[0]}'
-            btc_rows.append((ds, v))
-        except (ValueError, IndexError):
-            continue
-    # ETH 表格类似
-    try:
-        eth_html = http_get('https://farside.co.uk/ethereum-etf-data.htm', timeout=15, use_ua=True)
-        if eth_html and 'Total' in eth_html[:5000]:
-            for m in _re.finditer(r'(\d{2}-\w{3}-\d{4})\s+</td>\s*<td[^>]*>\s*\$?([-\d,]+)\s*</td>', eth_html):
-                dstr, val_str = m.group(1), m.group(2).replace(',', '')
-                try:
-                    v = float(val_str)
-                    parts = dstr.split('-')
-                    _mon_map = {'Jan':'01','Feb':'02','Mar':'04','Apr':'04','May':'05','Jun':'06',
-                                'Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'}
-                    ds = f'{parts[2]}-{_mon_map.get(parts[1],"01")}-{parts[0]}'
-                    eth_rows.append((ds, v))
-                except (ValueError, IndexError):
-                    continue
-    except Exception as e:
-        print(f'  [ETF:farside:eth] FAIL {e}')
+            cmd = ['curl', '-s', '--max-time', str(timeout),
+                   '-H', f'CG-API-KEY: {api_key}',
+                   '-H', 'Accept: application/json']
+            cmd.append(url)
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 15, encoding='utf-8', errors='replace')
+            if r.returncode == 0 and r.stdout.strip():
+                return r.stdout
+            last_err = f'curl exit {r.returncode}'
+        except Exception as e:
+            last_err = str(e)
+        time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(last_err or 'unknown')
 
-    if btc_rows:
-        btc_rows.sort()
-        print(f'  [ETF:BTC] → {len(btc_rows)} 条流量记录, 最新 {btc_rows[-1]}')
-    if eth_rows:
-        eth_rows.sort()
-        print(f'  [ETF:ETH] → {len(eth_rows)} 条流量记录, 最新 {eth_rows[-1]}')
-    return {'btc': btc_rows[-days:] if btc_rows else [],
-            'eth': eth_rows[-days:] if eth_rows else []}
+def fetch_coinglass_etf_flows(key, days=60):
+    """从 CoinGlass /api/etf/{bitcoin,ethereum}/flow-history 抓取每日净流量。
+    返回 {'btc':[(date,flow$M),...], 'eth':[...]} 或 None(无 key/失败)。"""
+    if not key:
+        print('  [ETF:CoinGlass] 未配置 COINGLASS_API_KEY, 跳过')
+        return None
+    base = 'https://open-api-v4.coinglass.com/api/etf'
+    out = {'btc': [], 'eth': []}
+    for asset, outkey in (('bitcoin', 'btc'), ('ethereum', 'eth')):
+        try:
+            url = f'{base}/{asset}/flow-history'
+            txt = http_get_auth(url, key, params={'interval': '1d', 'limit': days}, timeout=20)
+            js = json.loads(txt)
+            if not js or js.get('code') != '0' or not js.get('data'):
+                print(f'  [ETF:CoinGlass:{asset}] 无数据 code={js.get("code") if js else "none"}')
+                continue
+            rows = []
+            for row in js['data']:
+                ts = row.get('timestamp'); flow = row.get('flow_usd')
+                if ts is None or flow is None:
+                    continue
+                ds = datetime.utcfromtimestamp(int(ts) / 1000).strftime('%Y-%m-%d')
+                rows.append((ds, round(flow / 1e6, 1)))
+            rows.sort()
+            out[outkey] = rows
+            if rows:
+                print(f'  [ETF:CoinGlass:{asset}] → {len(rows)} 条, 最新 {rows[-1]}')
+        except Exception as e:
+            print(f'  [ETF:CoinGlass:{asset}] FAIL {e}')
+    if not (out['btc'] or out['eth']):
+        return None
+    return out
 
 # ---------- BEA 官方 API (需免费 key: apps.bea.gov/api/signup) ----------
 # 提供比 FRED GDPC1 更当前的"已发布实际 GDP":
@@ -419,8 +417,9 @@ for sym, key in YH_IDS.items():
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
 
-# Crypto ETF 流量 (farside.co.uk 免费源, 失败不阻塞)
-_etf_flows = fetch_crypto_etf_flows()
+# Crypto ETF 流量 (CoinGlass API, 需 COINGLASS_API_KEY; 无 key 则跳过, 图表显示"数据暂缺")
+_etf_key = os.environ.get('COINGLASS_API_KEY')
+_etf_flows = fetch_coinglass_etf_flows(_etf_key)
 if _etf_flows:
     S['etf_btc_flow'] = _etf_flows['btc']
     S['etf_eth_flow'] = _etf_flows['eth']
