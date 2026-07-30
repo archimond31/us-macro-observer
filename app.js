@@ -235,10 +235,21 @@ function sectionCard(title, sub, inner) {
 }
 
 // 把 'YYYY-MM-DD' 日期标签格式化为 'YY/MM' 时间轴 (非日期标签原样返回)
-function fmtDate(l) {
-  if (typeof l === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(l)) {
-    const p = l.split('-');
-    return p[0].slice(2) + '/' + p[1];
+function fmtDate(l, idx) {
+  // Chart.js v4 category 轴在 maxTicksLimit 自动跳过时常传入数值索引而非标签字符串
+  // 此时需通过 this 上下文回查 data.labels 取得真实日期
+  var label = l;
+  if (typeof label !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(label)) {
+    try {
+      if (this && this.chart && this.chart.data && this.chart.data.labels) {
+        var realIdx = (typeof idx === 'number') ? idx : Math.round(Number(label));
+        label = this.chart.data.labels[realIdx] || label;
+      }
+    } catch(e) {}
+  }
+  if (typeof label === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(label)) {
+    var parts = label.split('-');
+    return parts[0].slice(2) + '/' + parts[1];
   }
   return l;
 }
@@ -970,7 +981,7 @@ function renderEconomy(c) {
         tooltip: { backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4', padding: 10 }
       },
       scales: {
-        x: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text } },
+        x: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text, callback: fmtDate } },
         y: { position: 'left', grid: { color: COLORS.grid }, ticks: { color: COLORS.text }, title: { display: true, text: 'K', color: COLORS.text } },
         y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: COLORS.text, callback: function (v) { return v + '%'; } } }
       }
