@@ -88,10 +88,10 @@ def nyfed_srf(n=60):
         print(f'  [NYFED:SRF] FAIL {e}'); return []
 
 # ---------- TGA (Treasury General Account) ----------
-# 首选 FRED 官方序列 WTREGENL (单位 $M, 美联储 H.4.1 口径, 即市场普遍引用的 TGA 数字)
-# 比 Treasury DTS 分页拉取 (open_today_bal 字段口径歧义) 更可靠、权威
+# 首选 FRED 官方序列 WTREGEN (单位 $M=百万美元, 美联储 H.4.1 口径, 即市场普遍引用的 TGA 余额)
+# 注意: 旧代码用的 WTREGENL 在 FRED 上不存在(返回404), 会静默回退到易错的 Treasury DTS
 def fetch_tga_fred(days=420):
-    s = fred('WTREGENL', days=days)
+    s = fred('WTREGEN', days=days)
     if not s:
         return []
     return [(d, v / 1000.0) for d, v in s]   # $M → $B
@@ -124,11 +124,11 @@ def fetch_tga(days=420):
     s = fetch_tga_fred(days)
     if s:
         return s
-    print('  [TGA] FRED WTREGENL 不可用, 回退 Treasury DTS')
+    print('  [TGA] FRED WTREGEN 不可用, 回退 Treasury DTS')
     return fetch_tga_dts(days)
 
 # ---------- Yahoo ----------
-def yahoo(symbol, rng='1y'):
+def yahoo(symbol, rng='2y'):
     enc = symbol.replace('^', '%5E').replace('=', '%3D')
     url = f'https://query2.finance.yahoo.com/v8/finance/chart/{enc}?range={rng}&interval=1d'
     try:
@@ -203,8 +203,7 @@ FRED_IDS = {
     'BAMLC0A0CM': 'ig', 'BAMLC0A4CBBB': 'bbb', 'BAMLH0A0HYM2': 'hy',
     'BAMLH0A1HYBB': 'bb', 'BAMLH0A2HYB': 'b', 'BAMLH0A3HYC': 'ccc',
     'BAMLC0A1CAAA': 'aaa', 'BAMLC0A2CAA': 'aa', 'BAMLC0A3CA': 'a',
-    # 波动率
-    'VIXCLS': 'vix', 'OVXCLS': 'ovx', 'GVZCLS': 'gvz',
+    # 波动率 (VIX/OVX/GVZ 的 FRED CLS 序列已于 2014/2019 下架, 改从 Yahoo 取实时值, 见 YH_IDS)
     # 注意: VIX9D/VIX3M/SKEW 已被 FRED 下架 (CBOE 授权), 改从 Yahoo 取
     # 金融条件
     'NFCI': 'nfci',
@@ -262,7 +261,8 @@ YH_IDS = {
     'NG=F': 'natgas', 'HG=F': 'copper', 'DX-Y.NYB': 'dxy',
     'EURUSD=X': 'eurusd', 'GBPUSD=X': 'gbpusd', 'USDJPY=X': 'usdjpy', 'USDCNH=X': 'usdcnh',
     'TLT': 'tlt', 'IEF': 'ief', 'LQD': 'lqd', 'HYG': 'hyg', 'SPY': 'spy', 'QQQ': 'qqq',
-    '^VVIX': 'vvix', '^MOVE': 'move', '^SKEW': 'skew', '^VIX3M': 'vix3m', '^VIX9D': 'vix9d'
+    '^VVIX': 'vvix', '^MOVE': 'move', '^SKEW': 'skew', '^VIX3M': 'vix3m', '^VIX9D': 'vix9d',
+    '^VIX': 'vix', '^OVX': 'ovx', '^GVZ': 'gvz', '^TYX': 'tyx'
 }
 for sym, key in YH_IDS.items():
     S[key] = yahoo(sym)
@@ -293,12 +293,21 @@ def reg(key, series, is_pct=False, unit='', digits=2):
     d, v = last(series)
     if v is None:
         R[key] = None; print(f'  !! {key} no data'); return
+    # 时效性检测: 抓取失败 + 缓存回补会造成数据陈旧, 这里标记并在 CI 日志告警
+    try:
+        _age = (datetime.now() - datetime.strptime(d, '%Y-%m-%d')).days
+    except Exception:
+        _age = 0
+    _max_age = 200 if key in QUARTERLY else (40 if key in MONTHLY else 5)
+    _stale = _age > _max_age
     R[key] = {
         'date': d, 'value': v, 'pct': percentile(series),
         'tf': tf(series, is_pct), 'series30': [round(v, 4) for _, v in series[-30:]],
         'series90': [round(v, 4) for _, v in series[-90:]],
-        'unit': unit, 'digits': digits
+        'unit': unit, 'digits': digits, 'stale': _stale, 'age': _age
     }
+    if _stale:
+        print(f'  [过期警告] {key} 最新 {d} 距今 {_age} 天 (> {_max_age}), 可能抓取失败+缓存回补')
 
 print('\n-- 计算变化与分位 --')
 # FRED 中的资产价格序列用百分比变化(与 Yahoo 资产口径一致), 利率/余额类仍用点位/绝对差
@@ -306,7 +315,7 @@ FRED_PCT_ASSETS = {'spx', 'ndx_comp', 'dji', 'wti', 'dxy_broad', 'btc', 'eth'}
 for k in FRED_IDS.values(): reg(k, S[k], is_pct=(k in FRED_PCT_ASSETS))
 for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 # 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致
-YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m'}
+YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m', 'vix', 'ovx', 'gvz', 'tyx'}
 for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
 
 # 净流动性(同单位 $B) = WALCL($M→$B) - RRP($B) - TGA($B)

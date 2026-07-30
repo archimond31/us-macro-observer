@@ -50,6 +50,19 @@ def build_fomc_timeline():
     items.sort(key=lambda it: _iso(it['date'].split('~')[0]))
     return items
 
+
+# 下一场未来 FOMC (供利率路径 / 下一步观察动态引用, 避免硬编码日期)
+_NEXT_FOMC = None
+for _it in build_fomc_timeline():
+    if _it['status'] in ('即将召开', '待定', '进行中'):
+        _NEXT_FOMC = _it['date'].split('~')[0]; break
+if _NEXT_FOMC:
+    _fd = _iso(_NEXT_FOMC)
+    _fomc_md = f'{_fd.month}月{_fd.day}日'
+    _fomc_days = (_fd - datetime.date.today()).days
+else:
+    _fomc_md = None; _fomc_days = None
+
 def build_speeches():
     """返回真实近期讲话列表 [{date,speaker,title,url,stance}]"""
     return EV.get('speeches', []) or []
@@ -374,9 +387,12 @@ def wk_dict(key, scale=1/1000):
             out[k] = f'{sign}${comma(abs(v)*scale,0)}B'
     return out
 
+# 30Y 主源解析: Yahoo ^TYX (实时) 优先, FRED DGS30 回退 (多源交叉校验)
+_30y_key = 'tyx' if val('tyx') is not None else 'dgs30'
+
 # 收益率曲线: 用 raw 序列取最新/一个月前/一年前
 MATS = [('1M','dgs1mo'),('3M','dgs3mo'),('6M','dgs6mo'),('1Y','dgs1'),('2Y','dgs2'),
-        ('3Y','dgs3'),('5Y','dgs5'),('7Y','dgs7'),('10Y','dgs10'),('20Y','dgs20'),('30Y','dgs30')]
+        ('3Y','dgs3'),('5Y','dgs5'),('7Y','dgs7'),('10Y','dgs10'),('20Y','dgs20'),('30Y',_30y_key)]
 def curve_snapshot(offset=0):
     out = []
     for _, key in MATS:
@@ -526,7 +542,7 @@ def rate_metric(label, key, tag, extra_meaning=''):
         'changes': {k: (bp(ch[k]) if ch[k] is not None else '—') for k in ('d','w','m','h6')},
         'sparkline': series30(key)
     }
-v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val('dgs30'); v_tips=val('tips10'); v_bei=val('bei10')
+v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val(_30y_key); v_tips=val('tips10'); v_bei=val('bei10')
 spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
 
 # Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
@@ -551,7 +567,7 @@ DATA['rates'] = {
         rate_metric('联邦基金利率(上限)','ffr_up','FFR'),
         rate_metric('2Y 国债','dgs2','DGS2'),
         rate_metric('10Y 国债','dgs10','DGS10'),
-        rate_metric('30Y 国债','dgs30','DGS30'),
+        rate_metric('30Y 国债', _30y_key, '^TYX' if _30y_key=='tyx' else 'DGS30'),
         rate_metric('10Y 实际利率','tips10','TIPS'),
         rate_metric('10Y-2Y 利差','dgs10','Spread', f'利差 {spread_10_2:+.0f}bp'),
         rate_metric('10Y 通胀预期','bei10','Breakeven'),
@@ -560,7 +576,7 @@ DATA['rates'] = {
     'trendData': [
         {'name':'2Y 国债(政策预期)','unit':'bp','current':f2(v_2y)+'%','changes':rate_changes('dgs2'),'meaning':trend_meaning('2Y',{'d':tfm('dgs2')['d']*100,'w':tfm('dgs2')['w']*100,'m':tfm('dgs2')['m']*100,'h6':(tfm('dgs2')['h6']*100 if tfm('dgs2')['h6'] else None)})},
         {'name':'10Y 国债(长端锚)','unit':'bp','current':f2(v_10y)+'%','changes':rate_changes('dgs10'),'meaning':'四尺度全部上行——长端抛售是确立趋势' if (tfm('dgs10')['w'] or 0)>0 else '长端回落'},
-        {'name':'30Y 国债(期限溢价)','unit':'bp','current':f2(v_30y)+'%','changes':rate_changes('dgs30'),'meaning':'比10Y涨得更快, 财政供给担忧在定价'},
+        {'name':'30Y 国债(期限溢价)','unit':'bp','current':f2(v_30y)+'%','changes':rate_changes(_30y_key),'meaning':'比10Y涨得更快, 财政供给担忧在定价'},
         {'name':'10Y 实际利率','unit':'bp','current':f2(v_tips)+'%','changes':rate_changes('tips10'),'meaning':'估值压力持续累积'},
         {'name':'10Y Breakeven(通胀预期)','unit':'bp','current':f2(v_bei)+'%','changes':rate_changes('bei10'),'meaning':'缓慢爬升, 通胀预期未脱锚' if (tfm('bei10')['m'] or 0)>0 else '通胀预期回落'},
         {'name':'10Y-2Y 利差','unit':'bp','current':f'{spread_10_2:+.0f}bp','changes':{'d':round((tfm("dgs10")["d"]-tfm("dgs2")["d"])*100,1),'w':round((tfm("dgs10")["w"]-tfm("dgs2")["w"])*100,1),'m':round((tfm("dgs10")["m"]-tfm("dgs2")["m"])*100,1),'h6':(round((tfm("dgs10")["h6"]-tfm("dgs2")["h6"])*100,1) if tfm("dgs10")["h6"] and tfm("dgs2")["h6"] else None)},'meaning':'曲线陡峭化/正常化'},
@@ -572,7 +588,7 @@ DATA['rates'] = {
         'oneYearAgo': curve_snapshot(252),
     },
     'chartData': {'labels': list(range(len(series90('dgs10')))), 'series': {
-        '10Y名义': series90('dgs10'), '10Y实际': series90('tips10'), '2Y': series90('dgs2'), '30Y': series90('dgs30')}},
+        '10Y名义': series90('dgs10'), '10Y实际': series90('tips10'), '2Y': series90('dgs2'), '30Y': series90(_30y_key)}},
     'spreadData': {'labels': list(range(len(series90('dgs10')))), 'series': {
         '10Y-2Y利差': [round((a-b)*100,2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
         '通胀预期(Breakeven)': series90('bei10')}},
@@ -580,7 +596,7 @@ DATA['rates'] = {
         {'maturity':'2年','rate':f2(v_2y)+'%','change':rate_chg_bp('dgs2'),'realRate':f2(val('tips2') if val('tips2') else (val('tips10')-0.5))+'%','breakeven':f2(val('bei2') if val('bei2') else (v_2y-(val('tips10')-0.5)))+'%','source':'DGS2'},
         {'maturity':'5年','rate':f2(val('dgs5'))+'%','change':rate_chg_bp('dgs5'),'realRate':f2(val('tips5'))+'%','breakeven':f2(val('bei5') if val('bei5') else (val('dgs5')-val('tips5')))+'%','source':'DGS5'},
         {'maturity':'10年','rate':f2(v_10y)+'%','change':rate_chg_bp('dgs10'),'realRate':f2(v_tips)+'%','breakeven':f2(v_bei)+'%','source':'DGS10'},
-        {'maturity':'30年','rate':f2(v_30y)+'%','change':rate_chg_bp('dgs30'),'realRate':f2(val('tips30'))+'%','breakeven':f2(val('bei30') if val('bei30') else (v_30y-val('tips30')))+'%','source':'DGS30'},
+        {'maturity':'30年','rate':f2(v_30y)+'%','change':rate_chg_bp(_30y_key),'realRate':f2(val('tips30'))+'%','breakeven':f2(val('bei30') if val('bei30') else (v_30y-val('tips30')))+'%','source':('Yahoo ^TYX' if _30y_key=='tyx' else 'FRED DGS30')},
     ],
     'analystView': f'本轮利率上行的结构: 实际利率 ({f2(v_tips)}%) 与通胀预期 ({f2(v_bei)}%) 共同贡献, 属"增长受损+通胀回升"的滞胀组合而非单纯紧缩预期。对资产定价的含义: 实际利率高位环境下, 标普合理市盈率需下修。曲线下一个关键信号是 2Y——若油价冲击迫使市场取消降息定价, 2Y 补涨将触发熊平, 那才是对股市最不利的形态。',
     'whatToWatch': [
@@ -652,10 +668,12 @@ DATA['fed'] = {
             {'name':'Daly','role':'旧金山','score':5,'stance':'neutral'},
             {'name':'Goolsbee','role':'芝加哥','score':3,'stance':'dovish'},
         ],
-        'ratePath':{'nextMeeting':'2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
+        'ratePath':{'nextMeeting':_NEXT_FOMC or '2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
     'analystView': f'美联储处于"数据依赖的观望期", 但油价冲击正在改变平衡。关键: 沃什在 {curve_date(0)[:7]} 发布会上如何定性油价——"暂时性"=恢复降息定价, "持续风险"=压缩降息空间。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。',
     'whatToWatch': [
-        {'trigger':'<span class="watch-threshold">7月29日</span> 沃什发布会','implication':'关注对油价的定性: transitory=利多, persistent risk=利空','status':'即将'},
+        {'trigger':(f'<span class="watch-threshold">{_fomc_md}</span> FOMC会议' if _fomc_md else '下次 FOMC 会议'),
+         'implication':'关注对油价的定性: transitory=利多, persistent risk=利空',
+         'status':(f'{_fomc_days}天后' if (_fomc_days is not None and _fomc_days>0) else ('今天' if _fomc_days==0 else ('已召开' if _fomc_days is not None else '即将')))},
         {'trigger':'<span class="watch-threshold">8月22日</span> 杰克逊霍尔','implication':'历史重大政策转向信号窗口','status':'1个月后'},
         {'trigger':'SRF 使用量突破 <span class="watch-threshold">$50B</span>','implication':'银行主动向美联储借钱, 准备金稀缺确认','status':'当前极少'},
     ],
