@@ -7,11 +7,99 @@ gen_datajs.py — 把 computed.json (真实数值/分位/四尺度变化) + raw_
 输出: ../data.js  (const DATA = {...})
 依赖: build_data.py 先跑完, 生成 computed.json / raw_series.json
 """
-import json, datetime, sys, re
+import json, datetime, sys, re, calendar
 
 C = json.load(open('computed.json'))
 RAW = json.load(open('raw_series.json'))
 print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, flush=True)
+
+# Fed 事件 (FOMC 官方日程 + 真实官员讲话), 由 build_data.py 抓取写入 events.json
+try:
+    EV = json.load(open('events.json'))
+    print('[gen_datajs] loaded events.json', file=sys.stderr, flush=True)
+except Exception:
+    EV = {'fomc': [], 'jackson_hole': None, 'speeches': []}
+    print('[gen_datajs] events.json 缺失, 事件板块将留空', file=sys.stderr, flush=True)
+
+def _iso(d):  # '2026-07-28' → date
+    return datetime.date.fromisoformat(d)
+
+def build_fomc_timeline():
+    """用官方 FOMC 日程 + 当前日期动态计算每场会议状态 (已召开/进行中/即将召开/待定)"""
+    today = datetime.date.today()
+    items = []
+    for m in EV.get('fomc', []):
+        s, e = _iso(m['start']), _iso(m['end'])
+        if e < today:       status = '已召开'
+        elif s <= today <= e: status = '进行中'
+        else:               status = '待定'
+        items.append({'date': m['start'] if m['start'] == m['end'] else f"{m['start']}~{m['end']}",
+                      'event': m['label'], 'type': 'decision' if m['sep'] else 'meeting', 'status': status})
+    # 标记最近一场未来会议为"即将召开"
+    future = sorted([it for it in items if _iso(it['date'].split('~')[0]) > today], key=lambda it: _iso(it['date'].split('~')[0]))
+    if future:
+        future[0]['status'] = '即将召开'
+    # Jackson Hole (主席讲话窗口)
+    jh = EV.get('jackson_hole')
+    if jh:
+        js, je = _iso(jh['start']), _iso(jh['end'])
+        if je < today:       st = '已结束'
+        elif js <= today <= je: st = '进行中'
+        else:                 st = '即将召开'
+        items.append({'date': f"{jh['start']}~{jh['end']}", 'event': jh['label'], 'type': 'speech', 'status': st})
+    items.sort(key=lambda it: _iso(it['date'].split('~')[0]))
+    return items
+
+def build_speeches():
+    """返回真实近期讲话列表 [{date,speaker,title,url,stance}]"""
+    return EV.get('speeches', []) or []
+
+# ---------- 经济指标发布日程 (最新/下次公布, 按发布频率规律推算) ----------
+def _add_months(d, n):
+    y = d.year + (d.month - 1 + n) // 12
+    m = (d.month - 1 + n) % 12 + 1
+    return datetime.date(y, m, 1)
+
+def _first_friday(y, m):
+    d = datetime.date(y, m, 1)
+    return d + datetime.timedelta(days=(4 - d.weekday()) % 7)  # 周一=0..周五=4
+
+def _release_on(rule, ym):
+    """在 ym 所在年月, 按 rule 给出发布日"""
+    y, m = ym.year, ym.month
+    if len(rule) > 2 and rule[2] == 'ff':
+        return _first_friday(y, m)
+    day = rule[2] if (len(rule) > 2 and isinstance(rule[2], int)) else 28
+    last = calendar.monthrange(y, m)[1]
+    return datetime.date(y, m, min(day, last))
+
+# tag → (computed.json 序列key, 频率, 发布日规则)
+# 月度: 发布月 = 参考月 +1; 季度: 发布月 = 季末月 +1
+RELEASE_MAP = {
+    'GDP':    ('gdp', 'quarterly'),
+    'CPI':    ('cpi', 'monthly', 12),
+    'Core':   ('core_cpi', 'monthly', 12),
+    'PCE':    ('core_pce', 'monthly', 28),
+    'UNRATE': ('unrate', 'monthly', 'ff'),
+    'NFP':    ('payems', 'monthly', 'ff'),
+    'Retail': ('retail', 'monthly', 15),
+    'Conf':   ('umich', 'monthly', 15),
+}
+
+def release_info(tag):
+    rule = RELEASE_MAP.get(tag)
+    if not rule:
+        return None
+    ref = date_of(rule[0])          # 最新数据点的参考期 (月度=月初, 季度=季末)
+    if not ref:
+        return {'latest': None, 'next': None, 'estimated': True}
+    ref_d = _iso(ref)
+    freq = rule[1]
+    latest = _release_on(rule, _add_months(ref_d, 1))
+    if latest > datetime.date.today():        # 推算的"最新"仍未来 → 回退一个周期
+        latest = _release_on(rule, _add_months(latest, -1 if freq == 'monthly' else -3))
+    nxt = _release_on(rule, _add_months(latest, 1 if freq == 'monthly' else 3))
+    return {'latest': latest.isoformat(), 'next': nxt.isoformat(), 'estimated': True}
 
 def g(key):
     return C.get(key)
@@ -542,13 +630,7 @@ DATA['fed'] = {
         {'item':'QT 国债月度上限','value':'$250亿','change':'维持','note':'被动缩减'},
         {'item':'QT MBS 月度上限','value':'$150亿','change':'维持','note':'被动缩减'},
     ],
-    'fomcTimeline': [
-        {'date':'2026-07-28','event':'FOMC 会议第一天','type':'meeting','status':'即将召开'},
-        {'date':'2026-07-29','event':'FOMC 利率决议 + 鲍威尔发布会','type':'decision','status':'预期维持, 关注油价表述'},
-        {'date':'2026-08-22','event':'杰克逊霍尔年会','type':'speech','status':'鲍威尔讲话窗口'},
-        {'date':'2026-09-17','event':'FOMC 会议','type':'meeting','status':'降息概率待定'},
-        {'date':'2026-12-10','event':'FOMC 会议 + SEP','type':'decision','status':'点阵图更新'},
-    ],
+    'fomcTimeline': build_fomc_timeline(),
     'speeches': [
         {'date':'07-22','speaker':'Powell 鲍威尔','title':'半年度货币政策报告','stance':'neutral','key':'通胀仍高于目标但取得进展; 就业降温; 数据支持则可能降息','hawkishScore':5},
         {'date':'07-19','speaker':'Waller 沃勒','title':'通胀前景','stance':'dovish','key':'通胀向2%靠拢趋势明确, 降息时机已近','hawkishScore':3},
@@ -561,7 +643,8 @@ DATA['fed'] = {
         'isDataDriven': True,
         'method': f'基于2Y利率变化(周{_v_2y_week:+.0f}bp/月{_v_2y_month:+.0f}bp)自动计算',
         'officials':[
-            {'name':'Powell','role':'主席','score':5,'stance':'neutral'},
+            {'name':'Warsh','role':'主席','score':7,'stance':'hawkish'},
+            {'name':'Powell','role':'理事','score':5,'stance':'neutral'},
             {'name':'Williams','role':'纽约联储','score':5,'stance':'neutral'},
             {'name':'Waller','role':'理事','score':3,'stance':'dovish'},
             {'name':'Bowman','role':'理事','score':8,'stance':'hawkish'},
@@ -570,9 +653,9 @@ DATA['fed'] = {
             {'name':'Goolsbee','role':'芝加哥','score':3,'stance':'dovish'},
         ],
         'ratePath':{'nextMeeting':'2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
-    'analystView': f'美联储处于"数据依赖的观望期", 但油价冲击正在改变平衡。关键: 鲍威尔在 {curve_date(0)[:7]} 发布会上如何定性油价——"暂时性"=恢复降息定价, "持续风险"=压缩降息空间。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。',
+    'analystView': f'美联储处于"数据依赖的观望期", 但油价冲击正在改变平衡。关键: 沃什在 {curve_date(0)[:7]} 发布会上如何定性油价——"暂时性"=恢复降息定价, "持续风险"=压缩降息空间。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。',
     'whatToWatch': [
-        {'trigger':'<span class="watch-threshold">7月29日</span> 鲍威尔发布会','implication':'关注对油价的定性: transitory=利多, persistent risk=利空','status':'即将'},
+        {'trigger':'<span class="watch-threshold">7月29日</span> 沃什发布会','implication':'关注对油价的定性: transitory=利多, persistent risk=利空','status':'即将'},
         {'trigger':'<span class="watch-threshold">8月22日</span> 杰克逊霍尔','implication':'历史重大政策转向信号窗口','status':'1个月后'},
         {'trigger':'SRF 使用量突破 <span class="watch-threshold">$50B</span>','implication':'银行主动向美联储借钱, 准备金稀缺确认','status':'当前极少'},
     ],
@@ -719,6 +802,25 @@ infl_rows = [r for r in [
 def trend_of(v):
     return 'up' if (v is not None and v > 0) else 'down'
 
+# 用真实事件数据覆盖 DATA['fed'] 中的硬编码占位 (FOMC 官方日程 + 真实官员讲话)
+# build_fomc_timeline / build_speeches 见文件顶部, 数据来自 events.json (build_data.py 实时抓取)
+DATA['fed']['fomcTimeline'] = build_fomc_timeline()
+DATA['fed']['speeches'] = build_speeches()
+
+# 修正 whatToWatch 中杰克逊霍尔日期 (原硬编码 8月22日, 实际以官方日程为准)
+_jh = EV.get('jackson_hole')
+if _jh:
+    _jh_md = f"{int(_jh['start'][5:7])}月{_jh['start'][8:10]}日"
+    for _w in DATA['fed'].get('whatToWatch', []):
+        if '杰克逊霍尔' in _w.get('trigger', ''):
+            _w['trigger'] = _w['trigger'].replace('8月22日', _jh_md)
+
+# 利率路径"下次会议"动态化 (取自 FOMC 官方日程的未来首场)
+_next_fomc = next((it['date'].split('~')[0] for it in build_fomc_timeline()
+                   if it['status'] in ('即将召开', '待定', '进行中')), None)
+if _next_fomc:
+    DATA['fed']['hawkishDovish']['ratePath']['nextMeeting'] = _next_fomc
+
 DATA['economy'] = {
     'regime': {'label':'增长放缓+通胀回升','signal':'mixed','confidence':'中等置信',
         'description':f'就业消费降温 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 但通胀因能源回升 (CPI 同比 {f2(cpi_yoy)}%)。压缩美联储政策空间——降息怕通胀, 不降怕就业。'},
@@ -799,6 +901,12 @@ DATA['economy'] = {
         {'trigger':'<span class="watch-threshold">下月非农</span>','implication':'若连续<180K, 就业降温趋势确认','status':'关键事件'},
     ]
 }
+
+# 经济指标: 增补"最新公布 / 下次公布" (基于发布频率规律推算, 标注预计)
+for _m in DATA['economy']['metrics']:
+    _ri = release_info(_m.get('tag'))
+    if _ri:
+        _m['release'] = _ri
 
 # 信用市场
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)

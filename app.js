@@ -115,9 +115,23 @@ function metricCardsV3(metrics) {
       '</div>' +
       '<div class="metric-pct-labels"><span>1年低分位</span><span>当前 ' + pct + ' 分位</span><span>高分位</span></div>' +
       (m.meaning ? '<div class="metric-meaning">' + m.meaning + '</div>' : '') +
+      releaseLine(m) +
     '</div>';
   });
   return html + '</div>';
+}
+
+// 经济指标"最新公布 / 下次公布" (release.latest/next 为按发布频率推算值, estimated=true 标"预计")
+function releaseLine(m) {
+  if (!m || !m.release) return '';
+  const latest = m.release.latest || '—';
+  const nxt = m.release.next || '—';
+  const est = m.release.estimated ? ' <span style="color:#b08968">预计</span>' : '';
+  return '<div style="font-size:11px;color:var(--text-tertiary,#8a93a3);margin-top:7px;padding-top:7px;border-top:1px dashed #ececf1;display:flex;gap:5px;align-items:center;flex-wrap:wrap;line-height:1.5">'
+    + '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#9aa3b2;flex:0 0 auto"></span>'
+    + '最新公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + latest + '</b>'
+    + ' · 下次公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + nxt + '</b>' + est
+    + '</div>';
 }
 
 // 四尺度变化行（日/周/月/半年）
@@ -552,9 +566,9 @@ function renderSpeeches(sp) {
       '<div style="min-width:50px"><div style="font-size:12px;color:' + COLORS.text + '">' + s.date + '</div></div>' +
       '<div style="flex:1"><div style="font-size:13px;font-weight:500">' + s.speaker + '</div>' +
       '<div style="font-size:12px;color:' + COLORS.text + ';margin-top:2px">' + s.title + '</div>' +
-      '<div style="font-size:12px;color:' + COLORS.neutral + ';margin-top:4px;line-height:1.6">' + s.key + '</div></div>' +
-      '<div style="text-align:center;min-width:56px"><span style="padding:3px 10px;border-radius:12px;background:' + stBg + ';color:' + stColor + ';font-size:11px">' + stLabel + '</span>' +
-      '<div style="font-size:11px;color:' + COLORS.neutral + ';margin-top:4px">' + s.hawkishScore + '/10</div></div></div>';
+      (s.url ? '<div style="font-size:11px;margin-top:5px"><a href="' + s.url + '" target="_blank" rel="noopener" style="color:#4361ee;text-decoration:none">查看原文 →</a></div>' : '') +
+      '</div>' +
+      '<div style="text-align:center;min-width:56px"><span style="padding:3px 10px;border-radius:12px;background:' + stBg + ';color:' + stColor + ';font-size:11px">' + stLabel + '</span></div></div>';
   });
   return html + '</div>';
 }

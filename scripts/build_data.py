@@ -11,8 +11,9 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 自动计算: 日/周/月/半年变化 (1/5/21/126 个交易日)、1年历史分位数
 输出: ../data.js
 """
-import csv, io, json, sys, time, subprocess
+import csv, io, json, sys, time, subprocess, re
 from datetime import datetime, timedelta
+from html import unescape
 
 def http_get(url, timeout=25, use_ua=False):
     """通过 curl 拉取。注意: 本环境代理对 Mozilla UA 会卡死，FRED/NYFed/DTS 必须不带 UA；Yahoo 需要 UA"""
@@ -86,11 +87,18 @@ def nyfed_srf(n=60):
     except Exception as e:
         print(f'  [NYFED:SRF] FAIL {e}'); return []
 
-# ---------- Treasury DTS (TGA) ----------
-def fetch_tga(days=380):
+# ---------- TGA (Treasury General Account) ----------
+# 首选 FRED 官方序列 WTREGENL (单位 $M, 美联储 H.4.1 口径, 即市场普遍引用的 TGA 数字)
+# 比 Treasury DTS 分页拉取 (open_today_bal 字段口径歧义) 更可靠、权威
+def fetch_tga_fred(days=420):
+    s = fred('WTREGENL', days=days)
+    if not s:
+        return []
+    return [(d, v / 1000.0) for d, v in s]   # $M → $B
+
+# 兜底: Treasury FiscalData DTS (日度, 但字段口径有歧义, 仅作回退)
+def fetch_tga_dts(days=380):
     start = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-    # 注意: 方括号必须编码为 %5B %5D; sort=-record_date 才能正确应用 filter 并取到最新值
-    # 每页400行(含非TGA账户), 需翻页直至覆盖整个窗口
     out = []
     for page in range(1, 5):
         url = ('https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance'
@@ -103,16 +111,21 @@ def fetch_tga(days=380):
         if not rows: break
         for x in rows:
             if x.get('account_type', '').startswith('Treasury General Account'):
-                bal = x.get('open_today_bal')
+                bal = x.get('close_today_bal') or x.get('open_today_bal')
                 if bal and bal != 'null':
                     out.append((x['record_date'], float(bal) / 1e3))  # $M → $B
-        # 本页最旧日期已早于起点 → 覆盖完成
         if rows[-1].get('record_date', '9999') <= start:
             break
-    # 去重 + 时间升序
     seen = {}
     for d, v in out: seen[d] = v
     return sorted(seen.items())
+
+def fetch_tga(days=420):
+    s = fetch_tga_fred(days)
+    if s:
+        return s
+    print('  [TGA] FRED WTREGENL 不可用, 回退 Treasury DTS')
+    return fetch_tga_dts(days)
 
 # ---------- Yahoo ----------
 def yahoo(symbol, rng='1y'):
@@ -326,4 +339,80 @@ reg('netliq', S['netliq'])
 with open('computed.json', 'w') as f:
     json.dump(R, f, default=str)
 print(f'计算结果已存 computed.json')
+
+# ================= Fed 事件: FOMC 官方日程 + 真实官员讲话 =================
+# 美联储官方公布的 2026 / 2027 例行会议日程 (来源: federalreserve.gov, 每年初公布全年)
+# sep=True 表示该次会议伴随经济展望摘要 (SEP / 点阵图)
+FOMC_SCHEDULE = [
+    ('2026-01-27', '2026-01-28', False, 'FOMC 会议'),
+    ('2026-03-17', '2026-03-18', True,  'FOMC 会议 + SEP'),
+    ('2026-04-28', '2026-04-29', False, 'FOMC 会议'),
+    ('2026-06-16', '2026-06-17', True,  'FOMC 会议 + SEP'),
+    ('2026-07-28', '2026-07-29', False, 'FOMC 会议'),
+    ('2026-09-15', '2026-09-16', True,  'FOMC 会议 + SEP'),
+    ('2026-10-27', '2026-10-28', False, 'FOMC 会议'),
+    ('2026-12-08', '2026-12-09', True,  'FOMC 会议 + SEP'),
+    ('2027-01-26', '2027-01-27', False, 'FOMC 会议'),
+]
+JACKSON_HOLE = {'start': '2026-08-27', 'end': '2026-08-29', 'chair_date': '2026-08-28',
+                'label': '杰克逊霍尔年会 (主席讲话窗口)'}
+
+# 现任联储官员姓氏 → 显示名 (讲话页 slug 仅含姓氏, 用于还原姓名)
+FED_ROSTER = {
+    'powell': 'Jerome H. Powell', 'wars': 'Kevin Warsh', 'jefferson': 'Philip N. Jefferson',
+    'cook': 'Lisa D. Cook', 'waller': 'Christopher J. Waller', 'bowman': 'Michelle W. Bowman',
+    'barr': 'Michael S. Barr', 'kugler': 'Adriana D. Kugler', 'logan': 'Lorie K. Logan',
+    'goolsbee': 'Austan Goolsbee', 'daly': 'Mary C. Daly', 'bostic': 'Raphael Bostic',
+    'harker': 'Patrick Harker', 'kashkari': 'Neel Kashkari', 'williams': 'John C. Williams',
+    'schmid': 'Jeffrey R. Schmid', 'musalem': 'Alberto G. Musalem', 'barkin': 'Thomas Barkin',
+    'collins': 'Susan M. Collins',
+}
+def _tone_from_title(title):
+    """标题关键词语气估算 (非官方打分, 仅供参考)"""
+    t = title.lower()
+    hawk = sum(t.count(w) for w in ['inflation', 'disinfl', 'restrictive', 'tighten', 'higher', 'price', 'hawkish'])
+    dove = sum(t.count(w) for w in ['ease', 'cut', 'soft land', 'accommodat', 'cooling', 'landing', 'employment', 'labor', 'dovish'])
+    if hawk > dove: return 'hawkish'
+    if dove > hawk: return 'dovish'
+    return 'neutral'
+
+def fetch_speeches(n=12):
+    """抓取美联储官方讲话页真实近期讲话。返回 [{date,speaker,title,url,stance}]。失败返回 []。"""
+    html = None
+    for use_ua in (False, True):
+        try:
+            html = http_get('https://www.federalreserve.gov/newsevents/speeches.htm', use_ua=use_ua)
+            if html and 'speech' in html.lower():
+                break
+        except Exception as e:
+            print(f'  [FED:speeches] attempt(ua={use_ua}) FAIL {e}')
+    if not html:
+        print('  [FED:speeches] 无法获取页面'); return []
+    # slug 形如 jefferson20260716a → 日期 2026-07-16 嵌在链接里, 比页面 M/D/YYYY 文本更可靠
+    pat = re.compile(r'href="(/newsevents/(?:speech|testimony)/([a-z]+)(\d{8})([a-z])\.htm)"[^>]*>([^<]+)</a>', re.I)
+    seen, out = set(), []
+    for m in pat.finditer(html):
+        full, surname, datestr, _, title = m.groups()
+        if datestr + surname in seen: continue
+        seen.add(datestr + surname)
+        date = f'{datestr[:4]}-{datestr[4:6]}-{datestr[6:8]}'
+        speaker = FED_ROSTER.get(surname.lower(), surname.title())
+        out.append({'date': date, 'speaker': speaker, 'title': unescape(title).strip(),
+                    'url': 'https://www.federalreserve.gov' + full, 'stance': _tone_from_title(title)})
+        if len(out) >= n: break
+    print(f'  [FED:speeches] → {len(out)} 条真实讲话')
+    return out
+
+def write_events():
+    ev = {
+        'fetched_at': datetime.now().strftime('%Y-%m-%d'),
+        'fomc': [{'start': a, 'end': b, 'sep': sep, 'label': lab} for a, b, sep, lab in FOMC_SCHEDULE],
+        'jackson_hole': JACKSON_HOLE,
+        'speeches': fetch_speeches(),
+    }
+    with open('events.json', 'w') as f:
+        json.dump(ev, f, ensure_ascii=False)
+    print('事件数据已存 events.json')
+
+write_events()
 print('完成。下一步: 用 computed.json 重建 data.js')
