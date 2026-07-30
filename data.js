@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-30 01:33
+ * 生成时间: 2026-07-30 02:48
  * ============================================================
  */
 const DATA = {
@@ -37,7 +37,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 -0.24% 横盘",
+        "title": "黄金 -0.28% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -237,18 +237,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,136.80",
-        "change": "+2.49%",
+        "value": "$4,135.40",
+        "change": "+2.46%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 40,
         "signal": "down",
         "meaning": "当前位于近一年 40 分位",
         "changes": {
-          "d": "+2.49%",
-          "w": "-0.24%",
-          "m": "+2.85%",
-          "h6": "-18.57%"
+          "d": "+2.46%",
+          "w": "-0.28%",
+          "m": "+2.81%",
+          "h6": "-18.59%"
         },
         "sparkline": [
           4330.8999,
@@ -280,7 +280,7 @@ const DATA = {
           4067.6001,
           4074.5,
           4036.3,
-          4136.7998
+          4135.3999
         ]
       },
       {
@@ -344,7 +344,7 @@ const DATA = {
           "d": "+0.11%",
           "w": "-0.51%",
           "m": "-0.28%",
-          "h6": "+4.62%"
+          "h6": "+4.63%"
         },
         "sparkline": [
           100.09,
@@ -376,23 +376,23 @@ const DATA = {
           101.51,
           101.38,
           100.8,
-          100.909
+          100.911
         ]
       },
       {
         "label": "美元/日元",
-        "value": "163.42",
-        "change": "-0.27%",
+        "value": "163.46",
+        "change": "-0.24%",
         "dir": "down",
         "tag": "USDJPY=X",
         "percentile": 98,
         "signal": "up",
         "meaning": "当前位于近一年 98 分位",
         "changes": {
-          "d": "-0.27%",
-          "w": "+0.21%",
-          "m": "+0.49%",
-          "h6": "+4.89%"
+          "d": "-0.24%",
+          "w": "+0.23%",
+          "m": "+0.51%",
+          "h6": "+4.92%"
         },
         "sparkline": [
           161.289,
@@ -424,7 +424,7 @@ const DATA = {
           163.611,
           163.771,
           163.864,
-          163.423
+          163.464
         ]
       },
       {
@@ -672,12 +672,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,136.80",
+        "current": "$4,135.40",
         "changes": {
-          "d": 2.49,
-          "w": -0.24,
-          "m": 2.85,
-          "h6": -18.57
+          "d": 2.46,
+          "w": -0.28,
+          "m": 2.81,
+          "h6": -18.59
         },
         "meaning": "半年 -19% 但近周转弱——顶部预警"
       },
@@ -701,21 +701,21 @@ const DATA = {
           "d": 0.11,
           "w": -0.51,
           "m": -0.28,
-          "h6": 4.62
+          "h6": 4.63
         },
         "meaning": "半年 +5% 但近月 -0% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "163.42",
+        "current": "163.46",
         "changes": {
-          "d": -0.27,
-          "w": 0.21,
-          "m": 0.49,
-          "h6": 4.89
+          "d": -0.24,
+          "w": 0.23,
+          "m": 0.51,
+          "h6": 4.92
         },
-        "meaning": "半年 +5% 的上升趋势中, 近月 +0% 仍在加速"
+        "meaning": "半年 +5% 的上升趋势中, 近月 +1% 仍在加速"
       },
       {
         "name": "比特币",
@@ -798,8 +798,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,136.80",
-        "change": "+2.49%",
+        "price": "$4,135.40",
+        "change": "+2.46%",
         "dir": "up"
       },
       {
@@ -819,8 +819,8 @@ const DATA = {
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "163.42",
-        "change": "-0.27%",
+        "price": "163.46",
+        "change": "-0.24%",
         "dir": "down"
       },
       {
@@ -980,7 +980,7 @@ const DATA = {
           4067.6001,
           4074.5,
           4036.3,
-          4136.7998
+          4135.3999
         ],
         "BTC": [
           58585.96,
@@ -1077,7 +1077,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-6.23%) 与长债 (TLT -0.71%) 同步承压, 是典型的实际利率上行组合。黄金 (-0.24%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (18.21) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-6.23%) 与长债 (TLT -0.71%) 同步承压, 是典型的实际利率上行组合。黄金 (-0.28%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (18.21) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -3157,86 +3157,67 @@ const DATA = {
     ],
     "fomcTimeline": [
       {
-        "date": "2026-07-28",
-        "event": "FOMC 会议第一天",
+        "date": "2026-01-27~2026-01-28",
+        "event": "FOMC 会议",
         "type": "meeting",
+        "status": "已召开"
+      },
+      {
+        "date": "2026-03-17~2026-03-18",
+        "event": "FOMC 会议 + SEP",
+        "type": "decision",
+        "status": "已召开"
+      },
+      {
+        "date": "2026-04-28~2026-04-29",
+        "event": "FOMC 会议",
+        "type": "meeting",
+        "status": "已召开"
+      },
+      {
+        "date": "2026-06-16~2026-06-17",
+        "event": "FOMC 会议 + SEP",
+        "type": "decision",
+        "status": "已召开"
+      },
+      {
+        "date": "2026-07-28~2026-07-29",
+        "event": "FOMC 会议",
+        "type": "meeting",
+        "status": "已召开"
+      },
+      {
+        "date": "2026-08-27~2026-08-29",
+        "event": "杰克逊霍尔年会 (主席讲话窗口)",
+        "type": "speech",
         "status": "即将召开"
       },
       {
-        "date": "2026-07-29",
-        "event": "FOMC 利率决议 + 鲍威尔发布会",
-        "type": "decision",
-        "status": "预期维持, 关注油价表述"
-      },
-      {
-        "date": "2026-08-22",
-        "event": "杰克逊霍尔年会",
-        "type": "speech",
-        "status": "鲍威尔讲话窗口"
-      },
-      {
-        "date": "2026-09-17",
-        "event": "FOMC 会议",
-        "type": "meeting",
-        "status": "降息概率待定"
-      },
-      {
-        "date": "2026-12-10",
+        "date": "2026-09-15~2026-09-16",
         "event": "FOMC 会议 + SEP",
         "type": "decision",
-        "status": "点阵图更新"
+        "status": "即将召开"
+      },
+      {
+        "date": "2026-10-27~2026-10-28",
+        "event": "FOMC 会议",
+        "type": "meeting",
+        "status": "待定"
+      },
+      {
+        "date": "2026-12-08~2026-12-09",
+        "event": "FOMC 会议 + SEP",
+        "type": "decision",
+        "status": "待定"
+      },
+      {
+        "date": "2027-01-26~2027-01-27",
+        "event": "FOMC 会议",
+        "type": "meeting",
+        "status": "待定"
       }
     ],
-    "speeches": [
-      {
-        "date": "07-22",
-        "speaker": "Powell 鲍威尔",
-        "title": "半年度货币政策报告",
-        "stance": "neutral",
-        "key": "通胀仍高于目标但取得进展; 就业降温; 数据支持则可能降息",
-        "hawkishScore": 5
-      },
-      {
-        "date": "07-19",
-        "speaker": "Waller 沃勒",
-        "title": "通胀前景",
-        "stance": "dovish",
-        "key": "通胀向2%靠拢趋势明确, 降息时机已近",
-        "hawkishScore": 3
-      },
-      {
-        "date": "07-18",
-        "speaker": "Bostic 博斯蒂克",
-        "title": "经济展望",
-        "stance": "hawkish",
-        "key": "通胀粘性犹存, 不应急于降息",
-        "hawkishScore": 7
-      },
-      {
-        "date": "07-15",
-        "speaker": "Bowman 鲍曼",
-        "title": "银行业会议",
-        "stance": "hawkish",
-        "key": "通胀上行风险仍存, 降息需谨慎",
-        "hawkishScore": 8
-      },
-      {
-        "date": "07-12",
-        "speaker": "Goolsbee 古尔斯比",
-        "title": "芝加哥经济俱乐部",
-        "stance": "dovish",
-        "key": "就业正常化, 利率需随通胀回落下降",
-        "hawkishScore": 3
-      },
-      {
-        "date": "07-10",
-        "speaker": "Daly 戴利",
-        "title": "旧金山联储访谈",
-        "stance": "neutral",
-        "key": "对降息持开放态度, 取决于数据",
-        "hawkishScore": 5
-      }
-    ],
+    "speeches": [],
     "hawkishDovish": {
       "score": 8.8,
       "label": "偏鹰",
@@ -3244,8 +3225,14 @@ const DATA = {
       "method": "基于2Y利率变化(周+0bp/月+19bp)自动计算",
       "officials": [
         {
-          "name": "Powell",
+          "name": "Warsh",
           "role": "主席",
+          "score": 7,
+          "stance": "hawkish"
+        },
+        {
+          "name": "Powell",
+          "role": "理事",
           "score": 5,
           "stance": "neutral"
         },
@@ -3287,7 +3274,7 @@ const DATA = {
         }
       ],
       "ratePath": {
-        "nextMeeting": "2026-07-29",
+        "nextMeeting": "2026-08-27",
         "holdProb": 95,
         "cut25bpProb": 0,
         "cut50bpProb": 5,
@@ -3295,15 +3282,15 @@ const DATA = {
         "note": "基于2Y利率月变化(+19bp)动态推算 · 利率上行=降息概率下降"
       }
     },
-    "analystView": "美联储处于\"数据依赖的观望期\", 但油价冲击正在改变平衡。关键: 鲍威尔在 2026-07 发布会上如何定性油价——\"暂时性\"=恢复降息定价, \"持续风险\"=压缩降息空间。RRP 耗尽 ($2.58B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。",
+    "analystView": "美联储处于\"数据依赖的观望期\", 但油价冲击正在改变平衡。关键: 沃什在 2026-07 发布会上如何定性油价——\"暂时性\"=恢复降息定价, \"持续风险\"=压缩降息空间。RRP 耗尽 ($2.58B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。",
     "whatToWatch": [
       {
-        "trigger": "<span class=\"watch-threshold\">7月29日</span> 鲍威尔发布会",
+        "trigger": "<span class=\"watch-threshold\">7月29日</span> 沃什发布会",
         "implication": "关注对油价的定性: transitory=利多, persistent risk=利空",
         "status": "即将"
       },
       {
-        "trigger": "<span class=\"watch-threshold\">8月22日</span> 杰克逊霍尔",
+        "trigger": "<span class=\"watch-threshold\">8月27日</span> 杰克逊霍尔",
         "implication": "历史重大政策转向信号窗口",
         "status": "1个月后"
       },
@@ -4168,7 +4155,12 @@ const DATA = {
           31098.027,
           31422.526,
           31865.721
-        ]
+        ],
+        "release": {
+          "latest": "2026-02-28",
+          "next": "2026-05-28",
+          "estimated": true
+        }
       },
       {
         "label": "CPI 同比",
@@ -4196,7 +4188,12 @@ const DATA = {
           3.78,
           4.17,
           3.46
-        ]
+        ],
+        "release": {
+          "latest": "2026-07-12",
+          "next": "2026-08-12",
+          "estimated": true
+        }
       },
       {
         "label": "核心 CPI 同比",
@@ -4224,7 +4221,12 @@ const DATA = {
           2.74,
           2.82,
           2.57
-        ]
+        ],
+        "release": {
+          "latest": "2026-07-12",
+          "next": "2026-08-12",
+          "estimated": true
+        }
       },
       {
         "label": "核心 PCE 同比",
@@ -4252,7 +4254,12 @@ const DATA = {
           3.25,
           3.32,
           3.41
-        ]
+        ],
+        "release": {
+          "latest": "2026-06-28",
+          "next": "2026-07-28",
+          "estimated": true
+        }
       },
       {
         "label": "失业率",
@@ -4294,7 +4301,12 @@ const DATA = {
           4.3,
           4.3,
           4.2
-        ]
+        ],
+        "release": {
+          "latest": "2026-07-03",
+          "next": "2026-08-07",
+          "estimated": true
+        }
       },
       {
         "label": "非农就业 (月增)",
@@ -4318,7 +4330,12 @@ const DATA = {
           148.0,
           129.0,
           57.0
-        ]
+        ],
+        "release": {
+          "latest": "2026-07-03",
+          "next": "2026-08-07",
+          "estimated": true
+        }
       },
       {
         "label": "零售销售 (环比)",
@@ -4346,7 +4363,12 @@ const DATA = {
           0.67,
           1.02,
           0.22
-        ]
+        ],
+        "release": {
+          "latest": "2026-07-15",
+          "next": "2026-08-15",
+          "estimated": true
+        }
       },
       {
         "label": "消费者信心",
@@ -4388,7 +4410,12 @@ const DATA = {
           53.3,
           49.8,
           44.8
-        ]
+        ],
+        "release": {
+          "latest": "2026-06-15",
+          "next": "2026-07-15",
+          "estimated": true
+        }
       }
     ],
     "trendData": [
