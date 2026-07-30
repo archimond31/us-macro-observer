@@ -590,8 +590,9 @@ function renderRates(c) {
     chartCard('国债收益率曲线', '今日 vs 1月前 vs 1年前 · 熊陡=长端领涨', 'yc', 'tall') +
     chartCard('名义 vs 实际利率', '实际利率是估值的真实折现率', 'rateTrend', 'tall') +
   '</div>';
-  html += '<div class="chart-row one-col">' +
-    chartCard('利差与通胀预期', (d.chartNotes || {}).spreadNote || '10Y-2Y利差与Breakeven通胀预期', 'spreadChart', 'tall') +
+  html += '<div class="chart-row two-col">' +
+    chartCard('10Y-2Y 利差', (d.chartNotes || {}).spreadNote || '曲线陡峭化/倒挂/平坦', 'spreadChart', 'tall') +
+    chartCard('10Y 通胀预期 (Breakeven)', '名义利率 − 实际利率 = 市场通胀预期', 'breakevenChart', 'tall') +
   '</div>';
   html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
@@ -629,27 +630,50 @@ function renderRates(c) {
   });
 
   const sd = d.spreadData;
-  charts.spread = new Chart(document.getElementById('spreadChart'), {
-    type: 'line',
-    data: {
-      labels: sd.labels,
-      datasets: Object.keys(sd.series).map((n, i) => ({
-        label: n, data: sd.series[n], borderColor: COLORS.series[i],
-        backgroundColor: i === 0 ? COLORS.series[i] + '15' : 'transparent',
-        borderWidth: 2, fill: i === 0, pointRadius: 0, tension: 0.3
-      }))
-    },
-    options: Object.assign(baseOpts('%'), {
-      scales: Object.assign({}, baseOpts('%').scales, {
-        y: Object.assign({}, baseOpts('%').scales.y, {
-          min: -3, max: 3,
-          ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
-            callback: function(v) { return v.toFixed(1) + '%'; }
+  // 图1: 10Y-2Y 利差 (独立 Y 轴 -3~+3)
+  const _spArr = sd.series['10Y-2Y利差'] || [];
+  if (_spArr.length > 0) {
+    charts.spread = new Chart(document.getElementById('spreadChart'), {
+      type: 'line',
+      data: {
+        labels: sd.labels,
+        datasets: [{ label: '10Y-2Y利差', data: _spArr, borderColor: COLORS.series[0],
+          backgroundColor: COLORS.series[0] + '15', borderWidth: 2, fill: true, pointRadius: 0, tension: 0.3 }]
+      },
+      options: Object.assign(baseOpts('%'), {
+        scales: Object.assign({}, baseOpts('%').scales, {
+          y: Object.assign({}, baseOpts('%').scales.y, {
+            min: -3, max: 3,
+            ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
+              callback: function(v) { return v.toFixed(1) + '%'; }
+            })
           })
         })
       })
-    })
-  });
+    });
+  }
+  // 图2: Breakeven 通胀预期 (独立 Y 轴 ~1.5~3.5%)
+  const _beArr = sd.series['通胀预期(Breakeven)'] || [];
+  if (_beArr.length > 0) {
+    charts.breakeven = new Chart(document.getElementById('breakevenChart'), {
+      type: 'line',
+      data: {
+        labels: sd.labels,
+        datasets: [{ label: 'Breakeven', data: _beArr, borderColor: '#e63946',
+          backgroundColor: 'rgba(230,57,70,0.08)', borderWidth: 2, fill: true, pointRadius: 0, tension: 0.3 }]
+      },
+      options: Object.assign(baseOpts('%'), {
+        scales: Object.assign({}, baseOpts('%').scales, {
+          y: Object.assign({}, baseOpts('%').scales.y, {
+            min: 1.5, max: 3.5,
+            ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
+              callback: function(v) { return v.toFixed(2) + '%'; }
+            })
+          })
+        })
+      })
+    });
+  }
 }
 
 /* ================= 3. 美联储 ================= */
