@@ -756,7 +756,7 @@ DATA['liquidity'] = {
             {'name':'RRP 余额','value':round(v_rrpn/1000,4),'unit':'T$','sign':'−','color':'#2a9d8f','note':'NY Fed · 已耗尽'},
             {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'Treasury DTS · 变动中'},
         ]},
-    'chartData': {'labels': _dates_for('netliq' if v_nl else 'walcl'), 'series': {
+    'chartData': {'labels': _dates_for('walcl'), 'series': {
         '净流动性': [round(x/1000,2) for x in series90('netliq')] if v_nl else [],
         '准备金': [round(x/1e6,2) for x in series90('resbal')],
         'TGA': [round(x/1000,2) for x in series90('tga')] if v_tgan else []}},
