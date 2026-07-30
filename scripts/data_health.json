@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-30 05:03",
+  "generated_at": "2026-07-30 05:52",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -681,12 +681,28 @@
       "value": 2906.31005859375,
       "fallback": false
     },
+    "dji_yahoo": {
+      "status": "OK",
+      "source": "Yahoo:^DJI",
+      "last_date": "2026-07-29",
+      "age": 1,
+      "value": 51594.140625,
+      "fallback": false
+    },
+    "sox": {
+      "status": "OK",
+      "source": "Yahoo:^SOX",
+      "last_date": "2026-07-29",
+      "age": 1,
+      "value": 10447.490234375,
+      "fallback": false
+    },
     "gold": {
       "status": "OK",
       "source": "Yahoo:GC=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 4103.7998046875,
+      "value": 4092.300048828125,
       "fallback": false
     },
     "silver": {
@@ -694,7 +710,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 57.494998931884766,
+      "value": 57.349998474121094,
       "fallback": false
     },
     "natgas": {
@@ -702,7 +718,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 2.7360000610351562,
+      "value": 2.742000102996826,
       "fallback": false
     },
     "copper": {
@@ -710,7 +726,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 6.357999801635742,
+      "value": 6.368500232696533,
       "fallback": false
     },
     "dxy": {
@@ -718,7 +734,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 100.94599914550781,
+      "value": 100.93000030517578,
       "fallback": false
     },
     "eurusd": {
@@ -726,7 +742,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 1.1454753875732422,
+      "value": 1.1456066370010376,
       "fallback": false
     },
     "gbpusd": {
@@ -734,7 +750,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 1.3345433473587036,
+      "value": 1.3352738618850708,
       "fallback": false
     },
     "usdjpy": {
@@ -750,7 +766,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-07-30",
       "age": 0,
-      "value": 6.761529922485352,
+      "value": 6.7601799964904785,
       "fallback": false
     },
     "tlt": {
@@ -871,6 +887,14 @@
       "last_date": "2026-07-29",
       "age": 1,
       "value": 5.14300012588501,
+      "fallback": false
+    },
+    "eth_btc_ratio": {
+      "status": "OK",
+      "source": "?",
+      "last_date": "2026-07-29",
+      "age": 1,
+      "value": 0.029839,
       "fallback": false
     },
     "netliq": {
