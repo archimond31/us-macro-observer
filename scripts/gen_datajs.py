@@ -451,7 +451,7 @@ def corr_pair(xs, ys):
     if vx == 0 or vy == 0: return None
     return cov / (vx ** 0.5 * vy ** 0.5)
 
-CORR_KEYS = [('SPX','spx'), ('TLT','tlt'), ('Gold','gold'), ('WTI','wti'), ('DXY','dxy'), ('BTC','btc')]
+CORR_KEYS = [('SPX','spx'), ('TLT','tlt'), ('Gold','gold'), ('WTI','wti'), ('DXY','dxy'), ('BTC','btc'), ('Copper','copper'), ('ETH','eth')]
 _rets = {k: daily_ret_map(k) for _, k in CORR_KEYS}
 _common = None
 for _, k in CORR_KEYS:
@@ -515,9 +515,11 @@ def _build_us_indices_chart():
 ASSET_MAP = [
     ('标普500','spx','^GSPC',2,''), ('纳斯达克100','ndx','^NDX',2,''),
     ('道琼斯','dji','^DJI',2,''), ('罗素2000','rut','^RUT',2,''),
-    ('黄金','gold','GC=F',2,'$'), ('WTI原油','wti','CL=F',2,'$'),
+    ('费城半导体','sox','^SOX',2,''),
+    ('黄金','gold','GC=F',2,'$'), ('WTI原油','wti','CL=F',2,'$'), ('铜','copper','HG=F',2,''),
     ('美元指数','dxy','DX-Y.NYB',2,''), ('美元/日元','usdjpy','USDJPY=X',2,''),
-    ('比特币','btc','BTC',0,'$'), ('20+年国债ETF','tlt','TLT',2,''),
+    ('比特币','btc','BTC',0,'$'), ('以太坊','eth','ETH',0,'$'),
+    ('20+年国债ETF','tlt','TLT',2,''),
     ('投资级债ETF','lqd','LQD',2,''), ('高收益债ETF','hyg','HYG',2,''),
 ]
 metrics_assets = []
@@ -558,7 +560,8 @@ DATA['assets'] = {
     'trendData': trend_assets,
     'table': table_assets,
     'chartData': {'labels': ([d for d, _ in s('spx')[-30:]] if s('spx') else list(range(30))), 'series': {
-        'SPX': series30('spx'), 'WTI': series30('wti'), 'Gold': series30('gold'), 'BTC': series30('btc')}},
+        'SPX': series30('spx'), 'SOX': series30('sox'), 'WTI': series30('wti'), 'Gold': series30('gold'),
+        'Copper': series30('copper'), 'BTC': series30('btc'), 'ETH': series30('eth')}},
     'correlation': {'assets':[lb for lb, _ in CORR_KEYS],
         'matrix': corr_matrix,
         'note': f'近{len(_corr_dates)}个共同交易日日度收益的真实 Pearson 相关 · 股债 {spx_tlt_corr:+.2f} / 油股 {spx_wti_corr:+.2f}'},
