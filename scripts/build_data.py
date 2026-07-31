@@ -130,6 +130,71 @@ def fetch_tga(days=420):
     print('  [TGA] FRED WTREGEN 不可用, 回退 Treasury DTS')
     return fetch_tga_dts(days)
 
+# ---------- PMI (FRED 已下架 ISM 序列 NAPMPMI/NAPM; 改用 S&P Global 美国 PMI, 经 Trading Economics 稳定抓取) ----------
+# 静态兜底: S&P Global 美国 PMI 历史 (final, 来源 Trading Economics/FRED 存档), 仅当实时抓取彻底失败时使用
+_STATIC_SPG_MFG = [
+    ("2024-12-01",49.4),("2025-01-01",51.2),("2025-02-01",52.7),("2025-03-01",49.8),
+    ("2025-04-01",50.2),("2025-05-01",52.9),("2025-06-01",52.0),("2025-07-01",49.5),
+    ("2025-08-01",53.0),("2025-09-01",52.5),("2025-10-01",52.0),("2025-11-01",52.2),
+    ("2025-12-01",52.3),("2026-01-01",52.4),("2026-02-01",51.6),("2026-03-01",52.3),
+    ("2026-04-01",54.5),("2026-05-01",55.1),("2026-06-01",55.7),
+]
+_STATIC_SPG_SVC = [
+    ("2024-12-01",57.0),("2025-01-01",52.9),("2025-02-01",53.0),("2025-03-01",54.0),
+    ("2025-04-01",53.5),("2025-05-01",53.0),("2025-06-01",54.0),("2025-07-01",52.7),
+    ("2025-08-01",53.5),("2025-09-01",54.0),("2025-10-01",53.8),("2025-11-01",53.5),
+    ("2025-12-01",54.6),("2026-01-01",54.6),("2026-02-01",53.5),("2026-03-01",54.0),
+    ("2026-04-01",55.0),("2026-05-01",55.5),("2026-06-01",55.0),
+]
+
+def _te_pmi_latest(slug):
+    """抓取 Trading Economics 某 PMI 页面最新值+月份, 返回 (date 'YYYY-MM-01', value) 或 None。"""
+    try:
+        html = http_get(f'https://tradingeconomics.com/united-states/{slug}', timeout=15, use_ua=True)
+    except Exception as e:
+        print(f'  [PMI] TE {slug} 抓取失败: {e}'); return None
+    import re as _re
+    m = _re.search(r'to\s+([\d.]+)\s+points\s+in\s+([A-Za-z]+)(?:\s+of\s+|\s+)(\d{4})', html)
+    if not m:
+        print(f'  [PMI] TE {slug} 未匹配到数值'); return None
+    try:
+        val = float(m.group(1)); mon = datetime.strptime(m.group(2)[:3], '%b').month; yr = int(m.group(3))
+    except Exception:
+        return None
+    return (f'{yr}-{mon:02d}-01', val)
+
+def _pmi_merge(base, latest):
+    """把 latest 合并进 base(按月去重), 保留最近 36 个月。base/latest 为 [(date,val)...]。"""
+    d = {}
+    for dt, v in base:
+        d[dt[:7]] = v
+    if latest:
+        d[latest[0][:7]] = latest[1]
+    return [(k + '-01', d[k]) for k in sorted(d)][-36:]
+
+def fetch_pmi():
+    """
+    获取美国 PMI (制造业 + 服务业)。
+    FRED 的 ISM 序列(NAPMPMI/NAPM)已下架; 改用 S&P Global 美国 PMI (经 Trading Economics 稳定抓取, 比 ISM 更实时)。
+    返回 {'mfg':[(d,v)...], 'svc':[...], 'is_fallback':bool, 'asof':str}
+    - 实时抓取成功: 在静态历史底座上追加最新月, is_fallback=False
+    - 实时抓取彻底失败: 退回静态底座, is_fallback=True (前端需打明确警告标)
+    """
+    mfg_latest = _te_pmi_latest('manufacturing-pmi')
+    svc_latest = _te_pmi_latest('services-pmi')
+    is_fallback = False; asof = None
+    if mfg_latest:
+        mfg = _pmi_merge(_STATIC_SPG_MFG, mfg_latest); asof = mfg_latest[0][:7]
+    else:
+        mfg = list(_STATIC_SPG_MFG); is_fallback = True
+    if svc_latest:
+        svc = _pmi_merge(_STATIC_SPG_SVC, svc_latest); asof = svc_latest[0][:7] if asof is None else asof
+    else:
+        svc = list(_STATIC_SPG_SVC); is_fallback = True
+    print(f'  [PMI] S&P Global → mfg {mfg_latest}, svc {svc_latest} (fallback={is_fallback}, asof={asof})')
+    return {'mfg': mfg, 'svc': svc, 'is_fallback': is_fallback, 'asof': asof}
+
+# (deprecated) 以下 fetch_ism_pmi 为旧实现, 已被 fetch_pmi 取代, 保留仅供回溯
 # ---------- ISM PMI (FRED 已下架 NAPMPMI/NAPM, 从替代源抓取) ----------
 def _parse_ism_csv(text):
     """解析 CSV 格式的 ISM PMI 数据为 [(date, value), ...]"""
@@ -493,8 +558,12 @@ FRED_IDS = {
     # Phase1: 住房
     'MORTGAGE30US': 'mortgage30', 'HOUST': 'housing_starts',
     'CSUSHPINSA': 'case_shiller', 'PERMITNSA': 'permits',
+    # 通胀深化: PCE 服务/住房分项 (用于计算超级核心通胀 = 服务除住房)
+    'PCESV': 'pce_svcs', 'PCESH': 'pce_housing',
+    # Phase1: 地区联储调查 (最高频增长先行指标, 每月中旬发布)
+    'GACDISAQ': 'empire', 'PHILF': 'philly',
     # Phase1: 制造业/调查
-    # 注意: FRED 已下架 ISM PMI 序列 (NAPMPMI/NAPM 均 404), 改用 fetch_ism_pmi() 从替代源获取
+    # 注意: FRED 已下架 ISM PMI 序列 (NAPMPMI/NAPM 均 404), 改用 fetch_pmi() 从 S&P Global (Trading Economics) 获取
     'INDPRO': 'indpro',
     # Phase1: 财政
     'FYFSGDA188S': 'deficit_gdp', 'GFDEBTN': 'debt_total',
@@ -508,7 +577,7 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
            'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',
-           'mfg_pmi', 'svc_pmi',}
+           'mfg_pmi', 'svc_pmi', 'pce_svcs', 'pce_housing', 'empire', 'philly',}
 # 周度序列: WEI(实时周度经济指数) 每周六更新, 用更宽阈值避免误报"过期"
 WEEKLY = {'wei', 'gdpnow'}
 # 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"
@@ -519,15 +588,16 @@ for fid, key in FRED_IDS.items():
     d, v = last(S[key])
     print(f'  FRED {fid:14s} → {len(S[key]):4d} pts, latest {d} = {v}')
 
-# ISM PMI (FRED 已下架, 用替代源)
-print('  -- ISM PMI (alternative source) --')
-_ism = fetch_ism_pmi()
+# PMI (FRED 已下架 ISM; 改用 S&P Global 美国 PMI, 经 Trading Economics)
+print('  -- PMI (S&P Global via Trading Economics) --')
+_ism = fetch_pmi()
 if _ism['mfg']:
     S['mfg_pmi'] = _ism['mfg']
-    print(f'  ISM MfgPMI  → {len(S["mfg_pmi"])} pts, latest {last(S["mfg_pmi"])}')
+    print(f'  S&P Global MfgPMI  → {len(S["mfg_pmi"])} pts, latest {last(S["mfg_pmi"])}')
 if _ism['svc']:
     S['svc_pmi'] = _ism['svc']
-    print(f'  ISM SvcPMI  → {len(S["svc_pmi"])} pts, latest {last(S["svc_pmi"])}')
+    print(f'  S&P Global SvcPMI  → {len(S["svc_pmi"])} pts, latest {last(S["svc_pmi"])}')
+PMI_META = {'is_fallback': _ism.get('is_fallback', False), 'asof': _ism.get('asof'), 'source': 'S&P Global (via Trading Economics)'}
 
 print('  -- NY Fed / DTS / Yahoo --')
 S['sofr'] = nyfed_sofr();      print(f'  NYFED SOFR → {len(S["sofr"])} pts, latest {last(S["sofr"])}')
@@ -730,6 +800,7 @@ if _stale:
 
 with open('computed.json', 'w') as f:
     R['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
+    R['pmi_meta'] = PMI_META
     json.dump(R, f, default=str)
 print(f'计算结果已存 computed.json')
 

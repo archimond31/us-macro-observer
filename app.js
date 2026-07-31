@@ -24,6 +24,8 @@ const SECTION_CONFIG = {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lastUpdated').textContent = DATA.meta.lastUpdated;
   document.getElementById('dataSourceText').textContent = DATA.meta.dataSource;
+  const elAsOf = document.getElementById('dataAsOf');
+  if (elAsOf) elAsOf.textContent = DATA.meta.dataAsOf || '—';
   updateMarketStatus();
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', (e) => { e.preventDefault(); switchSection(item.dataset.section); });
@@ -709,6 +711,8 @@ function renderFed(c) {
   html += sectionCard('官员讲话追踪', '鹰鸽分化公开化=政策不确定性上升', renderSpeeches(d.speeches));
   html += '<div style="height:16px"></div>';
   html += sectionCard('利率路径预期', d.hawkishDovish.ratePath.note, renderRatePath(d.hawkishDovish.ratePath));
+  html += '<div style="height:16px"></div>';
+  html += sectionCard('市场隐含 Fed 路径', (d.impliedPath && d.impliedPath.note) || '收益率曲线短端反推的市场政策利率预期', renderImpliedPath(d.impliedPath));
   html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).probNote || '日/周/月/半年变化 → 识别政策预期重定价');
   html += trendTable(d.trendData);
   html += analystBox(d.analystView);
@@ -777,6 +781,30 @@ function renderRatePath(rp) {
       '<div style="font-size:16px;font-weight:600;color:' + p.color + '">' + p.val + '%</div></div>';
   });
   return html + '</div></div>';
+}
+
+function renderImpliedPath(ip) {
+  if (!ip) return '';
+  const ff = ip.currentFF, cuts = ip.cuts12m, hikes = ip.hikes12m, term = ip.terminal2y, sig = ip.signal;
+  let html = '<div>';
+  if (ip.points && ip.points.length) {
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
+    ip.points.forEach(p => {
+      html += '<div style="flex:1;min-width:90px;text-align:center;background:#f8faff;border:1px solid #eef1f6;border-radius:8px;padding:10px 6px">' +
+        '<div style="font-size:11px;color:#8a93a3">' + p.tenor + '</div>' +
+        '<div style="font-size:18px;font-weight:600;color:#1f2937">' + p.rate.toFixed(2) + '%</div>' +
+        '<div style="font-size:10px;color:#8a93a3">隐含政策利率</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px">';
+  if (cuts && cuts > 0) html += '<span style="padding:4px 10px;border-radius:12px;background:#e4f4ef;color:#2a9d8f">未来12个月隐含降息 ' + cuts + ' 次 (25bp)</span>';
+  else if (hikes && hikes > 0) html += '<span style="padding:4px 10px;border-radius:12px;background:#fde8ea;color:#e63946">未来12个月隐含加息 ' + hikes + ' 次 (25bp)</span>';
+  else html += '<span style="padding:4px 10px;border-radius:12px;background:#f3f4f6;color:#4b5563">未来12个月无隐含变动</span>';
+  if (term !== null && term !== undefined) html += '<span style="padding:4px 10px;border-radius:12px;background:#eef1f6;color:#4361ee">2Y 隐含终值 ' + term.toFixed(2) + '%</span>';
+  if (ff !== null && ff !== undefined) html += '<span style="padding:4px 10px;border-radius:12px;background:#f3f4f6;color:#4b5563">当前上限 ' + ff.toFixed(2) + '%</span>';
+  html += '</div></div>';
+  return html;
 }
 
 function renderHawkDovGauge(hd) {
@@ -1009,6 +1037,13 @@ function renderEconomy(c) {
       '经济数据获取时间：<b style="color:var(--text-secondary,#4b5563);font-weight:600">' + d.generatedAt + '</b>' +
       ' · 各项指标已标注数据源与参考期' +
       '</div>';
+  }
+  if (d.pmi_meta && d.pmi_meta.is_fallback) {
+    const asof = d.pmi_meta.asof ? (' 数据截至 ' + d.pmi_meta.asof) : '';
+    html += '<div style="font-size:12px;color:#8a5a00;margin:2px 0 14px;padding:9px 12px;background:#fff6e5;border:1px solid #ffd591;border-radius:8px;display:flex;gap:8px;align-items:flex-start">' +
+      '<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#ffa940;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">!</span>' +
+      '<div><b style="color:#b76e00">PMI 数据源警告：当前为静态兜底数据</b><br>' +
+      'S&amp;P Global PMI 实时抓取失败，已回退至内置历史序列' + asof + '，可能非最新值。关注官方发布后自动恢复。</div></div>';
   }
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);

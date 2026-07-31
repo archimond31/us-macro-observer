@@ -111,6 +111,9 @@ RELEASE_MAP = {
     'Conf':   ('umich', 'monthly', 15),
     'MfgPMI': ('mfg_pmi', 'monthly', 5),
     'SvcPMI': ('svc_pmi', 'monthly', 5),
+    'SuperCore': ('pce_svcs', 'monthly', 'lbd'),
+    'Empire': ('empire', 'monthly', 15),
+    'Philly': ('philly', 'monthly', 15),
 }
 
 # 经济指标 → 数据源 (机构)
@@ -122,7 +125,9 @@ SOURCE_MAP = {
     'umich': 'UMich', 'mich_infl': 'UMich', 'wei': 'NY Fed', 'gdpnow': 'Atlanta Fed',
     'nfci': 'Chicago Fed', 'cont_claims': 'BLS', 'cpi_energy': 'BLS', 'cpi_food': 'BLS',
     'cpi_shelter': 'BLS', 'cpi_core_svcs': 'BLS', 'cpi_core_goods': 'BLS', 'indpro': 'Fed',
-    'mfg_pmi': 'ISM', 'svc_pmi': 'ISM',
+    'mfg_pmi': 'S&P Global', 'svc_pmi': 'S&P Global',
+    'pce_svcs': 'BEA', 'pce_housing': 'BEA', 'supercore': 'BEA/BLS',
+    'empire': 'NY Fed', 'philly': 'Philly Fed',
 }
 
 def release_info(tag):
@@ -156,6 +161,26 @@ def series30(key):
     v = g(key); return v.get('series30', []) if v else []
 def date_of(key):
     v = g(key); return v['date'] if v else None
+
+def supercore_pce_yoy():
+    """超级核心通胀 = PCE 服务除住房 的同比%。返回 [(date, yoy%), ...] 或 []。"""
+    svcs = {d: v for d, v in s('pce_svcs')}
+    house = {d: v for d, v in s('pce_housing')}
+    if not svcs or not house:
+        return []
+    out = []
+    for d in sorted(svcs):
+        if d in house:
+            lv = svcs[d] - house[d]
+            y, m = int(d[:4]), int(d[5:7])
+            pm = m - 1 if m > 1 else 12
+            py = y if m > 1 else y - 1
+            pd = f'{py:04d}-{pm:02d}-01'
+            if pd in svcs and pd in house:
+                plv = svcs[pd] - house[pd]
+                if plv:
+                    out.append((d, (lv / plv - 1) * 100))
+    return out
 
 def _dates_for(ref_key):
     """取参考序列最近 N 个日期作为 X 轴时间轴 (N=该序列 series90 长度)。无数据则退回索引。"""
@@ -439,8 +464,11 @@ def curve_date(offset=0):
 
 # ---------- 构建各板块 ----------
 DATA = {}
+# 数据截至日: 取关键日度/月度序列的最新数据点日期 (SPX/10Y/CPI), 通常比运行时刻慢1-2天
+_dates = [d for d in (date_of('spx'), date_of('dgs10'), date_of('cpi')) if d]
 DATA['meta'] = {
     'lastUpdated': f'{GEN_DATE} {GEN_TIME} (官方数据, 自动更新)',
+    'dataAsOf': max(_dates) if _dates else None,
     'dataSource': 'FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance',
     'marketNote': '数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None'
 }
@@ -448,9 +476,22 @@ DATA['meta'] = {
 # 全局 regime (汇总关键真实值)
 v_dgs10 = val('dgs10'); v_wti = val('wti'); v_ccc = val('ccc'); v_hy = val('hy')
 v_vix = val('vix'); v_tga = val('tga'); v_netliq = val('netliq')
+# 全局 risk regime 由多指标阈值合成 (避免预置叙事)
+_v2 = val('dgs2')
+_g_spread = (v_dgs10 - _v2)*100 if (v_dgs10 is not None and _v2 is not None) else None
+_g_score = 0
+if _g_spread is not None:
+    _g_score += 1 if _g_spread < 0 else -1          # 曲线倒挂=衰退风险
+_g_score += 1 if (v_vix or 0) > 25 else (-1 if (v_vix or 0) < 15 else 0)
+_g_nfci = val('nfci')
+_g_score += 1 if (_g_nfci or 0) > 0 else (-1 if (_g_nfci or 0) < 0 else 0)
+_g_hy_pct = pct('hy')
+_g_score += 1 if (_g_hy_pct or 0) > 70 else (-1 if (_g_hy_pct or 0) < 30 else 0)
+_g_signal = 'risk-off' if _g_score >= 2 else ('risk-on' if _g_score <= -2 else 'mixed')
+_g_name = '风险规避' if _g_signal == 'risk-off' else ('风险偏好' if _g_signal == 'risk-on' else '条件性紧张')
 DATA['globalRegime'] = {
-    'name': '利率上行 + 信用分层',
-    'signal': 'risk-off',
+    'name': _g_name,
+    'signal': _g_signal,
     'confidence': '中等置信',
     'description': f'10Y 美债 {f2(v_dgs10)}% 处于近一年高位 (分位 {pct("dgs10")}), 长端抛售是确立趋势; 与此同时信用市场内部已分层——CCC 利差 {f2(v_ccc)}% (分位 {pct("ccc")}, 极窄历史区间的另外一端是极高压力), 而 HY 整体仅 {f2(v_hy)}%。这种"高评级平静、低评级承压"的组合是周期中后期的典型特征。油价 (WTI {f2(v_wti)}) 与波动率 (VIX {f2(v_vix)}) 尚未失控, 当前属"利率驱动的条件性紧张", 而非流动性危机。'
 }
@@ -613,6 +654,9 @@ def rate_metric(label, key, tag, extra_meaning=''):
     }
 v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val(_30y_key); v_tips=val('tips10'); v_bei=val('bei10')
 spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
+# 利率 regime: 由曲线形态+方向动态判定 (替代预置)
+_rates_signal = 'risk-off' if spread_10_2 > 0 else ('risk-on' if spread_10_2 < 0 else 'mixed')
+_rates_label = '熊陡确立' if spread_10_2 > 0 else ('牛平/曲线正常化' if spread_10_2 < 0 else '曲线平稳')
 
 # Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
 _v_2y_week = (tfm('dgs2')['w'] or 0) * 100  # bp
@@ -624,8 +668,27 @@ _cut_prob = max(0, min(80, round(50 - _v_2y_month * 3, 0))) if _v_2y_month else 
 _hold_prob = round(100 - _cut_prob - 5, 0)
 _hike_prob = 5
 
+# 市场隐含 Fed 路径: 用收益率曲线短端(3M/6M/1Y/2Y)反推市场对未来政策利率的预期轨迹
+_impl_pts = []
+for _ten, _k in (('3M','dgs3mo'),('6M','dgs6mo'),('1Y','dgs1'),('2Y','dgs2')):
+    _y = val(_k)
+    if _y is not None:
+        _impl_pts.append({'tenor':_ten,'rate':round(_y,2)})
+_ff_up_v = val('ffr_up')
+_impl_cuts12 = _impl_hikes12 = _impl_terminal = None
+_impl_signal = 'mixed'
+if _impl_pts:
+    _y1 = next((p['rate'] for p in _impl_pts if p['tenor']=='1Y'), None)
+    _y2 = next((p['rate'] for p in _impl_pts if p['tenor']=='2Y'), None)
+    _impl_terminal = _y2
+    if _ff_up_v is not None and _y1 is not None:
+        _impl_cuts12 = max(0, int(round((_ff_up_v - _y1)/0.25)))   # 未来12个月隐含降息次数(每次25bp)
+        _impl_hikes12 = max(0, int(round((_y1 - _ff_up_v)/0.25)))
+    if _ff_up_v is not None and _y2 is not None:
+        _impl_signal = 'risk-on' if _y2 < _ff_up_v - 0.25 else ('risk-off' if _y2 > _ff_up_v + 0.25 else 'mixed')
+
 DATA['rates'] = {
-    'regime': {'label':'熊陡确立' if (v_10y - v_2y) > 0 else '曲线变化','signal':'risk-off','confidence':'高置信',
+    'regime': {'label':_rates_label,'signal':_rates_signal,'confidence':'高置信',
         'description': f'长端利率上行快于短端 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%), 曲线{"熊市陡峭化" if (tfm("dgs10").get("w") or 0)>(tfm("dgs2").get("w") or 0) else "变化"}。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 共同上行。'},
     'keySignals': [
         {'title': f'10Y 突破 {f2(v_10y)}%','meaning':'长端利率是本轮资产重定价的核心变量, 实际利率驱动为主。','direction':'bearish'},
@@ -691,8 +754,14 @@ DATA['rates'] = {
 # ====== 美联储 ======
 v_walcl = val('walcl'); v_rrp2 = val('rrp'); v_tga2 = val('tga'); v_res = val('resbal')
 v_netliq = val('netliq')
+# Fed regime: 由市场隐含路径(短端曲线)动态判定
+_ff = val('ffr_up'); _y2_f = val('dgs2')
+_fed_signal = 'mixed'
+if _ff is not None and _y2_f is not None:
+    _fed_signal = 'risk-on' if _y2_f < _ff - 0.25 else ('risk-off' if _y2_f > _ff + 0.25 else 'mixed')
+_fed_label = '宽松预期主导' if _fed_signal=='risk-on' else ('收紧预期' if _fed_signal=='risk-off' else '观望/鹰鸽分化')
 DATA['fed'] = {
-    'regime': {'label':'观望期, 鹰鸽分化','signal':'mixed','confidence':'高置信',
+    'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':'高置信',
         'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 下一次行动大概率降息。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将直击准备金。'},
     'keySignals': [
         {'title':f'RRP 余额仅 ${f2(v_rrp2)}B','meaning':'货币市场基金可搬回美联储的钱基本耗尽, 未来缩表冲击无缓冲。','direction':'bearish'},
@@ -759,12 +828,25 @@ DATA['fed'] = {
         'hawkNote': f'0=极度鸽派 / 10=极度鹰派 · 当前 {_hawk_score_data} {_hawk_label_data} (基于2Y利率自动计算 · 月Δ{_v_2y_month:+.0f}bp)',
         'probNote': f'7月会议: 维持{_hold_prob}% / 降25bp {_cut_prob}% · 基于2Y利率动态推算',
     },
+    'impliedPath': {
+        'points': _impl_pts,                       # [{tenor, rate}]
+        'currentFF': _ff_up_v,                     # 当前联邦基金目标上限
+        'cuts12m': _impl_cuts12,                   # 未来12个月隐含降息次数(每次25bp)
+        'hikes12m': _impl_hikes12,                 # 未来12个月隐含加息次数
+        'terminal2y': _impl_terminal,              # 2Y=市场隐含~2年后的政策利率
+        'signal': _impl_signal,
+        'note': '基于收益率曲线短端(3M/6M/1Y/2Y)反推的市场隐含政策利率路径; 2Y相对当前上限的偏离折算为隐含降息/加息次数(每次25bp)'
+    },
 }
 
 # ====== 流动性 ======
 v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (val('sofr')-val('iorb'))
+# 流动性 regime: 由净流动性趋势 + SOFR-IORB 动态判定
+_nl_m = tfm('netliq')['m']
+_liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) >= 0) else ('risk-on' if (v_sofr_iorb or 0) < 0 else 'mixed')
+_liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 但未失速')
 DATA['liquidity'] = {
-    'regime': {'label':'缓冲耗尽, 但未失速','signal':'mixed','confidence':'高置信',
+    'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':'高置信',
         'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。从此 TGA 每升 1 美元、QT 每缩 1 美元都直击银行准备金——流动性框架从"有缓冲"切换到"裸奔"的结构性转折。但 SOFR-IORB ({bp(v_sofr_iorb*100)}) 仍为负, 融资市场尚未出现真实资金争夺。'},
     'keySignals': [
         {'title':f'RRP 余额 ${f2(v_rrpn)}B, 缓冲实质归零','meaning':'过去两年 QT 冲击被 RRP 吸收, 未来每一美元缩表直击准备金, 充裕度下滑加速。','direction':'bearish'},
@@ -932,8 +1014,22 @@ _next_fomc = next((it['date'].split('~')[0] for it in build_fomc_timeline()
 if _next_fomc:
     DATA['fed']['hawkishDovish']['ratePath']['nextMeeting'] = _next_fomc
 
+# 超级核心通胀(PCE服务除住房) 序列与最新同比, 供经济板块指标使用
+_sc_all = supercore_pce_yoy()
+_sc_ys = _sc_all[-24:]
+_sc_yoy = _sc_all[-1][1] if _sc_all else None
+_sc_d1 = (_sc_all[-1][1] - _sc_all[-2][1]) if len(_sc_all) >= 2 else None
+
+# 经济 regime: 由增长/就业/通胀 三因子动态判定
+_e_score = 0
+if gdp_qoq is not None: _e_score += 1 if (gdp_qoq or 0) > 0 else -1
+if unrate_tf.get('m') is not None: _e_score += -1 if unrate_tf['m'] > 0 else (1 if unrate_tf['m'] < 0 else 0)
+if cpi_yoy is not None: _e_score += -1 if cpi_yoy > 3 else 0
+_e_signal = 'risk-on' if _e_score >= 1 else ('risk-off' if _e_score <= -1 else 'mixed')
+_e_label = '增长稳健+通胀受控' if _e_signal=='risk-on' else ('增长放缓+通胀回升' if _e_signal=='risk-off' else '增长分化')
+
 DATA['economy'] = {
-    'regime': {'label':'增长放缓+通胀回升','signal':'mixed','confidence':'中等置信',
+    'regime': {'label':_e_label,'signal':_e_signal,'confidence':'中等置信',
         'description':f'就业消费降温 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 但通胀因能源回升 (CPI 同比 {f2(cpi_yoy)}%)。压缩美联储政策空间——降息怕通胀, 不降怕就业。'},
     'keySignals': [
         {'title':f'CPI 同比 {f2(cpi_yoy)}% 回升','meaning':'能源推升整体通胀, 方向与美联储目标背离。','direction':'bearish'},
@@ -949,8 +1045,11 @@ DATA['economy'] = {
         {'label':'非农就业 (月增)','value':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'change':(f'6月均 {nfp_avg6:+.0f}K' if nfp_avg6 is not None else '—'),'dir':dir_of(payems_mom),'tag':'NFP','percentile':pct('payems'),'signal':'bullish','meaning':'200K以下为降温区','changes':{'d':'—','w':'—','m':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'h6':(f'{nfp_h6:+.0f}K/6月' if nfp_h6 is not None else '—')},'sparkline':[v for _, v in nfp_diffs]},
         {'label':'零售销售 (环比)','value':(ret(retail_mom[-1][1]) if retail_mom else '—'),'change':(pctpt(round(retail_mom[-1][1]-retail_mom[-2][1],2))+' vs上月' if len(retail_mom)>1 else '—'),'dir':dir_of(retail_mom[-1][1] if retail_mom else None),'tag':'Retail','percentile':pct('retail'),'signal':'mixed','meaning':'名义零售月环比','changes':monthly_tf_str('retail',2,'pct','%'),'sparkline':[v for _, v in mom_pct_series('retail', 10)]},
         {'label':'消费者信心','value':f2(umich),'change':pctpt(umich_tf['m']),'dir':dir_of(umich_tf['m']),'tag':'Conf','percentile':pct('umich'),'signal':'bearish','meaning':'通胀预期压制信心','changes':{'d':'—','w':'—','m':pctpt(umich_tf['m']),'h6':pctpt(umich_tf['h6'])},'sparkline':series30('umich')},
-        {'label':'制造业 PMI','value':(f2(val('mfg_pmi')) if val('mfg_pmi') is not None else '—'),'change':pctpt(tfm('mfg_pmi')['m']),'dir':dir_of(tfm('mfg_pmi')['m']),'tag':'MfgPMI','percentile':pct('mfg_pmi'),'signal':('bullish' if (val('mfg_pmi') or 0) >= 50 else 'bearish'),'meaning':'ISM制造业景气: >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('mfg_pmi')['w']),'m':pctpt(tfm('mfg_pmi')['m']),'h6':pctpt(tfm('mfg_pmi')['h6'])},'sparkline':series30('mfg_pmi')},
-        {'label':'服务业 PMI','value':(f2(val('svc_pmi')) if val('svc_pmi') is not None else '—'),'change':pctpt(tfm('svc_pmi')['m']),'dir':dir_of(tfm('svc_pmi')['m']),'tag':'SvcPMI','percentile':pct('svc_pmi'),'signal':('bullish' if (val('svc_pmi') or 0) >= 50 else 'bearish'),'meaning':'ISM服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('svc_pmi')['w']),'m':pctpt(tfm('svc_pmi')['m']),'h6':pctpt(tfm('svc_pmi')['h6'])},'sparkline':series30('svc_pmi')},
+        {'label':'制造业 PMI','value':(f2(val('mfg_pmi')) if val('mfg_pmi') is not None else '—'),'change':pctpt(tfm('mfg_pmi')['m']),'dir':dir_of(tfm('mfg_pmi')['m']),'tag':'MfgPMI','percentile':pct('mfg_pmi'),'signal':('bullish' if (val('mfg_pmi') or 0) >= 50 else 'bearish'),'meaning':'S&P Global制造业景气: >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('mfg_pmi')['w']),'m':pctpt(tfm('mfg_pmi')['m']),'h6':pctpt(tfm('mfg_pmi')['h6'])},'sparkline':series30('mfg_pmi')},
+        {'label':'服务业 PMI','value':(f2(val('svc_pmi')) if val('svc_pmi') is not None else '—'),'change':pctpt(tfm('svc_pmi')['m']),'dir':dir_of(tfm('svc_pmi')['m']),'tag':'SvcPMI','percentile':pct('svc_pmi'),'signal':('bullish' if (val('svc_pmi') or 0) >= 50 else 'bearish'),'meaning':'S&P Global服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('svc_pmi')['w']),'m':pctpt(tfm('svc_pmi')['m']),'h6':pctpt(tfm('svc_pmi')['h6'])},'sparkline':series30('svc_pmi')},
+        {'label':'超级核心通胀 (PCE服务除住房)','value':(f2(_sc_yoy)+'%' if _sc_yoy is not None else '—'),'change':pctpt(_sc_d1),'dir':dir_of(_sc_d1),'tag':'SuperCore','percentile':None,'signal':('bearish' if (_sc_yoy or 0) > 3.5 else 'mixed'),'meaning':'美联储最看重的通胀口径(服务除住房), >3.5%为压力区','changes':{'d':'—','w':'—','m':pctpt(_sc_d1),'h6':'—'},'sparkline':[v for _, v in _sc_ys]},
+        {'label':'纽约联储制造业指数','value':(f2(val('empire')) if val('empire') is not None else '—'),'change':pctpt(tfm('empire')['m']),'dir':dir_of(tfm('empire')['m']),'tag':'Empire','percentile':pct('empire'),'signal':('bullish' if (val('empire') or 0) >= 0 else 'bearish'),'meaning':'扩散指数 >0扩张; 最高频增长先行指标(每月中旬)','changes':{'d':'—','w':pctpt(tfm('empire')['w']),'m':pctpt(tfm('empire')['m']),'h6':pctpt(tfm('empire')['h6'])},'sparkline':series30('empire')},
+        {'label':'费城联储制造业指数','value':(f2(val('philly')) if val('philly') is not None else '—'),'change':pctpt(tfm('philly')['m']),'dir':dir_of(tfm('philly')['m']),'tag':'Philly','percentile':pct('philly'),'signal':('bullish' if (val('philly') or 0) >= 0 else 'bearish'),'meaning':'扩散指数 >0扩张; 与 Empire 互补的软数据','changes':{'d':'—','w':pctpt(tfm('philly')['w']),'m':pctpt(tfm('philly')['m']),'h6':pctpt(tfm('philly')['h6'])},'sparkline':series30('philly')},
     ],
     'trendData': [
         {'name':'CPI 同比','tag':'CPI','unit':'pt','current':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
@@ -960,6 +1059,9 @@ DATA['economy'] = {
         {'name':'消费者信心','tag':'Conf','unit':'pt','current':f2(umich),'changes':{'d':None,'w':None,'m':umich_tf['m'],'h6':umich_tf['h6']},'meaning':'消费前瞻指标'},
         {'name':'制造业 PMI','tag':'MfgPMI','unit':'pt','current':(f2(val('mfg_pmi')) if val('mfg_pmi') is not None else '—'),'changes':{'d':None,'w':tfm('mfg_pmi')['w'],'m':tfm('mfg_pmi')['m'],'h6':tfm('mfg_pmi')['h6']},'meaning':'>50扩张/<50收缩, 荣枯线50'},
         {'name':'服务业 PMI','tag':'SvcPMI','unit':'pt','current':(f2(val('svc_pmi')) if val('svc_pmi') is not None else '—'),'changes':{'d':None,'w':tfm('svc_pmi')['w'],'m':tfm('svc_pmi')['m'],'h6':tfm('svc_pmi')['h6']},'meaning':'占经济~80%, >50扩张/<50收缩'},
+        {'name':'超级核心通胀','tag':'SuperCore','unit':'pt','current':(f2(_sc_yoy)+'%' if _sc_yoy is not None else '—'),'changes':{'d':None,'w':None,'m':_sc_d1,'h6':None},'meaning':'PCE服务除住房同比, 美联储首选通胀口径'},
+        {'name':'纽约联储制造业','tag':'Empire','unit':'pt','current':(f2(val('empire')) if val('empire') is not None else '—'),'changes':{'d':None,'w':tfm('empire')['w'],'m':tfm('empire')['m'],'h6':tfm('empire')['h6']},'meaning':'扩散指数 >0扩张, 最高频增长先行指标'},
+        {'name':'费城联储制造业','tag':'Philly','unit':'pt','current':(f2(val('philly')) if val('philly') is not None else '—'),'changes':{'d':None,'w':tfm('philly')['w'],'m':tfm('philly')['m'],'h6':tfm('philly')['h6']},'meaning':'扩散指数 >0扩张, 与 Empire 互补的软数据'},
     ],
     'inflationChart': {'labels':[mlabel(d) for d, _ in cpi_ys],
         'series':{'CPI同比':[v for _, v in cpi_ys],'核心CPI同比':align_yoy(cpi_ys, core_ys),'核心PCE同比':align_yoy(cpi_ys, pce_ys)}},
@@ -1032,13 +1134,23 @@ for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
         _m['source'] = SOURCE_MAP.get(_rk[0], '')
 # 数据获取时间 (全局, 用于板块内统一标注)
 DATA['economy']['generatedAt'] = GEN_AT
+# PMI 数据源元信息 (是否静态兜底): 供前端打"数据可能过期"警告标
+DATA['economy']['pmi_meta'] = C.get('pmi_meta', {})
 
 # 信用市场
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)
 ccc=val('ccc'); hyv=val('hy'); igv=val('ig'); bbb=val('bbb'); bb=val('bb'); b=val('b'); aaa=val('aaa'); aa=val('aa'); av=val('a')
 
+# 信用 regime: 由 HY 利差分位 + NFCI 符号动态判定
+_cr_hy_pct = pct('hy'); _cr_nfci = val('nfci')
+_cr_signal = 'mixed'
+if _cr_hy_pct is not None and _cr_hy_pct > 70: _cr_signal = 'risk-off'
+elif _cr_nfci is not None and _cr_nfci > 0: _cr_signal = 'risk-off'
+elif _cr_hy_pct is not None and _cr_hy_pct < 30: _cr_signal = 'risk-on'
+_cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '平静下的分层')
+
 DATA['credit'] = {
-    'regime': {'label':'平静下的分层','signal':'mixed','confidence':'高置信',
+    'regime': {'label':_cr_label,'signal':_cr_signal,'confidence':'高置信',
         'description':f'表面平静 (HY OAS {f2(hyv)}% 处历史低位) 但内部已分层: CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}) 率先走阔, 而 IG ({f2(igv)}%) 纹丝不动。信用市场是慢变量, 不预测冲击但最后确认冲击。'},
     'keySignals': [
         {'title':f'CCC 利差 {f2(ccc)}% 走阔','meaning':'最弱信用率先承压是周期中后期特征, 分层说明聪明钱撤离最弱信用。','direction':'bearish'},
