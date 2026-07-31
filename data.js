@@ -3,18 +3,19 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-31 06:23
+ * 生成时间: 2026-07-31 06:28
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-07-31 06:23 (官方数据, 自动更新)",
+    "lastUpdated": "2026-07-31 06:28 (官方数据, 自动更新)",
+    "dataAsOf": "2026-07-29",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
   },
   "globalRegime": {
-    "name": "利率上行 + 信用分层",
-    "signal": "risk-off",
+    "name": "风险偏好",
+    "signal": "risk-on",
     "confidence": "中等置信",
     "description": "10Y 美债 4.67% 处于近一年高位 (分位 99), 长端抛售是确立趋势; 与此同时信用市场内部已分层——CCC 利差 10.13% (分位 100, 极窄历史区间的另外一端是极高压力), 而 HY 整体仅 2.87%。这种\"高评级平静、低评级承压\"的组合是周期中后期的典型特征。油价 (WTI 84.25) 与波动率 (VIX 17.09) 尚未失控, 当前属\"利率驱动的条件性紧张\", 而非流动性危机。"
   },
@@ -37,7 +38,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 +1.76% 横盘",
+        "title": "黄金 +1.89% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -285,18 +286,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,139.20",
-        "change": "+0.95%",
+        "value": "$4,144.50",
+        "change": "+1.08%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 41,
         "signal": "up",
         "meaning": "当前位于近一年 41 分位",
         "changes": {
-          "d": "+0.95%",
-          "w": "+1.76%",
-          "m": "+1.74%",
-          "h6": "-22.17%"
+          "d": "+1.08%",
+          "w": "+1.89%",
+          "m": "+1.87%",
+          "h6": "-22.07%"
         },
         "sparkline": [
           4224.1001,
@@ -328,7 +329,7 @@ const DATA = {
           4036.3,
           4034.7,
           4100.1001,
-          4139.2002
+          4144.5
         ]
       },
       {
@@ -381,18 +382,18 @@ const DATA = {
       },
       {
         "label": "铜",
-        "value": "6.52",
-        "change": "+1.10%",
+        "value": "6.51",
+        "change": "+1.08%",
         "dir": "up",
         "tag": "HG=F",
         "percentile": 98,
         "signal": "up",
         "meaning": "当前位于近一年 98 分位",
         "changes": {
-          "d": "+1.10%",
-          "w": "+3.09%",
-          "m": "+6.40%",
-          "h6": "+5.51%"
+          "d": "+1.08%",
+          "w": "+3.07%",
+          "m": "+6.38%",
+          "h6": "+5.48%"
         },
         "sparkline": [
           6.3745,
@@ -424,23 +425,23 @@ const DATA = {
           6.322,
           6.2735,
           6.4445,
-          6.5155
+          6.514
         ]
       },
       {
         "label": "美元指数",
-        "value": "100.16",
-        "change": "+0.15%",
+        "value": "100.13",
+        "change": "+0.12%",
         "dir": "up",
         "tag": "DX-Y.NYB",
-        "percentile": 87,
+        "percentile": 85,
         "signal": "down",
-        "meaning": "当前位于近一年 87 分位",
+        "meaning": "当前位于近一年 85 分位",
         "changes": {
-          "d": "+0.15%",
-          "w": "-1.29%",
-          "m": "-1.21%",
-          "h6": "+4.03%"
+          "d": "+0.12%",
+          "w": "-1.32%",
+          "m": "-1.24%",
+          "h6": "+4.00%"
         },
         "sparkline": [
           100.85,
@@ -472,23 +473,23 @@ const DATA = {
           101.38,
           100.8,
           100.01,
-          100.162
+          100.13
         ]
       },
       {
         "label": "美元/日元",
-        "value": "160.48",
-        "change": "-1.73%",
+        "value": "160.28",
+        "change": "-1.85%",
         "dir": "down",
         "tag": "USDJPY=X",
-        "percentile": 87,
+        "percentile": 86,
         "signal": "down",
-        "meaning": "当前位于近一年 87 分位",
+        "meaning": "当前位于近一年 86 分位",
         "changes": {
-          "d": "-1.73%",
-          "w": "-2.05%",
-          "m": "-1.27%",
-          "h6": "+2.27%"
+          "d": "-1.85%",
+          "w": "-2.17%",
+          "m": "-1.39%",
+          "h6": "+2.15%"
         },
         "sparkline": [
           161.433,
@@ -520,7 +521,7 @@ const DATA = {
           163.771,
           163.864,
           163.3,
-          160.481
+          160.284
         ]
       },
       {
@@ -828,12 +829,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,139.20",
+        "current": "$4,144.50",
         "changes": {
-          "d": 0.95,
-          "w": 1.76,
-          "m": 1.74,
-          "h6": -22.17
+          "d": 1.08,
+          "w": 1.89,
+          "m": 1.87,
+          "h6": -22.07
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
@@ -852,36 +853,36 @@ const DATA = {
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.52",
+        "current": "6.51",
         "changes": {
-          "d": 1.1,
-          "w": 3.09,
-          "m": 6.4,
-          "h6": 5.51
+          "d": 1.08,
+          "w": 3.07,
+          "m": 6.38,
+          "h6": 5.48
         },
-        "meaning": "半年 +6% 的上升趋势中, 近月 +6% 仍在加速"
+        "meaning": "半年 +5% 的上升趋势中, 近月 +6% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "100.16",
+        "current": "100.13",
         "changes": {
-          "d": 0.15,
-          "w": -1.29,
-          "m": -1.21,
-          "h6": 4.03
+          "d": 0.12,
+          "w": -1.32,
+          "m": -1.24,
+          "h6": 4.0
         },
         "meaning": "半年 +4% 但近月 -1% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "160.48",
+        "current": "160.28",
         "changes": {
-          "d": -1.73,
-          "w": -2.05,
-          "m": -1.27,
-          "h6": 2.27
+          "d": -1.85,
+          "w": -2.17,
+          "m": -1.39,
+          "h6": 2.15
         },
         "meaning": "半年 +2% 但近月 -1% 回调——趋势内修正"
       },
@@ -985,8 +986,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,139.20",
-        "change": "+0.95%",
+        "price": "$4,144.50",
+        "change": "+1.08%",
         "dir": "up"
       },
       {
@@ -999,22 +1000,22 @@ const DATA = {
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.52",
-        "change": "+1.10%",
+        "price": "6.51",
+        "change": "+1.08%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "100.16",
-        "change": "+0.15%",
+        "price": "100.13",
+        "change": "+0.12%",
         "dir": "up"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "160.48",
-        "change": "-1.73%",
+        "price": "160.28",
+        "change": "-1.85%",
         "dir": "down"
       },
       {
@@ -1213,7 +1214,7 @@ const DATA = {
           4036.3,
           4034.7,
           4100.1001,
-          4139.2002
+          4144.5
         ],
         "Copper": [
           6.3745,
@@ -1245,7 +1246,7 @@ const DATA = {
           6.322,
           6.2735,
           6.4445,
-          6.5155
+          6.514
         ],
         "BTC": [
           59881.98,
@@ -1408,7 +1409,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+1.76%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+1.89%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -4351,8 +4352,8 @@ const DATA = {
   },
   "fed": {
     "regime": {
-      "label": "观望期, 鹰鸽分化",
-      "signal": "mixed",
+      "label": "收紧预期",
+      "signal": "risk-off",
       "confidence": "高置信",
       "description": "政策利率 3.75%-3.50% 维持不变, 下一次行动大概率降息。缩表 (WALCL 6.7T, 周 +2.5$B) 持续推进, RRP 缓冲 ($1.08B) 已耗尽, 未来 QT 将直击准备金。"
     },
@@ -5221,6 +5222,32 @@ const DATA = {
     "chartNotes": {
       "hawkNote": "0=极度鸽派 / 10=极度鹰派 · 当前 7.4 偏鹰 (基于2Y利率自动计算 · 月Δ+12bp)",
       "probNote": "7月会议: 维持81.0% / 降25bp 14.0% · 基于2Y利率动态推算"
+    },
+    "impliedPath": {
+      "points": [
+        {
+          "tenor": "3M",
+          "rate": 3.83
+        },
+        {
+          "tenor": "6M",
+          "rate": 3.97
+        },
+        {
+          "tenor": "1Y",
+          "rate": 4.04
+        },
+        {
+          "tenor": "2Y",
+          "rate": 4.22
+        }
+      ],
+      "currentFF": 3.75,
+      "cuts12m": 0,
+      "hikes12m": 1,
+      "terminal2y": 4.22,
+      "signal": "risk-off",
+      "note": "基于收益率曲线短端(3M/6M/1Y/2Y)反推的市场隐含政策利率路径; 2Y相对当前上限的偏离折算为隐含降息/加息次数(每次25bp)"
     }
   },
   "liquidity": {
@@ -5991,8 +6018,8 @@ const DATA = {
   },
   "economy": {
     "regime": {
-      "label": "增长放缓+通胀回升",
-      "signal": "mixed",
+      "label": "增长稳健+通胀受控",
+      "signal": "risk-on",
       "confidence": "中等置信",
       "description": "就业消费降温 (非农月增 +57K, 失业率 4.20%) 但通胀因能源回升 (CPI 同比 3.46%)。压缩美联储政策空间——降息怕通胀, 不降怕就业。"
     },
@@ -6322,7 +6349,7 @@ const DATA = {
         "tag": "MfgPMI",
         "percentile": 50,
         "signal": "bearish",
-        "meaning": "ISM制造业景气: >50扩张 / <50收缩, 荣枯线50",
+        "meaning": "S&P Global制造业景气: >50扩张 / <50收缩, 荣枯线50",
         "changes": {
           "d": "—",
           "w": "—",
@@ -6335,7 +6362,7 @@ const DATA = {
           "next": null,
           "estimated": true
         },
-        "source": "ISM"
+        "source": "S&P Global"
       },
       {
         "label": "服务业 PMI",
@@ -6345,7 +6372,7 @@ const DATA = {
         "tag": "SvcPMI",
         "percentile": 50,
         "signal": "bearish",
-        "meaning": "ISM服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50",
+        "meaning": "S&P Global服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50",
         "changes": {
           "d": "—",
           "w": "—",
@@ -6358,7 +6385,76 @@ const DATA = {
           "next": null,
           "estimated": true
         },
-        "source": "ISM"
+        "source": "S&P Global"
+      },
+      {
+        "label": "超级核心通胀 (PCE服务除住房)",
+        "value": "—",
+        "change": "—",
+        "dir": "neutral",
+        "tag": "SuperCore",
+        "percentile": null,
+        "signal": "mixed",
+        "meaning": "美联储最看重的通胀口径(服务除住房), >3.5%为压力区",
+        "changes": {
+          "d": "—",
+          "w": "—",
+          "m": "—",
+          "h6": "—"
+        },
+        "sparkline": [],
+        "release": {
+          "latest": "2026-05-29",
+          "next": "2026-06-30",
+          "estimated": true
+        },
+        "source": "BEA"
+      },
+      {
+        "label": "纽约联储制造业指数",
+        "value": "—",
+        "change": "—",
+        "dir": "neutral",
+        "tag": "Empire",
+        "percentile": 50,
+        "signal": "bullish",
+        "meaning": "扩散指数 >0扩张; 最高频增长先行指标(每月中旬)",
+        "changes": {
+          "d": "—",
+          "w": "—",
+          "m": "—",
+          "h6": "—"
+        },
+        "sparkline": [],
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "NY Fed"
+      },
+      {
+        "label": "费城联储制造业指数",
+        "value": "—",
+        "change": "—",
+        "dir": "neutral",
+        "tag": "Philly",
+        "percentile": 50,
+        "signal": "bullish",
+        "meaning": "扩散指数 >0扩张; 与 Empire 互补的软数据",
+        "changes": {
+          "d": "—",
+          "w": "—",
+          "m": "—",
+          "h6": "—"
+        },
+        "sparkline": [],
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "Philly Fed"
       }
     ],
     "trendData": [
@@ -6474,7 +6570,7 @@ const DATA = {
           "next": null,
           "estimated": true
         },
-        "source": "ISM"
+        "source": "S&P Global"
       },
       {
         "name": "服务业 PMI",
@@ -6493,7 +6589,64 @@ const DATA = {
           "next": null,
           "estimated": true
         },
-        "source": "ISM"
+        "source": "S&P Global"
+      },
+      {
+        "name": "超级核心通胀",
+        "tag": "SuperCore",
+        "unit": "pt",
+        "current": "—",
+        "changes": {
+          "d": null,
+          "w": null,
+          "m": null,
+          "h6": null
+        },
+        "meaning": "PCE服务除住房同比, 美联储首选通胀口径",
+        "release": {
+          "latest": "2026-05-29",
+          "next": "2026-06-30",
+          "estimated": true
+        },
+        "source": "BEA"
+      },
+      {
+        "name": "纽约联储制造业",
+        "tag": "Empire",
+        "unit": "pt",
+        "current": "—",
+        "changes": {
+          "d": null,
+          "w": null,
+          "m": null,
+          "h6": null
+        },
+        "meaning": "扩散指数 >0扩张, 最高频增长先行指标",
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "NY Fed"
+      },
+      {
+        "name": "费城联储制造业",
+        "tag": "Philly",
+        "unit": "pt",
+        "current": "—",
+        "changes": {
+          "d": null,
+          "w": null,
+          "m": null,
+          "h6": null
+        },
+        "meaning": "扩散指数 >0扩张, 与 Empire 互补的软数据",
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "Philly Fed"
       }
     ],
     "inflationChart": {
@@ -6606,11 +6759,6 @@ const DATA = {
     },
     "pmiChart": {
       "labels": [
-        "7月",
-        "8月",
-        "9月",
-        "10月",
-        "11月",
         "12月",
         "1月",
         "2月",
@@ -6629,67 +6777,52 @@ const DATA = {
         "3月",
         "4月",
         "5月",
-        "7月"
+        "6月"
       ],
       "series": {
         "制造业PMI": [
-          46.8,
-          47.2,
-          47.2,
-          46.5,
-          48.4,
-          49.2,
-          49.3,
-          48.4,
-          50.3,
-          49.0,
-          48.7,
-          48.5,
-          49.0,
-          48.0,
-          48.7,
-          49.1,
-          48.7,
-          48.2,
-          47.9,
-          52.6,
-          52.4,
+          49.4,
+          51.2,
           52.7,
-          54.0,
-          53.3
+          49.8,
+          50.2,
+          52.9,
+          52.0,
+          49.5,
+          53.0,
+          52.5,
+          52.0,
+          52.2,
+          52.3,
+          52.4,
+          51.6,
+          52.3,
+          54.5,
+          55.1,
+          55.7
         ],
         "服务业PMI": [
-          51.6,
-          50.9,
-          null,
-          56.0,
-          null,
-          null,
-          54.1,
-          53.4,
-          54.9,
-          null,
-          53.6,
-          null,
+          57.0,
+          52.9,
+          53.0,
+          54.0,
+          53.5,
+          53.0,
+          54.0,
           52.7,
-          null,
-          null,
-          null,
-          null,
-          null,
+          53.5,
+          54.0,
+          53.8,
+          53.5,
           54.6,
-          null,
-          null,
-          null,
-          null,
-          null
+          54.6,
+          53.5,
+          54.0,
+          55.0,
+          55.5,
+          55.0
         ],
         "荣枯线(50)": [
-          50,
-          50,
-          50,
-          50,
-          50,
           50,
           50,
           50,
@@ -6890,7 +7023,12 @@ const DATA = {
         "status": "关键事件"
       }
     ],
-    "generatedAt": "2026-07-31 06:23"
+    "generatedAt": "2026-07-31 06:28",
+    "pmi_meta": {
+      "is_fallback": true,
+      "asof": null,
+      "source": "S&P Global (via Trading Economics)"
+    }
   },
   "credit": {
     "regime": {
