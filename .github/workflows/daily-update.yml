@@ -12,6 +12,12 @@ on:
   schedule:
     - cron: '0 1 * * *'   # UTC 01:00 = 北京 09:00
   workflow_dispatch:      # 允许手动触发
+  push:
+    paths:                # 仅源码/配置变更触发重算, 避免 bot 提交 data.js 时自循环
+      - 'scripts/**'
+      - 'app.js'
+      - 'index.html'
+      - '.github/workflows/**'
 
 permissions:
   contents: write
