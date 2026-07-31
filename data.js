@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-31 06:28
+ * 生成时间: 2026-07-31 08:37
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-07-31 06:28 (官方数据, 自动更新)",
+    "lastUpdated": "2026-07-31 08:37 (官方数据, 自动更新)",
     "dataAsOf": "2026-07-29",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,12 +17,12 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "中等置信",
-    "description": "10Y 美债 4.67% 处于近一年高位 (分位 99), 长端抛售是确立趋势; 与此同时信用市场内部已分层——CCC 利差 10.13% (分位 100, 极窄历史区间的另外一端是极高压力), 而 HY 整体仅 2.87%。这种\"高评级平静、低评级承压\"的组合是周期中后期的典型特征。油价 (WTI 84.25) 与波动率 (VIX 17.09) 尚未失控, 当前属\"利率驱动的条件性紧张\", 而非流动性危机。"
+    "description": "10Y 美债 4.67% 处于近一年高位 (分位 99), 长端抛售是确立趋势; 与此同时信用市场内部已分层——CCC 利差 10.13% (分位 100, 极窄历史区间的另外一端是极高压力), 而 HY 整体仅 2.87%。这种\"高评级平静、低评级承压\"的组合是周期中后期的典型特征。油价 (WTI 84.25) 与波动率 (VIX 16.77) 尚未失控, 当前属\"利率驱动的条件性紧张\", 而非流动性危机。"
   },
   "assets": {
     "regime": {
-      "label": "利率定价的资产重定价",
-      "signal": "risk-off",
+      "label": "利率定价下的条件性紧张",
+      "signal": "mixed",
       "confidence": "中等置信",
       "description": "10Y 利率 4.67% 的上行是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 84.25 尚未失控, 但利率上行已压制估值。"
     },
@@ -38,7 +38,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 +1.89% 横盘",
+        "title": "黄金 +1.19% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -286,18 +286,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,144.50",
-        "change": "+1.08%",
+        "value": "$4,116.20",
+        "change": "+0.39%",
         "dir": "up",
         "tag": "GC=F",
-        "percentile": 41,
+        "percentile": 39,
         "signal": "up",
-        "meaning": "当前位于近一年 41 分位",
+        "meaning": "当前位于近一年 39 分位",
         "changes": {
-          "d": "+1.08%",
-          "w": "+1.89%",
-          "m": "+1.87%",
-          "h6": "-22.07%"
+          "d": "+0.39%",
+          "w": "+1.19%",
+          "m": "+1.18%",
+          "h6": "-22.60%"
         },
         "sparkline": [
           4224.1001,
@@ -329,7 +329,7 @@ const DATA = {
           4036.3,
           4034.7,
           4100.1001,
-          4144.5
+          4116.2002
         ]
       },
       {
@@ -430,18 +430,18 @@ const DATA = {
       },
       {
         "label": "美元指数",
-        "value": "100.13",
-        "change": "+0.12%",
+        "value": "100.18",
+        "change": "+0.17%",
         "dir": "up",
         "tag": "DX-Y.NYB",
-        "percentile": 85,
+        "percentile": 87,
         "signal": "down",
-        "meaning": "当前位于近一年 85 分位",
+        "meaning": "当前位于近一年 87 分位",
         "changes": {
-          "d": "+0.12%",
-          "w": "-1.32%",
-          "m": "-1.24%",
-          "h6": "+4.00%"
+          "d": "+0.17%",
+          "w": "-1.28%",
+          "m": "-1.20%",
+          "h6": "+4.05%"
         },
         "sparkline": [
           100.85,
@@ -473,23 +473,23 @@ const DATA = {
           101.38,
           100.8,
           100.01,
-          100.13
+          100.176
         ]
       },
       {
         "label": "美元/日元",
-        "value": "160.28",
-        "change": "-1.85%",
+        "value": "160.21",
+        "change": "-1.89%",
         "dir": "down",
         "tag": "USDJPY=X",
-        "percentile": 86,
+        "percentile": 85,
         "signal": "down",
-        "meaning": "当前位于近一年 86 分位",
+        "meaning": "当前位于近一年 85 分位",
         "changes": {
-          "d": "-1.85%",
-          "w": "-2.17%",
-          "m": "-1.39%",
-          "h6": "+2.15%"
+          "d": "-1.89%",
+          "w": "-2.21%",
+          "m": "-1.44%",
+          "h6": "+2.10%"
         },
         "sparkline": [
           161.433,
@@ -521,7 +521,7 @@ const DATA = {
           163.771,
           163.864,
           163.3,
-          160.284
+          160.206
         ]
       },
       {
@@ -829,12 +829,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,144.50",
+        "current": "$4,116.20",
         "changes": {
-          "d": 1.08,
-          "w": 1.89,
-          "m": 1.87,
-          "h6": -22.07
+          "d": 0.39,
+          "w": 1.19,
+          "m": 1.18,
+          "h6": -22.6
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
@@ -865,24 +865,24 @@ const DATA = {
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "100.13",
+        "current": "100.18",
         "changes": {
-          "d": 0.12,
-          "w": -1.32,
-          "m": -1.24,
-          "h6": 4.0
+          "d": 0.17,
+          "w": -1.28,
+          "m": -1.2,
+          "h6": 4.05
         },
         "meaning": "半年 +4% 但近月 -1% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "160.28",
+        "current": "160.21",
         "changes": {
-          "d": -1.85,
-          "w": -2.17,
-          "m": -1.39,
-          "h6": 2.15
+          "d": -1.89,
+          "w": -2.21,
+          "m": -1.44,
+          "h6": 2.1
         },
         "meaning": "半年 +2% 但近月 -1% 回调——趋势内修正"
       },
@@ -986,8 +986,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,144.50",
-        "change": "+1.08%",
+        "price": "$4,116.20",
+        "change": "+0.39%",
         "dir": "up"
       },
       {
@@ -1007,15 +1007,15 @@ const DATA = {
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "100.13",
-        "change": "+0.12%",
+        "price": "100.18",
+        "change": "+0.17%",
         "dir": "up"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "160.28",
-        "change": "-1.85%",
+        "price": "160.21",
+        "change": "-1.89%",
         "dir": "down"
       },
       {
@@ -1214,7 +1214,7 @@ const DATA = {
           4036.3,
           4034.7,
           4100.1001,
-          4144.5
+          4116.2002
         ],
         "Copper": [
           6.3745,
@@ -1409,7 +1409,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+1.89%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "利率驱动的条件性重定价: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 (+1.19%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (16.77) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -1419,7 +1419,7 @@ const DATA = {
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 股市抛压自我强化",
-        "status": "距离 2.9"
+        "status": "距离 3.2"
       },
       {
         "trigger": "WTI 突破 <span class=\"watch-threshold\">$90</span>",
@@ -4327,7 +4327,7 @@ const DATA = {
         "source": "Yahoo ^TYX"
       }
     ],
-    "analystView": "本轮利率上行的结构: 实际利率 (2.41%) 与通胀预期 (2.27%) 共同贡献, 属\"增长受损+通胀回升\"的滞胀组合而非单纯紧缩预期。对资产定价的含义: 实际利率高位环境下, 标普合理市盈率需下修。曲线下一个关键信号是 2Y——若油价冲击迫使市场取消降息定价, 2Y 补涨将触发熊平, 那才是对股市最不利的形态。",
+    "analystView": "利率上行由长端主导: 实际利率 (2.41%) 与通胀预期 (2.27%) 共同贡献, 曲线熊市陡峭化 (10Y-2Y +45bp)。对资产定价: 实际利率高位环境下标普合理市盈率承压; 若油价冲击迫使市场取消降息定价, 2Y 补涨触发熊平, 将对股市估值最不利。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -4478,7 +4478,7 @@ const DATA = {
         "dir": "down",
         "tag": "TREAST",
         "percentile": 100,
-        "signal": "mixed",
+        "signal": "bearish",
         "meaning": "被动缩表, 节奏可控",
         "changes": {
           "d": "+$4B",
@@ -4526,7 +4526,7 @@ const DATA = {
         "dir": "down",
         "tag": "MBST",
         "percentile": 2,
-        "signal": "mixed",
+        "signal": "bullish",
         "meaning": "提前还款低迷, MBS缩减慢",
         "changes": {
           "d": "-$14B",
@@ -4718,7 +4718,7 @@ const DATA = {
         "dir": "neutral",
         "tag": "SOFR",
         "percentile": 76,
-        "signal": "bullish",
+        "signal": "mixed",
         "meaning": "低于 IORB, 融资充裕",
         "changes": {
           "d": "0bp",
@@ -5201,7 +5201,7 @@ const DATA = {
         "note": "基于2Y利率月变化(+12bp)动态推算 · 利率上行=降息概率下降"
       }
     },
-    "analystView": "美联储处于\"数据依赖的观望期\", 但油价冲击正在改变平衡。关键: 沃什在 2026-07 发布会上如何定性油价——\"暂时性\"=恢复降息定价, \"持续风险\"=压缩降息空间。RRP 耗尽 ($1.08B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。",
+    "analystView": "市场定价收紧预期: 2Y 利率已高于联邦基金上限, 降息空间被压缩。油价冲击是关键变量——沃什在 2026-07 发布会上对油价的定性 (\"暂时性\" vs \"持续风险\") 将决定预期走向。RRP 耗尽 ($1.08B) 是结构性转折。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">9月15日</span> FOMC会议",
@@ -5426,7 +5426,7 @@ const DATA = {
         "dir": "down",
         "tag": "TGA",
         "percentile": 82,
-        "signal": "bearish",
+        "signal": "bullish",
         "meaning": "财政部抽水",
         "changes": {
           "d": "+$81B",
@@ -5522,7 +5522,7 @@ const DATA = {
         "dir": "up",
         "tag": "Spread",
         "percentile": 76,
-        "signal": "bullish",
+        "signal": "bearish",
         "meaning": "负值=充裕",
         "changes": {
           "d": "0bp",
@@ -5918,7 +5918,7 @@ const DATA = {
         "weekChange": "+$-8B",
         "monthChange": "+$79B",
         "source": "Treasury DTS",
-        "signal": "bearish"
+        "signal": "bullish"
       },
       {
         "component": "银行准备金 (WRESBAL)",
@@ -5988,13 +5988,13 @@ const DATA = {
         },
         {
           "name": "VIX 升至 20 上方",
-          "current": "17.09",
+          "current": "16.77",
           "status": "接近触发",
           "triggered": false
         }
       ]
     },
-    "analystView": "流动性分析核心是区分\"缓冲变薄\"与\"真实压力\"。当前是前者: RRP 耗尽 ($1.08B) 是结构性事件, 但 SOFR-IORB (0bp)、SRF、信用利差全部平静。类比: 水库水位下降(结构)但下游供水未停(价格)。历史参照 2019年9月回购危机: 先 RRP 耗尽, 再 SOFR 突然飙升。策略: 盯住 SOFR-IORB 转正、SRF 放量两个价格信号。",
+    "analystView": "流动性处于\"缓冲变薄\"阶段: RRP 耗尽 ($1.08B) 是结构性事件, 但 SOFR-IORB (0bp)、SRF、信用利差全部平静——数量收缩尚未传导为价格压力。类比: 水库水位下降(结构)但下游供水未停(价格)。历史参照 2019年9月回购危机: 先 RRP 耗尽, 再 SOFR 突然飙升。盯住 SOFR-IORB 转正、SRF 放量两个价格信号。",
     "whatToWatch": [
       {
         "trigger": "SOFR-IORB <span class=\"watch-threshold\">连续3日转正</span>",
@@ -6088,7 +6088,7 @@ const DATA = {
         "dir": "down",
         "tag": "CPI",
         "percentile": 96,
-        "signal": "bearish",
+        "signal": "bullish",
         "meaning": "月度频率: 月格=上月Δ, 半年格=6月Δ",
         "changes": {
           "d": "—",
@@ -6122,7 +6122,7 @@ const DATA = {
         "dir": "down",
         "tag": "Core",
         "percentile": 96,
-        "signal": "mixed",
+        "signal": "bullish",
         "meaning": "服务粘性对冲商品通缩",
         "changes": {
           "d": "—",
@@ -6156,7 +6156,7 @@ const DATA = {
         "dir": "down",
         "tag": "PCE",
         "percentile": 100,
-        "signal": "mixed",
+        "signal": "bullish",
         "meaning": "美联储首选, 距目标仍有路程 (滞后1月)",
         "changes": {
           "d": "—",
@@ -6267,7 +6267,7 @@ const DATA = {
         "dir": "up",
         "tag": "Retail",
         "percentile": 100,
-        "signal": "mixed",
+        "signal": "bullish",
         "meaning": "名义零售月环比",
         "changes": {
           "d": "—",
@@ -6343,115 +6343,214 @@ const DATA = {
       },
       {
         "label": "制造业 PMI",
-        "value": "—",
+        "value": "55.70",
         "change": "—",
         "dir": "neutral",
         "tag": "MfgPMI",
-        "percentile": 50,
-        "signal": "bearish",
+        "percentile": 100,
+        "signal": "bullish",
         "meaning": "S&P Global制造业景气: >50扩张 / <50收缩, 荣枯线50",
         "changes": {
           "d": "—",
-          "w": "—",
+          "w": "+3.3pt",
           "m": "—",
           "h6": "—"
         },
-        "sparkline": [],
+        "sparkline": [
+          49.4,
+          51.2,
+          52.7,
+          49.8,
+          50.2,
+          52.9,
+          52.0,
+          49.5,
+          53.0,
+          52.5,
+          52.0,
+          52.2,
+          52.3,
+          52.4,
+          51.6,
+          52.3,
+          54.5,
+          55.1,
+          55.7
+        ],
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-05",
+          "next": "2026-08-05",
           "estimated": true
         },
         "source": "S&P Global"
       },
       {
         "label": "服务业 PMI",
-        "value": "—",
+        "value": "55.00",
         "change": "—",
         "dir": "neutral",
         "tag": "SvcPMI",
-        "percentile": 50,
-        "signal": "bearish",
+        "percentile": 89,
+        "signal": "bullish",
         "meaning": "S&P Global服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50",
         "changes": {
           "d": "—",
-          "w": "—",
+          "w": "+0.4pt",
           "m": "—",
           "h6": "—"
         },
-        "sparkline": [],
+        "sparkline": [
+          57.0,
+          52.9,
+          53.0,
+          54.0,
+          53.5,
+          53.0,
+          54.0,
+          52.7,
+          53.5,
+          54.0,
+          53.8,
+          53.5,
+          54.6,
+          54.6,
+          53.5,
+          54.0,
+          55.0,
+          55.5,
+          55.0
+        ],
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-05",
+          "next": "2026-08-05",
           "estimated": true
         },
         "source": "S&P Global"
       },
       {
         "label": "超级核心通胀 (PCE服务除住房)",
-        "value": "—",
-        "change": "—",
-        "dir": "neutral",
+        "value": "3.78%",
+        "change": "-0.2pt",
+        "dir": "down",
         "tag": "SuperCore",
         "percentile": null,
-        "signal": "mixed",
+        "signal": "bearish",
         "meaning": "美联储最看重的通胀口径(服务除住房), >3.5%为压力区",
         "changes": {
           "d": "—",
           "w": "—",
-          "m": "—",
+          "m": "-0.2pt",
           "h6": "—"
         },
-        "sparkline": [],
+        "sparkline": [
+          3.2539682539682424,
+          3.4045922406967577,
+          3.235990528808208,
+          3.223270440251569,
+          3.296703296703285,
+          3.2863849765258246,
+          3.588143525741039,
+          3.3385093167701774,
+          3.56589147286821,
+          3.5603715170278827,
+          3.9412673879443583,
+          3.7779491133384857
+        ],
         "release": {
-          "latest": "2026-05-29",
-          "next": "2026-06-30",
+          "latest": "2026-07-31",
+          "next": "2026-08-31",
           "estimated": true
         },
         "source": "BEA"
       },
       {
         "label": "纽约联储制造业指数",
-        "value": "—",
+        "value": "-0.60",
         "change": "—",
         "dir": "neutral",
         "tag": "Empire",
-        "percentile": 50,
-        "signal": "bullish",
+        "percentile": 100,
+        "signal": "bearish",
         "meaning": "扩散指数 >0扩张; 最高频增长先行指标(每月中旬)",
         "changes": {
           "d": "—",
-          "w": "—",
+          "w": "+18.1pt",
           "m": "—",
           "h6": "—"
         },
-        "sparkline": [],
+        "sparkline": [
+          -5.1,
+          -6.3,
+          -7.0,
+          -9.0,
+          -8.4,
+          -8.2,
+          -6.2,
+          -10.6,
+          -13.2,
+          -13.5,
+          -16.2,
+          -14.5,
+          -10.2,
+          -18.7,
+          -24.4,
+          -34.8,
+          -28.5,
+          -12.6,
+          -0.6
+        ],
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-15",
+          "next": "2026-08-15",
           "estimated": true
         },
         "source": "NY Fed"
       },
       {
         "label": "费城联储制造业指数",
-        "value": "—",
-        "change": "—",
-        "dir": "neutral",
+        "value": "41.40",
+        "change": "+33.8pt",
+        "dir": "up",
         "tag": "Philly",
-        "percentile": 50,
+        "percentile": 100,
         "signal": "bullish",
         "meaning": "扩散指数 >0扩张; 与 Empire 互补的软数据",
         "changes": {
           "d": "—",
-          "w": "—",
-          "m": "—",
+          "w": "+25.1pt",
+          "m": "+33.8pt",
           "h6": "—"
         },
-        "sparkline": [],
+        "sparkline": [
+          9.9,
+          -3.0,
+          -1.6,
+          7.6,
+          -1.5,
+          -9.6,
+          32.9,
+          13.4,
+          10.2,
+          -12.9,
+          -0.7,
+          -1.4,
+          11.4,
+          0.7,
+          19.5,
+          -10.1,
+          0.6,
+          -8.8,
+          12.6,
+          16.3,
+          18.1,
+          26.7,
+          -0.4,
+          10.3,
+          41.4
+        ],
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-15",
+          "next": "2026-08-15",
           "estimated": true
         },
         "source": "Philly Fed"
@@ -6557,17 +6656,17 @@ const DATA = {
         "name": "制造业 PMI",
         "tag": "MfgPMI",
         "unit": "pt",
-        "current": "—",
+        "current": "55.70",
         "changes": {
           "d": null,
-          "w": null,
+          "w": 3.3000000000000043,
           "m": null,
           "h6": null
         },
         "meaning": ">50扩张/<50收缩, 荣枯线50",
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-05",
+          "next": "2026-08-05",
           "estimated": true
         },
         "source": "S&P Global"
@@ -6576,17 +6675,17 @@ const DATA = {
         "name": "服务业 PMI",
         "tag": "SvcPMI",
         "unit": "pt",
-        "current": "—",
+        "current": "55.00",
         "changes": {
           "d": null,
-          "w": null,
+          "w": 0.3999999999999986,
           "m": null,
           "h6": null
         },
         "meaning": "占经济~80%, >50扩张/<50收缩",
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-05",
+          "next": "2026-08-05",
           "estimated": true
         },
         "source": "S&P Global"
@@ -6595,17 +6694,17 @@ const DATA = {
         "name": "超级核心通胀",
         "tag": "SuperCore",
         "unit": "pt",
-        "current": "—",
+        "current": "3.78%",
         "changes": {
           "d": null,
           "w": null,
-          "m": null,
+          "m": -0.16331827460587256,
           "h6": null
         },
         "meaning": "PCE服务除住房同比, 美联储首选通胀口径",
         "release": {
-          "latest": "2026-05-29",
-          "next": "2026-06-30",
+          "latest": "2026-07-31",
+          "next": "2026-08-31",
           "estimated": true
         },
         "source": "BEA"
@@ -6614,17 +6713,17 @@ const DATA = {
         "name": "纽约联储制造业",
         "tag": "Empire",
         "unit": "pt",
-        "current": "—",
+        "current": "-0.60",
         "changes": {
           "d": null,
-          "w": null,
+          "w": 18.099999999999998,
           "m": null,
           "h6": null
         },
         "meaning": "扩散指数 >0扩张, 最高频增长先行指标",
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-15",
+          "next": "2026-08-15",
           "estimated": true
         },
         "source": "NY Fed"
@@ -6633,17 +6732,17 @@ const DATA = {
         "name": "费城联储制造业",
         "tag": "Philly",
         "unit": "pt",
-        "current": "—",
+        "current": "41.40",
         "changes": {
           "d": null,
-          "w": null,
-          "m": null,
+          "w": 25.099999999999998,
+          "m": 33.8,
           "h6": null
         },
         "meaning": "扩散指数 >0扩张, 与 Empire 互补的软数据",
         "release": {
-          "latest": null,
-          "next": null,
+          "latest": "2026-07-15",
+          "next": "2026-08-15",
           "estimated": true
         },
         "source": "Philly Fed"
@@ -6951,7 +7050,7 @@ const DATA = {
           "note": "时薪同比-核心服务CPI同比 · 正=实际工资增长"
         }
       ],
-      "analystNote": "劳动力市场\"需求-供给-价格\"三角框架。Sahm Rule当前 0.17 (未触发)。失业率 4.2% 从低点回升, 美联储关注劳动参与率与JOLTS的交叉信号。"
+      "analystNote": "劳动力市场\"需求-供给-价格\"三角框架。Sahm Rule 当前 0.17 (未触发)。失业率 4.2%回落, 美联储关注劳动参与率与JOLTS的交叉信号。"
     },
     "inflationDeepening": {
       "annualized3m": 2.29,
@@ -7001,11 +7100,11 @@ const DATA = {
       "inflNote": "CPI 3.46% (月Δ-0.7pt) / 核心CPI 2.57% / 核心PCE 3.29% (滞后1月) · 真实同比序列",
       "gdpNote": "实际环比年化 1.50% (26Q2, BEA最新) · 名义同比 6.53% · 实际同比 2.10% · 实时动能 WEI 2.46%",
       "empNote": "近3月非农: +148K, +129K, +57K · 失业率 4.20%",
-      "pmiNote": "制造业PMI — / 服务业PMI — · 荣枯线50: 上=扩张 下=收缩",
+      "pmiNote": "制造业PMI 55.70 / 服务业PMI 55.00 · 荣枯线50: 上=扩张 下=收缩",
       "trendNote": "CPI同比半年Δ+0.8pt · 非农6个月累计+552K · 失业率半年Δ-0.2pt",
       "breakdownSub": "分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ"
     },
-    "analystView": "数据分三堆: 增长 (GDP 同比 6.53% 无衰退)、就业 (失业率 4.20% 温和走弱)、通胀 (CPI 同比 3.46% 能源推升, 核心横盘)。对美联储最难办——无压倒性论据。变量是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、9月降息顺理成章; 站稳高位则\"higher for longer\", 这才是下行风险场景。",
+    "analystView": "数据偏暖: 增长 (GDP 同比 6.53%) 稳健、就业 (失业率 4.20%) 健康、通胀 (CPI 同比 3.46%) 受控。对美联储, 降息窗口相对从容; 变量仍是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、降息顺理成章, 站稳高位则\"higher for longer\"构成上行风险。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">下月 CPI 报告</span>",
@@ -7023,11 +7122,15 @@ const DATA = {
         "status": "关键事件"
       }
     ],
-    "generatedAt": "2026-07-31 06:28",
+    "generatedAt": "2026-07-31 08:37",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
       "source": "S&P Global (via Trading Economics)"
+    },
+    "empire_meta": {
+      "is_fallback": true,
+      "asof": null
     }
   },
   "credit": {
@@ -7158,7 +7261,7 @@ const DATA = {
         "dir": "up",
         "tag": "BB",
         "percentile": 61,
-        "signal": "mixed",
+        "signal": "bearish",
         "meaning": "HY最高档仍稳定",
         "changes": {
           "d": "+3bp",
@@ -7206,7 +7309,7 @@ const DATA = {
         "dir": "up",
         "tag": "B",
         "percentile": 50,
-        "signal": "mixed",
+        "signal": "bearish",
         "meaning": "中间地带轻微走阔",
         "changes": {
           "d": "+5bp",
@@ -7302,7 +7405,7 @@ const DATA = {
         "dir": "up",
         "tag": "HY",
         "percentile": 60,
-        "signal": "mixed",
+        "signal": "bearish",
         "meaning": "整体利差极窄",
         "changes": {
           "d": "+3bp",
@@ -8036,7 +8139,7 @@ const DATA = {
         "note": "分位100, 最弱信用率先承压"
       }
     ],
-    "analystView": "信用市场最大信息不是\"利差窄\", 而是\"利差窄+股市跌\"的背离。股票已定价利率冲击, 信用市场还没。CCC (10.13%, 分位 100) 提前走阔说明风险偏好退潮已在最弱环节发生。历史规律: 信用对股市下跌反应滞后 5-10 个交易日。策略: BB 以上可持有, CCC 应减仓——周期中段, 不在 CCC 上贪收益。",
+    "analystView": "平静下的分层: 利差整体仍窄, 但最弱环节 (CCC 10.13%, 分位 100) 已现走阔苗头。股票已部分定价利率冲击, 信用市场反应滞后约 5-10 个交易日; 关注 HY OAS 分位 (60) 是否突破阈值。",
     "whatToWatch": [
       {
         "trigger": "HY OAS 突破 <span class=\"watch-threshold\">3.0%</span>",
@@ -8064,16 +8167,16 @@ const DATA = {
       "label": "波动率分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "当前处于压力区的: OVX 原油。VIX 17.09, OVX 63.44, MOVE 70.88。分化形态决定这是单资产冲击还是系统性重定价——看压力是否从单一资产外溢。"
+      "description": "当前处于压力区的: OVX 原油。VIX 16.77, OVX 63.44, MOVE 70.88。分化形态决定这是单资产冲击还是系统性重定价——看压力是否从单一资产外溢。"
     },
     "keySignals": [
       {
-        "title": "OVX 63.44 vs VIX 17.09 剪刀差 46.3pt",
+        "title": "OVX 63.44 vs VIX 16.77 剪刀差 46.7pt",
         "meaning": "油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。",
         "direction": "mixed"
       },
       {
-        "title": "VIX 17.09, 周 -1.6pt",
+        "title": "VIX 16.77, 周 -1.8pt",
         "meaning": "站上20将触发波动率目标基金被动减仓, 抛压自我强化。",
         "direction": "mixed"
       },
@@ -8086,21 +8189,20 @@ const DATA = {
     "metrics": [
       {
         "label": "VIX (股票)",
-        "value": "17.09",
-        "change": "-3.57",
+        "value": "16.77",
+        "change": "-0.32",
         "dir": "down",
         "tag": "VIX",
-        "percentile": 48,
+        "percentile": 43,
         "signal": "mixed",
         "meaning": "20是系统性风险确认线",
         "changes": {
-          "d": "-3.57",
-          "w": "-1.61",
-          "m": "+0.64",
-          "h6": "+0.21"
+          "d": "-0.32",
+          "w": "-1.81",
+          "m": "+0.18",
+          "h6": "-0.67"
         },
         "sparkline": [
-          18.44,
           16.4,
           17.28,
           19.49,
@@ -8129,7 +8231,8 @@ const DATA = {
           18.67,
           18.21,
           20.66,
-          17.09
+          17.09,
+          16.77
         ]
       },
       {
@@ -8377,12 +8480,12 @@ const DATA = {
       {
         "name": "VIX 股票波动率",
         "unit": "pt",
-        "current": "17.09",
+        "current": "16.77",
         "changes": {
-          "d": -3.57,
-          "w": -1.61,
-          "m": 0.64,
-          "h6": 0.21
+          "d": -0.32,
+          "w": -1.81,
+          "m": 0.18,
+          "h6": -0.67
         },
         "meaning": "四尺度方向即风险偏好的温度计"
       },
@@ -8437,7 +8540,6 @@ const DATA = {
     ],
     "chartData": {
       "labels": [
-        "2026-03-24",
         "2026-03-25",
         "2026-03-26",
         "2026-03-27",
@@ -8526,100 +8628,101 @@ const DATA = {
         "2026-07-27",
         "2026-07-28",
         "2026-07-29",
-        "2026-07-30"
+        "2026-07-30",
+        "2026-07-31"
       ],
       "series": {
         "VIX": [
           0.0,
-          -6.0,
+          8.3,
+          22.6,
+          20.8,
+          -0.3,
+          -3.1,
+          -5.8,
+          -4.6,
           1.8,
-          15.2,
-          13.6,
-          -6.3,
-          -8.9,
-          -11.4,
-          -10.3,
-          -4.3,
-          -21.9,
-          -27.7,
-          -28.6,
-          -29.1,
-          -31.9,
-          -32.6,
-          -33.4,
-          -35.1,
-          -30.0,
-          -27.6,
-          -29.8,
+          -16.9,
+          -23.1,
+          -24.1,
+          -24.5,
+          -27.5,
           -28.3,
-          -30.6,
-          -33.1,
-          -33.8,
-          -30.2,
-          -37.3,
-          -37.0,
+          -29.2,
+          -31.0,
+          -25.5,
+          -23.0,
+          -25.3,
+          -23.8,
+          -26.1,
+          -28.9,
+          -29.6,
+          -25.7,
+          -33.3,
+          -32.9,
+          -27.8,
+          -31.4,
+          -31.3,
+          -32.6,
           -32.1,
-          -35.5,
-          -35.5,
-          -36.6,
-          -36.2,
-          -31.8,
-          -33.2,
-          -33.7,
-          -36.0,
-          -31.6,
-          -33.9,
-          -33.0,
-          -35.3,
-          -37.8,
-          -38.0,
-          -38.4,
-          -36.9,
-          -39.6,
-          -41.6,
-          -43.2,
-          -40.4,
-          -41.5,
-          -40.4,
-          -42.9,
-          -20.2,
-          -29.8,
-          -26.3,
-          -17.6,
-          -27.9,
-          -34.4,
-          -39.9,
-          -39.1,
-          -31.6,
-          -39.1,
-          -35.9,
-          -27.7,
-          -30.9,
-          -29.9,
-          -31.7,
-          -34.5,
-          -39.0,
-          -38.4,
-          -40.1,
-          -42.2,
-          -40.1,
-          -37.3,
-          -41.2,
-          -44.2,
-          -36.3,
-          -38.8,
-          -41.9,
-          -37.9,
-          -30.4,
-          -30.8,
-          -36.7,
-          -38.3,
-          -30.6,
+          -27.4,
+          -29.0,
+          -29.5,
+          -31.9,
+          -27.2,
+          -29.6,
+          -28.7,
           -31.1,
-          -30.7,
-          -32.4,
+          -33.8,
+          -34.1,
+          -34.5,
+          -32.8,
+          -35.7,
+          -37.9,
+          -39.5,
+          -36.6,
+          -37.7,
+          -36.6,
+          -39.2,
+          -15.1,
+          -25.3,
+          -21.6,
+          -12.3,
           -23.3,
-          -36.6
+          -30.2,
+          -36.0,
+          -35.2,
+          -27.2,
+          -35.3,
+          -31.8,
+          -23.1,
+          -26.5,
+          -25.4,
+          -27.3,
+          -30.3,
+          -35.1,
+          -34.5,
+          -36.2,
+          -38.5,
+          -36.3,
+          -33.3,
+          -37.5,
+          -40.7,
+          -32.3,
+          -34.9,
+          -38.1,
+          -34.0,
+          -25.9,
+          -26.4,
+          -32.7,
+          -34.3,
+          -26.2,
+          -26.6,
+          -26.3,
+          -28.1,
+          -18.4,
+          -32.5,
+          -33.8
         ],
         "VVIX": [
           0.0,
@@ -8907,7 +9010,7 @@ const DATA = {
       ],
       "values": [
         16.9,
-        17.1,
+        16.8,
         20.5
       ],
       "state": "Contango(升水)"
@@ -8922,7 +9025,7 @@ const DATA = {
         "SKEW"
       ],
       "current": [
-        17.1,
+        16.8,
         70.9,
         63.4,
         24.5,
@@ -8930,7 +9033,7 @@ const DATA = {
         139.9
       ],
       "pctRank30d": [
-        48,
+        43,
         42,
         74,
         44,
@@ -8953,12 +9056,12 @@ const DATA = {
         120,
         150
       ],
-      "note": "OVX-VIX剪刀差 46.3pt · 压力区: OVX 原油"
+      "note": "OVX-VIX剪刀差 46.7pt · 压力区: OVX 原油"
     },
     "regimeTable": [
       {
         "indicator": "VIX 股票",
-        "value": "17.09",
+        "value": "16.77",
         "current": "中性",
         "range": "<15 低 / 15-20 中 / 20+ 警戒",
         "note": "系统性风险确认线=20"
@@ -8999,12 +9102,12 @@ const DATA = {
         "note": "尾部保护定价"
       }
     ],
-    "analystView": "波动率市场比价格市场更诚实: 关键问题是\"单资产冲击还是系统性风险\"。当前压力集中在 OVX 原油; VIX 17.09 距20确认线 2.9pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 139.9 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
+    "analystView": "波动率分化: 压力集中在 OVX 原油; VIX 16.77 距20确认线 3.2pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 139.9 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
     "whatToWatch": [
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 抛压自我强化",
-        "status": "距离 2.9"
+        "status": "距离 3.2"
       },
       {
         "trigger": "VIX期限结构转为 <span class=\"watch-threshold\">倒挂</span>",
@@ -9021,7 +9124,7 @@ const DATA = {
       "volNote": "四条曲线累计涨跌(起点=0%) · 形状真实, 便于比较相对变化",
       "tsNote": "VIX期限结构: Contango(升水) · 9D/1M/3M 真实读数",
       "dashNote": "压力区: OVX 原油 —— 冲击源头定位",
-      "trendNote": "VIX周Δ-1.6pt · OVX月Δ20.3pt · SKEW 139.9"
+      "trendNote": "VIX周Δ-1.8pt · OVX月Δ20.3pt · SKEW 139.9"
     }
   },
   "recession": {
@@ -9132,7 +9235,7 @@ const DATA = {
       },
       {
         "label": "波动率风险",
-        "score": 54.7,
+        "score": 53.7,
         "weight": 12,
         "status": "bearish",
         "color": "#e63946"
@@ -9163,8 +9266,8 @@ const DATA = {
   },
   "crypto": {
     "regime": {
-      "label": "风险资产联动模式",
-      "signal": "mixed",
+      "label": "去风险/流动性收缩传导",
+      "signal": "risk-off",
       "confidence": "中等置信",
       "description": "BTC $64,818 · ETH $1,920 · ETH/BTC 0.0296"
     },
@@ -11321,7 +11424,7 @@ const DATA = {
         "meaning": "Altcoin 季节性的核心指标"
       }
     ],
-    "analystView": "加密市场当前处于独立行情阶段。 BTC $64,818 / ETH $1,920 (ETH/BTC 0.0296)。ETF 方面: BTC ETF 出现净流出(警惕)。关键观察: 加密市场与纳斯达克的 correlation 在流动性收紧时趋向+1（risk-off 一锅端），在流动性宽松时脱钩（alpha 行情）。",
+    "analystView": "加密市场当前处于去风险/流动性收缩传导。 BTC $64,818 / ETH $1,920 (ETH/BTC 0.0296)。ETF 方面: BTC ETF 出现净流出(警惕)。关键观察: 加密市场与纳斯达克的 correlation 在流动性收紧时趋向+1（risk-off 一锅端），在流动性宽松时脱钩（alpha 行情）。",
     "whatToWatch": [
       {
         "trigger": "BTC 突破 <span class=\"watch-threshold\">$100K</span>",
