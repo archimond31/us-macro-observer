@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-31 01:33
+ * 生成时间: 2026-07-31 02:11
  * ============================================================
  */
 const DATA = {
@@ -37,7 +37,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 +2.60% 横盘",
+        "title": "黄金 +2.37% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -285,18 +285,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,151.70",
-        "change": "+2.90%",
+        "value": "$4,142.60",
+        "change": "+2.67%",
         "dir": "up",
         "tag": "GC=F",
-        "percentile": 42,
+        "percentile": 41,
         "signal": "up",
-        "meaning": "当前位于近一年 42 分位",
+        "meaning": "当前位于近一年 41 分位",
         "changes": {
-          "d": "+2.90%",
-          "w": "+2.60%",
-          "m": "+3.20%",
-          "h6": "-21.69%"
+          "d": "+2.67%",
+          "w": "+2.37%",
+          "m": "+2.98%",
+          "h6": "-21.86%"
         },
         "sparkline": [
           4358.8999,
@@ -328,7 +328,7 @@ const DATA = {
           4074.5,
           4036.3,
           4034.7,
-          4151.7002
+          4142.6001
         ]
       },
       {
@@ -382,17 +382,17 @@ const DATA = {
       {
         "label": "铜",
         "value": "6.49",
-        "change": "+3.40%",
+        "change": "+3.51%",
         "dir": "up",
         "tag": "HG=F",
-        "percentile": 97,
+        "percentile": 98,
         "signal": "up",
-        "meaning": "当前位于近一年 97 分位",
+        "meaning": "当前位于近一年 98 分位",
         "changes": {
-          "d": "+3.40%",
-          "w": "+2.88%",
-          "m": "+4.75%",
-          "h6": "+10.08%"
+          "d": "+3.51%",
+          "w": "+3.00%",
+          "m": "+4.87%",
+          "h6": "+10.21%"
         },
         "sparkline": [
           6.4815,
@@ -424,23 +424,23 @@ const DATA = {
           6.339,
           6.322,
           6.2735,
-          6.4865
+          6.494
         ]
       },
       {
         "label": "美元指数",
-        "value": "100.14",
-        "change": "+0.13%",
+        "value": "100.20",
+        "change": "+0.19%",
         "dir": "up",
         "tag": "DX-Y.NYB",
-        "percentile": 85,
+        "percentile": 87,
         "signal": "down",
-        "meaning": "当前位于近一年 85 分位",
+        "meaning": "当前位于近一年 87 分位",
         "changes": {
-          "d": "+0.13%",
-          "w": "-1.31%",
-          "m": "-1.24%",
-          "h6": "+4.01%"
+          "d": "+0.19%",
+          "w": "-1.25%",
+          "m": "-1.18%",
+          "h6": "+4.07%"
         },
         "sparkline": [
           100.85,
@@ -472,23 +472,23 @@ const DATA = {
           101.38,
           100.8,
           100.01,
-          100.137
+          100.197
         ]
       },
       {
         "label": "美元/日元",
-        "value": "160.50",
-        "change": "-1.72%",
+        "value": "160.61",
+        "change": "-1.65%",
         "dir": "down",
         "tag": "USDJPY=X",
-        "percentile": 87,
+        "percentile": 88,
         "signal": "down",
-        "meaning": "当前位于近一年 87 分位",
+        "meaning": "当前位于近一年 88 分位",
         "changes": {
-          "d": "-1.72%",
-          "w": "-2.04%",
-          "m": "-1.26%",
-          "h6": "+2.28%"
+          "d": "-1.65%",
+          "w": "-1.97%",
+          "m": "-1.19%",
+          "h6": "+2.35%"
         },
         "sparkline": [
           161.433,
@@ -520,7 +520,7 @@ const DATA = {
           163.771,
           163.864,
           163.3,
-          160.498
+          160.606
         ]
       },
       {
@@ -828,12 +828,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,151.70",
+        "current": "$4,142.60",
         "changes": {
-          "d": 2.9,
-          "w": 2.6,
-          "m": 3.2,
-          "h6": -21.69
+          "d": 2.67,
+          "w": 2.37,
+          "m": 2.98,
+          "h6": -21.86
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
@@ -854,34 +854,34 @@ const DATA = {
         "unit": "%",
         "current": "6.49",
         "changes": {
-          "d": 3.4,
-          "w": 2.88,
-          "m": 4.75,
-          "h6": 10.08
+          "d": 3.51,
+          "w": 3.0,
+          "m": 4.87,
+          "h6": 10.21
         },
         "meaning": "半年 +10% 的上升趋势中, 近月 +5% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "100.14",
+        "current": "100.20",
         "changes": {
-          "d": 0.13,
-          "w": -1.31,
-          "m": -1.24,
-          "h6": 4.01
+          "d": 0.19,
+          "w": -1.25,
+          "m": -1.18,
+          "h6": 4.07
         },
         "meaning": "半年 +4% 但近月 -1% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "160.50",
+        "current": "160.61",
         "changes": {
-          "d": -1.72,
-          "w": -2.04,
-          "m": -1.26,
-          "h6": 2.28
+          "d": -1.65,
+          "w": -1.97,
+          "m": -1.19,
+          "h6": 2.35
         },
         "meaning": "半年 +2% 但近月 -1% 回调——趋势内修正"
       },
@@ -985,8 +985,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,151.70",
-        "change": "+2.90%",
+        "price": "$4,142.60",
+        "change": "+2.67%",
         "dir": "up"
       },
       {
@@ -1000,21 +1000,21 @@ const DATA = {
         "ticker": "HG=F",
         "name": "铜",
         "price": "6.49",
-        "change": "+3.40%",
+        "change": "+3.51%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "100.14",
-        "change": "+0.13%",
+        "price": "100.20",
+        "change": "+0.19%",
         "dir": "up"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "160.50",
-        "change": "-1.72%",
+        "price": "160.61",
+        "change": "-1.65%",
         "dir": "down"
       },
       {
@@ -1213,7 +1213,7 @@ const DATA = {
           4074.5,
           4036.3,
           4034.7,
-          4151.7002
+          4142.6001
         ],
         "Copper": [
           6.4815,
@@ -1245,7 +1245,7 @@ const DATA = {
           6.339,
           6.322,
           6.2735,
-          6.4865
+          6.494
         ],
         "BTC": [
           59881.98,
@@ -1408,7 +1408,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+2.60%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+2.37%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -6313,6 +6313,52 @@ const DATA = {
           "estimated": true
         },
         "source": "UMich"
+      },
+      {
+        "label": "制造业 PMI",
+        "value": "—",
+        "change": "—",
+        "dir": "neutral",
+        "tag": "MfgPMI",
+        "percentile": 50,
+        "signal": "bearish",
+        "meaning": "ISM制造业景气: >50扩张 / <50收缩, 荣枯线50",
+        "changes": {
+          "d": "—",
+          "w": "—",
+          "m": "—",
+          "h6": "—"
+        },
+        "sparkline": [],
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "ISM"
+      },
+      {
+        "label": "服务业 PMI",
+        "value": "—",
+        "change": "—",
+        "dir": "neutral",
+        "tag": "SvcPMI",
+        "percentile": 50,
+        "signal": "bearish",
+        "meaning": "ISM服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50",
+        "changes": {
+          "d": "—",
+          "w": "—",
+          "m": "—",
+          "h6": "—"
+        },
+        "sparkline": [],
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "ISM"
       }
     ],
     "trendData": [
@@ -6410,6 +6456,44 @@ const DATA = {
           "estimated": true
         },
         "source": "UMich"
+      },
+      {
+        "name": "制造业 PMI",
+        "tag": "MfgPMI",
+        "unit": "pt",
+        "current": "—",
+        "changes": {
+          "d": null,
+          "w": null,
+          "m": null,
+          "h6": null
+        },
+        "meaning": ">50扩张/<50收缩, 荣枯线50",
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "ISM"
+      },
+      {
+        "name": "服务业 PMI",
+        "tag": "SvcPMI",
+        "unit": "pt",
+        "current": "—",
+        "changes": {
+          "d": null,
+          "w": null,
+          "m": null,
+          "h6": null
+        },
+        "meaning": "占经济~80%, >50扩张/<50收缩",
+        "release": {
+          "latest": null,
+          "next": null,
+          "estimated": true
+        },
+        "source": "ISM"
       }
     ],
     "inflationChart": {
@@ -6519,6 +6603,10 @@ const DATA = {
           4.2
         ]
       }
+    },
+    "pmiChart": {
+      "labels": [],
+      "series": {}
     },
     "inflationBreakdown": [
       {
@@ -6676,6 +6764,7 @@ const DATA = {
       "inflNote": "CPI 3.46% (月Δ-0.7pt) / 核心CPI 2.57% / 核心PCE 3.29% (滞后1月) · 真实同比序列",
       "gdpNote": "实际环比年化 1.50% (26Q2, BEA最新) · 名义同比 6.53% · 实际同比 2.10% · 实时动能 WEI 2.46%",
       "empNote": "近3月非农: +148K, +129K, +57K · 失业率 4.20%",
+      "pmiNote": "制造业PMI — / 服务业PMI — · 荣枯线50: 上=扩张 下=收缩",
       "trendNote": "CPI同比半年Δ+0.8pt · 非农6个月累计+552K · 失业率半年Δ-0.2pt",
       "breakdownSub": "分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ"
     },
@@ -6697,7 +6786,7 @@ const DATA = {
         "status": "关键事件"
       }
     ],
-    "generatedAt": "2026-07-31 01:33"
+    "generatedAt": "2026-07-31 02:11"
   },
   "credit": {
     "regime": {
