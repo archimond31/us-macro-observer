@@ -106,6 +106,8 @@ RELEASE_MAP = {
     'NFP':    ('payems', 'monthly', 'ff'),
     'Retail': ('retail', 'monthly', 15),
     'Conf':   ('umich', 'monthly', 15),
+    'MfgPMI': ('mfg_pmi', 'monthly', 5),
+    'SvcPMI': ('svc_pmi', 'monthly', 5),
 }
 
 # 经济指标 → 数据源 (机构)
@@ -117,6 +119,7 @@ SOURCE_MAP = {
     'umich': 'UMich', 'mich_infl': 'UMich', 'wei': 'NY Fed', 'gdpnow': 'Atlanta Fed',
     'nfci': 'Chicago Fed', 'cont_claims': 'BLS', 'cpi_energy': 'BLS', 'cpi_food': 'BLS',
     'cpi_shelter': 'BLS', 'cpi_core_svcs': 'BLS', 'cpi_core_goods': 'BLS', 'indpro': 'Fed',
+    'mfg_pmi': 'ISM', 'svc_pmi': 'ISM',
 }
 
 def release_info(tag):
@@ -945,6 +948,8 @@ DATA['economy'] = {
         {'label':'非农就业 (月增)','value':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'change':(f'6月均 {nfp_avg6:+.0f}K' if nfp_avg6 is not None else '—'),'dir':dir_of(payems_mom),'tag':'NFP','percentile':pct('payems'),'signal':'bullish','meaning':'200K以下为降温区','changes':{'d':'—','w':'—','m':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'h6':(f'{nfp_h6:+.0f}K/6月' if nfp_h6 is not None else '—')},'sparkline':[v for _, v in nfp_diffs]},
         {'label':'零售销售 (环比)','value':(ret(retail_mom[-1][1]) if retail_mom else '—'),'change':(pctpt(round(retail_mom[-1][1]-retail_mom[-2][1],2))+' vs上月' if len(retail_mom)>1 else '—'),'dir':dir_of(retail_mom[-1][1] if retail_mom else None),'tag':'Retail','percentile':pct('retail'),'signal':'mixed','meaning':'名义零售月环比','changes':monthly_tf_str('retail',2,'pct','%'),'sparkline':[v for _, v in mom_pct_series('retail', 10)]},
         {'label':'消费者信心','value':f2(umich),'change':pctpt(umich_tf['m']),'dir':dir_of(umich_tf['m']),'tag':'Conf','percentile':pct('umich'),'signal':'bearish','meaning':'通胀预期压制信心','changes':{'d':'—','w':'—','m':pctpt(umich_tf['m']),'h6':pctpt(umich_tf['h6'])},'sparkline':series30('umich')},
+        {'label':'制造业 PMI','value':(f2(val('mfg_pmi')) if val('mfg_pmi') is not None else '—'),'change':pctpt(tfm('mfg_pmi')['m']),'dir':dir_of(tfm('mfg_pmi')['m']),'tag':'MfgPMI','percentile':pct('mfg_pmi'),'signal':('bullish' if (val('mfg_pmi') or 0) >= 50 else 'bearish'),'meaning':'ISM制造业景气: >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('mfg_pmi')['w']),'m':pctpt(tfm('mfg_pmi')['m']),'h6':pctpt(tfm('mfg_pmi')['h6'])},'sparkline':series30('mfg_pmi')},
+        {'label':'服务业 PMI','value':(f2(val('svc_pmi')) if val('svc_pmi') is not None else '—'),'change':pctpt(tfm('svc_pmi')['m']),'dir':dir_of(tfm('svc_pmi')['m']),'tag':'SvcPMI','percentile':pct('svc_pmi'),'signal':('bullish' if (val('svc_pmi') or 0) >= 50 else 'bearish'),'meaning':'ISM服务业景气(占经济~80%): >50扩张 / <50收缩, 荣枯线50','changes':{'d':'—','w':pctpt(tfm('svc_pmi')['w']),'m':pctpt(tfm('svc_pmi')['m']),'h6':pctpt(tfm('svc_pmi')['h6'])},'sparkline':series30('svc_pmi')},
     ],
     'trendData': [
         {'name':'CPI 同比','tag':'CPI','unit':'pt','current':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
@@ -952,6 +957,8 @@ DATA['economy'] = {
         {'name':'失业率','tag':'UNRATE','unit':'pt','current':f2(unrate)+'%','changes':{'d':None,'w':None,'m':unrate_tf['m'],'h6':unrate_tf['h6']},'meaning':'月格=上月Δ, 半年格=6月Δ'},
         {'name':'非农就业(月增)','tag':'NFP','unit':'K','current':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'changes':{'d':None,'w':None,'m':(round(payems_mom,0) if payems_mom is not None else None),'h6':(round(nfp_h6,0) if nfp_h6 is not None else None)},'meaning':'半年格=6个月累计新增'},
         {'name':'消费者信心','tag':'Conf','unit':'pt','current':f2(umich),'changes':{'d':None,'w':None,'m':umich_tf['m'],'h6':umich_tf['h6']},'meaning':'消费前瞻指标'},
+        {'name':'制造业 PMI','tag':'MfgPMI','unit':'pt','current':(f2(val('mfg_pmi')) if val('mfg_pmi') is not None else '—'),'changes':{'d':None,'w':tfm('mfg_pmi')['w'],'m':tfm('mfg_pmi')['m'],'h6':tfm('mfg_pmi')['h6']},'meaning':'>50扩张/<50收缩, 荣枯线50'},
+        {'name':'服务业 PMI','tag':'SvcPMI','unit':'pt','current':(f2(val('svc_pmi')) if val('svc_pmi') is not None else '—'),'changes':{'d':None,'w':tfm('svc_pmi')['w'],'m':tfm('svc_pmi')['m'],'h6':tfm('svc_pmi')['h6']},'meaning':'占经济~80%, >50扩张/<50收缩'},
     ],
     'inflationChart': {'labels':[mlabel(d) for d, _ in cpi_ys],
         'series':{'CPI同比':[v for _, v in cpi_ys],'核心CPI同比':align_yoy(cpi_ys, core_ys),'核心PCE同比':align_yoy(cpi_ys, pce_ys)}},
@@ -959,6 +966,10 @@ DATA['economy'] = {
         'series':{'名义GDP同比':[v for _, v in gdp_ys],'实际GDP同比':align_yoy(gdp_ys, gdpr_ys)}},
     'employmentChart': {'labels':[mlabel(d) for d, _ in nfp_diffs],
         'series':{'非农就业变动(K)':[v for _, v in nfp_diffs],'失业率(%)':[unrate_map.get(d) for d, _ in nfp_diffs]}},
+    'pmiChart': {'labels':[mlabel(d) for d, _ in s('mfg_pmi')[-24:]],
+        'series':{'制造业PMI':[v for _, v in s('mfg_pmi')[-24:]],
+                  '服务业PMI':[dict(s('svc_pmi')[-24:]).get(d) for d, _ in s('mfg_pmi')[-24:]],
+                  '荣枯线(50)':[50]*len(s('mfg_pmi')[-24:])}} if s('mfg_pmi') else {'labels':[],'series':{}},
     'inflationBreakdown': infl_rows,
     # Phase2: 劳动力市场三角面板
     'laborPanel': {
@@ -998,6 +1009,7 @@ DATA['economy'] = {
         'inflNote': f'CPI {f2(cpi_yoy)}% (月Δ{pctpt(cpi_d1)}) / 核心CPI {f2(core_cpi_yoy)}% / 核心PCE {f2(core_pce_yoy)}% (滞后1月) · 真实同比序列',
         'gdpNote': f'实际环比年化 {f2(gdp_qoq)}% ({_gdp_vintage}, BEA最新) · 名义同比 {f2(gdp_yoy)}% · 实际同比 {f2(gdpr_yoy)}%' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else '') + (f' · GDPNow本季预估 {f2(val("gdpnow"))}%' if val('gdpnow') is not None else ''),
         'empNote': f'近3月非农: ' + (', '.join(f'{v:+.0f}K' for _, v in nfp_diffs[-3:]) if nfp_diffs else '—') + f' · 失业率 {f2(unrate)}%',
+        'pmiNote': f'制造业PMI {f2(val("mfg_pmi"))} / 服务业PMI {f2(val("svc_pmi"))} · 荣枯线50: 上=扩张 下=收缩',
         'trendNote': f'CPI同比半年Δ{pctpt(cpi_d6)} · 非农6个月累计{(f"{nfp_h6:+.0f}K" if nfp_h6 is not None else "—")} · 失业率半年Δ{pctpt(unrate_tf["h6"])}',
         'breakdownSub': '分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ',
     },

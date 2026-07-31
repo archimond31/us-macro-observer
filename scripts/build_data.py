@@ -373,8 +373,9 @@ FRED_IDS = {
     # Phase1: 住房
     'MORTGAGE30US': 'mortgage30', 'HOUST': 'housing_starts',
     'CSUSHPINSA': 'case_shiller', 'PERMITNSA': 'permits',
-    # Phase1: 制造业/调查 (ISM PMI 为 ISM 专有数据, FRED 不免费提供; 改用工业产出替代)
+    # Phase1: 制造业/调查 (ISM PMI — FRED 免费提供: NAPMPMI=制造业, NAP=服务业/非制造业)
     'INDPRO': 'indpro',
+    'NAPMPMI': 'mfg_pmi', 'NAPM': 'svc_pmi',
     # Phase1: 财政
     'FYFSGDA188S': 'deficit_gdp', 'GFDEBTN': 'debt_total',
     # Phase3: 信用违约率
@@ -386,7 +387,8 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'umich', 'durables', 'cpi_energy', 'cpi_food', 'cpi_shelter', 'cpi_core_svcs', 'cpi_core_goods',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
-           'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',}
+           'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',
+           'mfg_pmi', 'svc_pmi',}
 # 周度序列: WEI(实时周度经济指数) 每周六更新, 用更宽阈值避免误报"过期"
 WEEKLY = {'wei', 'gdpnow'}
 # 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"

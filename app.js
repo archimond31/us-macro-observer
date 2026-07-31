@@ -1021,6 +1021,9 @@ function renderEconomy(c) {
   html += '<div class="chart-row one-col">' +
     chartCard('就业市场', cn.empNote || '非农月增 + 失业率', 'empChart', 'tall') +
   '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('PMI 景气指数 (荣枯线追踪)', cn.pmiNote || '制造业 + 服务业 PMI · 荣枯线50', 'pmiChart', 'tall') +
+  '</div>';
   html += sectionCard('CPI 通胀分项拆解 (真实同比)', cn.breakdownSub || '分项同比 vs 上月', renderInflationBreakdown(d.inflationBreakdown));
   html += sectionH('多尺度趋势追踪', cn.trendNote || '月度指标: 月格=上月Δ, 半年格=6个月Δ');
   html += trendTable(d.trendData);
@@ -1086,6 +1089,29 @@ function renderEconomy(c) {
       }
     }
   });
+
+  const pd = d.pmiChart;
+  if (pd && pd.labels && pd.labels.length) {
+    const pmiColors = { '制造业PMI': '#4361ee', '服务业PMI': '#2a9d8f', '荣枯线(50)': '#e63946' };
+    charts.pmi = new Chart(document.getElementById('pmiChart'), {
+      type: 'line',
+      data: {
+        labels: pd.labels,
+        datasets: Object.keys(pd.series).map(n => {
+          const isThr = n.indexOf('荣枯线') >= 0;
+          return {
+            label: n, data: pd.series[n],
+            borderColor: pmiColors[n] || '#888',
+            backgroundColor: 'transparent',
+            borderWidth: isThr ? 1.5 : 2,
+            borderDash: isThr ? [6, 4] : [],
+            pointRadius: isThr ? 0 : 3, tension: 0.3
+          };
+        })
+      },
+      options: baseOpts('')
+    });
+  }
 }
 
 function renderInflationBreakdown(items) {
