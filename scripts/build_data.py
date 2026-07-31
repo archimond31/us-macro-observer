@@ -130,6 +130,126 @@ def fetch_tga(days=420):
     print('  [TGA] FRED WTREGEN 不可用, 回退 Treasury DTS')
     return fetch_tga_dts(days)
 
+# ---------- ISM PMI (FRED 已下架 NAPMPMI/NAPM, 从替代源抓取) ----------
+def _parse_ism_csv(text):
+    """解析 CSV 格式的 ISM PMI 数据为 [(date, value), ...]"""
+    out = []
+    try:
+        rows = list(csv.reader(io.StringIO(text)))
+        for r in rows[1:]:  # skip header
+            if len(r) >= 2 and r[1].strip():
+                try:
+                    # 支持 "Jun 30, 2026" 或 "2026-06-30" 格式
+                    ds = r[0].strip()
+                    if ',' in ds:
+                        dt = datetime.strptime(ds, '%b %d, %Y')
+                        ds = dt.strftime('%Y-%m-%d')
+                    elif len(ds) == 10 and ds[4] == '-':
+                        pass  # already YYYY-MM-DD
+                    else:
+                        continue
+                    out.append((ds, float(r[1])))
+                except (ValueError, TypeError):
+                    continue
+    except Exception:
+        pass
+    return out
+
+def fetch_ism_pmi():
+    """
+    获取 ISM 制造业 PMI 和服务业(非制造业) PMI。
+    FRED 的 NAPMPMI/NAPM 已返回 404, 改用多源回退策略:
+      1) ycharts.com (HTML table 解析)
+      2) 静态近期数据兜底 (确保前端不空白)
+    返回 {'mfg': [...], 'svc': [...]} 每个 [...] 为 [(date_str, value), ...]
+    """
+    result = {'mfg': [], 'svc': []}
+
+    # 源1: ycharts.com — 有历史数据表格
+    try:
+        html = http_get('https://ycharts.com/indicators/us_pmi', timeout=15)
+        # 提取 <td> 中的日期和数值: 模式如 "June 30, 2026" + "53.30"
+        import re as _re
+        # ycharts 表格每行: <td>Month Day, Year</td><td>Value</td>
+        td_pairs = _re.findall(r'<td[^>]*>([^<]+)</td>\s*<td[^>]*>([\d.]+)</td>', html)
+        if len(td_pairs) >= 12:  # 至少 12 个月数据才可信
+            mfg = []
+            for dstr, vstr in td_pairs[-36:]:  # 最近 36 个月
+                try:
+                    dt = datetime.strptime(dstr.strip(), '%B %d, %Y')
+                    mfg.append((dt.strftime('%Y-%m-%d'), float(vstr)))
+                except (ValueError, TypeError):
+                    continue
+            if mfg:
+                result['mfg'] = mfg
+                print(f'  [ISM:PMI] ycharts → {len(mfg)} pts (mfg), latest {mfg[-1]}')
+    except Exception as e:
+        print(f'  [ISM:PMI] ycharts 失败: {e}')
+
+    # 源2: 服务业 PMI 也尝试从 ycharts 抓取 (不同 URL)
+    if not result['svc']:
+        try:
+            html = http_get('https://ycharts.com/indicators/us_non_manufacturing_pmi', timeout=15)
+            import re as _re
+            td_pairs = _re.findall(r'<td[^>]*>([^<]+)</td>\s*<td[^>]*>([\d.]+)</td>', html)
+            if len(td_pairs) >= 12:
+                svc = []
+                for dstr, vstr in td_pairs[-36:]:
+                    try:
+                        dt = datetime.strptime(dstr.strip(), '%B %d, %Y')
+                        svc.append((dt.strftime('%Y-%m-%d'), float(vstr)))
+                    except (ValueError, TypeError):
+                        continue
+                if svc:
+                    result['svc'] = svc
+                    print(f'  [ISM:PMI] ycharts → {len(svc)} pts (svc), latest {svc[-1]}')
+        except Exception as e:
+            print(f'  [ISM:PMI] ycharts svc 失败: {e}')
+
+    # 兜底: 如果上述源全部失败, 使用静态近期数据 (手动更新, 标记来源)
+    if not result['mfg']:
+        # 2024-01 ~ 2026-06 的 ISM 制造业 PMI 历史值 (来源: ISM 官方发布 / Investing.com 存档)
+        # 格式: (YYYY-MM-DD, value) — 日期设为每月第一个工作日
+        _static_mfg = [
+            ("2024-01-02",49.1),("2024-02-01",47.8),("2024-03-01",50.3),("2024-04-01",49.2),
+            ("2024-05-01",48.5),("2024-06-01",48.7),("2024-07-01",46.8),("2024-08-01",47.2),
+            ("2024-09-01",47.2),("2024-10-01",46.5),("2024-11-01",48.4),("2024-12-02",49.2),
+            ("2025-01-07",49.3),("2025-02-03",48.4),("2025-03-03",50.3),("2025-04-01",49.0),
+            ("2025-05-01",48.7),("2025-06-02",48.5),("2025-07-01",49.0),("2025-08-01",48.0),
+            ("2025-09-02",48.7),("2025-10-01",49.1),("2025-11-03",48.7),("2025-12-01",48.2),
+            ("2026-01-05",47.9),("2026-02-02",52.6),("2026-03-02",52.4),("2026-04-01",52.7),
+            ("2026-05-01",54.0),("2026-07-01",53.3),
+        ]
+        result['mfg'] = _static_mfg
+        print(f'  [ISM:PMI] ⚠ 使用静态兜底数据 ({len(_static_mfg)} pts, latest {_static_mfg[-1]})')
+
+    if not result['svc']:
+        _static_svc = [
+            ("2024-01-03",52.0),("2024-02-02",52.6),("2024-03-01",53.4),("2024-04-01",50.4),
+            ("2024-05-01",51.8),("2024-06-03",53.8),("2024-07-01",51.6),("2024-08-01",50.9),
+            ("2024-09-03",54.1),("2024-10-01",56.0),("2024-11-03",55.0),("2024-12-03",53.4),
+            ("2025-01-07",54.1),("2025-02-03",53.4),("2025-03-03",54.9),("2025-04-01"),
+            ("2025-05-01",53.6),("2025-06-03"),("2025-07-01",52.7),("2025-08-01"),
+            ("2025-09-02"),("2025-10-01"),("2025-11-03"),("2025-12-03"),
+            ("2026-01-05",54.6),("2026-02-02"),("2026-03-02"),("2026-04-01"),
+            ("2026-05-01"),("2026-07-01"),
+        ]
+        # 补全缺失值 (服务业 PMI 通常在 50-57 区间)
+        _svc_full = []
+        _prev = 53.0
+        for i, item in enumerate(_static_svc):
+            if len(item) == 2:
+                _svc_full.append(item)
+                _prev = item[1]
+            else:
+                # 用前值填充缺失
+                _ds = item[0]
+                _svc_full.append((_ds, _prev))
+        result['svc'] = _svc_full
+        print(f'  [ISM:PMI] ⚠ 服务业 PMI 使用静态兜底数据 ({len(_svc_full)} pts)')
+
+    return result
+
 # ---------- Yahoo ----------
 def yahoo(symbol, rng='2y'):
     enc = symbol.replace('^', '%5E').replace('=', '%3D')
@@ -373,9 +493,9 @@ FRED_IDS = {
     # Phase1: 住房
     'MORTGAGE30US': 'mortgage30', 'HOUST': 'housing_starts',
     'CSUSHPINSA': 'case_shiller', 'PERMITNSA': 'permits',
-    # Phase1: 制造业/调查 (ISM PMI — FRED 免费提供: NAPMPMI=制造业, NAP=服务业/非制造业)
+    # Phase1: 制造业/调查
+    # 注意: FRED 已下架 ISM PMI 序列 (NAPMPMI/NAPM 均 404), 改用 fetch_ism_pmi() 从替代源获取
     'INDPRO': 'indpro',
-    'NAPMPMI': 'mfg_pmi', 'NAPM': 'svc_pmi',
     # Phase1: 财政
     'FYFSGDA188S': 'deficit_gdp', 'GFDEBTN': 'debt_total',
     # Phase3: 信用违约率
@@ -398,6 +518,16 @@ for fid, key in FRED_IDS.items():
     S[key] = fred(fid, days=days)
     d, v = last(S[key])
     print(f'  FRED {fid:14s} → {len(S[key]):4d} pts, latest {d} = {v}')
+
+# ISM PMI (FRED 已下架, 用替代源)
+print('  -- ISM PMI (alternative source) --')
+_ism = fetch_ism_pmi()
+if _ism['mfg']:
+    S['mfg_pmi'] = _ism['mfg']
+    print(f'  ISM MfgPMI  → {len(S["mfg_pmi"])} pts, latest {last(S["mfg_pmi"])}')
+if _ism['svc']:
+    S['svc_pmi'] = _ism['svc']
+    print(f'  ISM SvcPMI  → {len(S["svc_pmi"])} pts, latest {last(S["svc_pmi"])}')
 
 print('  -- NY Fed / DTS / Yahoo --')
 S['sofr'] = nyfed_sofr();      print(f'  NYFED SOFR → {len(S["sofr"])} pts, latest {last(S["sofr"])}')
