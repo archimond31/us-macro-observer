@@ -781,43 +781,73 @@ function renderRatePath(rp) {
 
 function renderHawkDovGauge(hd) {
   const canvas = document.getElementById('hawkDov');
-  charts.hawkDov = new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [hd.score, 10 - hd.score],
-        backgroundColor: ['#e63946', '#e4f4ef'],
-        borderWidth: 0, circumference: 180, rotation: 270
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      cutout: '70%'
-    },
-    plugins: [{
-      id: 'hdCenter',
-      afterDraw(chart) {
-        const ctx = chart.ctx;
-        const cx = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
-        const cy = chart.chartArea.bottom - 10;
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 32px sans-serif';
-        ctx.fillStyle = hd.score > 5 ? '#e63946' : '#2a9d8f';
-        ctx.fillText(hd.score.toFixed(1), cx, cy - 20);
-        ctx.font = '13px sans-serif';
-        ctx.fillStyle = COLORS.text;
-        ctx.fillText(hd.label, cx, cy);
-        ctx.font = '10px sans-serif';
-        ctx.fillStyle = COLORS.neutral;
-        ctx.fillText('0 鸽 ← → 鹰 10', cx, cy + 16);
-        ctx.restore();
-      }
-    }]
+  // 用纯 SVG 指针仪表盘替代 Chart.js doughnut（避免 v4 插件兼容问题）
+  const score = hd.score || 0;
+  const label = hd.label || '';
+  const isHawk = score > 5;
+  // 半圆弧参数: cx=200 cy=170 r=120, 角度从 180°(左) 到 0°(右)
+  const cx = 200, cy = 170, r = 120;
+  // 将 score(0~10) 映射到角度(180°~0°), 即弧度 π ~ 0
+  const angleDeg = 180 - (score / 10) * 180; // 0→180°(左/鸽), 10→0°(右/鹰)
+  const angleRad = (angleDeg * Math.PI) / 180;
+  // 指针尖端坐标
+  const needleLen = r - 15;
+  const nx = cx + needleLen * Math.cos(angleRad);
+  const ny = cy - needleLen * Math.sin(angleRad);
+  // 指针尾部（反方向缩短）
+  const tailLen = 20;
+  const tx = cx - tailLen * Math.cos(angleRad);
+  const ty = cy + tailLen * Math.sin(angleRad);
+  // 颜色插值: 绿(0) → 黄(5) → 红(10)
+  const gaugeColor = score <= 5
+    ? `rgb(${Math.round(score/5*234)}, ${Math.round(179 - score/5*50)}, ${Math.round(104 - score/5*30)})`
+    : `rgb(${Math.round(234 + (score-5)/5*18)}, ${Math.round(129 - (score-5)/5*113)}, ${Math.round(74 - (score-5)*6)})`;
+
+  let svg = '<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;margin:0 auto">';
+
+  // 背景弧（灰）
+  svg += `<path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="#eef0f4" stroke-width="16" stroke-linecap="round"/>`;
+  // 彩色弧（当前值）— 用渐变或分段色
+  const endX = cx + r * Math.cos(angleRad);
+  const endY = cy - r * Math.sin(angleRad);
+  if (score > 0.05) {
+    svg += `<path d="M ${cx-r} ${cy} A ${r} ${r} 0 ${score > 5 ? 1 : 0} 1 ${endX} ${endY}" fill="none" stroke="${gaugeColor}" stroke-width="16" stroke-linecap="round"/>`;
+  }
+
+  // 刻度线与标签
+  [0, 2.5, 5, 7.5, 10].forEach(v => {
+    const a = ((180 - v/10*180) * Math.PI) / 180;
+    const x1 = cx + (r+12) * Math.cos(a), y1 = cy - (r+12) * Math.sin(a);
+    const x2 = cx + (r+22) * Math.cos(a), y2 = cy - (r+22) * Math.sin(a);
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#9aa3b2" stroke-width="2" stroke-linecap="round"/>`;
+    const lx = cx + (r+32) * Math.cos(a), ly = cy - (r+32) * Math.sin(a);
+    const anchor = (v === 0 ? 'end' : v === 10 ? 'start' : 'middle');
+    svg += `<text x="${lx}" y="${ly+4}" text-anchor="${anchor}" font-size="11" fill="#6b7280">${v}</text>`;
   });
-  const container = canvas.parentElement.parentElement;
-  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">';
+
+  // 底部标签
+  svg += `<text x="${cx-r-5}" y="${cy+40}" text-anchor="end" font-size="12" font-weight="600" fill="#2a9d8f">鸽派</text>`;
+  svg += `<text x="${cx}" y="${cy+40}" text-anchor="middle" font-size="11" fill="#9aa3b2">中性</text>`;
+  svg += `<text x="${cx+r+5}" y="${cy+40}" text-anchor="start" font-size="12" font-weight="600" fill="#e63946">鹰派</text>`;
+
+  // 指针（带阴影效果）
+  svg += `<defs><filter id="hdShadow"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/></filter></defs>`;
+  svg += `<line x1="${tx}" y1="${ty}" x2="${nx}" y2="${ny}" stroke="#374151" stroke-width="3" stroke-linecap="round" filter="url(#hdShadow)"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="8" fill="#374151"/>`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="4" fill="#fff"/>`;
+
+  // 中心数值
+  svg += `<text x="${cx}" y="${cy+55}" text-anchor="middle" font-size="36" font-weight="700" fill="${isHawk ? '#e63946' : '#2a9d8f'}">${score.toFixed(1)}</text>`;
+  svg += `<text x="${cx}" y="${cy+75}" text-anchor="middle" font-size="14" font-weight="500" fill="#4b5563">${label}</text>`;
+
+  svg += '</svg>';
+
+  // 替换 canvas 为 SVG 容器
+  const wrapper = canvas.parentElement;
+  wrapper.innerHTML = svg;
+
+  // 官员标签行
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">';
   hd.officials.forEach(o => {
     const sc = o.stance === 'hawkish' ? '#e63946' : o.stance === 'dovish' ? '#2a9d8f' : '#6b7280';
     const lb = o.stance === 'hawkish' ? '鹰' : o.stance === 'dovish' ? '鸽' : '中';
@@ -825,7 +855,7 @@ function renderHawkDovGauge(hd) {
       '<span style="font-size:11px;color:' + COLORS.text + '">' + o.name + '</span>' +
       '<span style="font-size:10px;padding:1px 5px;border-radius:8px;background:' + sc + ';color:#fff">' + lb + o.score + '</span></div>';
   });
-  container.innerHTML += html + '</div>';
+  wrapper.parentElement.innerHTML += html + '</div>';
 }
 
 /* ================= 4. 流动性 ================= */
