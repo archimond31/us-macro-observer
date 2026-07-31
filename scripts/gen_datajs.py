@@ -53,9 +53,10 @@ def build_fomc_timeline():
 
 
 # 下一场未来 FOMC (供利率路径 / 下一步观察动态引用, 避免硬编码日期)
+# 注意：必须过滤 type 排除杰克逊霍尔等非 FOMC 事件，否则会误取 JH 日期
 _NEXT_FOMC = None
 for _it in build_fomc_timeline():
-    if _it['status'] in ('即将召开', '待定', '进行中'):
+    if _it['type'] in ('decision', 'meeting') and _it['status'] in ('即将召开', '待定', '进行中'):
         _NEXT_FOMC = _it['date'].split('~')[0]; break
 if _NEXT_FOMC:
     _fd = _iso(_NEXT_FOMC)
@@ -921,9 +922,9 @@ if _jh:
         if '杰克逊霍尔' in _w.get('trigger', ''):
             _w['trigger'] = _w['trigger'].replace('8月22日', _jh_md)
 
-# 利率路径"下次会议"动态化 (取自 FOMC 官方日程的未来首场)
+# 利率路径"下次会议"动态化 (取自 FOMC 官方日程的未来首场, 排除杰克逊霍尔)
 _next_fomc = next((it['date'].split('~')[0] for it in build_fomc_timeline()
-                   if it['status'] in ('即将召开', '待定', '进行中')), None)
+                   if it['type'] in ('decision', 'meeting') and it['status'] in ('即将召开', '待定', '进行中')), None)
 if _next_fomc:
     DATA['fed']['hawkishDovish']['ratePath']['nextMeeting'] = _next_fomc
 
