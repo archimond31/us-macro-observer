@@ -12,6 +12,9 @@ import json, datetime, sys, re, calendar
 C = json.load(open('computed.json'))
 RAW = json.load(open('raw_series.json'))
 GEN_AT = C.get('generated_at', '')   # 数据获取时间 (build_data.py 运行时刻)
+# 自动更新日期: 取 build_data.py 实际运行时刻 (而非某序列最新数据点), 确保每次 workflow 跑都刷新
+GEN_DATE = GEN_AT.split(' ')[0] if GEN_AT else datetime.datetime.now().strftime('%Y-%m-%d')
+GEN_TIME = GEN_AT.split(' ', 1)[1] if GEN_AT else datetime.datetime.now().strftime('%H:%M')
 print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, flush=True)
 
 # Fed 事件 (FOMC 官方日程 + 真实官员讲话), 由 build_data.py 抓取写入 events.json
@@ -161,8 +164,6 @@ def _dates_for(ref_key):
     if arr:
         return [d for d, _ in arr[-n:]]
     return list(range(n))
-
-META_DATE = date_of('spx') or date_of('dgs10') or '2026-07-24'
 
 # ---------- 格式化工具 ----------
 def f2(x):  return f'{x:.2f}' if isinstance(x,(int,float)) else '—'
@@ -439,7 +440,7 @@ def curve_date(offset=0):
 # ---------- 构建各板块 ----------
 DATA = {}
 DATA['meta'] = {
-    'lastUpdated': f'{META_DATE} (官方数据, 自动更新)',
+    'lastUpdated': f'{GEN_DATE} {GEN_TIME} (官方数据, 自动更新)',
     'dataSource': 'FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance',
     'marketNote': '数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None'
 }
