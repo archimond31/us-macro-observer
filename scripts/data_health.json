@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31 02:33",
+  "generated_at": "2026-07-31 02:38",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -710,7 +710,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 4141.39990234375,
+      "value": 4140.89990234375,
       "fallback": false
     },
     "silver": {
@@ -718,7 +718,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 58.89500045776367,
+      "value": 58.845001220703125,
       "fallback": false
     },
     "natgas": {
@@ -726,7 +726,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 2.7639999389648438,
+      "value": 2.765000104904175,
       "fallback": false
     },
     "copper": {
@@ -734,7 +734,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 6.495500087738037,
+      "value": 6.494999885559082,
       "fallback": false
     },
     "dxy": {
@@ -742,7 +742,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 100.15899658203125,
+      "value": 100.16400146484375,
       "fallback": false
     },
     "eurusd": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 1.1518083810806274,
+      "value": 1.1516757011413574,
       "fallback": false
     },
     "gbpusd": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 1.3457139730453491,
+      "value": 1.3453699350357056,
       "fallback": false
     },
     "usdjpy": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 160.52499389648438,
+      "value": 160.54800415039062,
       "fallback": false
     },
     "usdcnh": {
@@ -774,7 +774,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 6.745649814605713,
+      "value": 6.745800018310547,
       "fallback": false
     },
     "tlt": {
