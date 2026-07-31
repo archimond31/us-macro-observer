@@ -1384,10 +1384,10 @@ DATA['crypto'] = {
     'etfFlows': _etf_data,
     'trendData': [
         {'name':'Bitcoin','unit':'%','current':('$'+comma(_v_btc,0) if _v_btc else '—'),
-         'changes':{k:(round(_btc_ch[k]*100,2) if _btc_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
+         'changes':{k:(round(_btc_ch[k],2) if _btc_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
          'meaning':'数字黄金叙事 vs 风险资产 beta 的博弈'},
         {'name':'Ethereum','unit':'%','current':('$'+comma(_v_eth,0) if _v_eth else '—'),
-         'changes':{k:(round(_eth_ch[k]*100,2) if _eth_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
+         'changes':{k:(round(_eth_ch[k],2) if _eth_ch.get(k) is not None else None) for k in ('d','w','m','h6')},
          'meaning':'DeFi/NFT/AI 叙事驱动的周期性资产'},
         {'name':'ETH/BTC','unit':'%','current':(f'{_v_ethbtc:.5f}' if _v_ethbtc else '—'),
          'changes':{k:(round(tfm('eth_btc_ratio')[k]*100,3) if tfm('eth_btc_ratio').get(k) is not None else None) for k in ('d','w','m','h6')},
