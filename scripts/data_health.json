@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31 03:08",
+  "generated_at": "2026-07-31 04:16",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -292,9 +292,9 @@
     "ndx_comp": {
       "status": "OK",
       "source": "FRED:NASDAQCOM",
-      "last_date": "2026-07-29",
-      "age": 2,
-      "value": 24442.94,
+      "last_date": "2026-07-30",
+      "age": 1,
+      "value": 25122.18,
       "fallback": false
     },
     "dji": {
@@ -670,7 +670,7 @@
       "source": "Yahoo:^NDX",
       "last_date": "2026-07-30",
       "age": 1,
-      "value": 28106.345703125,
+      "value": 28106.349609375,
       "fallback": false
     },
     "rut": {
@@ -678,7 +678,7 @@
       "source": "Yahoo:^RUT",
       "last_date": "2026-07-30",
       "age": 1,
-      "value": 2946.10107421875,
+      "value": 2946.10009765625,
       "fallback": false
     },
     "dji_yahoo": {
@@ -694,7 +694,7 @@
       "source": "Yahoo:^SOX",
       "last_date": "2026-07-30",
       "age": 1,
-      "value": 11302.9873046875,
+      "value": 11302.990234375,
       "fallback": false
     },
     "gold": {
@@ -702,7 +702,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 4136.2001953125,
+      "value": 4131.60009765625,
       "fallback": false
     },
     "silver": {
@@ -710,7 +710,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 58.76499938964844,
+      "value": 58.630001068115234,
       "fallback": false
     },
     "natgas": {
@@ -718,7 +718,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 2.7699999809265137,
+      "value": 2.7690000534057617,
       "fallback": false
     },
     "copper": {
@@ -726,7 +726,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 6.490499973297119,
+      "value": 6.499000072479248,
       "fallback": false
     },
     "dxy": {
@@ -734,7 +734,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 100.18099975585938,
+      "value": 100.177001953125,
       "fallback": false
     },
     "eurusd": {
@@ -742,7 +742,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 1.151410460472107,
+      "value": 1.151543140411377,
       "fallback": false
     },
     "gbpusd": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 1.3450441360473633,
+      "value": 1.3449175357818604,
       "fallback": false
     },
     "usdjpy": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 160.593994140625,
+      "value": 160.7259979248047,
       "fallback": false
     },
     "usdcnh": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-07-31",
       "age": 0,
-      "value": 6.74537992477417,
+      "value": 6.745329856872559,
       "fallback": false
     },
     "tlt": {
@@ -826,11 +826,11 @@
       "fallback": false
     },
     "move": {
-      "status": "OK",
+      "status": "STALE",
       "source": "Yahoo:^MOVE",
-      "last_date": "2026-07-30",
-      "age": 1,
-      "value": 77.09329986572266,
+      "last_date": "2026-07-17",
+      "age": 14,
+      "value": 70.87999725341797,
       "fallback": false
     },
     "skew": {
@@ -842,19 +842,19 @@
       "fallback": false
     },
     "vix3m": {
-      "status": "OK",
+      "status": "STALE",
       "source": "Yahoo:^VIX3M",
-      "last_date": "2026-07-30",
-      "age": 1,
-      "value": 19.5,
+      "last_date": "2026-07-17",
+      "age": 14,
+      "value": 20.540000915527344,
       "fallback": false
     },
     "vix9d": {
-      "status": "OK",
+      "status": "STALE",
       "source": "Yahoo:^VIX9D",
-      "last_date": "2026-07-30",
-      "age": 1,
-      "value": 14.850000381469727,
+      "last_date": "2026-07-17",
+      "age": 14,
+      "value": 16.850000381469727,
       "fallback": false
     },
     "vix": {
