@@ -571,7 +571,13 @@ function renderCorr(container, cd) {
   a.forEach((x, i) => {
     svg += '<text x="' + (lw - 8) + '" y="' + (lh + i * cs + cs / 2 + 4) + '" text-anchor="end" font-size="10" fill="' + COLORS.text + '">' + x + '</text>';
     a.forEach((y, j) => {
-      const v = m[i][j], int = Math.abs(v);
+      const v = m[i][j];
+      if (v === null || v === undefined) {
+        svg += '<rect x="' + (lw + j * cs) + '" y="' + (lh + i * cs) + '" width="' + (cs - 2) + '" height="' + (cs - 2) + '" rx="3" fill="#eef0f4"/>';
+        svg += '<text x="' + (lw + j * cs + cs / 2) + '" y="' + (lh + i * cs + cs / 2 + 4) + '" text-anchor="middle" font-size="10" fill="' + COLORS.text + '">—</text>';
+        return;
+      }
+      const int = Math.abs(v);
       const bg = v > 0 ? 'rgba(230,57,70,' + (0.1 + int * 0.7) + ')' : 'rgba(42,157,143,' + (0.1 + int * 0.7) + ')';
       svg += '<rect x="' + (lw + j * cs) + '" y="' + (lh + i * cs) + '" width="' + (cs - 2) + '" height="' + (cs - 2) + '" rx="3" fill="' + bg + '"/>';
       svg += '<text x="' + (lw + j * cs + cs / 2) + '" y="' + (lh + i * cs + cs / 2 + 4) + '" text-anchor="middle" font-size="10" fill="' + (int > 0.5 ? '#fff' : COLORS.text) + '">' + v.toFixed(2) + '</text>';
@@ -1038,12 +1044,20 @@ function renderEconomy(c) {
       ' · 各项指标已标注数据源与参考期' +
       '</div>';
   }
+  // 数据源回退警告 (PMI / Empire State 静态兜底时提示)
+  const _fallbackWarnings = [];
   if (d.pmi_meta && d.pmi_meta.is_fallback) {
     const asof = d.pmi_meta.asof ? (' 数据截至 ' + d.pmi_meta.asof) : '';
+    _fallbackWarnings.push('<b style="color:#b76e00">PMI 数据源警告：当前为静态兜底数据</b><br>S&amp;P Global PMI 实时抓取失败，已回退至内置历史序列' + asof + '，可能非最新值。关注官方发布后自动恢复。');
+  }
+  if (d.empire_meta && d.empire_meta.is_fallback) {
+    const easof = d.empire_meta.asof ? (' 数据截至 ' + d.empire_meta.asof) : '';
+    _fallbackWarnings.push('<b style="color:#b76e00">Empire State 警告：当前为静态兜底数据</b><br>纽约联储 Empire State 制造业指数实时抓取失败，已回退至内置历史序列' + easof + '。NY Fed 官网可能暂时不可用，将在下次运行时重试。');
+  }
+  if (_fallbackWarnings.length) {
     html += '<div style="font-size:12px;color:#8a5a00;margin:2px 0 14px;padding:9px 12px;background:#fff6e5;border:1px solid #ffd591;border-radius:8px;display:flex;gap:8px;align-items:flex-start">' +
       '<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#ffa940;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">!</span>' +
-      '<div><b style="color:#b76e00">PMI 数据源警告：当前为静态兜底数据</b><br>' +
-      'S&amp;P Global PMI 实时抓取失败，已回退至内置历史序列' + asof + '，可能非最新值。关注官方发布后自动恢复。</div></div>';
+      '<div>' + _fallbackWarnings.join('<br><br>') + '</div></div>';
   }
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);

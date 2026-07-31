@@ -18,14 +18,17 @@ import csv, io, json, os, sys, time, subprocess, re
 from datetime import datetime, timedelta
 from html import unescape
 
-def http_get(url, timeout=25, use_ua=False):
-    """通过 curl 拉取。注意: 本环境代理对 Mozilla UA 会卡死，FRED/NYFed/DTS 必须不带 UA；Yahoo 需要 UA"""
+def http_get(url, timeout=25, use_ua=False, headers=None):
+    """通过 curl 拉取。注意: 本环境代理对 Mozilla UA 会卡死，FRED/NYFed/DTS 必须不带 UA；Yahoo 需要 UA。
+    --compressed 让 curl 自动接受并解压 gzip 响应 (Yahoo/CBOE 默认 gzip, 否则 json.loads 会因二进制头报 Expecting value)。"""
     last_err = None
     for attempt in range(3):
         try:
-            cmd = ['curl', '-s', '--max-time', str(timeout)]
+            cmd = ['curl', '-s', '--compressed', '--max-time', str(timeout)]
             if use_ua:
                 cmd += ['-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)']
+            for h in (headers or []):
+                cmd += ['-H', h]
             cmd.append(url)
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 15, encoding='utf-8', errors='replace')
             if r.returncode == 0 and r.stdout.strip():
@@ -194,6 +197,63 @@ def fetch_pmi():
     print(f'  [PMI] S&P Global → mfg {mfg_latest}, svc {svc_latest} (fallback={is_fallback}, asof={asof})')
     return {'mfg': mfg, 'svc': svc, 'is_fallback': is_fallback, 'asof': asof}
 
+# ---------- Empire State Manufacturing (NY Fed, FRED 无此序列) ----------
+# 静态兜底: Empire State 总体经济活动指数 (扩散指数, >0 扩张)
+_STATIC_EMPIRE = [
+    ("2025-01-01",-5.1),("2025-02-01",-6.3),("2025-03-01",-7.0),("2025-04-01",-9.0),
+    ("2025-05-01",-8.4),("2025-06-01",-8.2),("2025-07-01",-6.2),("2025-08-01",-10.6),
+    ("2025-09-01",-13.2),("2025-10-01",-13.5),("2025-11-01",-16.2),("2025-12-01",-14.5),
+    ("2026-01-01",-10.2),("2026-02-01",-18.7),("2026-03-01",-24.4),("2026-04-01",-34.8),
+    ("2026-05-01",-28.5),("2026-06-01",-12.6),("2026-07-01",-0.6),
+]
+
+def fetch_empire():
+    """
+    获取纽约联储 Empire State 制造业指数 (总体经济活动扩散指数)。
+    FRED 不收录此序列; 数据源优先级:
+      1) NY Fed 官网 survey 页面抓取
+      2) Trading Economics
+      3) 静态兜底 (需手动定期更新)
+    返回 {'data':[...], 'is_fallback':bool, 'asof':str}
+    """
+    # 源1: NY Fed Empire State survey 页面
+    _result = None
+    try:
+        html = http_get('https://www.newyorkfed.org/survey/empire/emire_overview.html', timeout=15)
+        import re as _re2
+        m = _re2.search(r'(?:General\s+(?:Business\s+)?Activity|headline)[^0-9-]*([+-]?[\d.]+)', html, _re2.I)
+        if m:
+            val = float(m.group(1))
+            # 尝试提取日期
+            dm = _re2.search(r'([A-Za-z]+)\s+(\d{4})', html)
+            if dm:
+                mon = datetime.strptime(dm.group(1)[:3], '%b').month; yr = int(dm.group(2))
+                _result = (f'{yr}-{mon:02d}-01', val)
+    except Exception:
+        pass
+
+    if not _result:
+        # 源2: Trading Economics
+        try:
+            html = http_get('https://tradingeconomics.com/united-states/empire-state-manufacturing-index', timeout=15, use_ua=True)
+            import re as _re3
+            m = _re3.search(r'to\s+([+-]?[\d.]+)\s+points?\s+in\s+([A-Za-z]+)(?:\s+of\s+|\s+)(\d{4})', html)
+            if m:
+                val = float(m.group(1)); mon = datetime.strptime(m.group(2)[:3], '%b').month; yr = int(m.group(3))
+                _result = (f'{yr}-{mon:02d}-01', val)
+        except Exception:
+            pass
+
+    if _result:
+        d = {dt[:7]: v for dt, v in _STATIC_EMPIRE}
+        d[_result[0][:7]] = _result[1]
+        data = [(k + '-01', d[k]) for k in sorted(d)][-24:]
+        print(f'  [Empire] latest {_result}, fallback=False')
+        return {'data': data, 'is_fallback': False, 'asof': _result[0][:7]}
+    else:
+        print(f'  [Empire] 所有源失败, 使用静态兜底 ({len(_STATIC_EMPIRE)} pts)')
+        return {'data': list(_STATIC_EMPIRE), 'is_fallback': True, 'asof': None}
+
 # (deprecated) 以下 fetch_ism_pmi 为旧实现, 已被 fetch_pmi 取代, 保留仅供回溯
 # ---------- ISM PMI (FRED 已下架 NAPMPMI/NAPM, 从替代源抓取) ----------
 def _parse_ism_csv(text):
@@ -318,19 +378,54 @@ def fetch_ism_pmi():
 # ---------- Yahoo ----------
 def yahoo(symbol, rng='2y'):
     enc = symbol.replace('^', '%5E').replace('=', '%3D')
-    url = f'https://query2.finance.yahoo.com/v8/finance/chart/{enc}?range={rng}&interval=1d'
+    last_err = None
+    for host in ('query1', 'query2'):
+        url = f'https://{host}.finance.yahoo.com/v8/finance/chart/{enc}?range={rng}&interval=1d'
+        try:
+            data = json.loads(http_get(url, use_ua=True,
+                                       headers=['Accept: application/json', 'Accept-Language: en-US,en;q=0.9']))
+            res = data['chart']['result'][0]
+            ts = res.get('timestamp', [])
+            closes = res['indicators']['quote'][0]['close']
+            out = []
+            for t, c in zip(ts, closes):
+                if c is not None:
+                    out.append((datetime.utcfromtimestamp(t).strftime('%Y-%m-%d'), float(c)))
+            if out:
+                return out
+            last_err = 'empty series'
+        except Exception as e:
+            last_err = str(e)
+        time.sleep(1.0)
+    print(f'  [YH:{symbol}] FAIL {last_err}')
+    return []
+
+
+def cboe_vol(file_name):
+    """CBOE 官方日度波动率历史 CSV 兜底 (VIX/GVZ/OVX)。
+    FRED 已下架 VIXCLS/OVXCLS/GVZCLS, Yahoo 又常抽风, 故 CBOE 官方 CSV 作最后兜底。返回 [(date, close), ...] 或 []。"""
+    url = f'https://cdn.cboe.com/api/global/us_indices/daily_prices/{file_name}'
     try:
-        data = json.loads(http_get(url, use_ua=True))
-        res = data['chart']['result'][0]
-        ts = res.get('timestamp', [])
-        closes = res['indicators']['quote'][0]['close']
+        text = http_get(url, use_ua=True, headers=['Accept: text/csv'])
+        rows = list(csv.reader(io.StringIO(text)))
+        if len(rows) < 2:
+            return []
+        hdr = [h.strip().lower() for h in rows[0]]
+        di = next((i for i, h in enumerate(hdr) if 'date' in h), -1)
+        ci = next((i for i, h in enumerate(hdr) if 'close' in h), -1)
+        if di < 0 or ci < 0:
+            return []
         out = []
-        for t, c in zip(ts, closes):
-            if c is not None:
-                out.append((datetime.utcfromtimestamp(t).strftime('%Y-%m-%d'), float(c)))
+        for r in rows[1:]:
+            if len(r) > max(di, ci) and r[di] and r[ci] not in ('', '.'):
+                try:
+                    out.append((r[di], float(r[ci])))
+                except ValueError:
+                    pass
         return out
     except Exception as e:
-        print(f'  [YH:{symbol}] FAIL {e}')
+        print(f'  [CBOE:{file_name}] FAIL {e}')
+        return []
         return []
 
 # ---------- Crypto ETF 流量 (CoinGlass API, 需免费 key: coinglass.com) ----------
@@ -558,10 +653,12 @@ FRED_IDS = {
     # Phase1: 住房
     'MORTGAGE30US': 'mortgage30', 'HOUST': 'housing_starts',
     'CSUSHPINSA': 'case_shiller', 'PERMITNSA': 'permits',
-    # 通胀深化: PCE 服务/住房分项 (用于计算超级核心通胀 = 服务除住房)
-    'PCESV': 'pce_svcs', 'PCESH': 'pce_housing',
-    # Phase1: 地区联储调查 (最高频增长先行指标, 每月中旬发布)
-    'GACDISAQ': 'empire', 'PHILF': 'philly',
+    # 超级核心通胀: PCE 服务除能源除住房 (链式价格指数, 月度, 2017=100)
+    # 原方案用 PCESV(名义水平)+PCESH(404) 相减; 改用 BEA 官方直接序列
+    'IA001260M': 'supercore',
+    # 地区联储调查: 费城联储制造业扩散指数 (月度, FRED 可用)
+    # 纽约联储 Empire State 制造业 FRED 无此序列, 由 fetch_empire() 单独抓取
+    'GACDFSA066MSFRBPHI': 'philly',
     # Phase1: 制造业/调查
     # 注意: FRED 已下架 ISM PMI 序列 (NAPMPMI/NAPM 均 404), 改用 fetch_pmi() 从 S&P Global (Trading Economics) 获取
     'INDPRO': 'indpro',
@@ -577,7 +674,7 @@ MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',
            'mich_infl', 'mortgage30', 'housing_starts', 'case_shiller', 'permits',
-           'mfg_pmi', 'svc_pmi', 'pce_svcs', 'pce_housing', 'empire', 'philly',}
+           'mfg_pmi', 'svc_pmi', 'supercore', 'philly',}
 # 周度序列: WEI(实时周度经济指数) 每周六更新, 用更宽阈值避免误报"过期"
 WEEKLY = {'wei', 'gdpnow'}
 # 慢发布序列: PCE 系列通常滞后 ~45-60 天发布, 用更宽阈值避免误报"过期"
@@ -599,6 +696,14 @@ if _ism['svc']:
     print(f'  S&P Global SvcPMI  → {len(S["svc_pmi"])} pts, latest {last(S["svc_pmi"])}')
 PMI_META = {'is_fallback': _ism.get('is_fallback', False), 'asof': _ism.get('asof'), 'source': 'S&P Global (via Trading Economics)'}
 
+# Empire State Manufacturing (NY Fed, 非 FRED 序列)
+print('  -- Empire State Manufacturing (NY Fed) --')
+_emp = fetch_empire()
+if _emp['data']:
+    S['empire'] = _emp['data']
+    print(f'  Empire State → {len(S["empire"])} pts, latest {last(S["empire"])} (fallback={_emp["is_fallback"]})')
+EMPIRE_META = {'is_fallback': _emp.get('is_fallback', False), 'asof': _emp.get('asof')}
+
 print('  -- NY Fed / DTS / Yahoo --')
 S['sofr'] = nyfed_sofr();      print(f'  NYFED SOFR → {len(S["sofr"])} pts, latest {last(S["sofr"])}')
 S['rrp_api'] = nyfed_rrp();    print(f'  NYFED RRP → {len(S["rrp_api"])} pts, latest {last(S["rrp_api"])}')
@@ -618,6 +723,15 @@ for sym, key in YH_IDS.items():
     S[key] = yahoo(sym)
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
+
+# 波动率三件套 (VIX/GVZ/OVX): FRED 已下架, Yahoo 是唯一实时源; 若 Yahoo 失败则用 CBOE 官方 CSV 兜底
+_CBOE_FALLBACK = {'vix': 'VIX_History.csv', 'gvz': 'GVZ_History.csv', 'ovx': 'OVX_History.csv'}
+for _k, _f in _CBOE_FALLBACK.items():
+    if not S.get(_k):
+        _cb = cboe_vol(_f)
+        if _cb:
+            S[_k] = _cb
+            print(f'  [CBOE兜底] {_k} ← {_f} ({len(_cb)} pts, latest {_cb[-1]})')
 
 # Crypto ETF 流量 (CoinGlass API, 需 COINGLASS_API_KEY; 无 key 则跳过, 图表显示"数据暂缺")
 _etf_key = os.environ.get('COINGLASS_API_KEY')
@@ -701,6 +815,12 @@ for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 # 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致
 YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m', 'vix', 'ovx', 'gvz', 'tyx'}
 for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
+
+# PMI (非 FRED 序列, 需单独注册)
+if S.get('mfg_pmi'): reg('mfg_pmi', S['mfg_pmi'])
+if S.get('svc_pmi'): reg('svc_pmi', S['svc_pmi'])
+# Empire State (非 FRED 序列, 需单独注册)
+if S.get('empire'): reg('empire', S['empire'])
 
 # GDPNow 本季实时预估 (单点, 注册供卡片展示; 无数据则跳过)
 if _gnow:
@@ -801,6 +921,7 @@ if _stale:
 with open('computed.json', 'w') as f:
     R['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     R['pmi_meta'] = PMI_META
+    R['empire_meta'] = EMPIRE_META
     json.dump(R, f, default=str)
 print(f'计算结果已存 computed.json')
 
