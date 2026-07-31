@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-07-31 00:36
+ * 生成时间: 2026-07-31 01:25
  * ============================================================
  */
 const DATA = {
@@ -37,7 +37,7 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "黄金 +2.83% 横盘",
+        "title": "黄金 +2.48% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "mixed"
       }
@@ -285,18 +285,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,161.10",
-        "change": "+3.13%",
+        "value": "$4,146.80",
+        "change": "+2.78%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 42,
         "signal": "up",
         "meaning": "当前位于近一年 42 分位",
         "changes": {
-          "d": "+3.13%",
-          "w": "+2.83%",
-          "m": "+3.44%",
-          "h6": "-21.51%"
+          "d": "+2.78%",
+          "w": "+2.48%",
+          "m": "+3.08%",
+          "h6": "-21.78%"
         },
         "sparkline": [
           4358.8999,
@@ -328,7 +328,7 @@ const DATA = {
           4074.5,
           4036.3,
           4034.7,
-          4161.1001
+          4146.7998
         ]
       },
       {
@@ -381,18 +381,18 @@ const DATA = {
       },
       {
         "label": "铜",
-        "value": "6.51",
-        "change": "+3.74%",
+        "value": "6.49",
+        "change": "+3.44%",
         "dir": "up",
         "tag": "HG=F",
         "percentile": 98,
         "signal": "up",
         "meaning": "当前位于近一年 98 分位",
         "changes": {
-          "d": "+3.74%",
-          "w": "+3.22%",
-          "m": "+5.09%",
-          "h6": "+10.45%"
+          "d": "+3.44%",
+          "w": "+2.93%",
+          "m": "+4.80%",
+          "h6": "+10.13%"
         },
         "sparkline": [
           6.4815,
@@ -424,23 +424,23 @@ const DATA = {
           6.339,
           6.322,
           6.2735,
-          6.508
+          6.4895
         ]
       },
       {
         "label": "美元指数",
-        "value": "100.07",
-        "change": "-0.73%",
+        "value": "100.14",
+        "change": "-0.65%",
         "dir": "down",
         "tag": "DX-Y.NYB",
-        "percentile": 84,
+        "percentile": 86,
         "signal": "down",
-        "meaning": "当前位于近一年 84 分位",
+        "meaning": "当前位于近一年 86 分位",
         "changes": {
-          "d": "-0.73%",
-          "w": "-1.34%",
-          "m": "-1.11%",
-          "h6": "+3.75%"
+          "d": "-0.65%",
+          "w": "-1.27%",
+          "m": "-1.04%",
+          "h6": "+3.83%"
         },
         "sparkline": [
           100.09,
@@ -472,23 +472,23 @@ const DATA = {
           101.51,
           101.38,
           100.8,
-          100.069
+          100.141
         ]
       },
       {
         "label": "美元/日元",
-        "value": "160.36",
-        "change": "-1.80%",
+        "value": "160.49",
+        "change": "-1.72%",
         "dir": "down",
         "tag": "USDJPY=X",
         "percentile": 87,
         "signal": "down",
         "meaning": "当前位于近一年 87 分位",
         "changes": {
-          "d": "-1.80%",
-          "w": "-2.12%",
-          "m": "-1.34%",
-          "h6": "+2.19%"
+          "d": "-1.72%",
+          "w": "-2.04%",
+          "m": "-1.26%",
+          "h6": "+2.28%"
         },
         "sparkline": [
           161.433,
@@ -520,7 +520,7 @@ const DATA = {
           163.771,
           163.864,
           163.3,
-          160.357
+          160.495
         ]
       },
       {
@@ -828,12 +828,12 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,161.10",
+        "current": "$4,146.80",
         "changes": {
-          "d": 3.13,
-          "w": 2.83,
-          "m": 3.44,
-          "h6": -21.51
+          "d": 2.78,
+          "w": 2.48,
+          "m": 3.08,
+          "h6": -21.78
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
@@ -852,36 +852,36 @@ const DATA = {
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.51",
+        "current": "6.49",
         "changes": {
-          "d": 3.74,
-          "w": 3.22,
-          "m": 5.09,
-          "h6": 10.45
+          "d": 3.44,
+          "w": 2.93,
+          "m": 4.8,
+          "h6": 10.13
         },
         "meaning": "半年 +10% 的上升趋势中, 近月 +5% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "100.07",
+        "current": "100.14",
         "changes": {
-          "d": -0.73,
-          "w": -1.34,
-          "m": -1.11,
-          "h6": 3.75
+          "d": -0.65,
+          "w": -1.27,
+          "m": -1.04,
+          "h6": 3.83
         },
         "meaning": "半年 +4% 但近月 -1% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "160.36",
+        "current": "160.49",
         "changes": {
-          "d": -1.8,
-          "w": -2.12,
-          "m": -1.34,
-          "h6": 2.19
+          "d": -1.72,
+          "w": -2.04,
+          "m": -1.26,
+          "h6": 2.28
         },
         "meaning": "半年 +2% 但近月 -1% 回调——趋势内修正"
       },
@@ -985,8 +985,8 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,161.10",
-        "change": "+3.13%",
+        "price": "$4,146.80",
+        "change": "+2.78%",
         "dir": "up"
       },
       {
@@ -999,22 +999,22 @@ const DATA = {
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.51",
-        "change": "+3.74%",
+        "price": "6.49",
+        "change": "+3.44%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "100.07",
-        "change": "-0.73%",
+        "price": "100.14",
+        "change": "-0.65%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "160.36",
-        "change": "-1.80%",
+        "price": "160.49",
+        "change": "-1.72%",
         "dir": "down"
       },
       {
@@ -1213,7 +1213,7 @@ const DATA = {
           4074.5,
           4036.3,
           4034.7,
-          4161.1001
+          4146.7998
         ],
         "Copper": [
           6.4815,
@@ -1245,7 +1245,7 @@ const DATA = {
           6.339,
           6.322,
           6.2735,
-          6.508
+          6.4895
         ],
         "BTC": [
           59881.98,
@@ -1408,7 +1408,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.31"
     },
-    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+2.83%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "跨资产信号指向\"利率驱动的重定价\"而非系统性危机: 纳斯达克 (-1.22%) 与长债 (TLT -0.44%) 同步承压, 是典型的实际利率上行组合。黄金 (+2.48%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (17.09) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -6051,7 +6051,8 @@ const DATA = {
           "latest": "2026-05-28",
           "next": "2026-08-28",
           "estimated": true
-        }
+        },
+        "source": "BEA"
       },
       {
         "label": "CPI 同比",
@@ -6084,7 +6085,8 @@ const DATA = {
           "latest": "2026-07-12",
           "next": "2026-08-12",
           "estimated": true
-        }
+        },
+        "source": "BLS"
       },
       {
         "label": "核心 CPI 同比",
@@ -6117,7 +6119,8 @@ const DATA = {
           "latest": "2026-07-12",
           "next": "2026-08-12",
           "estimated": true
-        }
+        },
+        "source": "BLS"
       },
       {
         "label": "核心 PCE 同比",
@@ -6147,10 +6150,11 @@ const DATA = {
           3.29
         ],
         "release": {
-          "latest": "2026-07-28",
-          "next": "2026-08-28",
+          "latest": "2026-07-31",
+          "next": "2026-08-31",
           "estimated": true
-        }
+        },
+        "source": "BEA"
       },
       {
         "label": "失业率",
@@ -6196,7 +6200,8 @@ const DATA = {
           "latest": "2026-07-03",
           "next": "2026-08-07",
           "estimated": true
-        }
+        },
+        "source": "BLS"
       },
       {
         "label": "非农就业 (月增)",
@@ -6225,7 +6230,8 @@ const DATA = {
           "latest": "2026-07-03",
           "next": "2026-08-07",
           "estimated": true
-        }
+        },
+        "source": "BLS"
       },
       {
         "label": "零售销售 (环比)",
@@ -6258,7 +6264,8 @@ const DATA = {
           "latest": "2026-07-15",
           "next": "2026-08-15",
           "estimated": true
-        }
+        },
+        "source": "Census"
       },
       {
         "label": "消费者信心",
@@ -6304,12 +6311,14 @@ const DATA = {
           "latest": "2026-06-15",
           "next": "2026-07-15",
           "estimated": true
-        }
+        },
+        "source": "UMich"
       }
     ],
     "trendData": [
       {
         "name": "CPI 同比",
+        "tag": "CPI",
         "unit": "pt",
         "current": "3.46%",
         "changes": {
@@ -6318,10 +6327,17 @@ const DATA = {
           "m": -0.71,
           "h6": 0.81
         },
-        "meaning": "月格=同比的上月Δ, 半年格=6个月Δ"
+        "meaning": "月格=同比的上月Δ, 半年格=6个月Δ",
+        "release": {
+          "latest": "2026-07-12",
+          "next": "2026-08-12",
+          "estimated": true
+        },
+        "source": "BLS"
       },
       {
         "name": "核心 PCE 同比",
+        "tag": "PCE",
         "unit": "pt",
         "current": "3.29%",
         "changes": {
@@ -6330,10 +6346,17 @@ const DATA = {
           "m": -0.13,
           "h6": 0.32
         },
-        "meaning": "美联储首选指标的方向"
+        "meaning": "美联储首选指标的方向",
+        "release": {
+          "latest": "2026-07-31",
+          "next": "2026-08-31",
+          "estimated": true
+        },
+        "source": "BEA"
       },
       {
         "name": "失业率",
+        "tag": "UNRATE",
         "unit": "pt",
         "current": "4.20%",
         "changes": {
@@ -6342,10 +6365,17 @@ const DATA = {
           "m": -0.1,
           "h6": -0.2
         },
-        "meaning": "月格=上月Δ, 半年格=6月Δ"
+        "meaning": "月格=上月Δ, 半年格=6月Δ",
+        "release": {
+          "latest": "2026-07-03",
+          "next": "2026-08-07",
+          "estimated": true
+        },
+        "source": "BLS"
       },
       {
         "name": "非农就业(月增)",
+        "tag": "NFP",
         "unit": "K",
         "current": "+57K",
         "changes": {
@@ -6354,10 +6384,17 @@ const DATA = {
           "m": 57.0,
           "h6": 552.0
         },
-        "meaning": "半年格=6个月累计新增"
+        "meaning": "半年格=6个月累计新增",
+        "release": {
+          "latest": "2026-07-03",
+          "next": "2026-08-07",
+          "estimated": true
+        },
+        "source": "BLS"
       },
       {
         "name": "消费者信心",
+        "tag": "Conf",
         "unit": "pt",
         "current": "44.80",
         "changes": {
@@ -6366,7 +6403,13 @@ const DATA = {
           "m": -5.0,
           "h6": -6.2
         },
-        "meaning": "消费前瞻指标"
+        "meaning": "消费前瞻指标",
+        "release": {
+          "latest": "2026-06-15",
+          "next": "2026-07-15",
+          "estimated": true
+        },
+        "source": "UMich"
       }
     ],
     "inflationChart": {
@@ -6653,7 +6696,8 @@ const DATA = {
         "implication": "若连续<180K, 就业降温趋势确认",
         "status": "关键事件"
       }
-    ]
+    ],
+    "generatedAt": "2026-07-31 01:25"
   },
   "credit": {
     "regime": {
