@@ -597,6 +597,7 @@ if _stale:
     print(f'[数据源自检] 需关注: {", ".join(_stale)}')
 
 with open('computed.json', 'w') as f:
+    R['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     json.dump(R, f, default=str)
 print(f'计算结果已存 computed.json')
 

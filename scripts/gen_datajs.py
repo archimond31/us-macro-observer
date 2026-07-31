@@ -11,6 +11,7 @@ import json, datetime, sys, re, calendar
 
 C = json.load(open('computed.json'))
 RAW = json.load(open('raw_series.json'))
+GEN_AT = C.get('generated_at', '')   # 数据获取时间 (build_data.py 运行时刻)
 print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, flush=True)
 
 # Fed 事件 (FOMC 官方日程 + 真实官员讲话), 由 build_data.py 抓取写入 events.json
@@ -82,6 +83,13 @@ def _release_on(rule, ym):
     y, m = ym.year, ym.month
     if len(rule) > 2 and rule[2] == 'ff':
         return _first_friday(y, m)
+    if len(rule) > 2 and rule[2] == 'lbd':
+        # 月末最后工作日 (BEA PCE/GDP 等通常在参考月+1月的最后工作日附近发布)
+        last_day = calendar.monthrange(y, m)[1]
+        d = datetime.date(y, m, last_day)
+        while d.weekday() >= 5:  # 周六=5, 周日=6 → 往前推到周五
+            d -= datetime.timedelta(days=1)
+        return d
     day = rule[2] if (len(rule) > 2 and isinstance(rule[2], int)) else 28
     last = calendar.monthrange(y, m)[1]
     return datetime.date(y, m, min(day, last))
@@ -92,11 +100,22 @@ RELEASE_MAP = {
     'GDP':    ('gdp', 'quarterly'),
     'CPI':    ('cpi', 'monthly', 12),
     'Core':   ('core_cpi', 'monthly', 12),
-    'PCE':    ('core_pce', 'monthly', 28),
+    'PCE':    ('core_pce', 'monthly', 'lbd'),
     'UNRATE': ('unrate', 'monthly', 'ff'),
     'NFP':    ('payems', 'monthly', 'ff'),
     'Retail': ('retail', 'monthly', 15),
     'Conf':   ('umich', 'monthly', 15),
+}
+
+# 经济指标 → 数据源 (机构)
+SOURCE_MAP = {
+    'gdp': 'BEA', 'gdp_real': 'BEA', 'pce': 'BEA', 'core_pce': 'BEA', 'pce_real': 'BEA',
+    'cpi': 'BLS', 'core_cpi': 'BLS', 'unrate': 'BLS', 'payems': 'BLS', 'jolts': 'BLS',
+    'claims': 'BLS', 'participation': 'BLS', 'quits_rate': 'BLS', 'wage_yoy': 'BLS',
+    'retail': 'Census', 'durables': 'Census', 'housing_starts': 'Census', 'permits': 'Census',
+    'umich': 'UMich', 'mich_infl': 'UMich', 'wei': 'NY Fed', 'gdpnow': 'Atlanta Fed',
+    'nfci': 'Chicago Fed', 'cont_claims': 'BLS', 'cpi_energy': 'BLS', 'cpi_food': 'BLS',
+    'cpi_shelter': 'BLS', 'cpi_core_svcs': 'BLS', 'cpi_core_goods': 'BLS', 'indpro': 'Fed',
 }
 
 def release_info(tag):
@@ -927,11 +946,11 @@ DATA['economy'] = {
         {'label':'消费者信心','value':f2(umich),'change':pctpt(umich_tf['m']),'dir':dir_of(umich_tf['m']),'tag':'Conf','percentile':pct('umich'),'signal':'bearish','meaning':'通胀预期压制信心','changes':{'d':'—','w':'—','m':pctpt(umich_tf['m']),'h6':pctpt(umich_tf['h6'])},'sparkline':series30('umich')},
     ],
     'trendData': [
-        {'name':'CPI 同比','unit':'pt','current':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
-        {'name':'核心 PCE 同比','unit':'pt','current':(f2(core_pce_yoy)+'%' if core_pce_yoy else '—'),'changes':{'d':None,'w':None,'m':pce_d1,'h6':pce_d6},'meaning':'美联储首选指标的方向'},
-        {'name':'失业率','unit':'pt','current':f2(unrate)+'%','changes':{'d':None,'w':None,'m':unrate_tf['m'],'h6':unrate_tf['h6']},'meaning':'月格=上月Δ, 半年格=6月Δ'},
-        {'name':'非农就业(月增)','unit':'K','current':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'changes':{'d':None,'w':None,'m':(round(payems_mom,0) if payems_mom is not None else None),'h6':(round(nfp_h6,0) if nfp_h6 is not None else None)},'meaning':'半年格=6个月累计新增'},
-        {'name':'消费者信心','unit':'pt','current':f2(umich),'changes':{'d':None,'w':None,'m':umich_tf['m'],'h6':umich_tf['h6']},'meaning':'消费前瞻指标'},
+        {'name':'CPI 同比','tag':'CPI','unit':'pt','current':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
+        {'name':'核心 PCE 同比','tag':'PCE','unit':'pt','current':(f2(core_pce_yoy)+'%' if core_pce_yoy else '—'),'changes':{'d':None,'w':None,'m':pce_d1,'h6':pce_d6},'meaning':'美联储首选指标的方向'},
+        {'name':'失业率','tag':'UNRATE','unit':'pt','current':f2(unrate)+'%','changes':{'d':None,'w':None,'m':unrate_tf['m'],'h6':unrate_tf['h6']},'meaning':'月格=上月Δ, 半年格=6月Δ'},
+        {'name':'非农就业(月增)','tag':'NFP','unit':'K','current':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'changes':{'d':None,'w':None,'m':(round(payems_mom,0) if payems_mom is not None else None),'h6':(round(nfp_h6,0) if nfp_h6 is not None else None)},'meaning':'半年格=6个月累计新增'},
+        {'name':'消费者信心','tag':'Conf','unit':'pt','current':f2(umich),'changes':{'d':None,'w':None,'m':umich_tf['m'],'h6':umich_tf['h6']},'meaning':'消费前瞻指标'},
     ],
     'inflationChart': {'labels':[mlabel(d) for d, _ in cpi_ys],
         'series':{'CPI同比':[v for _, v in cpi_ys],'核心CPI同比':align_yoy(cpi_ys, core_ys),'核心PCE同比':align_yoy(cpi_ys, pce_ys)}},
@@ -989,11 +1008,16 @@ DATA['economy'] = {
     ]
 }
 
-# 经济指标: 增补"最新公布 / 下次公布" (基于发布频率规律推算, 标注预计)
-for _m in DATA['economy']['metrics']:
+# 经济指标: 增补"最新公布 / 下次公布" + 数据源 (基于发布频率规律推算, 标注预计)
+for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
     _ri = release_info(_m.get('tag'))
     if _ri:
         _m['release'] = _ri
+    _rk = RELEASE_MAP.get(_m.get('tag'))
+    if _rk:
+        _m['source'] = SOURCE_MAP.get(_rk[0], '')
+# 数据获取时间 (全局, 用于板块内统一标注)
+DATA['economy']['generatedAt'] = GEN_AT
 
 # 信用市场
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)

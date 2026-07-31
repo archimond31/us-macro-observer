@@ -122,16 +122,29 @@ function metricCardsV3(metrics) {
   return html + '</div>';
 }
 
-// 经济指标"最新公布 / 下次公布" (release.latest/next 为按发布频率推算值, estimated=true 标"预计")
+// 经济指标"最新公布 / 下次公布" + 数据源 / 数据获取时间
+// (release.latest/next 为按发布频率推算值, estimated=true 标"预计"; source/fetch 为真实信息)
 function releaseLine(m) {
-  if (!m || !m.release) return '';
-  const latest = m.release.latest || '—';
-  const nxt = m.release.next || '—';
-  const est = m.release.estimated ? ' <span style="color:#b08968">预计</span>' : '';
-  return '<div style="font-size:11px;color:var(--text-tertiary,#8a93a3);margin-top:7px;padding-top:7px;border-top:1px dashed #ececf1;display:flex;gap:5px;align-items:center;flex-wrap:wrap;line-height:1.5">'
+  if (!m) return '';
+  const parts = [];
+  if (m.release) {
+    const latest = m.release.latest || '—';
+    const nxt = m.release.next || '—';
+    const est = m.release.estimated ? ' <span style="color:#b08968">预计</span>' : '';
+    parts.push('最新公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + latest + '</b>'
+      + ' · 下次公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + nxt + '</b>' + est);
+  }
+  if (m.source) {
+    parts.push('来源 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + m.source + '</b>');
+  }
+  const ga = (DATA.economy && DATA.economy.generatedAt) ? DATA.economy.generatedAt : '';
+  if (ga) {
+    parts.push('获取 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + ga + '</b>');
+  }
+  if (!parts.length) return '';
+  return '<div style="font-size:11px;color:var(--text-tertiary,#8a93a3);margin-top:7px;padding-top:7px;border-top:1px dashed #ececf1;display:flex;gap:5px;align-items:center;flex-wrap:wrap;line-height:1.6">'
     + '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#9aa3b2;flex:0 0 auto"></span>'
-    + '最新公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + latest + '</b>'
-    + ' · 下次公布 <b style="color:var(--text-secondary,#4b5563);font-weight:600">' + nxt + '</b>' + est
+    + parts.join(' · ')
     + '</div>';
 }
 
@@ -360,8 +373,10 @@ function computeTrend(ch) {
 
 // 趋势追踪表
 function trendTable(trendData) {
+  const hasSource = trendData.some(t => t.source);
   let html = '<div class="table-card trend-table"><table class="data-table"><thead><tr>' +
     '<th>指标</th><th>当前值</th><th>日</th><th>周</th><th>月</th><th>半年</th><th>趋势判定</th><th>解读</th>' +
+    (hasSource ? '<th>来源</th>' : '') +
     '</tr></thead><tbody>';
   trendData.forEach(t => {
     const trend = computeTrend(t.changes);
@@ -374,6 +389,7 @@ function trendTable(trendData) {
       '<td>' + fmtChange(t.changes.h6, t.unit) + '</td>' +
       '<td><span class="trend-badge ' + trend.cls + '"><span class="trend-arrow">' + trend.arrow + '</span>' + trend.label + '</span></td>' +
       '<td style="font-size:11px;color:var(--text-secondary);max-width:280px">' + t.meaning + '</td>' +
+      (hasSource ? '<td style="font-size:11px;color:var(--text-tertiary)">' + (t.source || '—') + '</td>' : '') +
     '</tr>';
   });
   return html + '</tbody></table></div>';
@@ -945,6 +961,13 @@ function renderEconomy(c) {
   let html = '';
   html += riskScoreBar();
   html += regimeBanner(d.regime);
+  if (d.generatedAt) {
+    html += '<div style="font-size:11px;color:var(--text-tertiary,#8a93a3);margin:2px 0 14px;padding:7px 12px;background:rgba(154,163,178,0.08);border-radius:8px;display:flex;gap:6px;align-items:center">' +
+      '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4caf50"></span>' +
+      '经济数据获取时间：<b style="color:var(--text-secondary,#4b5563);font-weight:600">' + d.generatedAt + '</b>' +
+      ' · 各项指标已标注数据源与参考期' +
+      '</div>';
+  }
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
