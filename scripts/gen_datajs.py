@@ -636,9 +636,20 @@ DATA['assets'] = {
     'regime': {'label':_a_label,'signal':_a_signal,'confidence':'中等置信',
         'description': f'10Y 利率 {f2(v_dgs10)}% 的上行是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI {f2(v_wti)} 尚未失控, 但利率上行已压制估值。'},
     'keySignals': [
-        {'title': f'纳斯达克100 周跌 {ret(asset_changes("ndx")["w"])}', 'meaning':'长久期科技股对利率最敏感, 是本轮重定价的领先指标。', 'direction':'bearish'},
-        {'title': f'WTI 原油周涨 {ret(asset_changes("wti")["w"])}', 'meaning':'油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。', 'direction':'bearish'},
-        {'title': f'黄金 {ret(asset_changes("gold")["w"])} 横盘', 'meaning':'实际利率上行对冲了避险买需, 黄金方向选择临近。', 'direction':'mixed'},
+        {'title': f'纳斯达克100 周{"涨" if float(asset_changes("ndx")["w"] or 0)>=0 else "跌"} {ret(asset_changes("ndx")["w"])}',
+         'meaning':'长久期科技股对利率最敏感, 是本轮重定价的领先指标。',
+         'direction':_msig(dir_of(tfm('ndx', 'w')), False)},
+        {'title': f'WTI 原油周{"涨" if float(asset_changes("wti")["w"] or 0)>=0 else "跌"} {ret(asset_changes("wti")["w"])}',
+         'meaning':(
+             '油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。'
+             if float(asset_changes("wti")["w"] or 0) > 0
+             else ('油价回落缓解通胀压力, 通胀预期下行空间打开。'
+                   if float(asset_changes("wti")["w"] or 0) < 0
+                   else '油价持平, 通胀预期暂时稳定。')),
+         'direction':_msig(dir_of(tfm('wti', 'w')), False)},
+        {'title': f'黄金 {ret(asset_changes("gold")["w"])} {"横盘" if abs(float(asset_changes("gold")["w"] or 0))<1 else ("上涨" if float(asset_changes("gold")["w"] or 0)>0 else "下跌")}',
+         'meaning':'实际利率上行对冲了避险买需, 黄金方向选择临近。',
+         'direction':_msig(dir_of(tfm('gold', 'w')), False)},
     ],
     'metrics': metrics_assets,
     'trendData': trend_assets,
@@ -717,9 +728,30 @@ DATA['rates'] = {
     'regime': {'label':_rates_label,'signal':_rates_signal,'confidence':'高置信',
         'description': f'长端利率上行快于短端 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%), 曲线{"熊市陡峭化" if (tfm("dgs10").get("w") or 0)>(tfm("dgs2").get("w") or 0) else "变化"}。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 共同上行。'},
     'keySignals': [
-        {'title': f'10Y 突破 {f2(v_10y)}%','meaning':'长端利率是本轮资产重定价的核心变量, 实际利率驱动为主。','direction':'bearish'},
-        {'title': f'10Y-2Y 利差 {spread_10_2:+.0f}bp','meaning':'曲线正常化/陡峭化, 通常出现在紧缩末期或再通胀早期。','direction':'mixed'},
-        {'title': f'10Y 实际利率 {f2(v_tips)}% (分位 {pct("tips10")})','meaning':'实际利率是估值真实折现率, 处于高位对高估值科技股最不利。','direction':'bearish'},
+        {'title': f'10Y 国债 {f2(v_10y)}%',
+         'meaning':(
+             '长端利率上行是本周资产重定价核心, 实际利率驱动为主。'
+             if (tfm('dgs10').get('w') or 0) > 0
+             else ('长端利率回落, 估值压力缓和。'
+                   if (tfm('dgs10').get('w') or 0) < 0
+                   else '长端利率横盘, 方向待确认。')),
+         'direction': _msig(dir_of(tfm('dgs10').get('w')), False)},
+        {'title': f'10Y-2Y 利差 {spread_10_2:+.0f}bp',
+         'meaning':(
+             '曲线陡峭化 (长端上行更快), 反映再通胀或紧缩预期。'
+             if (spread_10_2 or 0) > 0
+             else ('曲线倒挂, 衰退预警信号。'
+                   if (spread_10_2 or 0) < 0
+                   else '曲线平坦, 方向中性。')),
+         'direction': _msig(dir_of(((tfm('dgs10').get('w') or 0)-(tfm('dgs2').get('w') or 0))), False)},
+        {'title': f'10Y 实际利率 {f2(v_tips)}% (分位 {pct("tips10")})',
+         'meaning':(
+             '实际利率是估值真实折现率, 高位上行对高估值科技股最不利。'
+             if (tfm('tips10').get('w') or 0) > 0
+             else ('实际利率回落, 估值压力缓和。'
+                   if (tfm('tips10').get('w') or 0) < 0
+                   else '实际利率横盘。')),
+         'direction': _msig(dir_of(tfm('tips10').get('w')), False)},
     ],
     'metrics': [
         rate_metric('联邦基金利率(上限)','ffr_up','FFR'),
@@ -794,9 +826,30 @@ DATA['fed'] = {
     'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':'高置信',
         'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 下一次行动大概率降息。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将直击准备金。'},
     'keySignals': [
-        {'title':f'RRP 余额仅 ${f2(v_rrp2)}B','meaning':'货币市场基金可搬回美联储的钱基本耗尽, 未来缩表冲击无缓冲。','direction':'bearish'},
-        {'title':f'WALCL {comma(v_walcl/1000000,1)}T 持续下行','meaning':'QT 每周缩减, 是净流动性的稳定逆风。','direction':'mixed'},
-        {'title':f'银行准备金 {comma(v_res/1000000,2)}T','meaning':'仍在 3 万亿上方, 处于"充裕"区间, 3 万亿是关键心理位。','direction':'bullish'},
+        {'title':f'RRP 余额 ${f2(v_rrp2)}B',
+         'meaning':(
+             '货币市场基金可搬回美联储的钱持续耗尽, 未来缩表冲击无缓冲。'
+             if (tfm('rrp').get('w') or 0) < 0
+             else ('RRP 回升, 缓冲边际增厚。'
+                   if (tfm('rrp').get('w') or 0) > 0
+                   else 'RRP 持平。')),
+         'direction':_msig(dir_of(tfm('rrp').get('w')), False)},
+        {'title':f'WALCL {comma(v_walcl/1000000,1)}T',
+         'meaning':(
+             'QT 每周缩减, 净流动性的稳定逆风。'
+             if (tfm('walcl').get('w') or 0) < 0
+             else ('扩表, 净流动性顺风。'
+                   if (tfm('walcl').get('w') or 0) > 0
+                   else '资产负债表规模持平。')),
+         'direction':_msig(dir_of(tfm('walcl').get('w')), False)},
+        {'title':f'银行准备金 {comma(v_res/1000000,2)}T',
+         'meaning':(
+             '准备金回落, 充裕度下滑。'
+             if (tfm('resbal').get('w') or 0) < 0
+             else ('准备金回升, 充裕度改善。'
+                   if (tfm('resbal').get('w') or 0) > 0
+                   else '准备金持平, 仍处充裕区间。')),
+         'direction':_msig(dir_of(tfm('resbal').get('w')), True)},
     ],
     'metrics': [
         {'label':'总资产','value':f'${comma(v_walcl/1000000,2)}T','change':wk('walcl'),'dir':'down','tag':'WALCL','percentile':pct('walcl'),'signal':_msig(dir_of(tfm("walcl")["w"]), False),'meaning':'缩表持续推进','changes':wk_dict('walcl'),'sparkline':series30('walcl')},
@@ -883,9 +936,28 @@ DATA['liquidity'] = {
     'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':'高置信',
         'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。从此 TGA 每升 1 美元、QT 每缩 1 美元都直击银行准备金——流动性框架从"有缓冲"切换到"裸奔"的结构性转折。但 SOFR-IORB ({bp(v_sofr_iorb*100)}) 仍为负, 融资市场尚未出现真实资金争夺。'},
     'keySignals': [
-        {'title':f'RRP 余额 ${f2(v_rrpn)}B, 缓冲实质归零','meaning':'过去两年 QT 冲击被 RRP 吸收, 未来每一美元缩表直击准备金, 充裕度下滑加速。','direction':'bearish'},
-        {'title':f'TGA 余额 ${comma(v_tgan,1)}B' if v_tgan else 'TGA 数据缺失','meaning':'财政部现金上升=从银行体系抽水, 若向 9000 亿迈进将单周收缩数百亿。','direction':'bearish'},
-        {'title':f'SOFR-IORB {bp(v_sofr_iorb*100)}','meaning':'回购利率低于准备金利率, 融资充裕; 转正才是压力第一确认信号。','direction':'bullish'},
+        {'title':f'RRP 余额 ${f2(v_rrpn)}B',
+         'meaning':(
+             '过去两年 QT 冲击被 RRP 吸收, 未来每一美元缩表直击准备金, 充裕度下滑加速。'
+             if (tfm('rrp').get('w') or 0) < 0
+             else ('RRP 回升, 缓冲边际增厚。'
+                   if (tfm('rrp').get('w') or 0) > 0
+                   else 'RRP 持平, 缓冲实质归零。')),
+         'direction':_msig(dir_of(tfm('rrp').get('w')), False)},
+        {'title':(f'TGA 余额 ${comma(v_tgan,1)}B' if v_tgan else 'TGA 数据缺失'),
+         'meaning':(
+             '财政部现金上升=从银行体系抽水, 若向 9000 亿迈进将单周收缩数百亿。'
+             if (tfm('tga').get('w') or 0) > 0
+             else ('财政部现金下降=向银行体系回注流动性。'
+                   if (tfm('tga').get('w') or 0) < 0
+                   else 'TGA 持平。')),
+         'direction':_msig(dir_of(tfm('tga').get('w') if v_tgan else None), False)},
+        {'title':f'SOFR-IORB {bp(v_sofr_iorb*100)}',
+         'meaning':(
+             '回购利率转正, 融资市场出现真实资金争夺压力。'
+             if (v_sofr_iorb or 0) >= 0
+             else '回购利率低于准备金利率, 融资充裕; 转正才是压力第一确认信号。'),
+         'direction':_msig(('down' if (v_sofr_iorb or 0) < 0 else ('up' if (v_sofr_iorb or 0) > 0 else 'neutral')), False)},
     ],
     'metrics': [
         {'label':'净流动性','value':f'${comma(v_nl/1000,2)}T' if v_nl else '—','change':f'{bp(tfm("netliq")["w"], "$B") if tfm("netliq")["w"] else "—"}','dir':dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else 'neutral','tag':'NetLiq','percentile':pct('netliq'),'signal':_msig(dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else None, False),'meaning':'WALCL−RRP−TGA','changes':{k:(bp(tfm("netliq")[k], "$B") if tfm("netliq")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('netliq')},
@@ -1070,9 +1142,30 @@ DATA['economy'] = {
     'regime': {'label':_e_label,'signal':_e_signal,'confidence':'中等置信',
         'description':f'就业消费降温 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 但通胀因能源回升 (CPI 同比 {f2(cpi_yoy)}%)。压缩美联储政策空间——降息怕通胀, 不降怕就业。'},
     'keySignals': [
-        {'title':f'CPI 同比 {f2(cpi_yoy)}% 回升','meaning':'能源推升整体通胀, 方向与美联储目标背离。','direction':'bearish'},
-        {'title':f'核心 PCE 同比 {f2(core_pce_yoy)}%','meaning':'美联储首选指标横盘, 通胀最后一英里停滞。','direction':'mixed'},
-        {'title':f'失业率 {f2(unrate)}% 爬升','meaning':'从低点回升, 劳动力市场温和走弱, 鸽派论据累积。','direction':'bullish'},
+        {'title':f'CPI 同比 {f2(cpi_yoy)}% ({("回升" if (cpi_d1 or 0)>0 else ("回落" if (cpi_d1 or 0)<0 else "持平"))})',
+         'meaning':(
+             '能源推升整体通胀, 方向与美联储目标背离。'
+             if (cpi_d1 or 0) > 0
+             else ('通胀回落, 向美联储目标靠近。'
+                   if (cpi_d1 or 0) < 0
+                   else '通胀横盘。')),
+         'direction':_msig(dir_of(cpi_d1), False)},
+        {'title':f'核心 PCE 同比 {f2(core_pce_yoy)}% ({("回升" if (pce_d1 or 0)>0 else ("回落" if (pce_d1 or 0)<0 else "持平"))})',
+         'meaning':(
+             '美联储首选指标上行, 通胀最后一英里停滞。'
+             if (pce_d1 or 0) > 0
+             else ('美联储首选指标回落, 通胀向目标收敛。'
+                   if (pce_d1 or 0) < 0
+                   else '美联储首选指标横盘。')),
+         'direction':_msig(dir_of(pce_d1), False)},
+        {'title':f'失业率 {f2(unrate)}% ({("回升" if (unrate_tf.get("m") or 0)>0 else ("回落" if (unrate_tf.get("m") or 0)<0 else "持平"))})',
+         'meaning':(
+             '失业率走高, 劳动力市场走弱, 鸽派论据累积。'
+             if (unrate_tf.get('m') or 0) > 0
+             else ('失业率走低, 劳动力市场走强。'
+                   if (unrate_tf.get('m') or 0) < 0
+                   else '失业率持平。')),
+         'direction':_msig(dir_of(unrate_tf.get('m')), False)},
     ],
     'metrics': [
         {'label':'GDP 环比年化 (实际)','value':(f2(gdp_qoq)+'%' if gdp_qoq is not None else '—'),'change':pctpt(gdp_qoq_d1),'dir':dir_of(gdp_qoq_d1),'tag':'GDP','percentile':pct('gdp_real'),'signal':('bullish' if (gdp_qoq or 0) >= 2 else ('mixed' if (gdp_qoq or 0) > 0 else 'bearish')),'meaning':f'季度环比年化, 新闻口径; 数据截至 {_gdp_vintage}' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else '') + (f' · GDPNow本季预估 {f2(val("gdpnow"))}%' if val('gdpnow') is not None else ''),'changes':{'d':'—','w':'—','m':'—','h6':pctpt(gdp_qoq_d2)},'sparkline':[v for _, v in gdp_qoq_ys]},
@@ -1196,9 +1289,30 @@ DATA['credit'] = {
     'regime': {'label':_cr_label,'signal':_cr_signal,'confidence':'高置信',
         'description':f'表面平静 (HY OAS {f2(hyv)}% 处历史低位) 但内部已分层: CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}) 率先走阔, 而 IG ({f2(igv)}%) 纹丝不动。信用市场是慢变量, 不预测冲击但最后确认冲击。'},
     'keySignals': [
-        {'title':f'CCC 利差 {f2(ccc)}% 走阔','meaning':'最弱信用率先承压是周期中后期特征, 分层说明聪明钱撤离最弱信用。','direction':'bearish'},
-        {'title':f'HY OAS {f2(hyv)}% 处历史 {pct("hy")} 分位','meaning':'利差极窄, 信用市场未为任何坏消息定价——这是脆弱性而非安全性。','direction':'mixed'},
-        {'title':f'IG OAS {f2(igv)}% 处历史 {pct("ig")} 分位','meaning':'高质量信用纹丝不动, 冲击尚未触及核心信用。','direction':'bullish'},
+        {'title':f'CCC 利差 {f2(ccc)}% ({("走阔" if (tfm("ccc").get("w") or 0)>0 else ("收窄" if (tfm("ccc").get("w") or 0)<0 else "持平"))})',
+         'meaning':(
+             '最弱信用率先承压是周期中后期特征, 分层说明聪明钱撤离最弱信用。'
+             if (tfm('ccc').get('w') or 0) > 0
+             else ('最弱信用利差收敛, 风险偏好改善。'
+                   if (tfm('ccc').get('w') or 0) < 0
+                   else 'CCC 利差持平。')),
+         'direction':_msig(dir_of(tfm('ccc').get('w')), False)},
+        {'title':f'HY OAS {f2(hyv)}% 处历史 {pct("hy")} 分位',
+         'meaning':(
+             '利差走阔, 信用市场开始为坏消息定价。'
+             if (tfm('hy').get('w') or 0) > 0
+             else ('利差收窄, 风险偏好稳健。'
+                   if (tfm('hy').get('w') or 0) < 0
+                   else '利差极窄, 信用市场未为任何坏消息定价——这是脆弱性而非安全性。')),
+         'direction':_msig(dir_of(tfm('hy').get('w')), False)},
+        {'title':f'IG OAS {f2(igv)}% 处历史 {pct("ig")} 分位',
+         'meaning':(
+             '高质量信用利差走阔, 冲击开始触及核心信用。'
+             if (tfm('ig').get('w') or 0) > 0
+             else ('高质量信用利差收窄, 核心信用稳健。'
+                   if (tfm('ig').get('w') or 0) < 0
+                   else '高质量信用纹丝不动, 冲击尚未触及核心信用。')),
+         'direction':_msig(dir_of(tfm('ig').get('w')), False)},
     ],
     'metrics': [
         {'label':'IG OAS','value':f2(igv)+'%','change':bp(tfm('ig')['d']*100),'dir':dir_of(tfm('ig')['d']),'tag':'IG','percentile':pct('ig'),'signal':_msig(dir_of(tfm('ig')['d']), False),'meaning':'投资级利差极窄','changes':{k:(bp(tfm('ig')[k]*100) if tfm('ig')[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('ig')},
@@ -1317,7 +1431,7 @@ DATA['volatility'] = {
     'regime': {'label':_vol_label,'signal':_vol_signal,'confidence':'中等置信',
         'description':f'当前处于压力区的: {(",".join(stress_assets) if stress_assets else "无")}。VIX {f2(vix)}' + (f', OVX {f2(ovx)}' if ovx else '') + (f', MOVE {f2(move)}' if move else '') + '。分化形态决定这是单资产冲击还是系统性重定价——看压力是否从单一资产外溢。'},
     'keySignals': [s for s in [
-        ({'title':f'OVX {f2(ovx)} vs VIX {f2(vix)} 剪刀差 {ovx_vix_gap}pt','meaning':'油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。','direction':'mixed'} if ovx_vix_gap is not None else None),
+        ({'title':f'OVX {f2(ovx)} vs VIX {f2(vix)} 剪刀差 {ovx_vix_gap}pt','meaning':'油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。','direction':('bearish' if (ovx_vix_gap or 0) > 8 else 'mixed')} if ovx_vix_gap is not None else None),
         {'title':f'VIX {f2(vix)}, 周 {bp(tfm("vix")["w"],"pt")}','meaning':'站上20将触发波动率目标基金被动减仓, 抛压自我强化。','direction':'bearish' if (vix or 0) >= 18 else 'mixed'},
         ({'title':f'SKEW {f1(skew)} 尾部偏度','meaning':'机构对深度虚值看跌的定价, >150 说明尾部保护需求极贵。','direction':'bearish' if (skew or 0) >= 140 else 'mixed'} if skew is not None else None),
     ] if s],
