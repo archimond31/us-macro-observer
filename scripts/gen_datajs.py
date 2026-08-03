@@ -638,7 +638,7 @@ DATA['assets'] = {
     'keySignals': [
         {'title': f'纳斯达克100 周{"涨" if float(asset_changes("ndx")["w"] or 0)>=0 else "跌"} {ret(asset_changes("ndx")["w"])}',
          'meaning':'长久期科技股对利率最敏感, 是本轮重定价的领先指标。',
-         'direction':_msig(dir_of(tfm('ndx', 'w')), False)},
+         'direction':_msig(dir_of(tfm('ndx')['w']), False)},
         {'title': f'WTI 原油周{"涨" if float(asset_changes("wti")["w"] or 0)>=0 else "跌"} {ret(asset_changes("wti")["w"])}',
          'meaning':(
              '油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。'
@@ -646,10 +646,10 @@ DATA['assets'] = {
              else ('油价回落缓解通胀压力, 通胀预期下行空间打开。'
                    if float(asset_changes("wti")["w"] or 0) < 0
                    else '油价持平, 通胀预期暂时稳定。')),
-         'direction':_msig(dir_of(tfm('wti', 'w')), False)},
+         'direction':_msig(dir_of(tfm('wti')['w']), False)},
         {'title': f'黄金 {ret(asset_changes("gold")["w"])} {"横盘" if abs(float(asset_changes("gold")["w"] or 0))<1 else ("上涨" if float(asset_changes("gold")["w"] or 0)>0 else "下跌")}',
          'meaning':'实际利率上行对冲了避险买需, 黄金方向选择临近。',
-         'direction':_msig(dir_of(tfm('gold', 'w')), False)},
+         'direction':_msig(dir_of(tfm('gold')['w']), False)},
     ],
     'metrics': metrics_assets,
     'trendData': trend_assets,
