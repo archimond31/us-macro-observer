@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-04 01:39",
+  "generated_at": "2026-08-04 02:18",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -718,7 +718,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 4104.2001953125,
+      "value": 4112.89990234375,
       "fallback": false
     },
     "silver": {
@@ -726,7 +726,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 58.525001525878906,
+      "value": 58.79499816894531,
       "fallback": false
     },
     "natgas": {
@@ -742,7 +742,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 6.553999900817871,
+      "value": 6.565499782562256,
       "fallback": false
     },
     "dxy": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 100.00199890136719,
+      "value": 99.98799896240234,
       "fallback": false
     },
     "eurusd": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 1.151410460472107,
+      "value": 1.1516757011413574,
       "fallback": false
     },
     "gbpusd": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 1.3428586721420288,
+      "value": 1.3432012796401978,
       "fallback": false
     },
     "usdjpy": {
@@ -774,7 +774,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 157.43699645996094,
+      "value": 157.61700439453125,
       "fallback": false
     },
     "usdcnh": {
@@ -782,7 +782,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-08-04",
       "age": 0,
-      "value": 6.757259845733643,
+      "value": 6.756919860839844,
       "fallback": false
     },
     "tlt": {
