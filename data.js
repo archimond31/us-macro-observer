@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-08-04 08:21
+ * 生成时间: 2026-08-04 09:41
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-08-04 08:21 (官方数据, 自动更新)",
+    "lastUpdated": "2026-08-04 09:41 (官方数据, 自动更新)",
     "dataAsOf": "2026-08-03",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,14 +17,14 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 4.75% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.06% (分位 99), 而 HY 整体 2.84%。油价 (WTI 80.92) 与波动率 (VIX 15.71) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 4.75% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.06% (分位 99), 而 HY 整体 2.84%。油价 (WTI 82.17) 与波动率 (VIX 15.82) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "regime": {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 4.75% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 80.92 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 4.75% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 82.17 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -33,17 +33,17 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "WTI 原油周跌 -2.05%",
+        "title": "WTI 原油周跌 -0.53%",
         "meaning": "油价回落缓解通胀压力, 通胀预期下行空间打开。",
         "direction": "bullish"
       },
       {
-        "title": "布伦特原油周跌 -3.70%",
+        "title": "布伦特原油周跌 -2.64%",
         "meaning": "布伦特回落, 全球油价压力缓和。",
         "direction": "bullish"
       },
       {
-        "title": "黄金 +1.22% 上涨",
+        "title": "黄金 +0.71% 横盘",
         "meaning": "实际利率上行对冲了避险买需, 黄金方向选择临近。",
         "direction": "bearish"
       }
@@ -291,18 +291,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,124.40",
-        "change": "+1.86%",
+        "value": "$4,103.60",
+        "change": "+1.35%",
         "dir": "up",
         "tag": "GC=F",
-        "percentile": 39,
+        "percentile": 37,
         "signal": "up",
-        "meaning": "当前位于近一年 39 分位",
+        "meaning": "当前位于近一年 37 分位",
         "changes": {
-          "d": "+1.86%",
-          "w": "+1.22%",
-          "m": "+0.28%",
-          "h6": "-12.51%"
+          "d": "+1.35%",
+          "w": "+0.71%",
+          "m": "-0.22%",
+          "h6": "-12.95%"
         },
         "sparkline": [
           4181.8999,
@@ -334,23 +334,23 @@ const DATA = {
           4034.7,
           4100.1001,
           4049.1001,
-          4124.3999
+          4103.6001
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$80.92",
-        "change": "-4.43%",
+        "value": "$82.17",
+        "change": "-2.95%",
         "dir": "down",
         "tag": "CL=F",
-        "percentile": 68,
+        "percentile": 69,
         "signal": "down",
-        "meaning": "当前位于近一年 68 分位",
+        "meaning": "当前位于近一年 69 分位",
         "changes": {
-          "d": "-4.43%",
-          "w": "-2.05%",
-          "m": "+17.80%",
-          "h6": "+24.09%"
+          "d": "-2.95%",
+          "w": "-0.53%",
+          "m": "+19.62%",
+          "h6": "+26.01%"
         },
         "sparkline": [
           74.82,
@@ -382,23 +382,23 @@ const DATA = {
           84.46,
           83.59,
           84.67,
-          80.92
+          82.17
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$85.09",
-        "change": "-5.58%",
+        "value": "$86.03",
+        "change": "-4.54%",
         "dir": "down",
         "tag": "BZ=F",
-        "percentile": 68,
+        "percentile": 69,
         "signal": "down",
-        "meaning": "当前位于近一年 68 分位",
+        "meaning": "当前位于近一年 69 分位",
         "changes": {
-          "d": "-5.58%",
-          "w": "-3.70%",
-          "m": "+18.51%",
-          "h6": "+20.37%"
+          "d": "-4.54%",
+          "w": "-2.64%",
+          "m": "+19.82%",
+          "h6": "+21.70%"
         },
         "sparkline": [
           77.9,
@@ -430,23 +430,23 @@ const DATA = {
           90.74,
           89.03,
           90.12,
-          85.09
+          86.03
         ]
       },
       {
         "label": "铜",
-        "value": "6.65",
-        "change": "+3.32%",
+        "value": "6.62",
+        "change": "+2.87%",
         "dir": "up",
         "tag": "HG=F",
-        "percentile": 100,
+        "percentile": 99,
         "signal": "up",
-        "meaning": "当前位于近一年 100 分位",
+        "meaning": "当前位于近一年 99 分位",
         "changes": {
-          "d": "+3.32%",
-          "w": "+4.90%",
-          "m": "+8.75%",
-          "h6": "+12.76%"
+          "d": "+2.87%",
+          "w": "+4.45%",
+          "m": "+8.28%",
+          "h6": "+12.28%"
         },
         "sparkline": [
           6.3565,
@@ -478,7 +478,7 @@ const DATA = {
           6.2735,
           6.4445,
           6.436,
-          6.6495
+          6.621
         ]
       },
       {
@@ -526,23 +526,23 @@ const DATA = {
           100.8,
           100.01,
           99.8,
-          99.998
+          100.0
         ]
       },
       {
         "label": "美元/日元",
-        "value": "157.80",
-        "change": "+0.14%",
+        "value": "157.86",
+        "change": "+0.18%",
         "dir": "up",
         "tag": "USDJPY=X",
-        "percentile": 58,
+        "percentile": 59,
         "signal": "down",
-        "meaning": "当前位于近一年 58 分位",
+        "meaning": "当前位于近一年 59 分位",
         "changes": {
-          "d": "+0.14%",
-          "w": "-3.65%",
-          "m": "-2.26%",
-          "h6": "+0.35%"
+          "d": "+0.18%",
+          "w": "-3.61%",
+          "m": "-2.23%",
+          "h6": "+0.39%"
         },
         "sparkline": [
           161.599,
@@ -574,7 +574,7 @@ const DATA = {
           163.3,
           160.183,
           157.582,
-          157.796
+          157.859
         ]
       },
       {
@@ -882,50 +882,50 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,124.40",
+        "current": "$4,103.60",
         "changes": {
-          "d": 1.86,
-          "w": 1.22,
-          "m": 0.28,
-          "h6": -12.51
+          "d": 1.35,
+          "w": 0.71,
+          "m": -0.22,
+          "h6": -12.95
         },
-        "meaning": "多尺度方向不一, 趋势不明"
+        "meaning": "半年 -13% 但近月转弱——底部可能形成"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$80.92",
+        "current": "$82.17",
         "changes": {
-          "d": -4.43,
-          "w": -2.05,
-          "m": 17.8,
-          "h6": 24.09
+          "d": -2.95,
+          "w": -0.53,
+          "m": 19.62,
+          "h6": 26.01
         },
-        "meaning": "半年 +24% 但近周转弱——顶部预警"
+        "meaning": "半年 +26% 但近周转弱——顶部预警"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$85.09",
+        "current": "$86.03",
         "changes": {
-          "d": -5.58,
-          "w": -3.7,
-          "m": 18.51,
-          "h6": 20.37
+          "d": -4.54,
+          "w": -2.64,
+          "m": 19.82,
+          "h6": 21.7
         },
-        "meaning": "半年 +20% 但近周转弱——顶部预警"
+        "meaning": "半年 +22% 但近周转弱——顶部预警"
       },
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.65",
+        "current": "6.62",
         "changes": {
-          "d": 3.32,
-          "w": 4.9,
-          "m": 8.75,
-          "h6": 12.76
+          "d": 2.87,
+          "w": 4.45,
+          "m": 8.28,
+          "h6": 12.28
         },
-        "meaning": "半年 +13% 的上升趋势中, 近月 +9% 仍在加速"
+        "meaning": "半年 +12% 的上升趋势中, 近月 +8% 仍在加速"
       },
       {
         "name": "美元指数",
@@ -942,12 +942,12 @@ const DATA = {
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "157.80",
+        "current": "157.86",
         "changes": {
-          "d": 0.14,
-          "w": -3.65,
-          "m": -2.26,
-          "h6": 0.35
+          "d": 0.18,
+          "w": -3.61,
+          "m": -2.23,
+          "h6": 0.39
         },
         "meaning": "半年 +0% 但近月 -2% 回调——趋势内修正"
       },
@@ -1051,29 +1051,29 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,124.40",
-        "change": "+1.86%",
+        "price": "$4,103.60",
+        "change": "+1.35%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$80.92",
-        "change": "-4.43%",
+        "price": "$82.17",
+        "change": "-2.95%",
         "dir": "down"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$85.09",
-        "change": "-5.58%",
+        "price": "$86.03",
+        "change": "-4.54%",
         "dir": "down"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.65",
-        "change": "+3.32%",
+        "price": "6.62",
+        "change": "+2.87%",
         "dir": "up"
       },
       {
@@ -1086,8 +1086,8 @@ const DATA = {
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "157.80",
-        "change": "+0.14%",
+        "price": "157.86",
+        "change": "+0.18%",
         "dir": "up"
       },
       {
@@ -1254,7 +1254,7 @@ const DATA = {
           84.46,
           83.59,
           84.67,
-          80.92
+          82.17
         ],
         "Gold": [
           4181.8999,
@@ -1286,7 +1286,7 @@ const DATA = {
           4034.7,
           4100.1001,
           4049.1001,
-          4124.3999
+          4103.6001
         ],
         "Copper": [
           6.3565,
@@ -1318,7 +1318,7 @@ const DATA = {
           6.2735,
           6.4445,
           6.436,
-          6.6495
+          6.621
         ],
         "BTC": [
           63577.07,
@@ -1481,7 +1481,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.42 / 油股 -0.35"
     },
-    "analystView": "利率驱动的条件性重定价: 纳斯达克 (+0.52%) 与长债 (TLT -1.20%) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 (+1.22%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (15.71) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "利率驱动的条件性重定价: 纳斯达克 (+0.52%) 与长债 (TLT -1.20%) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 (+0.71%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (15.82) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -1491,12 +1491,12 @@ const DATA = {
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 股市抛压自我强化",
-        "status": "距离 4.3"
+        "status": "距离 4.2"
       },
       {
         "trigger": "WTI 突破 <span class=\"watch-threshold\">$90</span>",
         "implication": "能源冲击确认, 通胀预期与利率进一步上行",
-        "status": "距离 9.1"
+        "status": "距离 7.8"
       }
     ],
     "usIndicesChart": {
@@ -6023,7 +6023,7 @@ const DATA = {
           "name": "风险传导",
           "score": 3.0,
           "weight": "20%",
-          "note": "VIX 15.71, HY OAS 2.84%"
+          "note": "VIX 15.82, HY OAS 2.84%"
         }
       ],
       "confirmationConditions": [
@@ -6053,7 +6053,7 @@ const DATA = {
         },
         {
           "name": "VIX 升至 20 上方",
-          "current": "15.71",
+          "current": "15.82",
           "status": "接近触发",
           "triggered": false
         }
@@ -7188,7 +7188,7 @@ const DATA = {
         "status": "关键事件"
       }
     ],
-    "generatedAt": "2026-08-04 08:21",
+    "generatedAt": "2026-08-04 09:41",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -8233,16 +8233,16 @@ const DATA = {
       "label": "波动率分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "当前处于压力区的资产: OVX 原油。VIX 15.71, OVX 63.04, MOVE 70.88。波动率分化形态反映压力是否从单一资产外溢。"
+      "description": "当前处于压力区的资产: OVX 原油。VIX 15.82, OVX 63.04, MOVE 70.88。波动率分化形态反映压力是否从单一资产外溢。"
     },
     "keySignals": [
       {
-        "title": "OVX 63.04 vs VIX 15.71 剪刀差 47.3pt",
+        "title": "OVX 63.04 vs VIX 15.82 剪刀差 47.2pt",
         "meaning": "油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。",
         "direction": "bearish"
       },
       {
-        "title": "VIX 15.71, 周 -3pt",
+        "title": "VIX 15.82, 周 -2.9pt",
         "meaning": "站上20将触发波动率目标基金被动减仓, 抛压自我强化。",
         "direction": "mixed"
       },
@@ -8255,18 +8255,18 @@ const DATA = {
     "metrics": [
       {
         "label": "VIX (股票)",
-        "value": "15.71",
-        "change": "-0.28",
+        "value": "15.82",
+        "change": "-0.17",
         "dir": "down",
         "tag": "VIX",
-        "percentile": 19,
+        "percentile": 22,
         "signal": "mixed",
         "meaning": "20是系统性风险确认线",
         "changes": {
-          "d": "-0.28",
-          "w": "-2.96",
-          "m": "-0.44",
-          "h6": "-0.63"
+          "d": "-0.17",
+          "w": "-2.85",
+          "m": "-0.33",
+          "h6": "-0.52"
         },
         "sparkline": [
           17.28,
@@ -8298,7 +8298,7 @@ const DATA = {
           20.66,
           17.09,
           15.99,
-          15.71
+          15.82
         ]
       },
       {
@@ -8546,12 +8546,12 @@ const DATA = {
       {
         "name": "VIX 股票波动率",
         "unit": "pt",
-        "current": "15.71",
+        "current": "15.82",
         "changes": {
-          "d": -0.28,
-          "w": -2.96,
-          "m": -0.44,
-          "h6": -0.63
+          "d": -0.17,
+          "w": -2.85,
+          "m": -0.33,
+          "h6": -0.52
         },
         "meaning": "四尺度方向即风险偏好的温度计"
       },
@@ -8788,7 +8788,7 @@ const DATA = {
           -24.7,
           -37.7,
           -41.7,
-          -42.7
+          -42.3
         ],
         "VVIX": [
           0.0,
@@ -9076,7 +9076,7 @@ const DATA = {
       ],
       "values": [
         16.9,
-        15.7,
+        15.8,
         20.5
       ],
       "state": "Contango(升水)"
@@ -9091,7 +9091,7 @@ const DATA = {
         "SKEW"
       ],
       "current": [
-        15.7,
+        15.8,
         70.9,
         63.0,
         23.3,
@@ -9099,7 +9099,7 @@ const DATA = {
         141.2
       ],
       "pctRank30d": [
-        19,
+        22,
         42,
         73,
         31,
@@ -9122,12 +9122,12 @@ const DATA = {
         120,
         150
       ],
-      "note": "OVX-VIX剪刀差 47.3pt · 压力区: OVX 原油"
+      "note": "OVX-VIX剪刀差 47.2pt · 压力区: OVX 原油"
     },
     "regimeTable": [
       {
         "indicator": "VIX 股票",
-        "value": "15.71",
+        "value": "15.82",
         "current": "中性",
         "range": "<15 低 / 15-20 中 / 20+ 警戒",
         "note": "系统性风险确认线=20"
@@ -9168,12 +9168,12 @@ const DATA = {
         "note": "尾部保护定价"
       }
     ],
-    "analystView": "波动率分化: 压力集中在 OVX 原油; VIX 15.71 距20确认线 4.3pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 141.2 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
+    "analystView": "波动率分化: 压力集中在 OVX 原油; VIX 15.82 距20确认线 4.2pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 141.2 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
     "whatToWatch": [
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 抛压自我强化",
-        "status": "距离 4.3"
+        "status": "距离 4.2"
       },
       {
         "trigger": "VIX期限结构转为 <span class=\"watch-threshold\">倒挂</span>",
@@ -9190,7 +9190,7 @@ const DATA = {
       "volNote": "四条曲线累计涨跌(起点=0%) · 形状真实, 便于比较相对变化",
       "tsNote": "VIX期限结构: Contango(升水) · 9D/1M/3M 真实读数",
       "dashNote": "压力区: OVX 原油 —— 冲击源头定位",
-      "trendNote": "VIX周Δ-3pt · OVX月Δ22.3pt · SKEW 141.2"
+      "trendNote": "VIX周Δ-2.9pt · OVX月Δ22.3pt · SKEW 141.2"
     }
   },
   "recession": {
@@ -9301,7 +9301,7 @@ const DATA = {
       },
       {
         "label": "波动率风险",
-        "score": 50.3,
+        "score": 50.6,
         "weight": 12,
         "status": "bearish",
         "color": "#e63946"
@@ -9332,9 +9332,9 @@ const DATA = {
   },
   "aiChain": {
     "meta": {
-      "asOf": "2026-08 种子版（含美股/A股/韩股；market 字段标注市场 US/A/KR，ccy 标注价格币种；市值统一换算为 USD $B 便于跨市场比较；策展估值/成长/毛利为估计值，请定期在 build_data 拉取真实财报后刷新；股价动量由 Yahoo 实时自动计算）",
+      "asOf": "2026-08 种子版（六层：应用/模型/基础设施/网络连接/芯片/能源；含美股/A股/韩股；market 标注市场、ccy 标注币种、市值统一 USD $B；策展财务/研报为估计值须随财报刷新；新增 cycle 资本开支周期叙事层，其中 capex 为公开指引估计值，非精确财报）",
       "disclaimer": "股价、日/周/月/半年动量由 Yahoo Finance 自动拉取；估值(P/E、PEG)、营收增速、毛利率、FCF 利润率、ROE、AI 卡位、研报共识为分析师策展种子值(标记 est=true)，需随财报/研报更新。本板块不构成投资建议。",
-      "note": "五层=黄仁勋AI蛋糕: 应用→模型→基础设施→芯片→能源; 股价动量自动(Yahoo), 基本面/研报为策展种子值"
+      "note": "六层(黄仁勋五层蛋糕+网络连接层): 应用→模型→基础设施→网络连接→芯片→能源; 股价动量自动(Yahoo), 基本面/研报/周期叙事为策展种子值(其中 cycle.capex 为公开指引估计)"
     },
     "layers": [
       {
@@ -9350,55 +9350,6 @@ const DATA = {
           "数据云 + AI"
         ],
         "companies": [
-          {
-            "ticker": "PLTR",
-            "name": "Palantir",
-            "key": "pltr",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "决策智能 / AI 作战平台",
-            "productDir": "AIP 平台、Foundry、政府 + 商业决策",
-            "price": 123.05999755859375,
-            "ch": {
-              "d": 0.8,
-              "w": 0.14,
-              "m": -2.67,
-              "h6": -28.8
-            },
-            "scores": {
-              "momentum": 39.013,
-              "valuation": 22,
-              "growth": 89.0,
-              "quality": 56,
-              "aiExposure": 90,
-              "research": 64.0,
-              "fundamental": 74,
-              "aiValue": 53
-            },
-            "tags": [],
-            "marketCap": 360,
-            "pe": 200,
-            "fwdPe": 120,
-            "peg": 5.0,
-            "revGrowth": 40,
-            "grossMargin": 81,
-            "fcfMargin": 28,
-            "roe": 18,
-            "research": {
-              "consensus": "分歧大",
-              "ratingScore": 3.2,
-              "reports": 35,
-              "summary": "商业客户加速是最强叙事，但估值极度透支，机构分歧显著。",
-              "sources": [
-                {
-                  "title": "Palantir Investor",
-                  "url": "https://www.palantir.com/investors/"
-                }
-              ]
-            },
-            "notes": "高成长高分歧标的，价值分受估值拖累明显。",
-            "est": true
-          },
           {
             "ticker": "NOW",
             "name": "ServiceNow",
@@ -9416,13 +9367,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 58.217000000000006,
-              "valuation": 35,
-              "growth": 69.2,
+              "valuation": 28,
+              "growth": 64,
               "quality": 62,
-              "aiExposure": 72,
-              "research": 84.00000000000001,
-              "fundamental": 69,
-              "aiValue": 52
+              "aiExposure": 47,
+              "research": 74,
+              "fundamental": 61,
+              "aiValue": 46,
+              "lp_valuation": 17,
+              "lp_fundamental": 50,
+              "lp_momentum": 33,
+              "lp_aiValue": 100
             },
             "tags": [],
             "marketCap": 230,
@@ -9446,209 +9401,84 @@ const DATA = {
               ]
             },
             "notes": "质量高但贵，动量回撤时是更好的买点。",
-            "est": true
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 72,
+            "layerPct": 100
           },
           {
-            "ticker": "CRM",
-            "name": "Salesforce",
-            "key": "crm",
+            "ticker": "PLTR",
+            "name": "Palantir",
+            "key": "pltr",
             "market": "US",
             "ccy": "USD",
-            "techRoute": "CRM + 自主 Agent",
-            "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
-            "price": 184.02000427246094,
+            "techRoute": "决策智能 / AI 作战平台",
+            "productDir": "AIP 平台、Foundry、政府 + 商业决策",
+            "price": 123.05999755859375,
             "ch": {
-              "d": 3.31,
-              "w": 20.36,
-              "m": 20.79,
-              "h6": -30.06
+              "d": 0.8,
+              "w": 0.14,
+              "m": -2.67,
+              "h6": -28.8
             },
             "scores": {
-              "momentum": 67.83699999999999,
-              "valuation": 48,
-              "growth": 57.1,
-              "quality": 54,
-              "aiExposure": 70,
-              "research": 76.0,
-              "fundamental": 61,
-              "aiValue": 51
+              "momentum": 39.013,
+              "valuation": 20,
+              "growth": 76,
+              "quality": 56,
+              "aiExposure": 88,
+              "research": 60,
+              "fundamental": 69,
+              "aiValue": 42,
+              "lp_valuation": 0,
+              "lp_fundamental": 100,
+              "lp_momentum": 0,
+              "lp_aiValue": 83
             },
             "tags": [
-              "领跑"
+              "下行趋势"
             ],
-            "marketCap": 320,
-            "pe": 28,
-            "fwdPe": 24,
-            "peg": 1.8,
-            "revGrowth": 11,
-            "grossMargin": 76,
-            "fcfMargin": 31,
-            "roe": 12,
+            "marketCap": 360,
+            "pe": 200,
+            "fwdPe": 120,
+            "peg": 5.0,
+            "revGrowth": 40,
+            "grossMargin": 81,
+            "fcfMargin": 28,
+            "roe": 18,
             "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.8,
-              "reports": 30,
-              "summary": "Agentforce 是下一增长曲线，但企业 Agent 落地节奏与提价能力待验证。",
+              "consensus": "分歧大",
+              "ratingScore": 3.2,
+              "reports": 35,
+              "summary": "商业客户加速是最强叙事，但估值极度透支，机构分歧显著。",
               "sources": [
                 {
-                  "title": "Salesforce Investor",
-                  "url": "https://www.salesforce.com/company/investor/"
+                  "title": "Palantir Investor",
+                  "url": "https://www.palantir.com/investors/"
                 }
               ]
             },
-            "notes": "估值相对巨头更温和，Agent 主题弹性大。",
-            "est": true
-          },
-          {
-            "ticker": "ADBE",
-            "name": "Adobe",
-            "key": "adbe",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "创意生成式 AI",
-            "productDir": "Firefly、Photoshop Express、GenStudio",
-            "price": 250.41000366210938,
-            "ch": {
-              "d": 2.51,
-              "w": 25.3,
-              "m": 39.43,
-              "h6": -41.24
-            },
-            "scores": {
-              "momentum": 83.235,
-              "valuation": 48,
-              "growth": 57.1,
-              "quality": 75,
-              "aiExposure": 60,
-              "research": 78.0,
-              "fundamental": 67,
-              "aiValue": 50
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 220,
-            "pe": 26,
-            "fwdPe": 23,
-            "peg": 1.6,
-            "revGrowth": 11,
-            "grossMargin": 89,
-            "fcfMargin": 38,
-            "roe": 40,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.9,
-              "reports": 26,
-              "summary": "Firefly 守住创意护城河，估值合理，是被低估的 AI 应用标的候选。",
-              "sources": [
-                {
-                  "title": "Adobe Investor",
-                  "url": "https://www.adobe.com/investor-relations.html"
-                }
-              ]
-            },
-            "notes": "估值温和 + 高毛利，价值挖掘重点关注对象。",
-            "est": true
-          },
-          {
-            "ticker": "002230.SZ",
-            "name": "科大讯飞",
-            "key": "iflytek",
-            "market": "A",
-            "ccy": "CNY",
-            "techRoute": "认知大模型 + 行业应用",
-            "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-            "price": 43.4900016784668,
-            "ch": {
-              "d": 0.68,
-              "w": 3.68,
-              "m": 2.84,
-              "h6": -15.26
-            },
-            "scores": {
-              "momentum": 49.45,
-              "valuation": 35,
-              "growth": 67.0,
-              "quality": 23,
-              "aiExposure": 72,
-              "research": 74.0,
-              "fundamental": 54,
-              "aiValue": 47
-            },
-            "tags": [],
-            "marketCap": 15,
-            "pe": 65,
-            "fwdPe": 50,
-            "peg": 2.5,
-            "revGrowth": 20,
-            "grossMargin": 42,
-            "fcfMargin": 6,
-            "roe": 8,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.7,
-              "reports": 26,
-              "summary": "星火大模型落地教育/办公, 商业化兑现节奏是关键。",
-              "sources": [
-                {
-                  "title": "科大讯飞投资者关系",
-                  "url": "https://www.iflytek.com"
-                }
-              ]
-            },
-            "notes": "A股大模型应用代表。",
-            "est": true
-          },
-          {
-            "ticker": "MSFT",
-            "name": "微软",
-            "key": "msft",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "企业级 AI 助手 (Copilot)",
-            "productDir": "Microsoft 365 Copilot、Azure OpenAI、GitHub Copilot、Copilot Studio",
-            "price": 464.7200012207031,
-            "ch": {
-              "d": 13.62,
-              "w": 83.02,
-              "m": 80.44,
-              "h6": 31.22
-            },
-            "scores": {
-              "momentum": 100,
-              "valuation": 35,
-              "growth": 61.5,
-              "quality": 64,
-              "aiExposure": 85,
-              "research": 88.00000000000001,
-              "fundamental": 71,
-              "aiValue": 44
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 3400,
-            "pe": 36,
-            "fwdPe": 30,
-            "peg": 2.1,
-            "revGrowth": 15,
-            "grossMargin": 70,
-            "fcfMargin": 33,
-            "roe": 38,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.4,
-              "reports": 42,
-              "summary": "Copilot 渗透率与 Azure AI 收入是核心催化；OpenAI 深度绑定但估值已含乐观预期。",
-              "sources": [
-                {
-                  "title": "Microsoft Investor Relations",
-                  "url": "https://www.microsoft.com/en-us/investor"
-                }
-              ]
-            },
-            "notes": "AI 变现最清晰的巨头之一，但PEG偏高，需看 Copilot 续费率。",
-            "est": true
+            "notes": "高成长高分歧标的，价值分受估值拖累明显。",
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 55,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 90,
+            "aiRevGrowth": 60,
+            "pricingPower": 85,
+            "peHist5y": 240,
+            "layerPct": 83
           },
           {
             "ticker": "SNOW",
@@ -9668,12 +9498,16 @@ const DATA = {
             "scores": {
               "momentum": 100,
               "valuation": 48,
-              "growth": 75.80000000000001,
+              "growth": 68,
               "quality": 42,
-              "aiExposure": 65,
-              "research": 70.0,
-              "fundamental": 61,
-              "aiValue": 44
+              "aiExposure": 47,
+              "research": 64,
+              "fundamental": 54,
+              "aiValue": 41,
+              "lp_valuation": 100,
+              "lp_fundamental": 17,
+              "lp_momentum": 83,
+              "lp_aiValue": 67
             },
             "tags": [
               "领跑"
@@ -9699,25 +9533,303 @@ const DATA = {
               ]
             },
             "notes": "成长修复逻辑，盈利前波动大。",
-            "est": true
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 84,
+            "layerPct": 67
+          },
+          {
+            "ticker": "MSFT",
+            "name": "微软",
+            "key": "msft",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "企业级 AI 助手 (Copilot)",
+            "productDir": "Microsoft 365 Copilot、Azure OpenAI、GitHub Copilot、Copilot Studio",
+            "price": 464.7200012207031,
+            "ch": {
+              "d": 13.62,
+              "w": 83.02,
+              "m": 80.44,
+              "h6": 31.22
+            },
+            "scores": {
+              "momentum": 100,
+              "valuation": 28,
+              "growth": 59,
+              "quality": 64,
+              "aiExposure": 47,
+              "research": 77,
+              "fundamental": 61,
+              "aiValue": 37,
+              "lp_valuation": 17,
+              "lp_fundamental": 50,
+              "lp_momentum": 83,
+              "lp_aiValue": 50
+            },
+            "tags": [
+              "高估值",
+              "领跑"
+            ],
+            "marketCap": 3400,
+            "pe": 36,
+            "fwdPe": 30,
+            "peg": 2.1,
+            "revGrowth": 15,
+            "grossMargin": 70,
+            "fcfMargin": 33,
+            "roe": 38,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.4,
+              "reports": 42,
+              "summary": "Copilot 渗透率与 Azure AI 收入是核心催化；OpenAI 深度绑定但估值已含乐观预期。",
+              "sources": [
+                {
+                  "title": "Microsoft Investor Relations",
+                  "url": "https://www.microsoft.com/en-us/investor"
+                }
+              ]
+            },
+            "notes": "AI 变现最清晰的巨头之一，但PEG偏高，需看 Copilot 续费率。",
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 43,
+            "layerPct": 50
+          },
+          {
+            "ticker": "CRM",
+            "name": "Salesforce",
+            "key": "crm",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "CRM + 自主 Agent",
+            "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
+            "price": 184.02000427246094,
+            "ch": {
+              "d": 3.31,
+              "w": 20.36,
+              "m": 20.79,
+              "h6": -30.06
+            },
+            "scores": {
+              "momentum": 67.83699999999999,
+              "valuation": 36,
+              "growth": 57,
+              "quality": 54,
+              "aiExposure": 47,
+              "research": 68,
+              "fundamental": 56,
+              "aiValue": 36,
+              "lp_valuation": 83,
+              "lp_fundamental": 33,
+              "lp_momentum": 50,
+              "lp_aiValue": 17
+            },
+            "tags": [
+              "领跑",
+              "下行趋势"
+            ],
+            "marketCap": 320,
+            "pe": 28,
+            "fwdPe": 24,
+            "peg": 1.8,
+            "revGrowth": 11,
+            "grossMargin": 76,
+            "fcfMargin": 31,
+            "roe": 12,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.8,
+              "reports": 30,
+              "summary": "Agentforce 是下一增长曲线，但企业 Agent 落地节奏与提价能力待验证。",
+              "sources": [
+                {
+                  "title": "Salesforce Investor",
+                  "url": "https://www.salesforce.com/company/investor/"
+                }
+              ]
+            },
+            "notes": "估值相对巨头更温和，Agent 主题弹性大。",
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 34,
+            "layerPct": 17
+          },
+          {
+            "ticker": "ADBE",
+            "name": "Adobe",
+            "key": "adbe",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "创意生成式 AI",
+            "productDir": "Firefly、Photoshop Express、GenStudio",
+            "price": 250.41000366210938,
+            "ch": {
+              "d": 2.51,
+              "w": 25.3,
+              "m": 39.43,
+              "h6": -41.24
+            },
+            "scores": {
+              "momentum": 83.235,
+              "valuation": 35,
+              "growth": 57,
+              "quality": 75,
+              "aiExposure": 47,
+              "research": 70,
+              "fundamental": 63,
+              "aiValue": 36,
+              "lp_valuation": 67,
+              "lp_fundamental": 83,
+              "lp_momentum": 67,
+              "lp_aiValue": 17
+            },
+            "tags": [
+              "领跑",
+              "下行趋势"
+            ],
+            "marketCap": 220,
+            "pe": 26,
+            "fwdPe": 23,
+            "peg": 1.6,
+            "revGrowth": 11,
+            "grossMargin": 89,
+            "fcfMargin": 38,
+            "roe": 40,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 26,
+              "summary": "Firefly 守住创意护城河，估值合理，是被低估的 AI 应用标的候选。",
+              "sources": [
+                {
+                  "title": "Adobe Investor",
+                  "url": "https://www.adobe.com/investor-relations.html"
+                }
+              ]
+            },
+            "notes": "估值温和 + 高毛利，价值挖掘重点关注对象。",
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 31,
+            "layerPct": 17
+          },
+          {
+            "ticker": "002230.SZ",
+            "name": "科大讯飞",
+            "key": "iflytek",
+            "market": "A",
+            "ccy": "CNY",
+            "techRoute": "认知大模型 + 行业应用",
+            "productDir": "星火大模型、教育/办公/医疗 AI 应用",
+            "price": 43.4900016784668,
+            "ch": {
+              "d": 0.68,
+              "w": 3.68,
+              "m": 2.84,
+              "h6": -15.26
+            },
+            "scores": {
+              "momentum": 49.45,
+              "valuation": 28,
+              "growth": 63,
+              "quality": 23,
+              "aiExposure": 47,
+              "research": 67,
+              "fundamental": 46,
+              "aiValue": 33,
+              "lp_valuation": 17,
+              "lp_fundamental": 0,
+              "lp_momentum": 17,
+              "lp_aiValue": 0
+            },
+            "tags": [
+              "下行趋势"
+            ],
+            "marketCap": 15,
+            "pe": 65,
+            "fwdPe": 50,
+            "peg": 2.5,
+            "revGrowth": 20,
+            "grossMargin": 42,
+            "fcfMargin": 6,
+            "roe": 8,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.7,
+              "reports": 26,
+              "summary": "星火大模型落地教育/办公, 商业化兑现节奏是关键。",
+              "sources": [
+                {
+                  "title": "科大讯飞投资者关系",
+                  "url": "https://www.iflytek.com"
+                }
+              ]
+            },
+            "notes": "A股大模型应用代表。",
+            "est": true,
+            "epsRevision": 2,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 78,
+            "layerPct": 0
           }
         ],
         "comparison": {
           "leaders": {
             "US": {
-              "ticker": "PLTR",
-              "name": "Palantir",
-              "aiValue": 53,
+              "ticker": "NOW",
+              "name": "ServiceNow",
+              "aiValue": 46,
               "count": 6
             },
             "A": {
               "ticker": "002230.SZ",
               "name": "科大讯飞",
-              "aiValue": 47,
+              "aiValue": 33,
               "count": 1
             }
           },
-          "crossMarketBest": "PLTR",
+          "crossMarketBest": "NOW",
           "marketCounts": {
             "US": 6,
             "A": 1
@@ -9725,11 +9837,11 @@ const DATA = {
         },
         "stats": {
           "count": 7,
-          "avgFundamental": 65,
-          "avgValuation": 39,
+          "avgFundamental": 59,
+          "avgValuation": 32,
           "avgMomentum": 71,
-          "avgAiValue": 49,
-          "topPick": "PLTR",
+          "avgAiValue": 39,
+          "topPick": "NOW",
           "valuePicks": []
         }
       },
@@ -9761,16 +9873,20 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 62,
-              "growth": 68.1,
+              "valuation": 46,
+              "growth": 75,
               "quality": 68,
               "aiExposure": 82,
-              "research": 86.0,
+              "research": 78,
               "fundamental": 74,
-              "aiValue": 75
+              "aiValue": 61,
+              "lp_valuation": 50,
+              "lp_fundamental": 100,
+              "lp_momentum": 0,
+              "lp_aiValue": 100
             },
             "tags": [
-              "价值股候选"
+              "下行趋势"
             ],
             "marketCap": 1900,
             "pe": 28,
@@ -9793,7 +9909,18 @@ const DATA = {
               ]
             },
             "notes": "开源模型战略独特，广告变现闭环强。",
-            "est": true
+            "est": true,
+            "epsRevision": 12,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 45,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 50,
+            "pricingPower": 80,
+            "peHist5y": 36,
+            "layerPct": 100
           },
           {
             "ticker": "GOOGL",
@@ -9812,13 +9939,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 65.348,
-              "valuation": 62,
-              "growth": 60.400000000000006,
+              "valuation": 46,
+              "growth": 71,
               "quality": 53,
-              "aiExposure": 88,
-              "research": 86.0,
-              "fundamental": 67,
-              "aiValue": 59
+              "aiExposure": 82,
+              "research": 78,
+              "fundamental": 68,
+              "aiValue": 54,
+              "lp_valuation": 50,
+              "lp_fundamental": 50,
+              "lp_momentum": 50,
+              "lp_aiValue": 50
             },
             "tags": [
               "领跑"
@@ -9844,7 +9975,18 @@ const DATA = {
               ]
             },
             "notes": "模型 + 应用 + 云三位一体，价值分靠前。",
-            "est": true
+            "est": true,
+            "epsRevision": 12,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 45,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 50,
+            "pricingPower": 80,
+            "peHist5y": 31,
+            "layerPct": 50
           },
           {
             "ticker": "AMZN",
@@ -9863,13 +10005,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 100,
-              "valuation": 48,
-              "growth": 59.3,
+              "valuation": 38,
+              "growth": 70,
               "quality": 34,
-              "aiExposure": 75,
-              "research": 84.00000000000001,
-              "fundamental": 57,
-              "aiValue": 42
+              "aiExposure": 82,
+              "research": 77,
+              "fundamental": 61,
+              "aiValue": 41,
+              "lp_valuation": 0,
+              "lp_fundamental": 0,
+              "lp_momentum": 100,
+              "lp_aiValue": 0
             },
             "tags": [
               "领跑"
@@ -9895,7 +10041,18 @@ const DATA = {
               ]
             },
             "notes": "云与模型入口俱全，估值受零售拖累偏低。",
-            "est": true
+            "est": true,
+            "epsRevision": 12,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 45,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 50,
+            "pricingPower": 80,
+            "peHist5y": 57,
+            "layerPct": 0
           }
         ],
         "comparison": {
@@ -9903,7 +10060,7 @@ const DATA = {
             "US": {
               "ticker": "META",
               "name": "Meta",
-              "aiValue": 75,
+              "aiValue": 61,
               "count": 3
             }
           },
@@ -9914,14 +10071,12 @@ const DATA = {
         },
         "stats": {
           "count": 3,
-          "avgFundamental": 66,
-          "avgValuation": 57,
+          "avgFundamental": 68,
+          "avgValuation": 43,
           "avgMomentum": 55,
-          "avgAiValue": 59,
+          "avgAiValue": 52,
           "topPick": "META",
-          "valuePicks": [
-            "META"
-          ]
+          "valuePicks": []
         }
       },
       {
@@ -9937,57 +10092,6 @@ const DATA = {
           "AI 服务器"
         ],
         "companies": [
-          {
-            "ticker": "CRWV",
-            "name": "CoreWeave",
-            "key": "crwv",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "GPU 专用云",
-            "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
-            "price": 71.7699966430664,
-            "ch": {
-              "d": -2.13,
-              "w": -0.11,
-              "m": -13.92,
-              "h6": -27.76
-            },
-            "scores": {
-              "momentum": 29.100000000000005,
-              "valuation": 62,
-              "growth": 100,
-              "quality": 36,
-              "aiExposure": 95,
-              "research": 65.99999999999999,
-              "fundamental": 72,
-              "aiValue": 68
-            },
-            "tags": [
-              "价值股候选"
-            ],
-            "marketCap": 90,
-            "pe": 0,
-            "fwdPe": 35,
-            "peg": 1.5,
-            "revGrowth": 100,
-            "grossMargin": 60,
-            "fcfMargin": 5,
-            "roe": 25,
-            "research": {
-              "consensus": "分歧大",
-              "ratingScore": 3.3,
-              "reports": 20,
-              "summary": "纯 AI 算力租赁龙头，增速惊人但客户集中(微软/OpenAI)与债务是风险。",
-              "sources": [
-                {
-                  "title": "CoreWeave Investor",
-                  "url": "https://www.coreweave.com/"
-                }
-              ]
-            },
-            "notes": "高 beta 纯算力标的，波动极大。",
-            "est": true
-          },
           {
             "ticker": "VRT",
             "name": "Vertiv",
@@ -10005,13 +10109,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 48,
-              "growth": 64.8,
+              "valuation": 40,
+              "growth": 68,
               "quality": 41,
-              "aiExposure": 75,
-              "research": 80.0,
-              "fundamental": 61,
-              "aiValue": 64
+              "aiExposure": 66,
+              "research": 73,
+              "fundamental": 59,
+              "aiValue": 61,
+              "lp_valuation": 0,
+              "lp_fundamental": 67,
+              "lp_momentum": 0,
+              "lp_aiValue": 100
             },
             "tags": [],
             "marketCap": 55,
@@ -10035,107 +10143,84 @@ const DATA = {
               ]
             },
             "notes": "散热赛道稀缺标的，受益于功率密度提升。",
-            "est": true
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 56,
+            "layerPct": 100
           },
           {
-            "ticker": "ORCL",
-            "name": "Oracle",
-            "key": "orcl",
+            "ticker": "CRWV",
+            "name": "CoreWeave",
+            "key": "crwv",
             "market": "US",
             "ccy": "USD",
-            "techRoute": "AI 云基础设施 (OCI)",
-            "productDir": "Oracle Cloud Infrastructure、AI 超级集群 (ZEUS)、多云",
-            "price": 129.8699951171875,
+            "techRoute": "GPU 专用云",
+            "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
+            "price": 71.7699966430664,
             "ch": {
-              "d": 2.31,
-              "w": 14.88,
-              "m": -12.63,
-              "h6": -39.14
+              "d": -2.13,
+              "w": -0.11,
+              "m": -13.92,
+              "h6": -27.76
             },
             "scores": {
-              "momentum": 32.842999999999996,
-              "valuation": 48,
-              "growth": 67.0,
-              "quality": 68,
-              "aiExposure": 78,
-              "research": 82.0,
-              "fundamental": 72,
-              "aiValue": 63
-            },
-            "tags": [],
-            "marketCap": 480,
-            "pe": 38,
-            "fwdPe": 28,
-            "peg": 1.7,
-            "revGrowth": 20,
-            "grossMargin": 72,
-            "fcfMargin": 25,
-            "roe": 60,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.1,
-              "reports": 30,
-              "summary": "OCI 拿下多家 AI 训练大单，剩余履约义务(RPO)高增，重估进行中。",
-              "sources": [
-                {
-                  "title": "Oracle Investor",
-                  "url": "https://www.oracle.com/investors/"
-                }
-              ]
-            },
-            "notes": "云重估逻辑强，但高负债需关注。",
-            "est": true
-          },
-          {
-            "ticker": "300502.SZ",
-            "name": "新易盛",
-            "key": "xys",
-            "market": "A",
-            "ccy": "CNY",
-            "techRoute": "光模块 (800G)",
-            "productDir": "800G 光模块、相干光模块",
-            "price": 448.0,
-            "ch": {
-              "d": 53.92,
-              "w": 41.1,
-              "m": -58.89,
-              "h6": 174.41
-            },
-            "scores": {
-              "momentum": 65.762,
+              "momentum": 29.100000000000005,
               "valuation": 62,
-              "growth": 100,
-              "quality": 45,
-              "aiExposure": 90,
-              "research": 82.0,
-              "fundamental": 76,
-              "aiValue": 63
+              "growth": 90,
+              "quality": 36,
+              "aiExposure": 66,
+              "research": 63,
+              "fundamental": 62,
+              "aiValue": 56,
+              "lp_valuation": 100,
+              "lp_fundamental": 83,
+              "lp_momentum": 17,
+              "lp_aiValue": 83
             },
             "tags": [
-              "领跑"
+              "下行趋势"
             ],
-            "marketCap": 12,
-            "pe": 35,
-            "fwdPe": 28,
-            "peg": 1.3,
-            "revGrowth": 60,
-            "grossMargin": 42,
-            "fcfMargin": 22,
-            "roe": 35,
+            "marketCap": 90,
+            "pe": 0,
+            "fwdPe": 35,
+            "peg": 1.5,
+            "revGrowth": 100,
+            "grossMargin": 60,
+            "fcfMargin": 5,
+            "roe": 25,
             "research": {
-              "consensus": "增持",
-              "ratingScore": 4.1,
-              "reports": 22,
-              "summary": "新易盛 800G 份额提升, 净利率行业领先; 估值随业绩上修。",
+              "consensus": "分歧大",
+              "ratingScore": 3.3,
+              "reports": 20,
+              "summary": "纯 AI 算力租赁龙头，增速惊人但客户集中(微软/OpenAI)与债务是风险。",
               "sources": [
                 {
-                  "title": "新易盛投资者关系",
-                  "url": "https://www.eoptolink.com"
+                  "title": "CoreWeave Investor",
+                  "url": "https://www.coreweave.com/"
                 }
               ]
             },
-            "notes": "高毛利光模块弹性标的。",
-            "est": true
+            "notes": "高 beta 纯算力标的，波动极大。",
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 49,
+            "layerPct": 83
           },
           {
             "ticker": "002463.SZ",
@@ -10154,13 +10239,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 48.955,
-              "valuation": 62,
-              "growth": 78.0,
+              "valuation": 48,
+              "growth": 76,
               "quality": 30,
-              "aiExposure": 65,
-              "research": 78.0,
-              "fundamental": 59,
-              "aiValue": 58
+              "aiExposure": 66,
+              "research": 72,
+              "fundamental": 57,
+              "aiValue": 53,
+              "lp_valuation": 33,
+              "lp_fundamental": 50,
+              "lp_momentum": 67,
+              "lp_aiValue": 67
             },
             "tags": [],
             "marketCap": 14,
@@ -10184,58 +10273,84 @@ const DATA = {
               ]
             },
             "notes": "PCB 受益于算力硬件升级。",
-            "est": true
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 39,
+            "layerPct": 67
           },
           {
-            "ticker": "300308.SZ",
-            "name": "中际旭创",
-            "key": "zhongji",
-            "market": "A",
-            "ccy": "CNY",
-            "techRoute": "光模块 (800G/1.6T)",
-            "productDir": "800G/1.6T 光模块、硅光、LPO",
-            "price": 1021.989990234375,
+            "ticker": "ORCL",
+            "name": "Oracle",
+            "key": "orcl",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "AI 云基础设施 (OCI)",
+            "productDir": "Oracle Cloud Infrastructure、AI 超级集群 (ZEUS)、多云",
+            "price": 129.8699951171875,
             "ch": {
-              "d": 119.49,
-              "w": 113.99,
-              "m": -76.93,
-              "h6": 436.99
+              "d": 2.31,
+              "w": 14.88,
+              "m": -12.63,
+              "h6": -39.14
             },
             "scores": {
-              "momentum": 100,
-              "valuation": 62,
-              "growth": 100,
-              "quality": 37,
-              "aiExposure": 92,
-              "research": 84.00000000000001,
-              "fundamental": 74,
-              "aiValue": 55
+              "momentum": 32.842999999999996,
+              "valuation": 40,
+              "growth": 70,
+              "quality": 68,
+              "aiExposure": 66,
+              "research": 75,
+              "fundamental": 69,
+              "aiValue": 50,
+              "lp_valuation": 0,
+              "lp_fundamental": 100,
+              "lp_momentum": 33,
+              "lp_aiValue": 33
             },
             "tags": [
-              "领跑"
+              "下行趋势"
             ],
-            "marketCap": 15,
-            "pe": 32,
-            "fwdPe": 26,
-            "peg": 1.2,
-            "revGrowth": 55,
-            "grossMargin": 34,
-            "fcfMargin": 18,
-            "roe": 30,
+            "marketCap": 480,
+            "pe": 38,
+            "fwdPe": 28,
+            "peg": 1.7,
+            "revGrowth": 20,
+            "grossMargin": 72,
+            "fcfMargin": 25,
+            "roe": 60,
             "research": {
               "consensus": "增持",
-              "ratingScore": 4.2,
-              "reports": 28,
-              "summary": "全球光模块龙头, 800G/1.6T 出货随 AI 集群放量; 客户集中(北美云厂)是风险。",
+              "ratingScore": 4.1,
+              "reports": 30,
+              "summary": "OCI 拿下多家 AI 训练大单，剩余履约义务(RPO)高增，重估进行中。",
               "sources": [
                 {
-                  "title": "中际旭创投资者关系",
-                  "url": "https://www.zjxc.com"
+                  "title": "Oracle Investor",
+                  "url": "https://www.oracle.com/investors/"
                 }
               ]
             },
-            "notes": "光模块是 AI 算力瓶颈环节, A股核心标的。",
-            "est": true
+            "notes": "云重估逻辑强，但高负债需关注。",
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 53,
+            "layerPct": 33
           },
           {
             "ticker": "601138.SS",
@@ -10254,13 +10369,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 47.392,
-              "valuation": 62,
-              "growth": 72.5,
+              "valuation": 49,
+              "growth": 73,
               "quality": 13,
-              "aiExposure": 60,
-              "research": 76.0,
+              "aiExposure": 66,
+              "research": 70,
               "fundamental": 50,
-              "aiValue": 55
+              "aiValue": 50,
+              "lp_valuation": 83,
+              "lp_fundamental": 17,
+              "lp_momentum": 50,
+              "lp_aiValue": 33
             },
             "tags": [],
             "marketCap": 70,
@@ -10284,7 +10403,18 @@ const DATA = {
               ]
             },
             "notes": "AI 服务器硬科技, 估值低但毛利薄。",
-            "est": true
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 28,
+            "layerPct": 33
           },
           {
             "ticker": "000977.SZ",
@@ -10303,13 +10433,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 54.481,
-              "valuation": 62,
-              "growth": 61.5,
+              "valuation": 48,
+              "growth": 66,
               "quality": 11,
-              "aiExposure": 55,
-              "research": 70.0,
-              "fundamental": 44,
-              "aiValue": 51
+              "aiExposure": 66,
+              "research": 66,
+              "fundamental": 47,
+              "aiValue": 47,
+              "lp_valuation": 33,
+              "lp_fundamental": 0,
+              "lp_momentum": 83,
+              "lp_aiValue": 17
             },
             "tags": [],
             "marketCap": 11,
@@ -10333,58 +10467,18 @@ const DATA = {
               ]
             },
             "notes": "国产算力代表, 毛利承压。",
-            "est": true
-          },
-          {
-            "ticker": "ANET",
-            "name": "Arista",
-            "key": "anet",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "AI 数据中心网络",
-            "productDir": "800G / 1.6T 交换机、EOS、AI 后端网络",
-            "price": 180.35000610351562,
-            "ch": {
-              "d": 9.33,
-              "w": 6.36,
-              "m": 13.73,
-              "h6": 32.2
-            },
-            "scores": {
-              "momentum": 74.56099999999999,
-              "valuation": 35,
-              "growth": 72.5,
-              "quality": 57,
-              "aiExposure": 80,
-              "research": 80.0,
-              "fundamental": 70,
-              "aiValue": 49
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 150,
-            "pe": 48,
-            "fwdPe": 38,
-            "peg": 2.2,
-            "revGrowth": 25,
-            "grossMargin": 64,
-            "fcfMargin": 33,
-            "roe": 28,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.0,
-              "reports": 26,
-              "summary": "AI 集群网络升级刚需，以太网替代 InfiniBand 趋势受益者。",
-              "sources": [
-                {
-                  "title": "Arista Investor",
-                  "url": "https://www.arista.com/en/investor-relations"
-                }
-              ]
-            },
-            "notes": "网络是算力瓶颈环节，地位稳固。",
-            "est": true
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 36,
+            "layerPct": 17
           },
           {
             "ticker": "DELL",
@@ -10403,13 +10497,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 100,
-              "valuation": 62,
-              "growth": 58.2,
+              "valuation": 48,
+              "growth": 65,
               "quality": 38,
-              "aiExposure": 55,
-              "research": 74.0,
-              "fundamental": 53,
-              "aiValue": 46
+              "aiExposure": 66,
+              "research": 69,
+              "fundamental": 56,
+              "aiValue": 42,
+              "lp_valuation": 33,
+              "lp_fundamental": 33,
+              "lp_momentum": 100,
+              "lp_aiValue": 0
             },
             "tags": [
               "领跑"
@@ -10435,40 +10533,420 @@ const DATA = {
               ]
             },
             "notes": "估值低、硬件弹性大，价值挖掘候选。",
-            "est": true
+            "est": true,
+            "epsRevision": 8,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 25,
+            "layerPct": 0
           }
         ],
         "comparison": {
           "leaders": {
             "US": {
-              "ticker": "CRWV",
-              "name": "CoreWeave",
-              "aiValue": 68,
-              "count": 5
+              "ticker": "VRT",
+              "name": "Vertiv",
+              "aiValue": 61,
+              "count": 4
             },
             "A": {
-              "ticker": "300502.SZ",
-              "name": "新易盛",
-              "aiValue": 63,
-              "count": 5
+              "ticker": "002463.SZ",
+              "name": "沪电股份",
+              "aiValue": 53,
+              "count": 3
             }
           },
-          "crossMarketBest": "CRWV",
+          "crossMarketBest": "VRT",
           "marketCounts": {
-            "US": 5,
-            "A": 5
+            "US": 4,
+            "A": 3
           }
         },
         "stats": {
-          "count": 10,
+          "count": 7,
+          "avgFundamental": 57,
+          "avgValuation": 48,
+          "avgMomentum": 45,
+          "avgAiValue": 51,
+          "topPick": "VRT",
+          "valuePicks": []
+        }
+      },
+      {
+        "id": "network",
+        "name": "网络连接层",
+        "en": "Networking",
+        "desc": "AI 集群的'神经网络'：交换机、光模块/CPO、光互联器件。随着集群规模从万卡迈向十万卡，网络带宽与延迟成为算力释放的瓶颈，是 2025–2026 景气度最确定的环节之一。",
+        "techRoutes": [
+          "800G/1.6T 交换机",
+          "光模块 / CPO",
+          "硅光与 LPO",
+          "光互联器件"
+        ],
+        "companies": [
+          {
+            "ticker": "COHR",
+            "name": "Coherent",
+            "key": "cohr",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "光互联器件",
+            "productDir": "激光器、光器件、800G/1.6T 光模块",
+            "price": 262.8900146484375,
+            "ch": {
+              "d": 13.83,
+              "w": -19.5,
+              "m": -105.76,
+              "h6": 47.03
+            },
+            "scores": {
+              "momentum": 0,
+              "valuation": 48,
+              "growth": 69,
+              "quality": 20,
+              "aiExposure": 78,
+              "research": 69,
+              "fundamental": 54,
+              "aiValue": 61,
+              "lp_valuation": 25,
+              "lp_fundamental": 0,
+              "lp_momentum": 0,
+              "lp_aiValue": 100
+            },
+            "tags": [],
+            "marketCap": 12,
+            "pe": 0,
+            "fwdPe": 30,
+            "peg": 2.0,
+            "revGrowth": 15,
+            "grossMargin": 35,
+            "fcfMargin": 8,
+            "roe": 5,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.7,
+              "reports": 18,
+              "summary": "光器件随 1.6T 升级放量，整合 II-VI 后协同待兑现。",
+              "sources": [
+                {
+                  "title": "Coherent Investor",
+                  "url": "https://www.coherent.com"
+                }
+              ]
+            },
+            "notes": "光器件上游，弹性标的。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 60,
+            "peHist5y": 42,
+            "layerPct": 100
+          },
+          {
+            "ticker": "300502.SZ",
+            "name": "新易盛",
+            "key": "xys",
+            "market": "A",
+            "ccy": "CNY",
+            "techRoute": "光模块 (800G)",
+            "productDir": "800G 光模块、相干光模块",
+            "price": 448.0,
+            "ch": {
+              "d": 53.92,
+              "w": 41.1,
+              "m": -58.89,
+              "h6": 174.41
+            },
+            "scores": {
+              "momentum": 65.762,
+              "valuation": 49,
+              "growth": 92,
+              "quality": 45,
+              "aiExposure": 78,
+              "research": 75,
+              "fundamental": 70,
+              "aiValue": 55,
+              "lp_valuation": 75,
+              "lp_fundamental": 100,
+              "lp_momentum": 50,
+              "lp_aiValue": 75
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 12,
+            "pe": 35,
+            "fwdPe": 28,
+            "peg": 1.3,
+            "revGrowth": 60,
+            "grossMargin": 42,
+            "fcfMargin": 22,
+            "roe": 35,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.1,
+              "reports": 22,
+              "summary": "新易盛 800G 份额提升, 净利率行业领先; 估值随业绩上修。",
+              "sources": [
+                {
+                  "title": "新易盛投资者关系",
+                  "url": "https://www.eoptolink.com"
+                }
+              ]
+            },
+            "notes": "高毛利光模块弹性标的。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 60,
+            "peHist5y": 49,
+            "layerPct": 75
+          },
+          {
+            "ticker": "LITE",
+            "name": "Lumentum",
+            "key": "lite",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "光互联器件",
+            "productDir": "激光器、光模块、云与 AI 光互联",
+            "price": 713.9400024414062,
+            "ch": {
+              "d": 20.7,
+              "w": -49.05,
+              "m": -87.22,
+              "h6": 332.5
+            },
+            "scores": {
+              "momentum": 51.63199999999999,
+              "valuation": 48,
+              "growth": 67,
+              "quality": 23,
+              "aiExposure": 78,
+              "research": 66,
+              "fundamental": 54,
+              "aiValue": 51,
+              "lp_valuation": 25,
+              "lp_fundamental": 0,
+              "lp_momentum": 25,
+              "lp_aiValue": 50
+            },
+            "tags": [],
+            "marketCap": 5,
+            "pe": 0,
+            "fwdPe": 25,
+            "peg": 1.8,
+            "revGrowth": 12,
+            "grossMargin": 38,
+            "fcfMargin": 10,
+            "roe": 6,
+            "research": {
+              "consensus": "中性",
+              "ratingScore": 3.5,
+              "reports": 16,
+              "summary": "AI 光互联需求改善，但盈利修复仍需时间。",
+              "sources": [
+                {
+                  "title": "Lumentum Investor",
+                  "url": "https://www.lumentum.com"
+                }
+              ]
+            },
+            "notes": "光器件弹性标的，波动较大。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 60,
+            "peHist5y": 35,
+            "layerPct": 50
+          },
+          {
+            "ticker": "300308.SZ",
+            "name": "中际旭创",
+            "key": "zhongji",
+            "market": "A",
+            "ccy": "CNY",
+            "techRoute": "光模块 (800G/1.6T)",
+            "productDir": "800G/1.6T 光模块、硅光、LPO",
+            "price": 1021.989990234375,
+            "ch": {
+              "d": 119.49,
+              "w": 113.99,
+              "m": -76.93,
+              "h6": 436.99
+            },
+            "scores": {
+              "momentum": 100,
+              "valuation": 49,
+              "growth": 92,
+              "quality": 37,
+              "aiExposure": 78,
+              "research": 76,
+              "fundamental": 68,
+              "aiValue": 48,
+              "lp_valuation": 75,
+              "lp_fundamental": 50,
+              "lp_momentum": 100,
+              "lp_aiValue": 25
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 15,
+            "pe": 32,
+            "fwdPe": 26,
+            "peg": 1.2,
+            "revGrowth": 55,
+            "grossMargin": 34,
+            "fcfMargin": 18,
+            "roe": 30,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.2,
+              "reports": 28,
+              "summary": "全球光模块龙头, 800G/1.6T 出货随 AI 集群放量; 客户集中(北美云厂)是风险。",
+              "sources": [
+                {
+                  "title": "中际旭创投资者关系",
+                  "url": "https://www.zjxc.com"
+                }
+              ]
+            },
+            "notes": "光模块是 AI 算力瓶颈环节, A股核心标的。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 60,
+            "peHist5y": 45,
+            "layerPct": 25
+          },
+          {
+            "ticker": "ANET",
+            "name": "Arista",
+            "key": "anet",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "AI 数据中心网络",
+            "productDir": "800G / 1.6T 交换机、EOS、AI 后端网络",
+            "price": 180.35000610351562,
+            "ch": {
+              "d": 9.33,
+              "w": 6.36,
+              "m": 13.73,
+              "h6": 32.2
+            },
+            "scores": {
+              "momentum": 74.56099999999999,
+              "valuation": 32,
+              "growth": 76,
+              "quality": 57,
+              "aiExposure": 78,
+              "research": 73,
+              "fundamental": 69,
+              "aiValue": 47,
+              "lp_valuation": 0,
+              "lp_fundamental": 75,
+              "lp_momentum": 75,
+              "lp_aiValue": 0
+            },
+            "tags": [
+              "高估值",
+              "领跑"
+            ],
+            "marketCap": 150,
+            "pe": 48,
+            "fwdPe": 38,
+            "peg": 2.2,
+            "revGrowth": 25,
+            "grossMargin": 64,
+            "fcfMargin": 33,
+            "roe": 28,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.0,
+              "reports": 26,
+              "summary": "AI 集群网络升级刚需，以太网替代 InfiniBand 趋势受益者。",
+              "sources": [
+                {
+                  "title": "Arista Investor",
+                  "url": "https://www.arista.com/en/investor-relations"
+                }
+              ]
+            },
+            "notes": "网络是算力瓶颈环节，地位稳固。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 60,
+            "peHist5y": 67,
+            "layerPct": 0
+          }
+        ],
+        "comparison": {
+          "leaders": {
+            "A": {
+              "ticker": "300502.SZ",
+              "name": "新易盛",
+              "aiValue": 55,
+              "count": 2
+            },
+            "US": {
+              "ticker": "COHR",
+              "name": "Coherent",
+              "aiValue": 61,
+              "count": 3
+            }
+          },
+          "crossMarketBest": "COHR",
+          "marketCounts": {
+            "A": 2,
+            "US": 3
+          }
+        },
+        "stats": {
+          "count": 5,
           "avgFundamental": 63,
-          "avgValuation": 56,
-          "avgMomentum": 55,
-          "avgAiValue": 57,
-          "topPick": "CRWV",
-          "valuePicks": [
-            "CRWV"
-          ]
+          "avgValuation": 45,
+          "avgMomentum": 58,
+          "avgAiValue": 52,
+          "topPick": "COHR",
+          "valuePicks": []
         }
       },
       {
@@ -10505,13 +10983,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 78,
-              "growth": 100,
+              "valuation": 60,
+              "growth": 92,
               "quality": 38,
-              "aiExposure": 82,
-              "research": 80.0,
-              "fundamental": 72,
-              "aiValue": 80
+              "aiExposure": 60,
+              "research": 73,
+              "fundamental": 64,
+              "aiValue": 70,
+              "lp_valuation": 92,
+              "lp_fundamental": 38,
+              "lp_momentum": 0,
+              "lp_aiValue": 92
             },
             "tags": [
               "价值股候选"
@@ -10537,7 +11019,18 @@ const DATA = {
               ]
             },
             "notes": "价值挖掘重点：HBM 景气 + 低 PEG。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 55,
+            "aiRevGrowth": 40,
+            "pricingPower": 55,
+            "peHist5y": 30,
+            "layerPct": 92
           },
           {
             "ticker": "000660.KS",
@@ -10556,13 +11049,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 78,
-              "growth": 94.5,
+              "valuation": 60,
+              "growth": 89,
               "quality": 37,
-              "aiExposure": 92,
-              "research": 84.00000000000001,
-              "fundamental": 72,
-              "aiValue": 80
+              "aiExposure": 72,
+              "research": 76,
+              "fundamental": 65,
+              "aiValue": 70,
+              "lp_valuation": 92,
+              "lp_fundamental": 46,
+              "lp_momentum": 0,
+              "lp_aiValue": 92
             },
             "tags": [
               "价值股候选"
@@ -10588,7 +11085,18 @@ const DATA = {
               ]
             },
             "notes": "HBM 核心受益, 价值挖掘重点。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 15,
+            "layerPct": 92
           },
           {
             "ticker": "NVDA",
@@ -10607,16 +11115,19 @@ const DATA = {
             },
             "scores": {
               "momentum": 52.889,
-              "valuation": 62,
-              "growth": 100,
+              "valuation": 51,
+              "growth": 92,
               "quality": 94,
-              "aiExposure": 100,
-              "research": 86.0,
-              "fundamental": 96,
-              "aiValue": 74
+              "aiExposure": 87,
+              "research": 77,
+              "fundamental": 89,
+              "aiValue": 67,
+              "lp_valuation": 77,
+              "lp_fundamental": 100,
+              "lp_momentum": 92,
+              "lp_aiValue": 85
             },
             "tags": [
-              "价值股候选",
               "高质量"
             ],
             "marketCap": 3800,
@@ -10640,107 +11151,18 @@ const DATA = {
               ]
             },
             "notes": "蛋糕核心，确定性最高但预期也最满。",
-            "est": true
-          },
-          {
-            "ticker": "042700.KS",
-            "name": "韩美半导体",
-            "key": "hansmi",
-            "market": "KR",
-            "ccy": "KRW",
-            "techRoute": "TC Bonder (HBM 封装设备)",
-            "productDir": "TC Bonder、HBM 封装键合设备",
-            "price": 203000.0,
-            "ch": {
-              "d": 500.0,
-              "w": 23500.0,
-              "m": -29500.0,
-              "h6": 28200.0
-            },
-            "scores": {
-              "momentum": 0,
-              "valuation": 48,
-              "growth": 100,
-              "quality": 44,
-              "aiExposure": 88,
-              "research": 76.0,
-              "fundamental": 74,
-              "aiValue": 70
-            },
-            "tags": [],
-            "marketCap": 20,
-            "pe": 25,
-            "fwdPe": 20,
-            "peg": 1.6,
-            "revGrowth": 50,
-            "grossMargin": 50,
-            "fcfMargin": 22,
-            "roe": 26,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.8,
-              "reports": 14,
-              "summary": "HBM 扩产直接拉动 TC Bonder 需求, 客户集中。",
-              "sources": [
-                {
-                  "title": "Hanmi Semiconductor IR",
-                  "url": "https://www.hanmi.co.kr"
-                }
-              ]
-            },
-            "notes": "HBM 封装设备弹性标的。",
-            "est": true
-          },
-          {
-            "ticker": "005930.KS",
-            "name": "三星电子",
-            "key": "ssamsung",
-            "market": "KR",
-            "ccy": "KRW",
-            "techRoute": "存储 (HBM) + 代工 + 移动",
-            "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-            "price": 240000.0,
-            "ch": {
-              "d": 500.0,
-              "w": 20000.0,
-              "m": -69500.0,
-              "h6": 80500.0
-            },
-            "scores": {
-              "momentum": 0,
-              "valuation": 62,
-              "growth": 61.5,
-              "quality": 32,
-              "aiExposure": 80,
-              "research": 80.0,
-              "fundamental": 58,
-              "aiValue": 68
-            },
-            "tags": [
-              "价值股候选"
-            ],
-            "marketCap": 370,
-            "pe": 12,
-            "fwdPe": 11,
-            "peg": 1.2,
-            "revGrowth": 15,
-            "grossMargin": 45,
-            "fcfMargin": 15,
-            "roe": 12,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.0,
-              "reports": 40,
-              "summary": "HBM 与存储复苏双驱动, 代工追赶台积电; 企业结构折价。",
-              "sources": [
-                {
-                  "title": "Samsung IR",
-                  "url": "https://www.samsung.com/us/aboutsamsung/ir/"
-                }
-              ]
-            },
-            "notes": "HBM+存储复苏, 估值低。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 85,
+            "aiRevGrowth": 55,
+            "pricingPower": 95,
+            "peHist5y": 72,
+            "layerPct": 85
           },
           {
             "ticker": "ASML",
@@ -10759,13 +11181,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 48,
-              "growth": 56.0,
+              "valuation": 42,
+              "growth": 66,
               "quality": 58,
               "aiExposure": 85,
-              "research": 82.0,
-              "fundamental": 66,
-              "aiValue": 66
+              "research": 75,
+              "fundamental": 68,
+              "aiValue": 65,
+              "lp_valuation": 38,
+              "lp_fundamental": 62,
+              "lp_momentum": 0,
+              "lp_aiValue": 69
             },
             "tags": [],
             "marketCap": 320,
@@ -10789,154 +11215,146 @@ const DATA = {
               ]
             },
             "notes": "不可替代的设备之王。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 90,
+            "aiRevGrowth": 35,
+            "pricingPower": 95,
+            "peHist5y": 57,
+            "layerPct": 69
           },
           {
-            "ticker": "TSM",
-            "name": "台积电",
-            "key": "tsm",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "先进制程代工",
-            "productDir": "3/2nm 制程、CoWoS 先进封装",
-            "price": 404.25,
+            "ticker": "042700.KS",
+            "name": "韩美半导体",
+            "key": "hansmi",
+            "market": "KR",
+            "ccy": "KRW",
+            "techRoute": "TC Bonder (HBM 封装设备)",
+            "productDir": "TC Bonder、HBM 封装键合设备",
+            "price": 203000.0,
             "ch": {
-              "d": 0.94,
-              "w": 0.84,
-              "m": -39.98,
-              "h6": 64.7
+              "d": 500.0,
+              "w": 23500.0,
+              "m": -29500.0,
+              "h6": 28200.0
             },
             "scores": {
-              "momentum": 33.763999999999996,
-              "valuation": 48,
-              "growth": 78.0,
-              "quality": 60,
-              "aiExposure": 90,
-              "research": 86.0,
-              "fundamental": 75,
-              "aiValue": 64
+              "momentum": 0,
+              "valuation": 42,
+              "growth": 92,
+              "quality": 44,
+              "aiExposure": 72,
+              "research": 70,
+              "fundamental": 68,
+              "aiValue": 65,
+              "lp_valuation": 38,
+              "lp_fundamental": 62,
+              "lp_momentum": 0,
+              "lp_aiValue": 69
             },
             "tags": [],
-            "marketCap": 1100,
-            "pe": 30,
-            "fwdPe": 25,
+            "marketCap": 20,
+            "pe": 25,
+            "fwdPe": 20,
             "peg": 1.6,
-            "revGrowth": 30,
-            "grossMargin": 55,
-            "fcfMargin": 40,
-            "roe": 30,
+            "revGrowth": 50,
+            "grossMargin": 50,
+            "fcfMargin": 22,
+            "roe": 26,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.8,
+              "reports": 14,
+              "summary": "HBM 扩产直接拉动 TC Bonder 需求, 客户集中。",
+              "sources": [
+                {
+                  "title": "Hanmi Semiconductor IR",
+                  "url": "https://www.hanmi.co.kr"
+                }
+              ]
+            },
+            "notes": "HBM 封装设备弹性标的。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 38,
+            "layerPct": 69
+          },
+          {
+            "ticker": "005930.KS",
+            "name": "三星电子",
+            "key": "ssamsung",
+            "market": "KR",
+            "ccy": "KRW",
+            "techRoute": "存储 (HBM) + 代工 + 移动",
+            "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
+            "price": 240000.0,
+            "ch": {
+              "d": 500.0,
+              "w": 20000.0,
+              "m": -69500.0,
+              "h6": 80500.0
+            },
+            "scores": {
+              "momentum": 0,
+              "valuation": 51,
+              "growth": 69,
+              "quality": 32,
+              "aiExposure": 72,
+              "research": 73,
+              "fundamental": 57,
+              "aiValue": 64,
+              "lp_valuation": 77,
+              "lp_fundamental": 0,
+              "lp_momentum": 0,
+              "lp_aiValue": 62
+            },
+            "tags": [],
+            "marketCap": 370,
+            "pe": 12,
+            "fwdPe": 11,
+            "peg": 1.2,
+            "revGrowth": 15,
+            "grossMargin": 45,
+            "fcfMargin": 15,
+            "roe": 12,
             "research": {
               "consensus": "增持",
-              "ratingScore": 4.3,
+              "ratingScore": 4.0,
               "reports": 40,
-              "summary": "AI 芯片与 CoWoS 封装几乎独家，定价权强；地缘是主要风险。",
+              "summary": "HBM 与存储复苏双驱动, 代工追赶台积电; 企业结构折价。",
               "sources": [
                 {
-                  "title": "TSMC Investor",
-                  "url": "https://www.tsmc.com/english/investorRelations"
+                  "title": "Samsung IR",
+                  "url": "https://www.samsung.com/us/aboutsamsung/ir/"
                 }
               ]
             },
-            "notes": "先进制程垄断，AI 与地缘双主线。",
-            "est": true
-          },
-          {
-            "ticker": "AMAT",
-            "name": "应用材料",
-            "key": "amat",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "半导体设备",
-            "productDir": "薄膜沉积、刻蚀、制程设备",
-            "price": 507.6700134277344,
-            "ch": {
-              "d": 5.9,
-              "w": -28.58,
-              "m": -143.24,
-              "h6": 166.33
-            },
-            "scores": {
-              "momentum": 0,
-              "valuation": 48,
-              "growth": 53.8,
-              "quality": 51,
-              "aiExposure": 70,
-              "research": 78.0,
-              "fundamental": 60,
-              "aiValue": 64
-            },
-            "tags": [],
-            "marketCap": 160,
-            "pe": 24,
-            "fwdPe": 22,
-            "peg": 1.8,
-            "revGrowth": 8,
-            "grossMargin": 47,
-            "fcfMargin": 25,
-            "roe": 40,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.9,
-              "reports": 30,
-              "summary": "设备国产化与 AI 扩产双驱动，周期性较强但地位稳固。",
-              "sources": [
-                {
-                  "title": "Applied Materials Investor",
-                  "url": "https://www.appliedmaterials.com/company/investors"
-                }
-              ]
-            },
-            "notes": "设备龙头，估值温和。",
-            "est": true
-          },
-          {
-            "ticker": "688041.SS",
-            "name": "海光信息",
-            "key": "hygon",
-            "market": "A",
-            "ccy": "CNY",
-            "techRoute": "x86 CPU + DCU (国产)",
-            "productDir": "海光 CPU、深算 DCU (GPGPU)",
-            "price": 275.3500061035156,
-            "ch": {
-              "d": 14.35,
-              "w": -22.93,
-              "m": -63.65,
-              "h6": -0.65
-            },
-            "scores": {
-              "momentum": 0,
-              "valuation": 35,
-              "growth": 89.0,
-              "quality": 42,
-              "aiExposure": 85,
-              "research": 78.0,
-              "fundamental": 70,
-              "aiValue": 64
-            },
-            "tags": [],
-            "marketCap": 52,
-            "pe": 100,
-            "fwdPe": 70,
-            "peg": 2.5,
-            "revGrowth": 40,
-            "grossMargin": 60,
-            "fcfMargin": 20,
-            "roe": 15,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.9,
-              "reports": 22,
-              "summary": "国产 CPU/DCU 双线, 信创与 AI 算力双驱动; 估值偏高。",
-              "sources": [
-                {
-                  "title": "海光信息投资者关系",
-                  "url": "https://www.hygon.com"
-                }
-              ]
-            },
-            "notes": "国产 CPU+DCU, 信创主线。",
-            "est": true
+            "notes": "HBM+存储复苏, 估值低。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 18,
+            "layerPct": 62
           },
           {
             "ticker": "ARM",
@@ -10955,13 +11373,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 35,
-              "growth": 72.5,
+              "valuation": 34,
+              "growth": 76,
               "quality": 62,
-              "aiExposure": 70,
-              "research": 72.0,
-              "fundamental": 68,
-              "aiValue": 63
+              "aiExposure": 72,
+              "research": 68,
+              "fundamental": 69,
+              "aiValue": 63,
+              "lp_valuation": 0,
+              "lp_fundamental": 77,
+              "lp_momentum": 0,
+              "lp_aiValue": 46
             },
             "tags": [],
             "marketCap": 180,
@@ -10985,7 +11407,146 @@ const DATA = {
               ]
             },
             "notes": "高毛利 IP 模式，贵但稀缺。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 135,
+            "layerPct": 46
+          },
+          {
+            "ticker": "AMAT",
+            "name": "应用材料",
+            "key": "amat",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "半导体设备",
+            "productDir": "薄膜沉积、刻蚀、制程设备",
+            "price": 507.6700134277344,
+            "ch": {
+              "d": 5.9,
+              "w": -28.58,
+              "m": -143.24,
+              "h6": 166.33
+            },
+            "scores": {
+              "momentum": 0,
+              "valuation": 42,
+              "growth": 64,
+              "quality": 51,
+              "aiExposure": 69,
+              "research": 72,
+              "fundamental": 62,
+              "aiValue": 63,
+              "lp_valuation": 38,
+              "lp_fundamental": 23,
+              "lp_momentum": 0,
+              "lp_aiValue": 46
+            },
+            "tags": [],
+            "marketCap": 160,
+            "pe": 24,
+            "fwdPe": 22,
+            "peg": 1.8,
+            "revGrowth": 8,
+            "grossMargin": 47,
+            "fcfMargin": 25,
+            "roe": 40,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 30,
+              "summary": "设备国产化与 AI 扩产双驱动，周期性较强但地位稳固。",
+              "sources": [
+                {
+                  "title": "Applied Materials Investor",
+                  "url": "https://www.appliedmaterials.com/company/investors"
+                }
+              ]
+            },
+            "notes": "设备龙头，估值温和。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 30,
+            "pricingPower": 75,
+            "peHist5y": 36,
+            "layerPct": 46
+          },
+          {
+            "ticker": "688041.SS",
+            "name": "海光信息",
+            "key": "hygon",
+            "market": "A",
+            "ccy": "CNY",
+            "techRoute": "x86 CPU + DCU (国产)",
+            "productDir": "海光 CPU、深算 DCU (GPGPU)",
+            "price": 275.3500061035156,
+            "ch": {
+              "d": 14.35,
+              "w": -22.93,
+              "m": -63.65,
+              "h6": -0.65
+            },
+            "scores": {
+              "momentum": 0,
+              "valuation": 34,
+              "growth": 85,
+              "quality": 42,
+              "aiExposure": 70,
+              "research": 72,
+              "fundamental": 65,
+              "aiValue": 61,
+              "lp_valuation": 0,
+              "lp_fundamental": 46,
+              "lp_momentum": 0,
+              "lp_aiValue": 38
+            },
+            "tags": [],
+            "marketCap": 52,
+            "pe": 100,
+            "fwdPe": 70,
+            "peg": 2.5,
+            "revGrowth": 40,
+            "grossMargin": 60,
+            "fcfMargin": 20,
+            "roe": 15,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 22,
+              "summary": "国产 CPU/DCU 双线, 信创与 AI 算力双驱动; 估值偏高。",
+              "sources": [
+                {
+                  "title": "海光信息投资者关系",
+                  "url": "https://www.hygon.com"
+                }
+              ]
+            },
+            "notes": "国产 CPU+DCU, 信创主线。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": "china-substitution",
+            "aiRevPct": 75,
+            "aiRevGrowth": 45,
+            "pricingPower": 55,
+            "peHist5y": 150,
+            "layerPct": 38
           },
           {
             "ticker": "688256.SS",
@@ -11005,12 +11566,16 @@ const DATA = {
             "scores": {
               "momentum": 0,
               "valuation": 35,
-              "growth": 100,
+              "growth": 92,
               "quality": 22,
-              "aiExposure": 95,
-              "research": 64.0,
-              "fundamental": 66,
-              "aiValue": 62
+              "aiExposure": 86,
+              "research": 62,
+              "fundamental": 62,
+              "aiValue": 60,
+              "lp_valuation": 23,
+              "lp_fundamental": 23,
+              "lp_momentum": 0,
+              "lp_aiValue": 31
             },
             "tags": [],
             "marketCap": 42,
@@ -11034,7 +11599,82 @@ const DATA = {
               ]
             },
             "notes": "国产算力期权, 高预期高波动。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": "china-substitution",
+            "aiRevPct": 90,
+            "aiRevGrowth": 120,
+            "pricingPower": 60,
+            "peHist5y": 180,
+            "layerPct": 31
+          },
+          {
+            "ticker": "TSM",
+            "name": "台积电",
+            "key": "tsm",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "先进制程代工",
+            "productDir": "3/2nm 制程、CoWoS 先进封装",
+            "price": 404.25,
+            "ch": {
+              "d": 0.94,
+              "w": 0.84,
+              "m": -39.98,
+              "h6": 64.7
+            },
+            "scores": {
+              "momentum": 33.763999999999996,
+              "valuation": 42,
+              "growth": 79,
+              "quality": 60,
+              "aiExposure": 71,
+              "research": 77,
+              "fundamental": 70,
+              "aiValue": 59,
+              "lp_valuation": 38,
+              "lp_fundamental": 85,
+              "lp_momentum": 77,
+              "lp_aiValue": 15
+            },
+            "tags": [],
+            "marketCap": 1100,
+            "pe": 30,
+            "fwdPe": 25,
+            "peg": 1.6,
+            "revGrowth": 30,
+            "grossMargin": 55,
+            "fcfMargin": 40,
+            "roe": 30,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.3,
+              "reports": 40,
+              "summary": "AI 芯片与 CoWoS 封装几乎独家，定价权强；地缘是主要风险。",
+              "sources": [
+                {
+                  "title": "TSMC Investor",
+                  "url": "https://www.tsmc.com/english/investorRelations"
+                }
+              ]
+            },
+            "notes": "先进制程垄断，AI 与地缘双主线。",
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 60,
+            "aiRevGrowth": 40,
+            "pricingPower": 90,
+            "peHist5y": 45,
+            "layerPct": 15
           },
           {
             "ticker": "MRVL",
@@ -11054,12 +11694,16 @@ const DATA = {
             "scores": {
               "momentum": 3.1570000000000036,
               "valuation": 35,
-              "growth": 78.0,
+              "growth": 79,
               "quality": 36,
-              "aiExposure": 78,
-              "research": 76.0,
-              "fundamental": 63,
-              "aiValue": 60
+              "aiExposure": 70,
+              "research": 70,
+              "fundamental": 61,
+              "aiValue": 59,
+              "lp_valuation": 23,
+              "lp_fundamental": 8,
+              "lp_momentum": 69,
+              "lp_aiValue": 15
             },
             "tags": [],
             "marketCap": 90,
@@ -11083,7 +11727,18 @@ const DATA = {
               ]
             },
             "notes": "定制芯片二供，弹性大。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 65,
+            "aiRevGrowth": 45,
+            "pricingPower": 70,
+            "peHist5y": 60,
+            "layerPct": 15
           },
           {
             "ticker": "AMD",
@@ -11102,13 +11757,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 40.614,
-              "valuation": 48,
-              "growth": 72.5,
+              "valuation": 42,
+              "growth": 76,
               "quality": 37,
-              "aiExposure": 80,
-              "research": 78.0,
-              "fundamental": 62,
-              "aiValue": 57
+              "aiExposure": 72,
+              "research": 72,
+              "fundamental": 61,
+              "aiValue": 54,
+              "lp_valuation": 38,
+              "lp_fundamental": 8,
+              "lp_momentum": 85,
+              "lp_aiValue": 8
             },
             "tags": [],
             "marketCap": 300,
@@ -11132,7 +11791,18 @@ const DATA = {
               ]
             },
             "notes": "第二供应商逻辑，弹性与风险并存。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 75,
+            "layerPct": 8
           },
           {
             "ticker": "AVGO",
@@ -11151,15 +11821,20 @@ const DATA = {
             },
             "scores": {
               "momentum": 88.455,
-              "valuation": 35,
-              "growth": 78.0,
+              "valuation": 34,
+              "growth": 79,
               "quality": 81,
-              "aiExposure": 85,
-              "research": 84.00000000000001,
-              "fundamental": 81,
-              "aiValue": 51
+              "aiExposure": 76,
+              "research": 76,
+              "fundamental": 79,
+              "aiValue": 50,
+              "lp_valuation": 0,
+              "lp_fundamental": 92,
+              "lp_momentum": 100,
+              "lp_aiValue": 0
             },
             "tags": [
+              "高估值",
               "领跑",
               "高质量"
             ],
@@ -11184,7 +11859,18 @@ const DATA = {
               ]
             },
             "notes": "定制芯片寡头，现金流极强。",
-            "est": true
+            "est": true,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 45,
+            "pricingPower": 85,
+            "peHist5y": 82,
+            "layerPct": 0
           }
         ],
         "comparison": {
@@ -11192,19 +11878,19 @@ const DATA = {
             "US": {
               "ticker": "MU",
               "name": "美光",
-              "aiValue": 80,
+              "aiValue": 70,
               "count": 9
             },
             "A": {
               "ticker": "688041.SS",
               "name": "海光信息",
-              "aiValue": 64,
+              "aiValue": 61,
               "count": 2
             },
             "KR": {
               "ticker": "000660.KS",
               "name": "SK海力士",
-              "aiValue": 80,
+              "aiValue": 70,
               "count": 3
             }
           },
@@ -11217,15 +11903,13 @@ const DATA = {
         },
         "stats": {
           "count": 14,
-          "avgFundamental": 70,
-          "avgValuation": 50,
+          "avgFundamental": 67,
+          "avgValuation": 43,
           "avgMomentum": 16,
-          "avgAiValue": 66,
+          "avgAiValue": 62,
           "topPick": "MU",
           "valuePicks": [
-            "NVDA",
             "MU",
-            "005930.KS",
             "000660.KS"
           ]
         }
@@ -11263,15 +11947,19 @@ const DATA = {
             "scores": {
               "momentum": 7.228999999999999,
               "valuation": 62,
-              "growth": 72.5,
+              "growth": 71,
               "quality": 39,
-              "aiExposure": 80,
-              "research": 70.0,
-              "fundamental": 62,
-              "aiValue": 68
+              "aiExposure": 44,
+              "research": 66,
+              "fundamental": 54,
+              "aiValue": 57,
+              "lp_valuation": 100,
+              "lp_fundamental": 100,
+              "lp_momentum": 14,
+              "lp_aiValue": 100
             },
             "tags": [
-              "价值股候选"
+              "下行趋势"
             ],
             "marketCap": 25,
             "pe": 0,
@@ -11294,56 +11982,18 @@ const DATA = {
               ]
             },
             "notes": "直连供电新模式，高弹性。",
-            "est": true
-          },
-          {
-            "ticker": "VST",
-            "name": "Vistra",
-            "key": "vst",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "燃气 + 核电调峰",
-            "productDir": "天然气发电、核电、零售电力",
-            "price": 148.19000244140625,
-            "ch": {
-              "d": -0.43,
-              "w": -15.19,
-              "m": -4.97,
-              "h6": -14.39
-            },
-            "scores": {
-              "momentum": 35.134,
-              "valuation": 62,
-              "growth": 67.0,
-              "quality": 37,
-              "aiExposure": 70,
-              "research": 80.0,
-              "fundamental": 59,
-              "aiValue": 61
-            },
-            "tags": [],
-            "marketCap": 50,
-            "pe": 18,
-            "fwdPe": 17,
-            "peg": 1.5,
-            "revGrowth": 20,
-            "grossMargin": 35,
-            "fcfMargin": 18,
-            "roe": 30,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.0,
-              "reports": 24,
-              "summary": "多元电源 + 退役核电重启，受益 AI 电力需求且估值温和。",
-              "sources": [
-                {
-                  "title": "Vistra Investor",
-                  "url": "https://www.vistracorp.com/about-us/investors/"
-                }
-              ]
-            },
-            "notes": "估值低、电力弹性大，价值候选。",
-            "est": true
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 26,
+            "layerPct": 100
           },
           {
             "ticker": "GEV",
@@ -11362,13 +12012,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 0,
-              "valuation": 35,
-              "growth": 61.5,
+              "valuation": 30,
+              "growth": 64,
               "quality": 20,
-              "aiExposure": 68,
-              "research": 78.0,
-              "fundamental": 51,
-              "aiValue": 55
+              "aiExposure": 44,
+              "research": 71,
+              "fundamental": 46,
+              "aiValue": 51,
+              "lp_valuation": 0,
+              "lp_fundamental": 14,
+              "lp_momentum": 0,
+              "lp_aiValue": 86
             },
             "tags": [],
             "marketCap": 120,
@@ -11392,56 +12046,84 @@ const DATA = {
               ]
             },
             "notes": "电力设备景气标的，估值偏贵。",
-            "est": true
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 78,
+            "layerPct": 86
           },
           {
-            "ticker": "CCJ",
-            "name": "Cameco",
-            "key": "ccj",
+            "ticker": "VST",
+            "name": "Vistra",
+            "key": "vst",
             "market": "US",
             "ccy": "USD",
-            "techRoute": "核燃料铀",
-            "productDir": "铀矿开采、核燃料循环",
-            "price": 86.37999725341797,
+            "techRoute": "燃气 + 核电调峰",
+            "productDir": "天然气发电、核电、零售电力",
+            "price": 148.19000244140625,
             "ch": {
-              "d": -1.85,
-              "w": -1.48,
-              "m": -11.01,
-              "h6": -47.29
+              "d": -0.43,
+              "w": -15.19,
+              "m": -4.97,
+              "h6": -14.39
             },
             "scores": {
-              "momentum": 25.312000000000005,
-              "valuation": 48,
-              "growth": 61.5,
-              "quality": 29,
-              "aiExposure": 60,
-              "research": 74.0,
-              "fundamental": 52,
-              "aiValue": 55
+              "momentum": 35.134,
+              "valuation": 46,
+              "growth": 67,
+              "quality": 37,
+              "aiExposure": 44,
+              "research": 72,
+              "fundamental": 53,
+              "aiValue": 45,
+              "lp_valuation": 71,
+              "lp_fundamental": 86,
+              "lp_momentum": 57,
+              "lp_aiValue": 57
             },
-            "tags": [],
-            "marketCap": 35,
-            "pe": 45,
-            "fwdPe": 35,
-            "peg": 2.0,
-            "revGrowth": 15,
+            "tags": [
+              "下行趋势"
+            ],
+            "marketCap": 50,
+            "pe": 18,
+            "fwdPe": 17,
+            "peg": 1.5,
+            "revGrowth": 20,
             "grossMargin": 35,
             "fcfMargin": 18,
-            "roe": 10,
+            "roe": 30,
             "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.7,
-              "reports": 18,
-              "summary": "核电复苏拉动铀需求，燃料端受益于 AI 电力长期叙事。",
+              "consensus": "增持",
+              "ratingScore": 4.0,
+              "reports": 24,
+              "summary": "多元电源 + 退役核电重启，受益 AI 电力需求且估值温和。",
               "sources": [
                 {
-                  "title": "Cameco Investor",
-                  "url": "https://www.cameco.com/investors"
+                  "title": "Vistra Investor",
+                  "url": "https://www.vistracorp.com/about-us/investors/"
                 }
               ]
             },
-            "notes": "核燃料上游，间接受益。",
-            "est": true
+            "notes": "估值低、电力弹性大，价值候选。",
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 23,
+            "layerPct": 57
           },
           {
             "ticker": "NEE",
@@ -11460,13 +12142,17 @@ const DATA = {
             },
             "scores": {
               "momentum": 48.973,
-              "valuation": 48,
-              "growth": 58.2,
+              "valuation": 38,
+              "growth": 62,
               "quality": 28,
-              "aiExposure": 55,
-              "research": 76.0,
-              "fundamental": 50,
-              "aiValue": 50
+              "aiExposure": 44,
+              "research": 70,
+              "fundamental": 48,
+              "aiValue": 45,
+              "lp_valuation": 29,
+              "lp_fundamental": 29,
+              "lp_momentum": 71,
+              "lp_aiValue": 57
             },
             "tags": [],
             "marketCap": 150,
@@ -11490,7 +12176,150 @@ const DATA = {
               ]
             },
             "notes": "储能弹性 + 利率敏感。",
-            "est": true
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 29,
+            "layerPct": 57
+          },
+          {
+            "ticker": "CCJ",
+            "name": "Cameco",
+            "key": "ccj",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "核燃料铀",
+            "productDir": "铀矿开采、核燃料循环",
+            "price": 86.37999725341797,
+            "ch": {
+              "d": -1.85,
+              "w": -1.48,
+              "m": -11.01,
+              "h6": -47.29
+            },
+            "scores": {
+              "momentum": 25.312000000000005,
+              "valuation": 38,
+              "growth": 64,
+              "quality": 29,
+              "aiExposure": 44,
+              "research": 68,
+              "fundamental": 48,
+              "aiValue": 42,
+              "lp_valuation": 29,
+              "lp_fundamental": 29,
+              "lp_momentum": 43,
+              "lp_aiValue": 43
+            },
+            "tags": [
+              "下行趋势"
+            ],
+            "marketCap": 35,
+            "pe": 45,
+            "fwdPe": 35,
+            "peg": 2.0,
+            "revGrowth": 15,
+            "grossMargin": 35,
+            "fcfMargin": 18,
+            "roe": 10,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.7,
+              "reports": 18,
+              "summary": "核电复苏拉动铀需求，燃料端受益于 AI 电力长期叙事。",
+              "sources": [
+                {
+                  "title": "Cameco Investor",
+                  "url": "https://www.cameco.com/investors"
+                }
+              ]
+            },
+            "notes": "核燃料上游，间接受益。",
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 58,
+            "layerPct": 43
+          },
+          {
+            "ticker": "ETN",
+            "name": "Eaton",
+            "key": "etn",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "电力设备 + 电网",
+            "productDir": "配电设备、变压器、数据中心电力基础设施",
+            "price": 415.20001220703125,
+            "ch": {
+              "d": 28.31,
+              "w": 11.13,
+              "m": 2.89,
+              "h6": 60.83
+            },
+            "scores": {
+              "momentum": 75.30199999999999,
+              "valuation": 38,
+              "growth": 62,
+              "quality": 33,
+              "aiExposure": 44,
+              "research": 71,
+              "fundamental": 50,
+              "aiValue": 41,
+              "lp_valuation": 29,
+              "lp_fundamental": 57,
+              "lp_momentum": 100,
+              "lp_aiValue": 29
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 150,
+            "pe": 35,
+            "fwdPe": 30,
+            "peg": 2.0,
+            "revGrowth": 12,
+            "grossMargin": 35,
+            "fcfMargin": 16,
+            "roe": 22,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 24,
+              "summary": "变压器/配电是 AI 数据中心电力扩容的物理瓶颈，订单能见度强。",
+              "sources": [
+                {
+                  "title": "Eaton Investor",
+                  "url": "https://www.eaton.com/us/en-us/company/investor-relations.html"
+                }
+              ]
+            },
+            "notes": "电网设备景气，受益于功率密度与扩容。",
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 46,
+            "layerPct": 29
           },
           {
             "ticker": "OKLO",
@@ -11510,14 +12339,20 @@ const DATA = {
             "scores": {
               "momentum": 23.011000000000006,
               "valuation": 50,
-              "growth": 45.0,
+              "growth": 54,
               "quality": 0,
-              "aiExposure": 85,
-              "research": 50.0,
-              "fundamental": 38,
-              "aiValue": 50
+              "aiExposure": 42,
+              "research": 52,
+              "fundamental": 32,
+              "aiValue": 39,
+              "lp_valuation": 86,
+              "lp_fundamental": 0,
+              "lp_momentum": 29,
+              "lp_aiValue": 14
             },
-            "tags": [],
+            "tags": [
+              "下行趋势"
+            ],
             "marketCap": 12,
             "pe": 0,
             "fwdPe": 0,
@@ -11539,7 +12374,18 @@ const DATA = {
               ]
             },
             "notes": "远期期权，仅适合高风险仓位。",
-            "est": true
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 55,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 5,
+            "aiRevGrowth": 80,
+            "pricingPower": 40,
+            "peHist5y": null,
+            "layerPct": 14
           },
           {
             "ticker": "CEG",
@@ -11558,15 +12404,21 @@ const DATA = {
             },
             "scores": {
               "momentum": 61.575,
-              "valuation": 35,
-              "growth": 58.2,
+              "valuation": 30,
+              "growth": 62,
               "quality": 35,
-              "aiExposure": 75,
-              "research": 82.0,
-              "fundamental": 57,
-              "aiValue": 46
+              "aiExposure": 44,
+              "research": 74,
+              "fundamental": 51,
+              "aiValue": 33,
+              "lp_valuation": 0,
+              "lp_fundamental": 71,
+              "lp_momentum": 86,
+              "lp_aiValue": 0
             },
-            "tags": [],
+            "tags": [
+              "下行趋势"
+            ],
             "marketCap": 90,
             "pe": 30,
             "fwdPe": 28,
@@ -11588,7 +12440,18 @@ const DATA = {
               ]
             },
             "notes": "核电 + AI 直供标杆标的。",
-            "est": true
+            "est": true,
+            "epsRevision": 6,
+            "ratingTrend": 0.2,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-07",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 39,
+            "layerPct": 0
           }
         ],
         "comparison": {
@@ -11596,25 +12459,23 @@ const DATA = {
             "US": {
               "ticker": "TLN",
               "name": "Talen Energy",
-              "aiValue": 68,
-              "count": 7
+              "aiValue": 57,
+              "count": 8
             }
           },
           "crossMarketBest": "TLN",
           "marketCounts": {
-            "US": 7
+            "US": 8
           }
         },
         "stats": {
-          "count": 7,
-          "avgFundamental": 53,
-          "avgValuation": 49,
-          "avgMomentum": 29,
-          "avgAiValue": 55,
+          "count": 8,
+          "avgFundamental": 48,
+          "avgValuation": 42,
+          "avgMomentum": 35,
+          "avgAiValue": 44,
           "topPick": "TLN",
-          "valuePicks": [
-            "TLN"
-          ]
+          "valuePicks": []
         }
       }
     ],
@@ -11623,74 +12484,161 @@ const DATA = {
         "ticker": "MU",
         "name": "美光",
         "layer": "芯片层",
-        "aiValue": 80,
-        "why": "基本面 72/100、估值便宜度 78/100、动量 0/100(未充分定价), AI价值分 80/100"
+        "aiValue": 70,
+        "layerPct": 92,
+        "why": "基本面 64/100、估值便宜度 60/100、动量 0/100(未充分定价), AI价值分 70/100"
       },
       {
         "ticker": "000660.KS",
         "name": "SK海力士",
         "layer": "芯片层",
-        "aiValue": 80,
-        "why": "基本面 72/100、估值便宜度 78/100、动量 0/100(未充分定价), AI价值分 80/100"
-      },
-      {
-        "ticker": "META",
-        "name": "Meta",
-        "layer": "模型层",
-        "aiValue": 75,
-        "why": "基本面 74/100、估值便宜度 62/100、动量 0/100(未充分定价), AI价值分 75/100"
-      },
-      {
-        "ticker": "NVDA",
-        "name": "英伟达",
-        "layer": "芯片层",
-        "aiValue": 74,
-        "why": "基本面 96/100、估值便宜度 62/100、动量 52.889/100(未充分定价), AI价值分 74/100"
-      },
-      {
-        "ticker": "CRWV",
-        "name": "CoreWeave",
-        "layer": "基础设施层",
-        "aiValue": 68,
-        "why": "基本面 72/100、估值便宜度 62/100、动量 29.100000000000005/100(未充分定价), AI价值分 68/100"
-      },
-      {
-        "ticker": "005930.KS",
-        "name": "三星电子",
-        "layer": "芯片层",
-        "aiValue": 68,
-        "why": "基本面 58/100、估值便宜度 62/100、动量 0/100(未充分定价), AI价值分 68/100"
-      },
-      {
-        "ticker": "TLN",
-        "name": "Talen Energy",
-        "layer": "能源层",
-        "aiValue": 68,
-        "why": "基本面 62/100、估值便宜度 62/100、动量 7.228999999999999/100(未充分定价), AI价值分 68/100"
+        "aiValue": 70,
+        "layerPct": 92,
+        "why": "基本面 65/100、估值便宜度 60/100、动量 0/100(未充分定价), AI价值分 70/100"
       }
     ],
     "summary": {
-      "companies": 41,
-      "layers": 5,
-      "valuePicks": 7,
-      "avgAiValue": 58,
+      "companies": 44,
+      "layers": 6,
+      "valuePicks": 2,
+      "avgAiValue": 52,
       "avgMomentum": 40
     },
     "marketSummary": {
       "US": {
-        "count": 30,
-        "avgAiValue": 57,
+        "count": 33,
+        "avgAiValue": 50,
         "best": "MU"
       },
       "A": {
         "count": 8,
-        "avgAiValue": 57,
+        "avgAiValue": 51,
         "best": "688041.SS"
       },
       "KR": {
         "count": 3,
-        "avgAiValue": 73,
+        "avgAiValue": 66,
         "best": "000660.KS"
+      }
+    },
+    "cycle": {
+      "asOf": "2026-Q2 策展（hyperscaler capex 为公开指引估计值，非精确财报，请按最新季报核实）",
+      "stage": "建设高峰 · 早期回报兑现",
+      "capex": [
+        {
+          "name": "Microsoft",
+          "ticker": "MSFT",
+          "fy25": 80,
+          "fy26e": 95,
+          "yoy": 0.19,
+          "note": "OpenAI/算力双线"
+        },
+        {
+          "name": "Alphabet",
+          "ticker": "GOOGL",
+          "fy25": 75,
+          "fy26e": 90,
+          "yoy": 0.2,
+          "note": "Gemini + 云"
+        },
+        {
+          "name": "Amazon",
+          "ticker": "AMZN",
+          "fy25": 100,
+          "fy26e": 120,
+          "yoy": 0.2,
+          "note": "AWS + Anthropic"
+        },
+        {
+          "name": "Meta",
+          "ticker": "META",
+          "fy25": 65,
+          "fy26e": 80,
+          "yoy": 0.23,
+          "note": "GPU + 自建集群"
+        },
+        {
+          "name": "四家合计",
+          "ticker": "",
+          "fy25": 320,
+          "fy26e": 385,
+          "yoy": 0.2,
+          "note": "Capex 超级周期延续"
+        }
+      ],
+      "bottlenecks": [
+        {
+          "name": "CoWoS 先进封装",
+          "status": "紧张",
+          "level": 3,
+          "detail": "台积电产能仍是头号瓶颈，2026 持续满载"
+        },
+        {
+          "name": "HBM 内存",
+          "status": "供不应求",
+          "level": 3,
+          "detail": "SK海力士/三星主导，价格上行"
+        },
+        {
+          "name": "电力与电网",
+          "status": "约束加剧",
+          "level": 2,
+          "detail": "数据中心用电审批与变压器交付是硬约束"
+        },
+        {
+          "name": "GPU 供给",
+          "status": "缓解中",
+          "level": 1,
+          "detail": "Blackwell 放量，交付改善"
+        }
+      ],
+      "transition": "重心由训练基建 → 推理规模化：推理毛利更高、需求更持久，是下一阶段主线。",
+      "narrative": "四大 hyperscaler 2026 年 Capex 合计约 $385B（+20%），超级周期延续。市场焦点从'谁拿到 GPU'转向'AI 能否兑现收入（ROI）'。估值已高但盈利仍在兑现，热度偏热、尚未泡沫化——需警惕客户集中度与出口管制。",
+      "privateModels": [
+        {
+          "name": "OpenAI",
+          "note": "GPT 系列 + 推理价格战，与微软深度绑定，估值超 $300B"
+        },
+        {
+          "name": "Anthropic",
+          "note": "Claude 企业级领先，亚马逊/谷歌投资，API 收入高增"
+        },
+        {
+          "name": "DeepSeek",
+          "note": "低成本推理范式，冲击闭源定价，国产算力受益"
+        },
+        {
+          "name": "xAI",
+          "note": "Grok + 自建超大规模集群，资本开支激进"
+        },
+        {
+          "name": "Mistral",
+          "note": "欧洲开源代表，企业级定位"
+        }
+      ],
+      "riskFlags": [
+        {
+          "name": "客户集中度",
+          "detail": "NVDA/CRWV 等前四大 hyperscaler 贡献过半收入"
+        },
+        {
+          "name": "出口管制",
+          "detail": "美对华先进芯片/设备管制，影响寒武纪/海光替代逻辑与美光/英伟达对华收入"
+        },
+        {
+          "name": "地缘(台海/韩)",
+          "detail": "台积电/三星产能集中于东亚，地缘风险溢价"
+        },
+        {
+          "name": "ROI 兑现",
+          "detail": "若 AI 收入不及预期，高估值 capex 链面临重估"
+        }
+      ],
+      "heat": 42,
+      "heatDriver": {
+        "avgMomentum": 40,
+        "avgValuationScore": 42,
+        "breadthPct": 27
       }
     }
   },
