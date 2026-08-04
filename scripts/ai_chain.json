@@ -1793,48 +1793,48 @@
     }
   ],
   "cycle": {
-    "asOf": "2026-Q2 策展（hyperscaler capex 为公开指引估计值，非精确财报，请按最新季报核实）",
-    "stage": "建设高峰 · 早期回报兑现",
+    "asOf": "2026-Q2 财报更新（截至 2026-08-04；hyperscaler capex 为公开指引估计值，非精确财报）",
+    "stage": "建设高峰 · ROI 兑现考验",
     "capex": [
       {
         "name": "Microsoft",
         "ticker": "MSFT",
-        "fy25": 80,
-        "fy26e": 95,
-        "yoy": 0.19,
-        "note": "OpenAI/算力双线"
+        "fy25": 81.4,
+        "fy26e": 175,
+        "yoy": 1.15,
+        "note": "OpenAI/算力双线；FY26e 口径调至 $175B（会计调整，实际投资节奏未放缓）"
       },
       {
         "name": "Alphabet",
         "ticker": "GOOGL",
-        "fy25": 75,
-        "fy26e": 90,
-        "yoy": 0.2,
-        "note": "Gemini + 云"
+        "fy25": 91.4,
+        "fy26e": 200,
+        "yoy": 1.19,
+        "note": "Gemini + 云；Q2 capex $44.9B，全年指引上修至 $195-205B"
       },
       {
         "name": "Amazon",
         "ticker": "AMZN",
-        "fy25": 100,
-        "fy26e": 120,
-        "yoy": 0.2,
-        "note": "AWS + Anthropic"
+        "fy25": 131.8,
+        "fy26e": 220,
+        "yoy": 0.67,
+        "note": "AWS + Anthropic；Q2 capex $53.1B 领跑，全年指引上修至 $220B"
       },
       {
         "name": "Meta",
         "ticker": "META",
-        "fy25": 65,
-        "fy26e": 80,
-        "yoy": 0.23,
-        "note": "GPU + 自建集群"
+        "fy25": 69.7,
+        "fy26e": 140,
+        "yoy": 1.01,
+        "note": "GPU + 自建集群；全年指引上修至 $130-145B，启动对外算力服务"
       },
       {
         "name": "四家合计",
         "ticker": "",
-        "fy25": 320,
-        "fy26e": 385,
-        "yoy": 0.2,
-        "note": "Capex 超级周期延续"
+        "fy25": 374,
+        "fy26e": 735,
+        "yoy": 0.96,
+        "note": "Capex 超级周期延续；四家合计逼近 $750B，自由现金流全面承压"
       }
     ],
     "bottlenecks": [
@@ -1864,7 +1864,7 @@
       }
     ],
     "transition": "重心由训练基建 → 推理规模化：推理毛利更高、需求更持久，是下一阶段主线。",
-    "narrative": "四大 hyperscaler 2026 年 Capex 合计约 $385B（+20%），超级周期延续。市场焦点从'谁拿到 GPU'转向'AI 能否兑现收入（ROI）'。估值已高但盈利仍在兑现，热度偏热、尚未泡沫化——需警惕客户集中度与出口管制。",
+    "narrative": "四大 hyperscaler 2026 年 Capex 合计约 $735B（+96%），Q2 财报后全线指引上修。市场焦点从'谁拿到 GPU'转向'AI 能否兑现收入（ROI）'与'自由现金流能否承受'。谷歌/亚马逊 FCF 已转负、Meta 暴跌 91%，单纯堆砌算力的时代结束——高估值 capex 链需警惕 ROI 不及预期、客户集中度与出口管制。",
     "privateModels": [
       {
         "name": "OpenAI",
