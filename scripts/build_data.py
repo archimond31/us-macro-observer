@@ -631,7 +631,7 @@ FRED_IDS = {
     'NFCI': 'nfci',
     # 资产
     'SP500': 'spx', 'NASDAQCOM': 'ndx_comp', 'DJIA': 'dji',
-    'DCOILWTICO': 'wti', 'DTWEXBGS': 'dxy_broad',
+    'DCOILWTICO': 'wti', 'DCOILBRENTEU': 'brent', 'DTWEXBGS': 'dxy_broad',
     'CBBTCUSD': 'btc', 'CBETHUSD': 'eth',
     # 经济
     'UNRATE': 'unrate', 'PAYEMS': 'payems', 'CPIAUCSL': 'cpi', 'CPILFESL': 'core_cpi',
@@ -713,7 +713,7 @@ S['tga'] = fetch_tga();        print(f'  DTS TGA → {len(S["tga"])} pts, latest
 YH_IDS = {
     '^NDX': 'ndx', '^RUT': 'rut', '^DJI': 'dji_yahoo', '^SOX': 'sox',
     'GC=F': 'gold', 'SI=F': 'silver',
-    'NG=F': 'natgas', 'HG=F': 'copper', 'DX-Y.NYB': 'dxy',
+    'NG=F': 'natgas', 'HG=F': 'copper', 'DX-Y.NYB': 'dxy', 'CL=F': 'wti_rt', 'BZ=F': 'brent_rt',
     'EURUSD=X': 'eurusd', 'GBPUSD=X': 'gbpusd', 'USDJPY=X': 'usdjpy', 'USDCNH=X': 'usdcnh',
     'TLT': 'tlt', 'IEF': 'ief', 'LQD': 'lqd', 'HYG': 'hyg', 'SPY': 'spy', 'QQQ': 'qqq',
     '^VVIX': 'vvix', '^MOVE': 'move', '^SKEW': 'skew', '^VIX3M': 'vix3m', '^VIX9D': 'vix9d',
@@ -809,7 +809,7 @@ def reg(key, series, is_pct=False, unit='', digits=2):
 
 print('\n-- 计算变化与分位 --')
 # FRED 中的资产价格序列用百分比变化(与 Yahoo 资产口径一致), 利率/余额类仍用点位/绝对差
-FRED_PCT_ASSETS = {'spx', 'ndx_comp', 'dji', 'wti', 'dxy_broad', 'btc', 'eth'}
+FRED_PCT_ASSETS = {'spx', 'ndx_comp', 'dji', 'wti', 'brent', 'dxy_broad', 'btc', 'eth'}
 for k in FRED_IDS.values(): reg(k, S[k], is_pct=(k in FRED_PCT_ASSETS))
 for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 # 波动率指数用点位差(pt)而非百分比, 与 FRED 的 VIX 口径一致

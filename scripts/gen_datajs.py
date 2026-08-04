@@ -145,10 +145,17 @@ def release_info(tag):
     nxt = _release_on(rule, _add_months(latest, 1 if freq == 'monthly' else 3))
     return {'latest': latest.isoformat(), 'next': nxt.isoformat(), 'estimated': True}
 
+# 实时源覆盖: Yahoo 实时序列优先于 FRED 滞后序列, 缺失时回退原 FRED 序列
+_LIVE_OVERRIDE = {'wti': 'wti_rt', 'brent': 'brent_rt'}
+def _live_resolve(key):
+    ov = _LIVE_OVERRIDE.get(key)
+    if ov and C.get(ov) is not None:
+        return ov
+    return key
 def g(key):
-    return C.get(key)
+    return C.get(_live_resolve(key))
 def s(key):
-    return RAW.get(key, [])
+    return RAW.get(_live_resolve(key), [])
 def val(key):
     v = g(key); return v['value'] if v else None
 def pct(key):
@@ -597,7 +604,7 @@ ASSET_MAP = [
     ('标普500','spx','^GSPC',2,''), ('纳斯达克100','ndx','^NDX',2,''),
     ('道琼斯','dji','^DJI',2,''), ('罗素2000','rut','^RUT',2,''),
     ('费城半导体','sox','^SOX',2,''),
-    ('黄金','gold','GC=F',2,'$'), ('WTI原油','wti','CL=F',2,'$'), ('铜','copper','HG=F',2,''),
+    ('黄金','gold','GC=F',2,'$'), ('WTI原油','wti','CL=F',2,'$'), ('布伦特原油','brent','BZ=F',2,'$'), ('铜','copper','HG=F',2,''),
     ('美元指数','dxy','DX-Y.NYB',2,''), ('美元/日元','usdjpy','USDJPY=X',2,''),
     ('比特币','btc','BTC',0,'$'), ('以太坊','eth','ETH',0,'$'),
     ('20+年国债ETF','tlt','TLT',2,''),
@@ -658,6 +665,14 @@ DATA['assets'] = {
                    if float(asset_changes("wti")["w"] or 0) < 0
                    else '油价持平, 通胀预期暂时稳定。')),
          'direction':_msig(dir_of(tfm('wti')['w']), False)},
+        {'title': f'布伦特原油周{"涨" if float(asset_changes("brent")["w"] or 0)>=0 else "跌"} {ret(asset_changes("brent")["w"])}',
+         'meaning':(
+             '布伦特对地缘与海运风险更敏感, 其溢价反映全球供需而非仅美国库存。'
+             if float(asset_changes("brent")["w"] or 0) > 0
+             else ('布伦特回落, 全球油价压力缓和。'
+                   if float(asset_changes("brent")["w"] or 0) < 0
+                   else '布伦特持平。')),
+         'direction':_msig(dir_of(tfm('brent')['w']), False)},
         {'title': f'黄金 {ret(asset_changes("gold")["w"])} {"横盘" if abs(float(asset_changes("gold")["w"] or 0))<1 else ("上涨" if float(asset_changes("gold")["w"] or 0)>0 else "下跌")}',
          'meaning':'实际利率上行对冲了避险买需, 黄金方向选择临近。',
          'direction':_msig(dir_of(tfm('gold')['w']), False)},
