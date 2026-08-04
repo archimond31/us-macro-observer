@@ -1740,6 +1740,7 @@ for _ly in AIC.get('layers', []):
             _tags.append('高质量')
         _comps.append({
             'ticker': _c.get('ticker'), 'name': _c.get('name'), 'key': _key,
+            'market': _c.get('market', 'US'), 'ccy': _c.get('ccy', 'USD'),
             'techRoute': _c.get('techRoute'), 'productDir': _c.get('productDir'),
             'price': _price, 'ch': _ch,
             'scores': {'momentum': _mom, 'valuation': _val, 'growth': _gro,
@@ -1758,10 +1759,24 @@ for _ly in AIC.get('layers', []):
         return round(sum(vs) / len(vs)) if vs else 0
     _comps_sorted = sorted(_comps, key=lambda c: c['scores']['aiValue'], reverse=True)
     _value_picks = [c for c in _comps if '价值股候选' in c['tags']]
+    # 每层跨市场对比: 各市场领头羊 + 跨市场最佳
+    _mk = {}
+    for _cc in _comps:
+        _mk.setdefault(_cc['market'], []).append(_cc)
+    _mk_leaders = {}
+    for _mkname, _lst in _mk.items():
+        _b = max(_lst, key=lambda x: x['scores']['aiValue'])
+        _mk_leaders[_mkname] = {'ticker': _b['ticker'], 'name': _b['name'],
+                                'aiValue': _b['scores']['aiValue'], 'count': len(_lst)}
+    _comparison = {
+        'leaders': _mk_leaders,
+        'crossMarketBest': (_comps_sorted[0]['ticker'] if _comps_sorted else None),
+        'marketCounts': {_mkname: len(_lst) for _mkname, _lst in _mk.items()}
+    }
     _ai_layers_out.append({
         'id': _ly.get('id'), 'name': _ly.get('name'), 'en': _ly.get('en'),
         'desc': _ly.get('desc'), 'techRoutes': _ly.get('techRoutes', []),
-        'companies': _comps_sorted,
+        'companies': _comps_sorted, 'comparison': _comparison,
         'stats': {
             'count': len(_comps),
             'avgFundamental': _avg('fundamental'), 'avgValuation': _avg('valuation'),
@@ -1787,12 +1802,21 @@ _ai_summary = {
     'avgAiValue': round(sum(c['scores']['aiValue'] for c in _ai_all_companies) / max(len(_ai_all_companies), 1)),
     'avgMomentum': round(sum(c['scores']['momentum'] for c in _ai_all_companies) / max(len(_ai_all_companies), 1))
 }
+# 全局跨市场汇总: 各市场公司数 / 平均AI价值分 / 该市场最佳
+_ai_mk_all = {}
+for _c in _ai_all_companies:
+    _ai_mk_all.setdefault(_c['market'], []).append(_c)
+_ai_market_summary = {_mk: {'count': len(_lst),
+                            'avgAiValue': round(sum(x['scores']['aiValue'] for x in _lst) / len(_lst)),
+                            'best': max(_lst, key=lambda x: x['scores']['aiValue'])['ticker']}
+                      for _mk, _lst in _ai_mk_all.items()}
 DATA['aiChain'] = {
     'meta': {'asOf': AIC.get('asOf', ''), 'disclaimer': AIC.get('disclaimer', ''),
              'note': '五层=黄仁勋AI蛋糕: 应用→模型→基础设施→芯片→能源; 股价动量自动(Yahoo), 基本面/研报为策展种子值'},
     'layers': _ai_layers_out,
     'bestValuePicks': _ai_best_picks,
-    'summary': _ai_summary
+    'summary': _ai_summary,
+    'marketSummary': _ai_market_summary
 }
 print('[gen_datajs] aiChain section OK', file=sys.stderr, flush=True)
 

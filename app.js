@@ -1491,6 +1491,14 @@ function _aiTags(tags) {
     return '<span style="display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;color:#fff;background:' + c + ';margin:1px 2px 1px 0">' + t + '</span>';
   }).join('');
 }
+function _aiMkt(m) {
+  var m2 = { 'US': { f: '🇺🇸', t: '美股' }, 'A': { f: '🇨🇳', t: 'A股' }, 'KR': { f: '🇰🇷', t: '韩股' } };
+  var x = m2[m] || { f: '🌐', t: (m || '?') };
+  return '<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(67,97,238,0.12);color:var(--accent);margin-left:4px;white-space:nowrap">' + x.f + ' ' + x.t + '</span>';
+}
+function _aiCcySym(ccy) {
+  return ({ 'USD': '$', 'CNY': '¥', 'KRW': '₩' })[ccy] || '$';
+}
 function renderAiValuePicks(list) {
   if (!list || !list.length) return '<div style="color:var(--text-tertiary);font-size:12px">当前未筛选出明显被低估的标的（可放宽阈值或等待动量回撤）。</div>';
   var headers = ['公司', '所属层', 'AI价值分', '为何被低估'];
@@ -1518,12 +1526,27 @@ function renderAiLayer(L) {
     var ch = c.ch || {}, sc = c.scores || {}, col = _aiColor(sc.aiValue);
     var valCell = '<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;min-width:24px">' + sc.aiValue + '</span>' + _aiBar(sc.aiValue, col) + '</div>';
     return [
-      '<div><span class="ticker">' + c.ticker + '</span><br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span></div>',
+      '<div><span class="ticker">' + c.ticker + '</span>' + _aiMkt(c.market) + '<br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span>'
+        + (c.price != null ? '<br><span style="font-size:11px;color:var(--text-tertiary)">' + _aiCcySym(c.ccy) + Number(c.price).toFixed(2) + '</span>' : '') + '</div>',
       '<div style="font-size:12px"><div>' + (c.techRoute || '—') + '</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + (c.productDir || '') + '</div></div>',
       _aiPct(ch.w), _aiPct(ch.m), _aiPct(ch.h6), valCell, _aiTags(c.tags)
     ];
   });
   inner += table(headers, rows);
+  // 中美韩对比面板: 该层各市场领头羊 + 跨市场最佳
+  var cmp = L.comparison || {}, leaders = cmp.leaders || {}, mkKeys = Object.keys(leaders);
+  if (mkKeys.length > 1) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:14px 0 6px">🌍 中美韩对比 · 各市场领头羊</div>';
+    inner += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    mkKeys.forEach(function (mk) {
+      var ld = leaders[mk], isBest = (cmp.crossMarketBest && ld.ticker === cmp.crossMarketBest);
+      inner += '<div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid ' + (isBest ? '#2a9d8f' : 'var(--border-card)') + ';border-radius:10px;padding:8px 10px">'
+        + '<div style="font-size:11px;color:var(--text-tertiary)">' + _aiMkt(mk) + ' 领头羊' + (isBest ? ' · <b style="color:#2a9d8f">跨市场最佳</b>' : '') + '</div>'
+        + '<div style="font-weight:700;margin-top:3px">' + ld.ticker + ' <span style="font-size:11px;font-weight:400;color:var(--text-secondary)">' + ld.name + '</span></div>'
+        + '<div style="font-size:13px;margin-top:2px">AI价值分 <b>' + ld.aiValue + '</b> · ' + ld.count + ' 家</div></div>';
+    });
+    inner += '</div>';
+  }
   var rs = (L.companies || []).filter(function (c) { return c.research; });
   if (rs.length) {
     inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:14px 0 6px">📑 研报共识与备注</div>';
@@ -1552,6 +1575,19 @@ function renderAiChain(container) {
       + '<div style="font-size:20px;font-weight:700;margin-top:4px">' + kv[1] + '</div></div>';
   });
   html += '</div>';
+  // 市场分布汇总
+  var ms = d.marketSummary || {}, msKeys = Object.keys(ms);
+  if (msKeys.length > 1) {
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">';
+    msKeys.forEach(function (mk) {
+      var m = ms[mk];
+      html += '<div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:10px 12px">'
+        + '<div style="font-size:11px;color:var(--text-tertiary)">' + _aiMkt(mk) + '</div>'
+        + '<div style="font-size:18px;font-weight:700;margin-top:2px">' + m.count + ' 家</div>'
+        + '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">平均AI价值分 ' + m.avgAiValue + ' · 最佳 ' + m.best + '</div></div>';
+    });
+    html += '</div>';
+  }
   html += sectionH('五层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">';
   (d.layers || []).forEach(function (L) {
