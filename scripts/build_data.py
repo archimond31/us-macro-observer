@@ -719,7 +719,24 @@ YH_IDS = {
     '^VVIX': 'vvix', '^MOVE': 'move', '^SKEW': 'skew', '^VIX3M': 'vix3m', '^VIX9D': 'vix9d',
     '^VIX': 'vix', '^OVX': 'ovx', '^GVZ': 'gvz', '^TYX': 'tyx'
 }
+
+# AI 产业链 (黄仁勋五层蛋糕): 应用/模型/基础设施/芯片/能源 代表公司实时行情
+# key 与 scripts/ai_chain.json 中的 company.key 一一对应
+AI_YH_IDS = {
+    'MSFT': 'msft', 'CRM': 'crm', 'NOW': 'now', 'PLTR': 'pltr', 'ADBE': 'adbe', 'SNOW': 'snow',
+    'GOOGL': 'googl', 'META': 'meta', 'AMZN': 'amzn',
+    'ORCL': 'orcl', 'CRWV': 'crwv', 'ANET': 'anet', 'VRT': 'vrt', 'DELL': 'dell',
+    'NVDA': 'nvda', 'AMD': 'amd', 'AVGO': 'avgo', 'TSM': 'tsm', 'ARM': 'arm',
+    'MRVL': 'mrvl', 'AMAT': 'amat', 'ASML': 'asml', 'MU': 'mu',
+    'CEG': 'ceg', 'VST': 'vst', 'NEE': 'nee', 'GEV': 'gev', 'TLN': 'tln', 'CCJ': 'ccj', 'OKLO': 'oklo'
+}
 for sym, key in YH_IDS.items():
+    S[key] = yahoo(sym)
+    print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
+    time.sleep(0.4)
+
+# AI 公司行情 (与主线行情分开, 便于阅读日志)
+for sym, key in AI_YH_IDS.items():
     S[key] = yahoo(sym)
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
@@ -816,6 +833,10 @@ for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m', 'vix', 'ovx', 'gvz', 'tyx'}
 for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
 
+# AI 产业链公司行情 (价格 level, 四尺度 %变化供动量计算; 不进 YH_LEVEL)
+for k in AI_YH_IDS.values():
+    if S.get(k): reg(k, S[k], is_pct=False)
+
 # PMI (非 FRED 序列, 需单独注册)
 if S.get('mfg_pmi'): reg('mfg_pmi', S['mfg_pmi'])
 if S.get('svc_pmi'): reg('svc_pmi', S['svc_pmi'])
@@ -869,6 +890,8 @@ def _src_of(k):
     for fid, key in FRED_IDS.items():
         if key == k: return 'FRED:' + fid
     for sym, key in YH_IDS.items():
+        if key == k: return 'Yahoo:' + sym
+    for sym, key in AI_YH_IDS.items():
         if key == k: return 'Yahoo:' + sym
     return {'sofr': 'NYFed:SOFR', 'rrp_api': 'NYFed:RRP', 'srf': 'NYFed:SRF',
             'tga': 'FRED:WTREGEN→DTS', 'netliq': 'derived'}.get(k, '?')

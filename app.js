@@ -17,6 +17,7 @@ const SECTION_CONFIG = {
   credit:     { title: '信用市场',   subtitle: 'Credit · 利差分层与违约周期' },
   volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' },
   crypto:     { title: '加密货币',   subtitle: 'Crypto · BTC/ETH/ETF/比率' },
+  ai:         { title: 'AI产业链',   subtitle: 'AI Chain · 五层蛋糕价值挖掘' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
   risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
@@ -60,7 +61,8 @@ function switchSection(section) {
     assets: renderAssets, rates: renderRates, fed: renderFed,
     liquidity: renderLiquidity, economy: renderEconomy,
     credit: renderCredit, volatility: renderVolatility,
-    crypto: renderCrypto, recession: renderRecession, risk: renderRisk
+    crypto: renderCrypto, recession: renderRecession, risk: renderRisk,
+    ai: renderAiChain
   };
   renderers[section](content);
 }
@@ -1462,3 +1464,108 @@ renderEconomy = function(c) {
     }
   }
 };
+
+/* ================= AI 产业链 (Jensen 五层蛋糕) ================= */
+function _aiColor(v) {
+  v = v || 0;
+  if (v >= 65) return '#2a9d8f';
+  if (v >= 48) return '#4361ee';
+  if (v >= 35) return '#f59e0b';
+  return '#e63946';
+}
+function _aiPct(x) {
+  if (x === null || x === undefined) return { text: '—', dir: '' };
+  var t = (x >= 0 ? '+' : '') + x.toFixed(1) + '%';
+  return { text: t, dir: x > 0 ? 'up' : (x < 0 ? 'down' : '') };
+}
+function _aiBar(v, color) {
+  v = Math.max(0, Math.min(100, v || 0));
+  return '<div style="flex:1;height:8px;background:var(--border-card);border-radius:5px;overflow:hidden">'
+    + '<div style="height:100%;width:' + v + '%;background:' + (color || 'var(--accent)') + ';border-radius:5px"></div></div>';
+}
+function _aiTags(tags) {
+  if (!tags || !tags.length) return '<span style="color:var(--text-tertiary)">—</span>';
+  var cmap = { '价值股候选': '#2a9d8f', '高估值': '#e63946', '领跑': '#4361ee', '高质量': '#b08968' };
+  return tags.map(function (t) {
+    var c = cmap[t] || '#6b7280';
+    return '<span style="display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;color:#fff;background:' + c + ';margin:1px 2px 1px 0">' + t + '</span>';
+  }).join('');
+}
+function renderAiValuePicks(list) {
+  if (!list || !list.length) return '<div style="color:var(--text-tertiary);font-size:12px">当前未筛选出明显被低估的标的（可放宽阈值或等待动量回撤）。</div>';
+  var headers = ['公司', '所属层', 'AI价值分', '为何被低估'];
+  var rows = list.map(function (p) {
+    return ['<b>' + p.ticker + '</b> <span style="font-size:11px;color:var(--text-secondary)">' + p.name + '</span>',
+      '<span style="font-size:11px">' + p.layer + '</span>',
+      '<span style="font-weight:700;color:#2a9d8f">' + p.aiValue + '</span>',
+      '<span style="font-size:11px;color:var(--text-secondary)">' + p.why + '</span>'];
+  });
+  return table(headers, rows);
+}
+function renderAiLayer(L) {
+  var s = L.stats || {};
+  var inner = '';
+  if (L.desc) inner += '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">' + L.desc + '</div>';
+  if (L.techRoutes && L.techRoutes.length) {
+    inner += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+    L.techRoutes.forEach(function (r) {
+      inner += '<span style="font-size:11px;padding:3px 9px;border:1px solid var(--border-card);border-radius:12px;color:var(--text-secondary)">' + r + '</span>';
+    });
+    inner += '</div>';
+  }
+  var headers = ['公司', '技术路线 / 产品方向', '周', '月', '半年', 'AI价值分', '标签'];
+  var rows = (L.companies || []).map(function (c) {
+    var ch = c.ch || {}, sc = c.scores || {}, col = _aiColor(sc.aiValue);
+    var valCell = '<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;min-width:24px">' + sc.aiValue + '</span>' + _aiBar(sc.aiValue, col) + '</div>';
+    return [
+      '<div><span class="ticker">' + c.ticker + '</span><br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span></div>',
+      '<div style="font-size:12px"><div>' + (c.techRoute || '—') + '</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + (c.productDir || '') + '</div></div>',
+      _aiPct(ch.w), _aiPct(ch.m), _aiPct(ch.h6), valCell, _aiTags(c.tags)
+    ];
+  });
+  inner += table(headers, rows);
+  var rs = (L.companies || []).filter(function (c) { return c.research; });
+  if (rs.length) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:14px 0 6px">📑 研报共识与备注</div>';
+    inner += '<div class="watch-list">';
+    rs.forEach(function (c) {
+      var r = c.research;
+      var src = (r.sources && r.sources.length) ? '<a href="' + r.sources[0].url + '" target="_blank" style="color:var(--accent);font-size:11px;margin-left:6px">来源↗</a>' : '';
+      inner += '<div class="watch-item"><div class="watch-trigger"><b>' + c.ticker + '</b> · ' + (r.consensus || '—')
+        + ' <span style="color:var(--text-tertiary);font-weight:400">(' + (r.ratingScore || '—') + '/5, ' + (r.reports || 0) + '篇)</span>' + src + '</div>'
+        + '<div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (r.summary || '') + (c.notes ? ' ｜ ' + c.notes : '') + '</div></div>';
+    });
+    inner += '</div>';
+  }
+  return sectionCard(L.name + ' · ' + (L.en || ''), (s.count || 0) + ' 家公司 · 平均AI价值分 ' + (s.avgAiValue || 0) + (s.topPick ? ' · 优选 ' + s.topPick : ''), inner);
+}
+function renderAiChain(container) {
+  var d = DATA.aiChain || { layers: [], bestValuePicks: [], summary: {}, meta: {} };
+  var sm = d.summary || {};
+  var html = '';
+  html += sectionH('AI 产业链 · 黄仁勋五层蛋糕', '应用 → 模型 → 基础设施 → 芯片 → 能源；股价动量自动(Yahoo)，基本面/研报为策展种子值');
+  html += '<div class="metric-grid">';
+  [['覆盖公司', (sm.companies || 0) + ' 家'], ['产业链层', (sm.layers || 0) + ' 层'], ['价值股候选', (sm.valuePicks || 0) + ' 只'],
+   ['平均AI价值分', (sm.avgAiValue || 0) + ' /100'], ['平均动量', (sm.avgMomentum || 0) + ' /100']].forEach(function (kv) {
+    html += '<div style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:12px 14px">'
+      + '<div style="font-size:11px;color:var(--text-tertiary)">' + kv[0] + '</div>'
+      + '<div style="font-size:20px;font-weight:700;margin-top:4px">' + kv[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += sectionH('五层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
+  html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">';
+  (d.layers || []).forEach(function (L) {
+    var s = L.stats || {}, col = _aiColor(s.avgAiValue || 0);
+    html += '<div style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:10px 14px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<span style="font-weight:600">' + L.name + ' <span style="font-size:11px;color:var(--text-tertiary)">' + (L.en || '') + '</span></span>'
+      + '<span style="font-size:11px;color:var(--text-tertiary)">' + (s.count || 0) + ' 家 · 优选 ' + (s.topPick || '—') + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:10px">' + _aiBar(s.avgAiValue || 0, col)
+      + '<span style="font-weight:700;font-size:13px">' + (s.avgAiValue || 0) + '</span></div></div>';
+  });
+  html += '</div>';
+  html += sectionCard('🔎 尚未被充分定价的 AI 价值股', '筛选：基本面强 + 估值便宜 + 尚未被拉涨', renderAiValuePicks(d.bestValuePicks || []));
+  (d.layers || []).forEach(function (L) { html += renderAiLayer(L); });
+  if (d.meta && d.meta.disclaimer) html += '<div style="font-size:11px;color:var(--text-tertiary);line-height:1.6;margin-top:14px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px">' + d.meta.disclaimer + '</div>';
+  container.innerHTML = html;
+}

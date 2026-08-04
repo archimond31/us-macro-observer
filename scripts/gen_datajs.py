@@ -25,6 +25,14 @@ except Exception:
     EV = {'fomc': [], 'jackson_hole': None, 'speeches': []}
     print('[gen_datajs] events.json 缺失, 事件板块将留空', file=sys.stderr, flush=True)
 
+# AI 产业链知识库 (五层蛋糕: 应用/模型/基础设施/芯片/能源; 策展基本面 + 研报共识)
+try:
+    AIC = json.load(open('ai_chain.json'))
+    print('[gen_datajs] loaded ai_chain.json', file=sys.stderr, flush=True)
+except Exception:
+    AIC = {'layers': [], 'disclaimer': '', 'asOf': ''}
+    print('[gen_datajs] ai_chain.json 缺失, AI板块将留空', file=sys.stderr, flush=True)
+
 def _iso(d):  # '2026-07-28' → date
     return datetime.date.fromisoformat(d)
 
@@ -1663,6 +1671,130 @@ DATA['riskScore'] = {
 }
 
 print('[gen_datajs] riskScore section OK', file=sys.stderr, flush=True)
+
+# ====== AI 产业链 (Jensen 黄仁勋五层蛋糕) ======
+print('[gen_datajs] generating aiChain section...', file=sys.stderr, flush=True)
+
+def _aiclip(x, lo=0, hi=100):
+    try: return max(lo, min(hi, x))
+    except Exception: return 50
+
+def _ai_valuation(pe, fpe, peg):
+    """便宜度评分: PEG 优先, 其次远期/静态 PE; 数值越高=越便宜"""
+    if peg and peg > 0:
+        return (90 if peg <= 0.5 else 78 if peg <= 1.0 else 62 if peg <= 1.5
+                else 48 if peg <= 2.0 else 35 if peg <= 3.0 else 22)
+    pe_u = fpe or pe
+    if pe_u and pe_u > 0:
+        return (85 if pe_u <= 15 else 72 if pe_u <= 25 else 58 if pe_u <= 35
+                else 44 if pe_u <= 50 else 30)
+    return 50
+
+def _ai_growth(g):
+    if g is None: return 50
+    return _aiclip(45 + g * 1.1)
+
+def _ai_quality(gm, fcf, roe):
+    def _q(x, hi): return _aiclip((x or 0) / hi * 100) if x is not None else 60
+    return round((_q(gm, 90) + _q(fcf, 50) + _q(roe, 80)) / 3)
+
+def _ai_research(rs):
+    if rs and rs.get('ratingScore') is not None:
+        return _aiclip(rs['ratingScore'] / 5 * 100)
+    return 50
+
+def _ai_momentum(ch):
+    """价格动量分: 周/月/半年收益加权; 越高=已上涨(越被定价)"""
+    w, m, h6 = (ch or {}).get('w'), (ch or {}).get('m'), (ch or {}).get('h6')
+    if w is None and m is None and h6 is None: return 50
+    s = 50 + (w or 0) * 0.4 + (m or 0) * 0.9 + (h6 or 0) * 0.3
+    return _aiclip(s)
+
+_key2layer = {c['key']: _ly['name'] for _ly in AIC.get('layers', []) for c in _ly.get('companies', [])}
+_ai_layers_out = []
+_ai_all_companies = []
+for _ly in AIC.get('layers', []):
+    _comps = []
+    for _c in _ly.get('companies', []):
+        _key = _c.get('key')
+        _price = val(_key) if _key else None
+        _ch = asset_changes(_key) if _key else {}
+        _mom = _ai_momentum(_ch)
+        _val = _ai_valuation(_c.get('pe'), _c.get('fwdPe'), _c.get('peg'))
+        _gro = _ai_growth(_c.get('revGrowth'))
+        _qua = _ai_quality(_c.get('grossMargin'), _c.get('fcfMargin'), _c.get('roe'))
+        _res = _ai_research(_c.get('research'))
+        _aie = _c.get('aiExposure') or 50
+        # 基本面强度: 质量/成长/AI卡位/研报共识
+        _fund = round(0.35 * _qua + 0.30 * _gro + 0.20 * _aie + 0.15 * _res)
+        # AI 价值分: 强基本面 + 便宜 + 尚未被拉涨(动量低) = 被低估的价值股
+        _aiv = round(0.45 * _fund + 0.35 * _val + 0.20 * (100 - _mom))
+        _tags = []
+        if _aiv >= 62 and _val >= 55 and _mom < 62:
+            _tags.append('价值股候选')
+        if _val < 35 and _mom >= 65:
+            _tags.append('高估值')
+        if _mom >= 65:
+            _tags.append('领跑')
+        if _qua >= 70 and _fund >= 70:
+            _tags.append('高质量')
+        _comps.append({
+            'ticker': _c.get('ticker'), 'name': _c.get('name'), 'key': _key,
+            'techRoute': _c.get('techRoute'), 'productDir': _c.get('productDir'),
+            'price': _price, 'ch': _ch,
+            'scores': {'momentum': _mom, 'valuation': _val, 'growth': _gro,
+                       'quality': _qua, 'aiExposure': _aie, 'research': _res,
+                       'fundamental': _fund, 'aiValue': _aiv},
+            'tags': _tags,
+            'marketCap': _c.get('marketCap'), 'pe': _c.get('pe'), 'fwdPe': _c.get('fwdPe'),
+            'peg': _c.get('peg'), 'revGrowth': _c.get('revGrowth'),
+            'grossMargin': _c.get('grossMargin'), 'fcfMargin': _c.get('fcfMargin'),
+            'roe': _c.get('roe'),
+            'research': _c.get('research'), 'notes': _c.get('notes'), 'est': _c.get('est', True)
+        })
+        _ai_all_companies.append(_comps[-1])
+    def _avg(field):
+        vs = [c['scores'][field] for c in _comps]
+        return round(sum(vs) / len(vs)) if vs else 0
+    _comps_sorted = sorted(_comps, key=lambda c: c['scores']['aiValue'], reverse=True)
+    _value_picks = [c for c in _comps if '价值股候选' in c['tags']]
+    _ai_layers_out.append({
+        'id': _ly.get('id'), 'name': _ly.get('name'), 'en': _ly.get('en'),
+        'desc': _ly.get('desc'), 'techRoutes': _ly.get('techRoutes', []),
+        'companies': _comps_sorted,
+        'stats': {
+            'count': len(_comps),
+            'avgFundamental': _avg('fundamental'), 'avgValuation': _avg('valuation'),
+            'avgMomentum': _avg('momentum'), 'avgAiValue': _avg('aiValue'),
+            'topPick': (_comps_sorted[0]['ticker'] if _comps_sorted else None),
+            'valuePicks': [c['ticker'] for c in _value_picks]
+        }
+    })
+
+# 跨层价值股挖掘 (尚未被充分定价)
+_ai_best = sorted([c for c in _ai_all_companies if '价值股候选' in c['tags']],
+                  key=lambda c: c['scores']['aiValue'], reverse=True)[:10]
+def _ai_why(c):
+    s = c['scores']
+    return (f"基本面 {s['fundamental']}/100、估值便宜度 {s['valuation']}/100、"
+            f"动量 {s['momentum']}/100(未充分定价), AI价值分 {s['aiValue']}/100")
+_ai_best_picks = [{'ticker': c['ticker'], 'name': c['name'],
+                   'layer': _key2layer.get(c['key'], ''),
+                   'aiValue': c['scores']['aiValue'], 'why': _ai_why(c)} for c in _ai_best]
+_ai_summary = {
+    'companies': len(_ai_all_companies), 'layers': len(_ai_layers_out),
+    'valuePicks': len(_ai_best),
+    'avgAiValue': round(sum(c['scores']['aiValue'] for c in _ai_all_companies) / max(len(_ai_all_companies), 1)),
+    'avgMomentum': round(sum(c['scores']['momentum'] for c in _ai_all_companies) / max(len(_ai_all_companies), 1))
+}
+DATA['aiChain'] = {
+    'meta': {'asOf': AIC.get('asOf', ''), 'disclaimer': AIC.get('disclaimer', ''),
+             'note': '五层=黄仁勋AI蛋糕: 应用→模型→基础设施→芯片→能源; 股价动量自动(Yahoo), 基本面/研报为策展种子值'},
+    'layers': _ai_layers_out,
+    'bestValuePicks': _ai_best_picks,
+    'summary': _ai_summary
+}
+print('[gen_datajs] aiChain section OK', file=sys.stderr, flush=True)
 
 # ====== 加密货币板块 (Crypto) ======
 print('[gen_datajs] generating crypto section...', file=sys.stderr, flush=True)
