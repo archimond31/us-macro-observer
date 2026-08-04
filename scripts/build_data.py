@@ -840,9 +840,11 @@ for k in ['sofr', 'rrp_api', 'srf', 'tga']: reg(k, S[k])
 YH_LEVEL = {'vvix', 'move', 'skew', 'vix9d', 'vix3m', 'vix', 'ovx', 'gvz', 'tyx'}
 for k in YH_IDS.values(): reg(k, S[k], is_pct=(k not in YH_LEVEL))
 
-# AI 产业链公司行情 (价格 level, 四尺度 %变化供动量计算; 不进 YH_LEVEL)
+# AI 产业链公司行情 (价格 level, 四尺度 百分比变化供动量计算; 不进 YH_LEVEL)
+# 必须用 is_pct=True：韩股/A股等绝对价格基数大(₩1000+ / ¥100+)，若用绝对差会显示成 +27000% 这种荒谬值，
+# 且动量分公式 _ai_momentum 期望的是百分比收益。
 for k in AI_YH_IDS.values():
-    if S.get(k): reg(k, S[k], is_pct=False)
+    if S.get(k): reg(k, S[k], is_pct=True)
 
 # PMI (非 FRED 序列, 需单独注册)
 if S.get('mfg_pmi'): reg('mfg_pmi', S['mfg_pmi'])
