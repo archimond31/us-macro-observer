@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-08 种子版（含美股/A股/韩股；market 字段标注市场 US/A/KR，ccy 标注价格币种；市值统一换算为 USD $B 便于跨市场比较；策展估值/成长/毛利为估计值，请定期在 build_data 拉取真实财报后刷新；股价动量由 Yahoo 实时自动计算）",
+  "asOf": "2026-08 种子版（六层：应用/模型/基础设施/网络连接/芯片/能源；含美股/A股/韩股；market 标注市场、ccy 标注币种、市值统一 USD $B；策展财务/研报为估计值须随财报刷新；新增 cycle 资本开支周期叙事层，其中 capex 为公开指引估计值，非精确财报）",
   "disclaimer": "股价、日/周/月/半年动量由 Yahoo Finance 自动拉取；估值(P/E、PEG)、营收增速、毛利率、FCF 利润率、ROE、AI 卡位、研报共识为分析师策展种子值(标记 est=true)，需随财报/研报更新。本板块不构成投资建议。",
   "layers": [
     {
@@ -7,50 +7,282 @@
       "name": "应用层",
       "en": "Applications",
       "desc": "将 AI 能力封装进产品或工作流、直接面向企业与消费者的公司。最容易感知 AI 变现，但壁垒相对最低、易被平台方挤压。",
-      "techRoutes": ["企业级 AI 助手 / Copilot", "自主 AI Agent", "决策智能平台", "创意生成式 AI", "数据云 + AI"],
+      "techRoutes": [
+        "企业级 AI 助手 / Copilot",
+        "自主 AI Agent",
+        "决策智能平台",
+        "创意生成式 AI",
+        "数据云 + AI"
+      ],
       "companies": [
-        {"ticker": "MSFT", "key": "msft", "name": "微软", "est": true,
-         "techRoute": "企业级 AI 助手 (Copilot)",
-         "productDir": "Microsoft 365 Copilot、Azure OpenAI、GitHub Copilot、Copilot Studio",
-         "marketCap": 3400, "pe": 36, "fwdPe": 30, "peg": 2.1, "revGrowth": 15, "grossMargin": 70, "fcfMargin": 33, "roe": 38, "aiExposure": 85,
-         "research": {"consensus": "增持", "ratingScore": 4.4, "reports": 42, "summary": "Copilot 渗透率与 Azure AI 收入是核心催化；OpenAI 深度绑定但估值已含乐观预期。", "sources": [{"title": "Microsoft Investor Relations", "url": "https://www.microsoft.com/en-us/investor"}]},
-         "notes": "AI 变现最清晰的巨头之一，但PEG偏高，需看 Copilot 续费率。"},
-        {"ticker": "CRM", "key": "crm", "name": "Salesforce", "est": true,
-         "techRoute": "CRM + 自主 Agent",
-         "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
-         "marketCap": 320, "pe": 28, "fwdPe": 24, "peg": 1.8, "revGrowth": 11, "grossMargin": 76, "fcfMargin": 31, "roe": 12, "aiExposure": 70,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.8, "reports": 30, "summary": "Agentforce 是下一增长曲线，但企业 Agent 落地节奏与提价能力待验证。", "sources": [{"title": "Salesforce Investor", "url": "https://www.salesforce.com/company/investor/"}]},
-         "notes": "估值相对巨头更温和，Agent 主题弹性大。"},
-        {"ticker": "NOW", "key": "now", "name": "ServiceNow", "est": true,
-         "techRoute": "工作流 AI 代理",
-         "productDir": "Now Assist、AI Agent、ITSM / 企业自动化平台",
-         "marketCap": 230, "pe": 60, "fwdPe": 48, "peg": 2.4, "revGrowth": 22, "grossMargin": 79, "fcfMargin": 30, "roe": 30, "aiExposure": 72,
-         "research": {"consensus": "增持", "ratingScore": 4.2, "reports": 28, "summary": "高粘性 ITSM 底座 + AI 提价逻辑扎实，但估值已反映高增长。", "sources": [{"title": "ServiceNow Investor", "url": "https://www.servicenow.com/company/investor-relations.html"}]},
-         "notes": "质量高但贵，动量回撤时是更好的买点。"},
-        {"ticker": "PLTR", "key": "pltr", "name": "Palantir", "est": true,
-         "techRoute": "决策智能 / AI 作战平台",
-         "productDir": "AIP 平台、Foundry、政府 + 商业决策",
-         "marketCap": 360, "pe": 200, "fwdPe": 120, "peg": 5.0, "revGrowth": 40, "grossMargin": 81, "fcfMargin": 28, "roe": 18, "aiExposure": 90,
-         "research": {"consensus": "分歧大", "ratingScore": 3.2, "reports": 35, "summary": "商业客户加速是最强叙事，但估值极度透支，机构分歧显著。", "sources": [{"title": "Palantir Investor", "url": "https://www.palantir.com/investors/"}]},
-         "notes": "高成长高分歧标的，价值分受估值拖累明显。"},
-        {"ticker": "ADBE", "key": "adbe", "name": "Adobe", "est": true,
-         "techRoute": "创意生成式 AI",
-         "productDir": "Firefly、Photoshop Express、GenStudio",
-         "marketCap": 220, "pe": 26, "fwdPe": 23, "peg": 1.6, "revGrowth": 11, "grossMargin": 89, "fcfMargin": 38, "roe": 40, "aiExposure": 60,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.9, "reports": 26, "summary": "Firefly 守住创意护城河，估值合理，是被低估的 AI 应用标的候选。", "sources": [{"title": "Adobe Investor", "url": "https://www.adobe.com/investor-relations.html"}]},
-         "notes": "估值温和 + 高毛利，价值挖掘重点关注对象。"},
-        {"ticker": "SNOW", "key": "snow", "name": "Snowflake", "est": true,
-         "techRoute": "数据云 + AI",
-         "productDir": "Cortex、Snowpark、Document AI",
-         "marketCap": 60, "pe": 0, "fwdPe": 70, "peg": 2.0, "revGrowth": 28, "grossMargin": 75, "fcfMargin": 22, "roe": -10, "aiExposure": 65,
-         "research": {"consensus": "中性", "ratingScore": 3.5, "reports": 24, "summary": " consumption 模式修复中，AI 推理工作负载是新增量，但仍未稳定盈利。", "sources": [{"title": "Snowflake Investor", "url": "https://www.snowflake.com/en/company/investors/"}]},
-         "notes": "成长修复逻辑，盈利前波动大。"},
-        {"ticker": "002230.SZ", "key": "iflytek", "name": "科大讯飞", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "认知大模型 + 行业应用",
-         "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-         "marketCap": 15, "pe": 65, "fwdPe": 50, "peg": 2.5, "revGrowth": 20, "grossMargin": 42, "fcfMargin": 6, "roe": 8, "aiExposure": 72,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.7, "reports": 26, "summary": "星火大模型落地教育/办公, 商业化兑现节奏是关键。", "sources": [{"title": "科大讯飞投资者关系", "url": "https://www.iflytek.com"}]},
-         "notes": "A股大模型应用代表。"}
+        {
+          "ticker": "MSFT",
+          "key": "msft",
+          "name": "微软",
+          "est": true,
+          "techRoute": "企业级 AI 助手 (Copilot)",
+          "productDir": "Microsoft 365 Copilot、Azure OpenAI、GitHub Copilot、Copilot Studio",
+          "marketCap": 3400,
+          "pe": 36,
+          "fwdPe": 30,
+          "peg": 2.1,
+          "revGrowth": 15,
+          "grossMargin": 70,
+          "fcfMargin": 33,
+          "roe": 38,
+          "aiExposure": 85,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.4,
+            "reports": 42,
+            "summary": "Copilot 渗透率与 Azure AI 收入是核心催化；OpenAI 深度绑定但估值已含乐观预期。",
+            "sources": [
+              {
+                "title": "Microsoft Investor Relations",
+                "url": "https://www.microsoft.com/en-us/investor"
+              }
+            ]
+          },
+          "notes": "AI 变现最清晰的巨头之一，但PEG偏高，需看 Copilot 续费率。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 43,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "CRM",
+          "key": "crm",
+          "name": "Salesforce",
+          "est": true,
+          "techRoute": "CRM + 自主 Agent",
+          "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
+          "marketCap": 320,
+          "pe": 28,
+          "fwdPe": 24,
+          "peg": 1.8,
+          "revGrowth": 11,
+          "grossMargin": 76,
+          "fcfMargin": 31,
+          "roe": 12,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.8,
+            "reports": 30,
+            "summary": "Agentforce 是下一增长曲线，但企业 Agent 落地节奏与提价能力待验证。",
+            "sources": [
+              {
+                "title": "Salesforce Investor",
+                "url": "https://www.salesforce.com/company/investor/"
+              }
+            ]
+          },
+          "notes": "估值相对巨头更温和，Agent 主题弹性大。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 34,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "NOW",
+          "key": "now",
+          "name": "ServiceNow",
+          "est": true,
+          "techRoute": "工作流 AI 代理",
+          "productDir": "Now Assist、AI Agent、ITSM / 企业自动化平台",
+          "marketCap": 230,
+          "pe": 60,
+          "fwdPe": 48,
+          "peg": 2.4,
+          "revGrowth": 22,
+          "grossMargin": 79,
+          "fcfMargin": 30,
+          "roe": 30,
+          "aiExposure": 72,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.2,
+            "reports": 28,
+            "summary": "高粘性 ITSM 底座 + AI 提价逻辑扎实，但估值已反映高增长。",
+            "sources": [
+              {
+                "title": "ServiceNow Investor",
+                "url": "https://www.servicenow.com/company/investor-relations.html"
+              }
+            ]
+          },
+          "notes": "质量高但贵，动量回撤时是更好的买点。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 72,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "PLTR",
+          "key": "pltr",
+          "name": "Palantir",
+          "est": true,
+          "techRoute": "决策智能 / AI 作战平台",
+          "productDir": "AIP 平台、Foundry、政府 + 商业决策",
+          "marketCap": 360,
+          "pe": 200,
+          "fwdPe": 120,
+          "peg": 5.0,
+          "revGrowth": 40,
+          "grossMargin": 81,
+          "fcfMargin": 28,
+          "roe": 18,
+          "aiExposure": 90,
+          "research": {
+            "consensus": "分歧大",
+            "ratingScore": 3.2,
+            "reports": 35,
+            "summary": "商业客户加速是最强叙事，但估值极度透支，机构分歧显著。",
+            "sources": [
+              {
+                "title": "Palantir Investor",
+                "url": "https://www.palantir.com/investors/"
+              }
+            ]
+          },
+          "notes": "高成长高分歧标的，价值分受估值拖累明显。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 55,
+          "peHist5y": 240,
+          "aiRevPct": 90,
+          "aiRevGrowth": 60,
+          "pricingPower": 85
+        },
+        {
+          "ticker": "ADBE",
+          "key": "adbe",
+          "name": "Adobe",
+          "est": true,
+          "techRoute": "创意生成式 AI",
+          "productDir": "Firefly、Photoshop Express、GenStudio",
+          "marketCap": 220,
+          "pe": 26,
+          "fwdPe": 23,
+          "peg": 1.6,
+          "revGrowth": 11,
+          "grossMargin": 89,
+          "fcfMargin": 38,
+          "roe": 40,
+          "aiExposure": 60,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 26,
+            "summary": "Firefly 守住创意护城河，估值合理，是被低估的 AI 应用标的候选。",
+            "sources": [
+              {
+                "title": "Adobe Investor",
+                "url": "https://www.adobe.com/investor-relations.html"
+              }
+            ]
+          },
+          "notes": "估值温和 + 高毛利，价值挖掘重点关注对象。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 31,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "SNOW",
+          "key": "snow",
+          "name": "Snowflake",
+          "est": true,
+          "techRoute": "数据云 + AI",
+          "productDir": "Cortex、Snowpark、Document AI",
+          "marketCap": 60,
+          "pe": 0,
+          "fwdPe": 70,
+          "peg": 2.0,
+          "revGrowth": 28,
+          "grossMargin": 75,
+          "fcfMargin": 22,
+          "roe": -10,
+          "aiExposure": 65,
+          "research": {
+            "consensus": "中性",
+            "ratingScore": 3.5,
+            "reports": 24,
+            "summary": " consumption 模式修复中，AI 推理工作负载是新增量，但仍未稳定盈利。",
+            "sources": [
+              {
+                "title": "Snowflake Investor",
+                "url": "https://www.snowflake.com/en/company/investors/"
+              }
+            ]
+          },
+          "notes": "成长修复逻辑，盈利前波动大。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 84,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "002230.SZ",
+          "key": "iflytek",
+          "name": "科大讯飞",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "认知大模型 + 行业应用",
+          "productDir": "星火大模型、教育/办公/医疗 AI 应用",
+          "marketCap": 15,
+          "pe": 65,
+          "fwdPe": 50,
+          "peg": 2.5,
+          "revGrowth": 20,
+          "grossMargin": 42,
+          "fcfMargin": 6,
+          "roe": 8,
+          "aiExposure": 72,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.7,
+            "reports": 26,
+            "summary": "星火大模型落地教育/办公, 商业化兑现节奏是关键。",
+            "sources": [
+              {
+                "title": "科大讯飞投资者关系",
+                "url": "https://www.iflytek.com"
+              }
+            ]
+          },
+          "notes": "A股大模型应用代表。",
+          "curatedDate": "2026-07",
+          "epsRevision": 2,
+          "ratingTrend": 0.0,
+          "ratingDispersion": 35,
+          "peHist5y": 78,
+          "aiRevPct": 25,
+          "aiRevGrowth": 30,
+          "pricingPower": 65
+        }
       ]
     },
     {
@@ -58,26 +290,126 @@
       "name": "模型层",
       "en": "Foundation Models",
       "desc": "拥有前沿基础模型能力的公司。绝大多数顶尖实验室(OpenAI/Anthropic)未上市，已上市的是自研大模型的平台型巨头。壁垒在算力、数据、人才飞轮。",
-      "techRoutes": ["通用多模态大模型", "开源大模型", "云上大模型 + 外部投资"],
+      "techRoutes": [
+        "通用多模态大模型",
+        "开源大模型",
+        "云上大模型 + 外部投资"
+      ],
       "companies": [
-        {"ticker": "GOOGL", "key": "googl", "name": "Alphabet", "est": true,
-         "techRoute": "通用多模态大模型",
-         "productDir": "Gemini 系列、Vertex AI、DeepMind",
-         "marketCap": 2300, "pe": 24, "fwdPe": 20, "peg": 1.4, "revGrowth": 14, "grossMargin": 58, "fcfMargin": 28, "roe": 32, "aiExposure": 88,
-         "research": {"consensus": "增持", "ratingScore": 4.3, "reports": 45, "summary": "Gemini 追赶 + 搜索/云 AI 货币化，估值在巨头中最具性价比。", "sources": [{"title": "Alphabet Investor", "url": "https://abc.xyz/investor/"}]},
-         "notes": "模型 + 应用 + 云三位一体，价值分靠前。"},
-        {"ticker": "META", "key": "meta", "name": "Meta", "est": true,
-         "techRoute": "开源大模型 + 广告 AI",
-         "productDir": "Llama 开源生态、广告推荐 AI、AI 眼镜",
-         "marketCap": 1900, "pe": 28, "fwdPe": 23, "peg": 1.5, "revGrowth": 21, "grossMargin": 81, "fcfMargin": 34, "roe": 36, "aiExposure": 82,
-         "research": {"consensus": "增持", "ratingScore": 4.3, "reports": 40, "summary": "Llama 开源建立生态壁垒，广告 AI 提效直接兑现利润。", "sources": [{"title": "Meta Investor", "url": "https://investor.atmeta.com/"}]},
-         "notes": "开源模型战略独特，广告变现闭环强。"},
-        {"ticker": "AMZN", "key": "amzn", "name": "Amazon", "est": true,
-         "techRoute": "云上大模型 + 外部投资",
-         "productDir": "Nova 模型、Bedrock、Anthropic 战略投资",
-         "marketCap": 2400, "pe": 44, "fwdPe": 32, "peg": 1.9, "revGrowth": 13, "grossMargin": 48, "fcfMargin": 11, "roe": 22, "aiExposure": 75,
-         "research": {"consensus": "增持", "ratingScore": 4.2, "reports": 44, "summary": "AWS + Bedrock + Anthropic 三者构成模型/云入口，零售现金流支撑资本开支。", "sources": [{"title": "Amazon Investor", "url": "https://ir.aboutamazon.com/"}]},
-         "notes": "云与模型入口俱全，估值受零售拖累偏低。"}
+        {
+          "ticker": "GOOGL",
+          "key": "googl",
+          "name": "Alphabet",
+          "est": true,
+          "techRoute": "通用多模态大模型",
+          "productDir": "Gemini 系列、Vertex AI、DeepMind",
+          "marketCap": 2300,
+          "pe": 24,
+          "fwdPe": 20,
+          "peg": 1.4,
+          "revGrowth": 14,
+          "grossMargin": 58,
+          "fcfMargin": 28,
+          "roe": 32,
+          "aiExposure": 88,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.3,
+            "reports": 45,
+            "summary": "Gemini 追赶 + 搜索/云 AI 货币化，估值在巨头中最具性价比。",
+            "sources": [
+              {
+                "title": "Alphabet Investor",
+                "url": "https://abc.xyz/investor/"
+              }
+            ]
+          },
+          "notes": "模型 + 应用 + 云三位一体，价值分靠前。",
+          "curatedDate": "2026-07",
+          "epsRevision": 12,
+          "ratingTrend": 0.4,
+          "ratingDispersion": 45,
+          "peHist5y": 31,
+          "aiRevPct": 85,
+          "aiRevGrowth": 50,
+          "pricingPower": 80
+        },
+        {
+          "ticker": "META",
+          "key": "meta",
+          "name": "Meta",
+          "est": true,
+          "techRoute": "开源大模型 + 广告 AI",
+          "productDir": "Llama 开源生态、广告推荐 AI、AI 眼镜",
+          "marketCap": 1900,
+          "pe": 28,
+          "fwdPe": 23,
+          "peg": 1.5,
+          "revGrowth": 21,
+          "grossMargin": 81,
+          "fcfMargin": 34,
+          "roe": 36,
+          "aiExposure": 82,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.3,
+            "reports": 40,
+            "summary": "Llama 开源建立生态壁垒，广告 AI 提效直接兑现利润。",
+            "sources": [
+              {
+                "title": "Meta Investor",
+                "url": "https://investor.atmeta.com/"
+              }
+            ]
+          },
+          "notes": "开源模型战略独特，广告变现闭环强。",
+          "curatedDate": "2026-07",
+          "epsRevision": 12,
+          "ratingTrend": 0.4,
+          "ratingDispersion": 45,
+          "peHist5y": 36,
+          "aiRevPct": 85,
+          "aiRevGrowth": 50,
+          "pricingPower": 80
+        },
+        {
+          "ticker": "AMZN",
+          "key": "amzn",
+          "name": "Amazon",
+          "est": true,
+          "techRoute": "云上大模型 + 外部投资",
+          "productDir": "Nova 模型、Bedrock、Anthropic 战略投资",
+          "marketCap": 2400,
+          "pe": 44,
+          "fwdPe": 32,
+          "peg": 1.9,
+          "revGrowth": 13,
+          "grossMargin": 48,
+          "fcfMargin": 11,
+          "roe": 22,
+          "aiExposure": 75,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.2,
+            "reports": 44,
+            "summary": "AWS + Bedrock + Anthropic 三者构成模型/云入口，零售现金流支撑资本开支。",
+            "sources": [
+              {
+                "title": "Amazon Investor",
+                "url": "https://ir.aboutamazon.com/"
+              }
+            ]
+          },
+          "notes": "云与模型入口俱全，估值受零售拖累偏低。",
+          "curatedDate": "2026-07",
+          "epsRevision": 12,
+          "ratingTrend": 0.4,
+          "ratingDispersion": 45,
+          "peHist5y": 57,
+          "aiRevPct": 85,
+          "aiRevGrowth": 50,
+          "pricingPower": 80
+        }
       ]
     },
     {
@@ -85,68 +417,494 @@
       "name": "基础设施层",
       "en": "Infrastructure",
       "desc": "承载 AI 算力的云平台、网络、服务器与散热供配电。训练集群的'卖铲人'，需求由资本开支周期驱动，景气度与超大规模厂商 Capex 强相关。",
-      "techRoutes": ["AI 云基础设施", "GPU 专用云", "AI 数据中心网络", "散热与供配电", "AI 服务器"],
+      "techRoutes": [
+        "AI 云基础设施",
+        "GPU 专用云",
+        "AI 数据中心网络",
+        "散热与供配电",
+        "AI 服务器"
+      ],
       "companies": [
-        {"ticker": "ORCL", "key": "orcl", "name": "Oracle", "est": true,
-         "techRoute": "AI 云基础设施 (OCI)",
-         "productDir": "Oracle Cloud Infrastructure、AI 超级集群 (ZEUS)、多云",
-         "marketCap": 480, "pe": 38, "fwdPe": 28, "peg": 1.7, "revGrowth": 20, "grossMargin": 72, "fcfMargin": 25, "roe": 60, "aiExposure": 78,
-         "research": {"consensus": "增持", "ratingScore": 4.1, "reports": 30, "summary": "OCI 拿下多家 AI 训练大单，剩余履约义务(RPO)高增，重估进行中。", "sources": [{"title": "Oracle Investor", "url": "https://www.oracle.com/investors/"}]},
-         "notes": "云重估逻辑强，但高负债需关注。"},
-        {"ticker": "CRWV", "key": "crwv", "name": "CoreWeave", "est": true,
-         "techRoute": "GPU 专用云",
-         "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
-         "marketCap": 90, "pe": 0, "fwdPe": 35, "peg": 1.5, "revGrowth": 100, "grossMargin": 60, "fcfMargin": 5, "roe": 25, "aiExposure": 95,
-         "research": {"consensus": "分歧大", "ratingScore": 3.3, "reports": 20, "summary": "纯 AI 算力租赁龙头，增速惊人但客户集中(微软/OpenAI)与债务是风险。", "sources": [{"title": "CoreWeave Investor", "url": "https://www.coreweave.com/"}]},
-         "notes": "高 beta 纯算力标的，波动极大。"},
-        {"ticker": "ANET", "key": "anet", "name": "Arista", "est": true,
-         "techRoute": "AI 数据中心网络",
-         "productDir": "800G / 1.6T 交换机、EOS、AI 后端网络",
-         "marketCap": 150, "pe": 48, "fwdPe": 38, "peg": 2.2, "revGrowth": 25, "grossMargin": 64, "fcfMargin": 33, "roe": 28, "aiExposure": 80,
-         "research": {"consensus": "增持", "ratingScore": 4.0, "reports": 26, "summary": "AI 集群网络升级刚需，以太网替代 InfiniBand 趋势受益者。", "sources": [{"title": "Arista Investor", "url": "https://www.arista.com/en/investor-relations"}]},
-         "notes": "网络是算力瓶颈环节，地位稳固。"},
-        {"ticker": "VRT", "key": "vrt", "name": "Vertiv", "est": true,
-         "techRoute": "散热与供配电",
-         "productDir": "液冷 (Liquid Cooling)、UPS、热管理基础设施",
-         "marketCap": 55, "pe": 40, "fwdPe": 32, "peg": 1.8, "revGrowth": 18, "grossMargin": 36, "fcfMargin": 14, "roe": 45, "aiExposure": 75,
-         "research": {"consensus": "增持", "ratingScore": 4.0, "reports": 22, "summary": "液冷是 AI 数据中心的物理瓶颈，订单能见度强。", "sources": [{"title": "Vertiv Investor", "url": "https://www.vertiv.com/en-us/about/investors/"}]},
-         "notes": "散热赛道稀缺标的，受益于功率密度提升。"},
-        {"ticker": "DELL", "key": "dell", "name": "Dell", "est": true,
-         "techRoute": "AI 服务器",
-         "productDir": "PowerEdge XE 加速服务器、企业 AI 方案",
-         "marketCap": 95, "pe": 18, "fwdPe": 15, "peg": 1.4, "revGrowth": 12, "grossMargin": 23, "fcfMargin": 7, "roe": 60, "aiExposure": 55,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.7, "reports": 25, "summary": "AI 服务器(ISA)放量但毛利薄，传统 PC/服务器提供估值安全垫。", "sources": [{"title": "Dell Investor", "url": "https://www.dell.com/en-us/investor"}]},
-         "notes": "估值低、硬件弹性大，价值挖掘候选。"},
-        {"ticker": "300308.SZ", "key": "zhongji", "name": "中际旭创", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "光模块 (800G/1.6T)",
-         "productDir": "800G/1.6T 光模块、硅光、LPO",
-         "marketCap": 15, "pe": 32, "fwdPe": 26, "peg": 1.2, "revGrowth": 55, "grossMargin": 34, "fcfMargin": 18, "roe": 30, "aiExposure": 92,
-         "research": {"consensus": "增持", "ratingScore": 4.2, "reports": 28, "summary": "全球光模块龙头, 800G/1.6T 出货随 AI 集群放量; 客户集中(北美云厂)是风险。", "sources": [{"title": "中际旭创投资者关系", "url": "https://www.zjxc.com"}]},
-         "notes": "光模块是 AI 算力瓶颈环节, A股核心标的。"},
-        {"ticker": "300502.SZ", "key": "xys", "name": "新易盛", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "光模块 (800G)",
-         "productDir": "800G 光模块、相干光模块",
-         "marketCap": 12, "pe": 35, "fwdPe": 28, "peg": 1.3, "revGrowth": 60, "grossMargin": 42, "fcfMargin": 22, "roe": 35, "aiExposure": 90,
-         "research": {"consensus": "增持", "ratingScore": 4.1, "reports": 22, "summary": "新易盛 800G 份额提升, 净利率行业领先; 估值随业绩上修。", "sources": [{"title": "新易盛投资者关系", "url": "https://www.eoptolink.com"}]},
-         "notes": "高毛利光模块弹性标的。"},
-        {"ticker": "601138.SS", "key": "fii", "name": "工业富联", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "AI 服务器 (代工)",
-         "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
-         "marketCap": 70, "pe": 20, "fwdPe": 17, "peg": 1.4, "revGrowth": 25, "grossMargin": 7, "fcfMargin": 4, "roe": 18, "aiExposure": 60,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.8, "reports": 26, "summary": "AI 服务器(GB200)放量驱动成长, 但代工毛利薄。", "sources": [{"title": "工业富联投资者关系", "url": "https://www.fii-foxconn.com"}]},
-         "notes": "AI 服务器硬科技, 估值低但毛利薄。"},
-        {"ticker": "000977.SZ", "key": "inspur", "name": "浪潮信息", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "AI 服务器",
-         "productDir": "AI 服务器、液冷整机柜",
-         "marketCap": 11, "pe": 26, "fwdPe": 22, "peg": 1.5, "revGrowth": 15, "grossMargin": 10, "fcfMargin": 3, "roe": 12, "aiExposure": 55,
-         "research": {"consensus": "中性", "ratingScore": 3.5, "reports": 18, "summary": "国产 AI 服务器龙头, 受供应链与价格竞争影响。", "sources": [{"title": "浪潮信息投资者关系", "url": "https://www.inspur.com"}]},
-         "notes": "国产算力代表, 毛利承压。"},
-        {"ticker": "002463.SZ", "key": "huadian", "name": "沪电股份", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "AI 服务器 PCB",
-         "productDir": "高速 PCB、交换机板、AI 服务器主板",
-         "marketCap": 14, "pe": 28, "fwdPe": 23, "peg": 1.4, "revGrowth": 30, "grossMargin": 32, "fcfMargin": 14, "roe": 22, "aiExposure": 65,
-         "research": {"consensus": "增持", "ratingScore": 3.9, "reports": 16, "summary": "AI 服务器升级带动高层板需求, 稼动率与良率提升。", "sources": [{"title": "沪电股份投资者关系", "url": "https://www.hld.com"}]},
-         "notes": "PCB 受益于算力硬件升级。"}
+        {
+          "ticker": "ORCL",
+          "key": "orcl",
+          "name": "Oracle",
+          "est": true,
+          "techRoute": "AI 云基础设施 (OCI)",
+          "productDir": "Oracle Cloud Infrastructure、AI 超级集群 (ZEUS)、多云",
+          "marketCap": 480,
+          "pe": 38,
+          "fwdPe": 28,
+          "peg": 1.7,
+          "revGrowth": 20,
+          "grossMargin": 72,
+          "fcfMargin": 25,
+          "roe": 60,
+          "aiExposure": 78,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.1,
+            "reports": 30,
+            "summary": "OCI 拿下多家 AI 训练大单，剩余履约义务(RPO)高增，重估进行中。",
+            "sources": [
+              {
+                "title": "Oracle Investor",
+                "url": "https://www.oracle.com/investors/"
+              }
+            ]
+          },
+          "notes": "云重估逻辑强，但高负债需关注。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 53,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "CRWV",
+          "key": "crwv",
+          "name": "CoreWeave",
+          "est": true,
+          "techRoute": "GPU 专用云",
+          "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
+          "marketCap": 90,
+          "pe": 0,
+          "fwdPe": 35,
+          "peg": 1.5,
+          "revGrowth": 100,
+          "grossMargin": 60,
+          "fcfMargin": 5,
+          "roe": 25,
+          "aiExposure": 95,
+          "research": {
+            "consensus": "分歧大",
+            "ratingScore": 3.3,
+            "reports": 20,
+            "summary": "纯 AI 算力租赁龙头，增速惊人但客户集中(微软/OpenAI)与债务是风险。",
+            "sources": [
+              {
+                "title": "CoreWeave Investor",
+                "url": "https://www.coreweave.com/"
+              }
+            ]
+          },
+          "notes": "高 beta 纯算力标的，波动极大。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 49,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "VRT",
+          "key": "vrt",
+          "name": "Vertiv",
+          "est": true,
+          "techRoute": "散热与供配电",
+          "productDir": "液冷 (Liquid Cooling)、UPS、热管理基础设施",
+          "marketCap": 55,
+          "pe": 40,
+          "fwdPe": 32,
+          "peg": 1.8,
+          "revGrowth": 18,
+          "grossMargin": 36,
+          "fcfMargin": 14,
+          "roe": 45,
+          "aiExposure": 75,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.0,
+            "reports": 22,
+            "summary": "液冷是 AI 数据中心的物理瓶颈，订单能见度强。",
+            "sources": [
+              {
+                "title": "Vertiv Investor",
+                "url": "https://www.vertiv.com/en-us/about/investors/"
+              }
+            ]
+          },
+          "notes": "散热赛道稀缺标的，受益于功率密度提升。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 56,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "DELL",
+          "key": "dell",
+          "name": "Dell",
+          "est": true,
+          "techRoute": "AI 服务器",
+          "productDir": "PowerEdge XE 加速服务器、企业 AI 方案",
+          "marketCap": 95,
+          "pe": 18,
+          "fwdPe": 15,
+          "peg": 1.4,
+          "revGrowth": 12,
+          "grossMargin": 23,
+          "fcfMargin": 7,
+          "roe": 60,
+          "aiExposure": 55,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.7,
+            "reports": 25,
+            "summary": "AI 服务器(ISA)放量但毛利薄，传统 PC/服务器提供估值安全垫。",
+            "sources": [
+              {
+                "title": "Dell Investor",
+                "url": "https://www.dell.com/en-us/investor"
+              }
+            ]
+          },
+          "notes": "估值低、硬件弹性大，价值挖掘候选。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 25,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "601138.SS",
+          "key": "fii",
+          "name": "工业富联",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "AI 服务器 (代工)",
+          "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
+          "marketCap": 70,
+          "pe": 20,
+          "fwdPe": 17,
+          "peg": 1.4,
+          "revGrowth": 25,
+          "grossMargin": 7,
+          "fcfMargin": 4,
+          "roe": 18,
+          "aiExposure": 60,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.8,
+            "reports": 26,
+            "summary": "AI 服务器(GB200)放量驱动成长, 但代工毛利薄。",
+            "sources": [
+              {
+                "title": "工业富联投资者关系",
+                "url": "https://www.fii-foxconn.com"
+              }
+            ]
+          },
+          "notes": "AI 服务器硬科技, 估值低但毛利薄。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 28,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "000977.SZ",
+          "key": "inspur",
+          "name": "浪潮信息",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "AI 服务器",
+          "productDir": "AI 服务器、液冷整机柜",
+          "marketCap": 11,
+          "pe": 26,
+          "fwdPe": 22,
+          "peg": 1.5,
+          "revGrowth": 15,
+          "grossMargin": 10,
+          "fcfMargin": 3,
+          "roe": 12,
+          "aiExposure": 55,
+          "research": {
+            "consensus": "中性",
+            "ratingScore": 3.5,
+            "reports": 18,
+            "summary": "国产 AI 服务器龙头, 受供应链与价格竞争影响。",
+            "sources": [
+              {
+                "title": "浪潮信息投资者关系",
+                "url": "https://www.inspur.com"
+              }
+            ]
+          },
+          "notes": "国产算力代表, 毛利承压。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 36,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "002463.SZ",
+          "key": "huadian",
+          "name": "沪电股份",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "AI 服务器 PCB",
+          "productDir": "高速 PCB、交换机板、AI 服务器主板",
+          "marketCap": 14,
+          "pe": 28,
+          "fwdPe": 23,
+          "peg": 1.4,
+          "revGrowth": 30,
+          "grossMargin": 32,
+          "fcfMargin": 14,
+          "roe": 22,
+          "aiExposure": 65,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 3.9,
+            "reports": 16,
+            "summary": "AI 服务器升级带动高层板需求, 稼动率与良率提升。",
+            "sources": [
+              {
+                "title": "沪电股份投资者关系",
+                "url": "https://www.hld.com"
+              }
+            ]
+          },
+          "notes": "PCB 受益于算力硬件升级。",
+          "curatedDate": "2026-07",
+          "epsRevision": 8,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 39,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 55
+        }
+      ]
+    },
+    {
+      "id": "network",
+      "name": "网络连接层",
+      "en": "Networking",
+      "desc": "AI 集群的'神经网络'：交换机、光模块/CPO、光互联器件。随着集群规模从万卡迈向十万卡，网络带宽与延迟成为算力释放的瓶颈，是 2025–2026 景气度最确定的环节之一。",
+      "techRoutes": [
+        "800G/1.6T 交换机",
+        "光模块 / CPO",
+        "硅光与 LPO",
+        "光互联器件"
+      ],
+      "companies": [
+        {
+          "ticker": "300308.SZ",
+          "key": "zhongji",
+          "name": "中际旭创",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "光模块 (800G/1.6T)",
+          "productDir": "800G/1.6T 光模块、硅光、LPO",
+          "marketCap": 15,
+          "pe": 32,
+          "fwdPe": 26,
+          "peg": 1.2,
+          "revGrowth": 55,
+          "grossMargin": 34,
+          "fcfMargin": 18,
+          "roe": 30,
+          "aiExposure": 92,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.2,
+            "reports": 28,
+            "summary": "全球光模块龙头, 800G/1.6T 出货随 AI 集群放量; 客户集中(北美云厂)是风险。",
+            "sources": [
+              {
+                "title": "中际旭创投资者关系",
+                "url": "https://www.zjxc.com"
+              }
+            ]
+          },
+          "notes": "光模块是 AI 算力瓶颈环节, A股核心标的。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 45,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 60
+        },
+        {
+          "ticker": "300502.SZ",
+          "key": "xys",
+          "name": "新易盛",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "光模块 (800G)",
+          "productDir": "800G 光模块、相干光模块",
+          "marketCap": 12,
+          "pe": 35,
+          "fwdPe": 28,
+          "peg": 1.3,
+          "revGrowth": 60,
+          "grossMargin": 42,
+          "fcfMargin": 22,
+          "roe": 35,
+          "aiExposure": 90,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.1,
+            "reports": 22,
+            "summary": "新易盛 800G 份额提升, 净利率行业领先; 估值随业绩上修。",
+            "sources": [
+              {
+                "title": "新易盛投资者关系",
+                "url": "https://www.eoptolink.com"
+              }
+            ]
+          },
+          "notes": "高毛利光模块弹性标的。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 49,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 60
+        },
+        {
+          "ticker": "ANET",
+          "key": "anet",
+          "name": "Arista",
+          "est": true,
+          "techRoute": "AI 数据中心网络",
+          "productDir": "800G / 1.6T 交换机、EOS、AI 后端网络",
+          "marketCap": 150,
+          "pe": 48,
+          "fwdPe": 38,
+          "peg": 2.2,
+          "revGrowth": 25,
+          "grossMargin": 64,
+          "fcfMargin": 33,
+          "roe": 28,
+          "aiExposure": 80,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.0,
+            "reports": 26,
+            "summary": "AI 集群网络升级刚需，以太网替代 InfiniBand 趋势受益者。",
+            "sources": [
+              {
+                "title": "Arista Investor",
+                "url": "https://www.arista.com/en/investor-relations"
+              }
+            ]
+          },
+          "notes": "网络是算力瓶颈环节，地位稳固。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 67,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 60
+        },
+        {
+          "ticker": "COHR",
+          "key": "cohr",
+          "name": "Coherent",
+          "est": true,
+          "techRoute": "光互联器件",
+          "productDir": "激光器、光器件、800G/1.6T 光模块",
+          "marketCap": 12,
+          "pe": 0,
+          "fwdPe": 30,
+          "peg": 2.0,
+          "revGrowth": 15,
+          "grossMargin": 35,
+          "fcfMargin": 8,
+          "roe": 5,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.7,
+            "reports": 18,
+            "summary": "光器件随 1.6T 升级放量，整合 II-VI 后协同待兑现。",
+            "sources": [
+              {
+                "title": "Coherent Investor",
+                "url": "https://www.coherent.com"
+              }
+            ]
+          },
+          "notes": "光器件上游，弹性标的。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 42,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 60
+        },
+        {
+          "ticker": "LITE",
+          "key": "lite",
+          "name": "Lumentum",
+          "est": true,
+          "techRoute": "光互联器件",
+          "productDir": "激光器、光模块、云与 AI 光互联",
+          "marketCap": 5,
+          "pe": 0,
+          "fwdPe": 25,
+          "peg": 1.8,
+          "revGrowth": 12,
+          "grossMargin": 38,
+          "fcfMargin": 10,
+          "roe": 6,
+          "aiExposure": 68,
+          "research": {
+            "consensus": "中性",
+            "ratingScore": 3.5,
+            "reports": 16,
+            "summary": "AI 光互联需求改善，但盈利修复仍需时间。",
+            "sources": [
+              {
+                "title": "Lumentum Investor",
+                "url": "https://www.lumentum.com"
+              }
+            ]
+          },
+          "notes": "光器件弹性标的，波动较大。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 35,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 60
+        }
       ]
     },
     {
@@ -154,92 +912,562 @@
       "name": "芯片层",
       "en": "Silicon",
       "desc": "AI 算力的物理底座：GPU/ASIC、CPU IP、先进制程代工、半导体设备与 HBM 内存。技术壁垒最高、集中度最强，是整个蛋糕的'硬核'。",
-      "techRoutes": ["GPU + CUDA 全栈", "GPU + CPU 双线", "定制 AI ASIC + 网络", "先进制程代工", "CPU IP 架构", "定制芯片 + 光互联", "半导体设备", "光刻设备", "HBM 内存"],
+      "techRoutes": [
+        "GPU + CUDA 全栈",
+        "GPU + CPU 双线",
+        "定制 AI ASIC + 网络",
+        "先进制程代工",
+        "CPU IP 架构",
+        "定制芯片 + 光互联",
+        "半导体设备",
+        "光刻设备",
+        "HBM 内存"
+      ],
       "companies": [
-        {"ticker": "NVDA", "key": "nvda", "name": "英伟达", "est": true,
-         "techRoute": "GPU + CUDA 全栈",
-         "productDir": "数据中心 GPU (B 系列)、CUDA、NIM 微服务、InfiniBand 网络",
-         "marketCap": 3800, "pe": 48, "fwdPe": 34, "peg": 1.5, "revGrowth": 70, "grossMargin": 75, "fcfMargin": 50, "roe": 110, "aiExposure": 100,
-         "research": {"consensus": "增持", "ratingScore": 4.3, "reports": 50, "summary": "AI 算力绝对龙头，CUDA 生态护城河极深；估值已高但增长仍超预期。", "sources": [{"title": "NVIDIA Investor", "url": "https://investor.nvidia.com/"}]},
-         "notes": "蛋糕核心，确定性最高但预期也最满。"},
-        {"ticker": "AMD", "key": "amd", "name": "AMD", "est": true,
-         "techRoute": "GPU + CPU 双线",
-         "productDir": "Instinct MI 系列、EPYC、ROCm 生态",
-         "marketCap": 300, "pe": 50, "fwdPe": 35, "peg": 2.0, "revGrowth": 25, "grossMargin": 50, "fcfMargin": 18, "roe": 15, "aiExposure": 80,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.9, "reports": 38, "summary": "MI 系列在推理市场抢份额，ROCm 生态仍落后于 CUDA。", "sources": [{"title": "AMD Investor", "url": "https://www.amd.com/en/investor-relations.html"}]},
-         "notes": "第二供应商逻辑，弹性与风险并存。"},
-        {"ticker": "AVGO", "key": "avgo", "name": "博通", "est": true,
-         "techRoute": "定制 AI ASIC + 网络",
-         "productDir": "定制 AI 芯片 (TPU 等)、Tomahawk 交换、VMware",
-         "marketCap": 1200, "pe": 55, "fwdPe": 38, "peg": 2.1, "revGrowth": 30, "grossMargin": 77, "fcfMargin": 45, "roe": 55, "aiExposure": 85,
-         "research": {"consensus": "增持", "ratingScore": 4.2, "reports": 36, "summary": "定制 ASIC 绑定超大规模客户，VMware 订阅化提升利润质量。", "sources": [{"title": "Broadcom Investor", "url": "https://www.broadcom.com/company/investor-relations"}]},
-         "notes": "定制芯片寡头，现金流极强。"},
-        {"ticker": "TSM", "key": "tsm", "name": "台积电", "est": true,
-         "techRoute": "先进制程代工",
-         "productDir": "3/2nm 制程、CoWoS 先进封装",
-         "marketCap": 1100, "pe": 30, "fwdPe": 25, "peg": 1.6, "revGrowth": 30, "grossMargin": 55, "fcfMargin": 40, "roe": 30, "aiExposure": 90,
-         "research": {"consensus": "增持", "ratingScore": 4.3, "reports": 40, "summary": "AI 芯片与 CoWoS 封装几乎独家，定价权强；地缘是主要风险。", "sources": [{"title": "TSMC Investor", "url": "https://www.tsmc.com/english/investorRelations"}]},
-         "notes": "先进制程垄断，AI 与地缘双主线。"},
-        {"ticker": "ARM", "key": "arm", "name": "Arm", "est": true,
-         "techRoute": "CPU IP 架构",
-         "productDir": "Armv9 架构、CSS 计算子系统、端侧 AI",
-         "marketCap": 180, "pe": 90, "fwdPe": 60, "peg": 3.0, "revGrowth": 25, "grossMargin": 95, "fcfMargin": 30, "roe": 20, "aiExposure": 70,
-         "research": {"consensus": "中性", "ratingScore": 3.6, "reports": 28, "summary": "特许权模式毛利极高，端侧 AI 与 v9 提价是看点，但估值昂贵。", "sources": [{"title": "Arm Investor", "url": "https://www.arm.com/company/investors"}]},
-         "notes": "高毛利 IP 模式，贵但稀缺。"},
-        {"ticker": "MRVL", "key": "mrvl", "name": "Marvell", "est": true,
-         "techRoute": "定制芯片 + 光互联",
-         "productDir": "定制 AI ASIC、PAM4 / DSP、光模块",
-         "marketCap": 90, "pe": 0, "fwdPe": 40, "peg": 2.2, "revGrowth": 30, "grossMargin": 60, "fcfMargin": 15, "roe": 8, "aiExposure": 78,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.8, "reports": 24, "summary": "亚马逊/谷歌定制 ASIC 核心伙伴，光互联随 1.6T 升级放量。", "sources": [{"title": "Marvell Investor", "url": "https://www.marvell.com/company/investors.html"}]},
-         "notes": "定制芯片二供，弹性大。"},
-        {"ticker": "AMAT", "key": "amat", "name": "应用材料", "est": true,
-         "techRoute": "半导体设备",
-         "productDir": "薄膜沉积、刻蚀、制程设备",
-         "marketCap": 160, "pe": 24, "fwdPe": 22, "peg": 1.8, "revGrowth": 8, "grossMargin": 47, "fcfMargin": 25, "roe": 40, "aiExposure": 70,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.9, "reports": 30, "summary": "设备国产化与 AI 扩产双驱动，周期性较强但地位稳固。", "sources": [{"title": "Applied Materials Investor", "url": "https://www.appliedmaterials.com/company/investors"}]},
-         "notes": "设备龙头，估值温和。"},
-        {"ticker": "ASML", "key": "asml", "name": "阿斯麦", "est": true,
-         "techRoute": "光刻设备",
-         "productDir": "EUV 光刻机、High-NA EUV",
-         "marketCap": 320, "pe": 38, "fwdPe": 32, "peg": 2.0, "revGrowth": 10, "grossMargin": 51, "fcfMargin": 28, "roe": 50, "aiExposure": 85,
-         "research": {"consensus": "增持", "ratingScore": 4.1, "reports": 32, "summary": "EUV 独家垄断，是先进制程的物理天花板；出口管制是风险。", "sources": [{"title": "ASML Investor", "url": "https://www.asml.com/en/investor-relations"}]},
-         "notes": "不可替代的设备之王。"},
-        {"ticker": "MU", "key": "mu", "name": "美光", "est": true,
-         "techRoute": "HBM 内存",
-         "productDir": "HBM3E / 4、DRAM、AI 内存",
-         "marketCap": 150, "pe": 20, "fwdPe": 14, "peg": 1.0, "revGrowth": 50, "grossMargin": 45, "fcfMargin": 20, "roe": 18, "aiExposure": 82,
-         "research": {"consensus": "增持", "ratingScore": 4.0, "reports": 28, "summary": "HBM 供不应求贯穿周期，PEG 接近 1，是芯片层少有的低估值高成长。", "sources": [{"title": "Micron Investor", "url": "https://www.micron.com/about/innovation/investors"}]},
-         "notes": "价值挖掘重点：HBM 景气 + 低 PEG。"},
-        {"ticker": "688256.SS", "key": "cambricon", "name": "寒武纪", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "AI 训练/推理芯片 (国产)",
-         "productDir": "思元系列 AI 芯片、训练/推理卡",
-         "marketCap": 42, "pe": 0, "fwdPe": 120, "peg": 3.0, "revGrowth": 120, "grossMargin": 60, "fcfMargin": -10, "roe": -8, "aiExposure": 95,
-         "research": {"consensus": "分歧大", "ratingScore": 3.2, "reports": 24, "summary": "国产 AI 芯片核心标的, 大模型适配与软件生态是关键; 盈利尚远。", "sources": [{"title": "寒武纪投资者关系", "url": "https://www.cambricon.com"}]},
-         "notes": "国产算力期权, 高预期高波动。"},
-        {"ticker": "688041.SS", "key": "hygon", "name": "海光信息", "est": true, "market": "A", "ccy": "CNY",
-         "techRoute": "x86 CPU + DCU (国产)",
-         "productDir": "海光 CPU、深算 DCU (GPGPU)",
-         "marketCap": 52, "pe": 100, "fwdPe": 70, "peg": 2.5, "revGrowth": 40, "grossMargin": 60, "fcfMargin": 20, "roe": 15, "aiExposure": 85,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.9, "reports": 22, "summary": "国产 CPU/DCU 双线, 信创与 AI 算力双驱动; 估值偏高。", "sources": [{"title": "海光信息投资者关系", "url": "https://www.hygon.com"}]},
-         "notes": "国产 CPU+DCU, 信创主线。"},
-        {"ticker": "005930.KS", "key": "ssamsung", "name": "三星电子", "est": true, "market": "KR", "ccy": "KRW",
-         "techRoute": "存储 (HBM) + 代工 + 移动",
-         "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-         "marketCap": 370, "pe": 12, "fwdPe": 11, "peg": 1.2, "revGrowth": 15, "grossMargin": 45, "fcfMargin": 15, "roe": 12, "aiExposure": 80,
-         "research": {"consensus": "增持", "ratingScore": 4.0, "reports": 40, "summary": "HBM 与存储复苏双驱动, 代工追赶台积电; 企业结构折价。", "sources": [{"title": "Samsung IR", "url": "https://www.samsung.com/us/aboutsamsung/ir/"}]},
-         "notes": "HBM+存储复苏, 估值低。"},
-        {"ticker": "000660.KS", "key": "skhynix", "name": "SK海力士", "est": true, "market": "KR", "ccy": "KRW",
-         "techRoute": "HBM 存储 (全球领先)",
-         "productDir": "HBM3E/4、DRAM、NAND",
-         "marketCap": 115, "pe": 10, "fwdPe": 9, "peg": 1.0, "revGrowth": 45, "grossMargin": 46, "fcfMargin": 20, "roe": 16, "aiExposure": 92,
-         "research": {"consensus": "增持", "ratingScore": 4.2, "reports": 34, "summary": "HBM 绝对领先, 与英伟达/微软深度绑定; 周期属性仍存。", "sources": [{"title": "SK hynix IR", "url": "https://www.skhynix.com"}]},
-         "notes": "HBM 核心受益, 价值挖掘重点。"},
-        {"ticker": "042700.KS", "key": "hansmi", "name": "韩美半导体", "est": true, "market": "KR", "ccy": "KRW",
-         "techRoute": "TC Bonder (HBM 封装设备)",
-         "productDir": "TC Bonder、HBM 封装键合设备",
-         "marketCap": 20, "pe": 25, "fwdPe": 20, "peg": 1.6, "revGrowth": 50, "grossMargin": 50, "fcfMargin": 22, "roe": 26, "aiExposure": 88,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.8, "reports": 14, "summary": "HBM 扩产直接拉动 TC Bonder 需求, 客户集中。", "sources": [{"title": "Hanmi Semiconductor IR", "url": "https://www.hanmi.co.kr"}]},
-         "notes": "HBM 封装设备弹性标的。"}
+        {
+          "ticker": "NVDA",
+          "key": "nvda",
+          "name": "英伟达",
+          "est": true,
+          "techRoute": "GPU + CUDA 全栈",
+          "productDir": "数据中心 GPU (B 系列)、CUDA、NIM 微服务、InfiniBand 网络",
+          "marketCap": 3800,
+          "pe": 48,
+          "fwdPe": 34,
+          "peg": 1.5,
+          "revGrowth": 70,
+          "grossMargin": 75,
+          "fcfMargin": 50,
+          "roe": 110,
+          "aiExposure": 100,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.3,
+            "reports": 50,
+            "summary": "AI 算力绝对龙头，CUDA 生态护城河极深；估值已高但增长仍超预期。",
+            "sources": [
+              {
+                "title": "NVIDIA Investor",
+                "url": "https://investor.nvidia.com/"
+              }
+            ]
+          },
+          "notes": "蛋糕核心，确定性最高但预期也最满。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 72,
+          "aiRevPct": 85,
+          "aiRevGrowth": 55,
+          "pricingPower": 95
+        },
+        {
+          "ticker": "AMD",
+          "key": "amd",
+          "name": "AMD",
+          "est": true,
+          "techRoute": "GPU + CPU 双线",
+          "productDir": "Instinct MI 系列、EPYC、ROCm 生态",
+          "marketCap": 300,
+          "pe": 50,
+          "fwdPe": 35,
+          "peg": 2.0,
+          "revGrowth": 25,
+          "grossMargin": 50,
+          "fcfMargin": 18,
+          "roe": 15,
+          "aiExposure": 80,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 38,
+            "summary": "MI 系列在推理市场抢份额，ROCm 生态仍落后于 CUDA。",
+            "sources": [
+              {
+                "title": "AMD Investor",
+                "url": "https://www.amd.com/en/investor-relations.html"
+              }
+            ]
+          },
+          "notes": "第二供应商逻辑，弹性与风险并存。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 75,
+          "aiRevPct": 70,
+          "aiRevGrowth": 50,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "AVGO",
+          "key": "avgo",
+          "name": "博通",
+          "est": true,
+          "techRoute": "定制 AI ASIC + 网络",
+          "productDir": "定制 AI 芯片 (TPU 等)、Tomahawk 交换、VMware",
+          "marketCap": 1200,
+          "pe": 55,
+          "fwdPe": 38,
+          "peg": 2.1,
+          "revGrowth": 30,
+          "grossMargin": 77,
+          "fcfMargin": 45,
+          "roe": 55,
+          "aiExposure": 85,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.2,
+            "reports": 36,
+            "summary": "定制 ASIC 绑定超大规模客户，VMware 订阅化提升利润质量。",
+            "sources": [
+              {
+                "title": "Broadcom Investor",
+                "url": "https://www.broadcom.com/company/investor-relations"
+              }
+            ]
+          },
+          "notes": "定制芯片寡头，现金流极强。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 82,
+          "aiRevPct": 70,
+          "aiRevGrowth": 45,
+          "pricingPower": 85
+        },
+        {
+          "ticker": "TSM",
+          "key": "tsm",
+          "name": "台积电",
+          "est": true,
+          "techRoute": "先进制程代工",
+          "productDir": "3/2nm 制程、CoWoS 先进封装",
+          "marketCap": 1100,
+          "pe": 30,
+          "fwdPe": 25,
+          "peg": 1.6,
+          "revGrowth": 30,
+          "grossMargin": 55,
+          "fcfMargin": 40,
+          "roe": 30,
+          "aiExposure": 90,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.3,
+            "reports": 40,
+            "summary": "AI 芯片与 CoWoS 封装几乎独家，定价权强；地缘是主要风险。",
+            "sources": [
+              {
+                "title": "TSMC Investor",
+                "url": "https://www.tsmc.com/english/investorRelations"
+              }
+            ]
+          },
+          "notes": "先进制程垄断，AI 与地缘双主线。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 45,
+          "aiRevPct": 60,
+          "aiRevGrowth": 40,
+          "pricingPower": 90
+        },
+        {
+          "ticker": "ARM",
+          "key": "arm",
+          "name": "Arm",
+          "est": true,
+          "techRoute": "CPU IP 架构",
+          "productDir": "Armv9 架构、CSS 计算子系统、端侧 AI",
+          "marketCap": 180,
+          "pe": 90,
+          "fwdPe": 60,
+          "peg": 3.0,
+          "revGrowth": 25,
+          "grossMargin": 95,
+          "fcfMargin": 30,
+          "roe": 20,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "中性",
+            "ratingScore": 3.6,
+            "reports": 28,
+            "summary": "特许权模式毛利极高，端侧 AI 与 v9 提价是看点，但估值昂贵。",
+            "sources": [
+              {
+                "title": "Arm Investor",
+                "url": "https://www.arm.com/company/investors"
+              }
+            ]
+          },
+          "notes": "高毛利 IP 模式，贵但稀缺。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 135,
+          "aiRevPct": 70,
+          "aiRevGrowth": 50,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "MRVL",
+          "key": "mrvl",
+          "name": "Marvell",
+          "est": true,
+          "techRoute": "定制芯片 + 光互联",
+          "productDir": "定制 AI ASIC、PAM4 / DSP、光模块",
+          "marketCap": 90,
+          "pe": 0,
+          "fwdPe": 40,
+          "peg": 2.2,
+          "revGrowth": 30,
+          "grossMargin": 60,
+          "fcfMargin": 15,
+          "roe": 8,
+          "aiExposure": 78,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.8,
+            "reports": 24,
+            "summary": "亚马逊/谷歌定制 ASIC 核心伙伴，光互联随 1.6T 升级放量。",
+            "sources": [
+              {
+                "title": "Marvell Investor",
+                "url": "https://www.marvell.com/company/investors.html"
+              }
+            ]
+          },
+          "notes": "定制芯片二供，弹性大。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 60,
+          "aiRevPct": 65,
+          "aiRevGrowth": 45,
+          "pricingPower": 70
+        },
+        {
+          "ticker": "AMAT",
+          "key": "amat",
+          "name": "应用材料",
+          "est": true,
+          "techRoute": "半导体设备",
+          "productDir": "薄膜沉积、刻蚀、制程设备",
+          "marketCap": 160,
+          "pe": 24,
+          "fwdPe": 22,
+          "peg": 1.8,
+          "revGrowth": 8,
+          "grossMargin": 47,
+          "fcfMargin": 25,
+          "roe": 40,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 30,
+            "summary": "设备国产化与 AI 扩产双驱动，周期性较强但地位稳固。",
+            "sources": [
+              {
+                "title": "Applied Materials Investor",
+                "url": "https://www.appliedmaterials.com/company/investors"
+              }
+            ]
+          },
+          "notes": "设备龙头，估值温和。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 36,
+          "aiRevPct": 70,
+          "aiRevGrowth": 30,
+          "pricingPower": 75
+        },
+        {
+          "ticker": "ASML",
+          "key": "asml",
+          "name": "阿斯麦",
+          "est": true,
+          "techRoute": "光刻设备",
+          "productDir": "EUV 光刻机、High-NA EUV",
+          "marketCap": 320,
+          "pe": 38,
+          "fwdPe": 32,
+          "peg": 2.0,
+          "revGrowth": 10,
+          "grossMargin": 51,
+          "fcfMargin": 28,
+          "roe": 50,
+          "aiExposure": 85,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.1,
+            "reports": 32,
+            "summary": "EUV 独家垄断，是先进制程的物理天花板；出口管制是风险。",
+            "sources": [
+              {
+                "title": "ASML Investor",
+                "url": "https://www.asml.com/en/investor-relations"
+              }
+            ]
+          },
+          "notes": "不可替代的设备之王。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 57,
+          "aiRevPct": 90,
+          "aiRevGrowth": 35,
+          "pricingPower": 95
+        },
+        {
+          "ticker": "MU",
+          "key": "mu",
+          "name": "美光",
+          "est": true,
+          "techRoute": "HBM 内存",
+          "productDir": "HBM3E / 4、DRAM、AI 内存",
+          "marketCap": 150,
+          "pe": 20,
+          "fwdPe": 14,
+          "peg": 1.0,
+          "revGrowth": 50,
+          "grossMargin": 45,
+          "fcfMargin": 20,
+          "roe": 18,
+          "aiExposure": 82,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.0,
+            "reports": 28,
+            "summary": "HBM 供不应求贯穿周期，PEG 接近 1，是芯片层少有的低估值高成长。",
+            "sources": [
+              {
+                "title": "Micron Investor",
+                "url": "https://www.micron.com/about/innovation/investors"
+              }
+            ]
+          },
+          "notes": "价值挖掘重点：HBM 景气 + 低 PEG。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 30,
+          "aiRevPct": 55,
+          "aiRevGrowth": 40,
+          "pricingPower": 55
+        },
+        {
+          "ticker": "688256.SS",
+          "key": "cambricon",
+          "name": "寒武纪",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "AI 训练/推理芯片 (国产)",
+          "productDir": "思元系列 AI 芯片、训练/推理卡",
+          "marketCap": 42,
+          "pe": 0,
+          "fwdPe": 120,
+          "peg": 3.0,
+          "revGrowth": 120,
+          "grossMargin": 60,
+          "fcfMargin": -10,
+          "roe": -8,
+          "aiExposure": 95,
+          "research": {
+            "consensus": "分歧大",
+            "ratingScore": 3.2,
+            "reports": 24,
+            "summary": "国产 AI 芯片核心标的, 大模型适配与软件生态是关键; 盈利尚远。",
+            "sources": [
+              {
+                "title": "寒武纪投资者关系",
+                "url": "https://www.cambricon.com"
+              }
+            ]
+          },
+          "notes": "国产算力期权, 高预期高波动。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 180,
+          "aiRevPct": 90,
+          "aiRevGrowth": 120,
+          "pricingPower": 60,
+          "thesis": "china-substitution"
+        },
+        {
+          "ticker": "688041.SS",
+          "key": "hygon",
+          "name": "海光信息",
+          "est": true,
+          "market": "A",
+          "ccy": "CNY",
+          "techRoute": "x86 CPU + DCU (国产)",
+          "productDir": "海光 CPU、深算 DCU (GPGPU)",
+          "marketCap": 52,
+          "pe": 100,
+          "fwdPe": 70,
+          "peg": 2.5,
+          "revGrowth": 40,
+          "grossMargin": 60,
+          "fcfMargin": 20,
+          "roe": 15,
+          "aiExposure": 85,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 22,
+            "summary": "国产 CPU/DCU 双线, 信创与 AI 算力双驱动; 估值偏高。",
+            "sources": [
+              {
+                "title": "海光信息投资者关系",
+                "url": "https://www.hygon.com"
+              }
+            ]
+          },
+          "notes": "国产 CPU+DCU, 信创主线。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 150,
+          "aiRevPct": 75,
+          "aiRevGrowth": 45,
+          "pricingPower": 55,
+          "thesis": "china-substitution"
+        },
+        {
+          "ticker": "005930.KS",
+          "key": "ssamsung",
+          "name": "三星电子",
+          "est": true,
+          "market": "KR",
+          "ccy": "KRW",
+          "techRoute": "存储 (HBM) + 代工 + 移动",
+          "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
+          "marketCap": 370,
+          "pe": 12,
+          "fwdPe": 11,
+          "peg": 1.2,
+          "revGrowth": 15,
+          "grossMargin": 45,
+          "fcfMargin": 15,
+          "roe": 12,
+          "aiExposure": 80,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.0,
+            "reports": 40,
+            "summary": "HBM 与存储复苏双驱动, 代工追赶台积电; 企业结构折价。",
+            "sources": [
+              {
+                "title": "Samsung IR",
+                "url": "https://www.samsung.com/us/aboutsamsung/ir/"
+              }
+            ]
+          },
+          "notes": "HBM+存储复苏, 估值低。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 18,
+          "aiRevPct": 70,
+          "aiRevGrowth": 50,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "000660.KS",
+          "key": "skhynix",
+          "name": "SK海力士",
+          "est": true,
+          "market": "KR",
+          "ccy": "KRW",
+          "techRoute": "HBM 存储 (全球领先)",
+          "productDir": "HBM3E/4、DRAM、NAND",
+          "marketCap": 115,
+          "pe": 10,
+          "fwdPe": 9,
+          "peg": 1.0,
+          "revGrowth": 45,
+          "grossMargin": 46,
+          "fcfMargin": 20,
+          "roe": 16,
+          "aiExposure": 92,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.2,
+            "reports": 34,
+            "summary": "HBM 绝对领先, 与英伟达/微软深度绑定; 周期属性仍存。",
+            "sources": [
+              {
+                "title": "SK hynix IR",
+                "url": "https://www.skhynix.com"
+              }
+            ]
+          },
+          "notes": "HBM 核心受益, 价值挖掘重点。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 15,
+          "aiRevPct": 70,
+          "aiRevGrowth": 50,
+          "pricingPower": 65
+        },
+        {
+          "ticker": "042700.KS",
+          "key": "hansmi",
+          "name": "韩美半导体",
+          "est": true,
+          "market": "KR",
+          "ccy": "KRW",
+          "techRoute": "TC Bonder (HBM 封装设备)",
+          "productDir": "TC Bonder、HBM 封装键合设备",
+          "marketCap": 20,
+          "pe": 25,
+          "fwdPe": 20,
+          "peg": 1.6,
+          "revGrowth": 50,
+          "grossMargin": 50,
+          "fcfMargin": 22,
+          "roe": 26,
+          "aiExposure": 88,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.8,
+            "reports": 14,
+            "summary": "HBM 扩产直接拉动 TC Bonder 需求, 客户集中。",
+            "sources": [
+              {
+                "title": "Hanmi Semiconductor IR",
+                "url": "https://www.hanmi.co.kr"
+              }
+            ]
+          },
+          "notes": "HBM 封装设备弹性标的。",
+          "curatedDate": "2026-07",
+          "epsRevision": 10,
+          "ratingTrend": 0.3,
+          "ratingDispersion": 30,
+          "peHist5y": 38,
+          "aiRevPct": 70,
+          "aiRevGrowth": 50,
+          "pricingPower": 65
+        }
       ]
     },
     {
@@ -247,51 +1475,435 @@
       "name": "能源层",
       "en": "Energy",
       "desc": "AI 数据中心的电力底座。训练/推理是'电老虎'，电力供应(尤其是核电与气电)成为算力扩张的硬约束，是最近两年才被市场重定价的新环节。",
-      "techRoutes": ["核电供应 AI 数据中心", "燃气 + 核电调峰", "可再生 + 储能", "发电设备 + 电网", "核电直供数据中心", "核燃料铀", "小型模块化堆 (SMR)"],
+      "techRoutes": [
+        "核电供应 AI 数据中心",
+        "燃气 + 核电调峰",
+        "可再生 + 储能",
+        "发电设备 + 电网",
+        "核电直供数据中心",
+        "核燃料铀",
+        "小型模块化堆 (SMR)"
+      ],
       "companies": [
-        {"ticker": "CEG", "key": "ceg", "name": "Constellation Energy", "est": true,
-         "techRoute": "核电供应 AI 数据中心",
-         "productDir": "核电、与科技巨头 PPA 购电协议",
-         "marketCap": 90, "pe": 30, "fwdPe": 28, "peg": 2.2, "revGrowth": 12, "grossMargin": 40, "fcfMargin": 15, "roe": 25, "aiExposure": 75,
-         "research": {"consensus": "增持", "ratingScore": 4.1, "reports": 26, "summary": "美国最大核电运营商，PPA 长协锁定 AI 数据中心需求，重估逻辑强。", "sources": [{"title": "Constellation Investor", "url": "https://www.constellationenergy.com/about/investors.html"}]},
-         "notes": "核电 + AI 直供标杆标的。"},
-        {"ticker": "VST", "key": "vst", "name": "Vistra", "est": true,
-         "techRoute": "燃气 + 核电调峰",
-         "productDir": "天然气发电、核电、零售电力",
-         "marketCap": 50, "pe": 18, "fwdPe": 17, "peg": 1.5, "revGrowth": 20, "grossMargin": 35, "fcfMargin": 18, "roe": 30, "aiExposure": 70,
-         "research": {"consensus": "增持", "ratingScore": 4.0, "reports": 24, "summary": "多元电源 + 退役核电重启，受益 AI 电力需求且估值温和。", "sources": [{"title": "Vistra Investor", "url": "https://www.vistracorp.com/about-us/investors/"}]},
-         "notes": "估值低、电力弹性大，价值候选。"},
-        {"ticker": "NEE", "key": "nee", "name": "NextEra", "est": true,
-         "techRoute": "可再生 + 储能",
-         "productDir": "风电、光伏、电池储能",
-         "marketCap": 150, "pe": 22, "fwdPe": 19, "peg": 1.7, "revGrowth": 12, "grossMargin": 32, "fcfMargin": 16, "roe": 12, "aiExposure": 55,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.8, "reports": 28, "summary": "储能配套 AI 数据中心用电，但利率敏感、可再生属性更强。", "sources": [{"title": "NextEra Investor", "url": "https://www.investor.nexteraenergy.com/"}]},
-         "notes": "储能弹性 + 利率敏感。"},
-        {"ticker": "GEV", "key": "gev", "name": "GE Vernova", "est": true,
-         "techRoute": "发电设备 + 电网",
-         "productDir": "燃气轮机、电网设备、核电服务",
-         "marketCap": 120, "pe": 60, "fwdPe": 40, "peg": 2.5, "revGrowth": 15, "grossMargin": 18, "fcfMargin": 8, "roe": 20, "aiExposure": 68,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.9, "reports": 22, "summary": "燃气轮机与电网设备订单爆满，是电力扩容的'卖铲人'。", "sources": [{"title": "GE Vernova Investor", "url": "https://www.gevernova.com/about/investors"}]},
-         "notes": "电力设备景气标的，估值偏贵。"},
-        {"ticker": "TLN", "key": "tln", "name": "Talen Energy", "est": true,
-         "techRoute": "核电直供数据中心",
-         "productDir": "Susquehanna 核电、Amazon 直连供电",
-         "marketCap": 25, "pe": 0, "fwdPe": 20, "peg": 1.4, "revGrowth": 25, "grossMargin": 38, "fcfMargin": 20, "roe": 28, "aiExposure": 80,
-         "research": {"consensus": "分歧大", "ratingScore": 3.5, "reports": 16, "summary": "核电站直连超大规模客户范式开创者，弹性大但单一项目依赖度高。", "sources": [{"title": "Talen Energy", "url": "https://www.talenenergy.com/"}]},
-         "notes": "直连供电新模式，高弹性。"},
-        {"ticker": "CCJ", "key": "ccj", "name": "Cameco", "est": true,
-         "techRoute": "核燃料铀",
-         "productDir": "铀矿开采、核燃料循环",
-         "marketCap": 35, "pe": 45, "fwdPe": 35, "peg": 2.0, "revGrowth": 15, "grossMargin": 35, "fcfMargin": 18, "roe": 10, "aiExposure": 60,
-         "research": {"consensus": "中性偏多", "ratingScore": 3.7, "reports": 18, "summary": "核电复苏拉动铀需求，燃料端受益于 AI 电力长期叙事。", "sources": [{"title": "Cameco Investor", "url": "https://www.cameco.com/investors"}]},
-         "notes": "核燃料上游，间接受益。"},
-        {"ticker": "OKLO", "key": "oklo", "name": "Oklo", "est": true,
-         "techRoute": "小型模块化堆 (SMR)",
-         "productDir": "小型模块化核反应堆、快堆技术",
-         "marketCap": 12, "pe": 0, "fwdPe": 0, "peg": 0, "revGrowth": 0, "grossMargin": 0, "fcfMargin": -50, "roe": -20, "aiExposure": 85,
-         "research": {"consensus": "高风险投机", "ratingScore": 2.5, "reports": 12, "summary": "SMR 解决 AI 电力远期瓶颈的纯期权标的，商业化与融资风险极高。", "sources": [{"title": "Oklo Investor", "url": "https://www.oklo.com/"}]},
-         "notes": "远期期权，仅适合高风险仓位。"}
+        {
+          "ticker": "CEG",
+          "key": "ceg",
+          "name": "Constellation Energy",
+          "est": true,
+          "techRoute": "核电供应 AI 数据中心",
+          "productDir": "核电、与科技巨头 PPA 购电协议",
+          "marketCap": 90,
+          "pe": 30,
+          "fwdPe": 28,
+          "peg": 2.2,
+          "revGrowth": 12,
+          "grossMargin": 40,
+          "fcfMargin": 15,
+          "roe": 25,
+          "aiExposure": 75,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.1,
+            "reports": 26,
+            "summary": "美国最大核电运营商，PPA 长协锁定 AI 数据中心需求，重估逻辑强。",
+            "sources": [
+              {
+                "title": "Constellation Investor",
+                "url": "https://www.constellationenergy.com/about/investors.html"
+              }
+            ]
+          },
+          "notes": "核电 + AI 直供标杆标的。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 39,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "VST",
+          "key": "vst",
+          "name": "Vistra",
+          "est": true,
+          "techRoute": "燃气 + 核电调峰",
+          "productDir": "天然气发电、核电、零售电力",
+          "marketCap": 50,
+          "pe": 18,
+          "fwdPe": 17,
+          "peg": 1.5,
+          "revGrowth": 20,
+          "grossMargin": 35,
+          "fcfMargin": 18,
+          "roe": 30,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "增持",
+            "ratingScore": 4.0,
+            "reports": 24,
+            "summary": "多元电源 + 退役核电重启，受益 AI 电力需求且估值温和。",
+            "sources": [
+              {
+                "title": "Vistra Investor",
+                "url": "https://www.vistracorp.com/about-us/investors/"
+              }
+            ]
+          },
+          "notes": "估值低、电力弹性大，价值候选。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 23,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "NEE",
+          "key": "nee",
+          "name": "NextEra",
+          "est": true,
+          "techRoute": "可再生 + 储能",
+          "productDir": "风电、光伏、电池储能",
+          "marketCap": 150,
+          "pe": 22,
+          "fwdPe": 19,
+          "peg": 1.7,
+          "revGrowth": 12,
+          "grossMargin": 32,
+          "fcfMargin": 16,
+          "roe": 12,
+          "aiExposure": 55,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.8,
+            "reports": 28,
+            "summary": "储能配套 AI 数据中心用电，但利率敏感、可再生属性更强。",
+            "sources": [
+              {
+                "title": "NextEra Investor",
+                "url": "https://www.investor.nexteraenergy.com/"
+              }
+            ]
+          },
+          "notes": "储能弹性 + 利率敏感。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 29,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "GEV",
+          "key": "gev",
+          "name": "GE Vernova",
+          "est": true,
+          "techRoute": "发电设备 + 电网",
+          "productDir": "燃气轮机、电网设备、核电服务",
+          "marketCap": 120,
+          "pe": 60,
+          "fwdPe": 40,
+          "peg": 2.5,
+          "revGrowth": 15,
+          "grossMargin": 18,
+          "fcfMargin": 8,
+          "roe": 20,
+          "aiExposure": 68,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 22,
+            "summary": "燃气轮机与电网设备订单爆满，是电力扩容的'卖铲人'。",
+            "sources": [
+              {
+                "title": "GE Vernova Investor",
+                "url": "https://www.gevernova.com/about/investors"
+              }
+            ]
+          },
+          "notes": "电力设备景气标的，估值偏贵。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 78,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "TLN",
+          "key": "tln",
+          "name": "Talen Energy",
+          "est": true,
+          "techRoute": "核电直供数据中心",
+          "productDir": "Susquehanna 核电、Amazon 直连供电",
+          "marketCap": 25,
+          "pe": 0,
+          "fwdPe": 20,
+          "peg": 1.4,
+          "revGrowth": 25,
+          "grossMargin": 38,
+          "fcfMargin": 20,
+          "roe": 28,
+          "aiExposure": 80,
+          "research": {
+            "consensus": "分歧大",
+            "ratingScore": 3.5,
+            "reports": 16,
+            "summary": "核电站直连超大规模客户范式开创者，弹性大但单一项目依赖度高。",
+            "sources": [
+              {
+                "title": "Talen Energy",
+                "url": "https://www.talenenergy.com/"
+              }
+            ]
+          },
+          "notes": "直连供电新模式，高弹性。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 26,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "CCJ",
+          "key": "ccj",
+          "name": "Cameco",
+          "est": true,
+          "techRoute": "核燃料铀",
+          "productDir": "铀矿开采、核燃料循环",
+          "marketCap": 35,
+          "pe": 45,
+          "fwdPe": 35,
+          "peg": 2.0,
+          "revGrowth": 15,
+          "grossMargin": 35,
+          "fcfMargin": 18,
+          "roe": 10,
+          "aiExposure": 60,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.7,
+            "reports": 18,
+            "summary": "核电复苏拉动铀需求，燃料端受益于 AI 电力长期叙事。",
+            "sources": [
+              {
+                "title": "Cameco Investor",
+                "url": "https://www.cameco.com/investors"
+              }
+            ]
+          },
+          "notes": "核燃料上游，间接受益。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 58,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        },
+        {
+          "ticker": "OKLO",
+          "key": "oklo",
+          "name": "Oklo",
+          "est": true,
+          "techRoute": "小型模块化堆 (SMR)",
+          "productDir": "小型模块化核反应堆、快堆技术",
+          "marketCap": 12,
+          "pe": 0,
+          "fwdPe": 0,
+          "peg": 0,
+          "revGrowth": 0,
+          "grossMargin": 0,
+          "fcfMargin": -50,
+          "roe": -20,
+          "aiExposure": 85,
+          "research": {
+            "consensus": "高风险投机",
+            "ratingScore": 2.5,
+            "reports": 12,
+            "summary": "SMR 解决 AI 电力远期瓶颈的纯期权标的，商业化与融资风险极高。",
+            "sources": [
+              {
+                "title": "Oklo Investor",
+                "url": "https://www.oklo.com/"
+              }
+            ]
+          },
+          "notes": "远期期权，仅适合高风险仓位。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 55,
+          "peHist5y": null,
+          "aiRevPct": 5,
+          "aiRevGrowth": 80,
+          "pricingPower": 40
+        },
+        {
+          "ticker": "ETN",
+          "key": "etn",
+          "name": "Eaton",
+          "est": true,
+          "techRoute": "电力设备 + 电网",
+          "productDir": "配电设备、变压器、数据中心电力基础设施",
+          "marketCap": 150,
+          "pe": 35,
+          "fwdPe": 30,
+          "peg": 2.0,
+          "revGrowth": 12,
+          "grossMargin": 35,
+          "fcfMargin": 16,
+          "roe": 22,
+          "aiExposure": 70,
+          "research": {
+            "consensus": "中性偏多",
+            "ratingScore": 3.9,
+            "reports": 24,
+            "summary": "变压器/配电是 AI 数据中心电力扩容的物理瓶颈，订单能见度强。",
+            "sources": [
+              {
+                "title": "Eaton Investor",
+                "url": "https://www.eaton.com/us/en-us/company/investor-relations.html"
+              }
+            ]
+          },
+          "notes": "电网设备景气，受益于功率密度与扩容。",
+          "curatedDate": "2026-07",
+          "epsRevision": 6,
+          "ratingTrend": 0.2,
+          "ratingDispersion": 25,
+          "peHist5y": 46,
+          "aiRevPct": 30,
+          "aiRevGrowth": 25,
+          "pricingPower": 50
+        }
       ]
     }
-  ]
+  ],
+  "cycle": {
+    "asOf": "2026-Q2 策展（hyperscaler capex 为公开指引估计值，非精确财报，请按最新季报核实）",
+    "stage": "建设高峰 · 早期回报兑现",
+    "capex": [
+      {
+        "name": "Microsoft",
+        "ticker": "MSFT",
+        "fy25": 80,
+        "fy26e": 95,
+        "yoy": 0.19,
+        "note": "OpenAI/算力双线"
+      },
+      {
+        "name": "Alphabet",
+        "ticker": "GOOGL",
+        "fy25": 75,
+        "fy26e": 90,
+        "yoy": 0.2,
+        "note": "Gemini + 云"
+      },
+      {
+        "name": "Amazon",
+        "ticker": "AMZN",
+        "fy25": 100,
+        "fy26e": 120,
+        "yoy": 0.2,
+        "note": "AWS + Anthropic"
+      },
+      {
+        "name": "Meta",
+        "ticker": "META",
+        "fy25": 65,
+        "fy26e": 80,
+        "yoy": 0.23,
+        "note": "GPU + 自建集群"
+      },
+      {
+        "name": "四家合计",
+        "ticker": "",
+        "fy25": 320,
+        "fy26e": 385,
+        "yoy": 0.2,
+        "note": "Capex 超级周期延续"
+      }
+    ],
+    "bottlenecks": [
+      {
+        "name": "CoWoS 先进封装",
+        "status": "紧张",
+        "level": 3,
+        "detail": "台积电产能仍是头号瓶颈，2026 持续满载"
+      },
+      {
+        "name": "HBM 内存",
+        "status": "供不应求",
+        "level": 3,
+        "detail": "SK海力士/三星主导，价格上行"
+      },
+      {
+        "name": "电力与电网",
+        "status": "约束加剧",
+        "level": 2,
+        "detail": "数据中心用电审批与变压器交付是硬约束"
+      },
+      {
+        "name": "GPU 供给",
+        "status": "缓解中",
+        "level": 1,
+        "detail": "Blackwell 放量，交付改善"
+      }
+    ],
+    "transition": "重心由训练基建 → 推理规模化：推理毛利更高、需求更持久，是下一阶段主线。",
+    "narrative": "四大 hyperscaler 2026 年 Capex 合计约 $385B（+20%），超级周期延续。市场焦点从'谁拿到 GPU'转向'AI 能否兑现收入（ROI）'。估值已高但盈利仍在兑现，热度偏热、尚未泡沫化——需警惕客户集中度与出口管制。",
+    "privateModels": [
+      {
+        "name": "OpenAI",
+        "note": "GPT 系列 + 推理价格战，与微软深度绑定，估值超 $300B"
+      },
+      {
+        "name": "Anthropic",
+        "note": "Claude 企业级领先，亚马逊/谷歌投资，API 收入高增"
+      },
+      {
+        "name": "DeepSeek",
+        "note": "低成本推理范式，冲击闭源定价，国产算力受益"
+      },
+      {
+        "name": "xAI",
+        "note": "Grok + 自建超大规模集群，资本开支激进"
+      },
+      {
+        "name": "Mistral",
+        "note": "欧洲开源代表，企业级定位"
+      }
+    ],
+    "riskFlags": [
+      {
+        "name": "客户集中度",
+        "detail": "NVDA/CRWV 等前四大 hyperscaler 贡献过半收入"
+      },
+      {
+        "name": "出口管制",
+        "detail": "美对华先进芯片/设备管制，影响寒武纪/海光替代逻辑与美光/英伟达对华收入"
+      },
+      {
+        "name": "地缘(台海/韩)",
+        "detail": "台积电/三星产能集中于东亚，地缘风险溢价"
+      },
+      {
+        "name": "ROI 兑现",
+        "detail": "若 AI 收入不及预期，高估值 capex 链面临重估"
+      }
+    ]
+  }
 }

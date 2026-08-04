@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>美国宏观监控网站 · 新手使用指南</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1d2733; --muted:#5b6b7b;
+    --line:#e4e8ee; --accent:#2563eb; --accent-soft:#eef4ff;
+    --red:#e63946; --red-soft:#fdecee; --green:#2a9d8f; --green-soft:#e7f6f3;
+    --amber:#f59e0b; --amber-soft:#fef5e6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.75;font-size:15px}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  header.hero{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;
+    border-radius:16px;padding:34px 30px;margin-bottom:26px}
+  header.hero h1{margin:0 0 8px;font-size:26px}
+  header.hero p{margin:0;opacity:.92;font-size:15px}
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 22px;margin-bottom:26px}
+  .toc h2{margin:0 0 10px;font-size:16px;color:var(--accent)}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{margin:4px 0}
+  .toc a{color:var(--ink);text-decoration:none}
+  .toc a:hover{color:var(--accent)}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 26px;margin-bottom:22px;scroll-margin-top:16px}
+  h2.sec{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .tag{font-size:12px;font-weight:600;color:#fff;background:var(--accent);
+    border-radius:6px;padding:2px 9px}
+  h3{font-size:16px;margin:20px 0 8px;color:#0f172a}
+  p{margin:8px 0}
+  .muted{color:var(--muted)}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:5px 0}
+  .callout{border-radius:10px;padding:12px 16px;margin:14px 0;font-size:14px}
+  .callout.tip{background:var(--accent-soft);border-left:4px solid var(--accent)}
+  .callout.warn{background:var(--red-soft);border-left:4px solid var(--red)}
+  .callout.good{background:var(--green-soft);border-left:4px solid var(--green)}
+  .callout.note{background:var(--amber-soft);border-left:4px solid var(--amber)}
+  code{background:#eef1f5;padding:1px 6px;border-radius:5px;font-size:13px;color:#b51c2c}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f4f8}
+  .pill{padding:1px 8px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill.r{background:var(--red-soft);color:var(--red)}
+  .pill.g{background:var(--green-soft);color:var(--green)}
+  .pill.a{background:var(--amber-soft);color:#a86a07}
+  .pill.x{background:#eceff3;color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .kpi{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi b{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  footer{color:var(--muted);font-size:13px;text-align:center;margin-top:30px}
+  .big{font-size:17px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>美国宏观监控网站 · 新手使用指南</h1>
+  <p>写给没有任何宏观分析基础的人：怎么读这个网站，以及每个数字和图表背后到底在说什么。</p>
+</header>
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#what">一、这个网站是干什么的</a></li>
+    <li><a href="#concepts">二、先搞懂 5 个基础概念（大白话）</a></li>
+    <li><a href="#read">三、推荐阅读顺序：从"全局"到"细分"</a></li>
+    <li><a href="#sections">四、逐板块解读（看什么 + 含义 + 该盯什么）</a></li>
+    <li><a href="#legend">五、颜色与标签速查表</a></li>
+    <li><a href="#tips">六、给新人的 6 条实操建议</a></li>
+    <li><a href="#data">七、数据从哪来、更新多快（很重要）</a></li>
+  </ol>
+</nav>
+
+<section id="what">
+  <h2 class="sec">一、这个网站是干什么的 <span class="tag">定位</span></h2>
+  <p class="big">一句话：它是一个 <b>美国宏观经济"体温计" + "雷达"</b>。
+  它把美联储、市场利率、资产价格、就业、通胀、信用风险等几十个指标，实时汇总成你能一眼看懂的状态判断。</p>
+  <p class="muted">你不用会经济学。你只需要学会看三样东西：<b>当前值</b>、<b>变化方向</b>、<b>信号颜色</b>。网站已经把"专家怎么解读"这件事做成了自动信号，你读信号即可。</p>
+  <div class="callout tip">
+    <b>核心心法：</b>宏观是"慢变量"。这个网站不是用来做短线交易的，而是帮你看清——<b>市场在"冒险"还是"避险"？经济在"扩张"还是"走向衰退"？钱是"变多"还是"变紧"？</b>每天花 5 分钟看趋势，比盯单日跳动有用得多。
+  </div>
+</section>
+
+<section id="concepts">
+  <h2 class="sec">二、先搞懂 5 个基础概念 <span class="tag">入门</span></h2>
+
+  <h3>1. 状态区间（Regime）</h3>
+  <p>网站给每个板块一个"当前状态"判断，常用两类词：</p>
+  <ul>
+    <li><b>risk-on / bullish（乐观 / 健康）</b>：市场愿意承担风险，或数据偏暖。</li>
+    <li><b>risk-off / bearish（避险 / 压力）</b>：市场在防御，或数据偏冷/偏险。</li>
+    <li><b>mixed（胶着 / 分化）</b>：信号互相打架，看不清方向。</li>
+  </ul>
+  <p class="muted">记住：这是"当前状态"，不是"预测"。它告诉你现在在哪，不保证明天去哪。</p>
+
+  <h3>2. 收益率曲线与利差（最该懂的一个）</h3>
+  <p>"收益率"就是借钱要付的利息。短期（如 2 年）和长期（如 10 年）利率之间的差，叫<b>利差</b>。</p>
+  <ul>
+    <li>正常：长期利率 &gt; 短期利率（曲线向上）。</li>
+    <li><b>倒挂（利差 &lt; 0）</b>：短期反而比长期贵。历史上，<b>收益率曲线倒挂是预测衰退最可靠的先行信号之一</b>，通常领先衰退 12–18 个月。</li>
+  </ul>
+  <div class="callout note">网站里你会反复看到 <code>10Y-2Y 利差</code> 和更可靠的 <code>3M-10Y 利差</code>。只要它为负，就是一盏"黄/红灯"。</div>
+
+  <h3>3. 流动性（市场里的"钱"够不够）</h3>
+  <p>流动性 = 金融系统里可随时动用的钱。关键角色：</p>
+  <ul>
+    <li><b>美联储资产负债表（WALCL）</b>：美联储"印/缩"的钱。在缩表（QT）就是在抽水。</li>
+    <li><b>RRP（逆回购）</b>：货币基金存在美联储的钱，曾是"缓冲垫"，现已基本耗尽。</li>
+    <li><b>TGA（财政部现金账户）</b>：财政部存在美联储的钱。TGA 上升 = 从市场抽水。</li>
+    <li><b>SOFR-IORB 利差</b>：融资利率减准备金利率。<b>它由负转正，是"钱开始紧张"的第一道确认信号</b>。</li>
+  </ul>
+
+  <h3>4. 衰退先行指标（不等衰退来了才看）</h3>
+  <p>"先行"= 比衰退本身早发生。网站用一组领先指标当雷达：收益率曲线倒挂、Sahm 规则（失业率）、初请失业金、纽约联储衰退概率、金融压力指数。它们亮红灯，往往比官方宣布衰退早大半年。</p>
+
+  <h3>5. 信用利差（谁还敢借钱）</h3>
+  <p>高风险企业债（HY）相对国债要多付的利息。利差<b>走阔</b> = 投资者担心违约、要求更高补偿 = 避险情绪升温；<b>收窄</b> = 一切安好。</p>
+</section>
+
+<section id="read">
+  <h2 class="sec">三、推荐阅读顺序 <span class="tag">导航</span></h2>
+  <p>页面板块虽多，但有逻辑顺序：<b>先看全局 → 再看"现象"（资产/波动）→ 找"原因"（利率/美联储/流动性/经济/信用）→ 最后看"前瞻雷达"（衰退/总览）</b>。</p>
+  <div class="grid2">
+    <div class="kpi"><b>① 全局状态 + 分析总览</b>一眼看全盘风险分和状态</div>
+    <div class="kpi"><b>② 大类资产 / 波动率</b>钱正在往哪去、市场慌不慌</div>
+    <div class="kpi"><b>③ 利率 / 美联储 / 流动性</b>定价之锚、央行在干嘛、钱够不够</div>
+    <div class="kpi"><b>④ 经济 / 信用</b>基本面与违约风险是否恶化</div>
+    <div class="kpi"><b>⑤ 衰退信号</b>最前瞻的衰退雷达（红黄绿灯）</div>
+    <div class="kpi"><b>⑥ 加密货币</b>风险偏好的"边缘"温度计</div>
+  </div>
+  <div class="callout tip">新人最简路径：每天只看 <b>分析总览的分数</b> + <b>衰退信号的灯</b> + <b>收益率曲线是否倒挂</b>，就抓住了 80% 的信息。</div>
+</section>
+
+<section id="sections">
+  <h2 class="sec">四、逐板块解读 <span class="tag">正文</span></h2>
+
+  <h3>🌐 全局状态（globalRegime）</h3>
+  <p><b>看什么：</b>一个总的 market regime 判断（risk-on / risk-off / mixed），由收益率曲线、VIX、金融压力、信用分位等合成。</p>
+  <p><b>背后含义：</b>市场整体的"体温"。risk-off 不预示立刻崩盘，只是说防御情绪占上风。</p>
+  <p><b>新人盯：</b>它的 <code>signal</code> 从 risk-on 翻成 mixed/risk-off 时，就要开始留意下面细分板块了。</p>
+
+  <h3>📊 分析总览（riskScore）</h3>
+  <p><b>看什么：</b>0–100 的加权风险总分 + 风险等级（低/中/高）+ 7 个因子条（流动性、衰退、利率、经济、信用、波动率、跨资产）。</p>
+  <p><b>背后含义：</b>把 7 个板块按权重（流动性 18%、衰退 17%、利率 15%、经济 14%、信用 14%、波动率 12%、资产 10%）合成一个总分。条越长越红 = 该板块压力越大。</p>
+  <p><b>新人盯：</b>先看总分和等级，再看<b>哪几根条变红</b>——红的板块就是当下主要矛盾。</p>
+
+  <h3>💹 大类资产（assets）</h3>
+  <p><b>看什么：</b>纳指(NDX)、WTI 原油、布伦特原油、黄金、铜等的<b>实时价格</b>和<b>周/月涨跌</b>（带方向箭头）。</p>
+  <p><b>背后含义：</b>钱在往哪去。金涨、铜跌常暗示避险/担忧增长；油价受供需与地缘影响。</p>
+  <p><b>新人盯：</b>别只看价格，看 <code>▲/▼</code> 周变化。WTI/Brent 用的是 Yahoo 实时价，其余资产也多为实时源。</p>
+
+  <h3>🌊 波动率（volatility）</h3>
+  <p><b>看什么：</b>VIX（美股恐慌指数）、OVX（原油波动率）、GVZ（黄金波动率），以及"处于压力区的资产数量"。</p>
+  <p><b>背后含义：</b>市场慌不慌。<b>VIX &gt; 20</b> 一般被视为紧张，&gt; 30 是明显恐慌。</p>
+  <p><b>新人盯：</b>VIX 是"市场情绪温度计"，它飙升往往和下跌同时发生，是用来确认风险偏好的最好指标之一。</p>
+
+  <h3>📉 利率（rates）</h3>
+  <p><b>看什么：</b>10 年期、2 年期国债收益率、TIPS（实际利率）、BEI（通胀预期），以及曲线形态。</p>
+  <p><b>背后含义：</b>这是所有资产定价的"锚"。长端利率涨 = 融资环境收紧；曲线倒挂 = 衰退预警（见概念 2）。</p>
+  <p><b>新人盯：</b>重点看 <code>10Y-2Y 利差</code> 是否为负；BEI 上升代表市场担心的通胀在抬头。</p>
+
+  <h3>🏛️ 美联储（fed）</h3>
+  <p><b>看什么：</b>政策利率区间、市场隐含的降息/加息路径（看短端利率）、缩表进度（WALCL/RRP/TGA），以及官员"鸽鹰评分"。</p>
+  <p><b>背后含义：</b>央行在"放水"还是"收水"。鸽 = 偏宽松（利好风险资产），鹰 = 偏收紧。</p>
+  <p><b>新人盯：</b>官员评分是"展示性模型值"（基于 2Y 利率自动算，非官方评分），别当成美联储内部真实立场；真正该看的是政策利率和缩表速度。</p>
+
+  <h3>💧 流动性（liquidity）</h3>
+  <p><b>看什么：</b>净流动性、美联储总资产、RRP、TGA、银行准备金、SOFR-IORB，以及 LPI（流动性压力指数，含三子维度）。</p>
+  <p><b>背后含义：</b>市场里的"钱"是变多还是变少。RRP 耗尽 + TGA 上升 + SOFR-IORB 转正 = 流动性从"有缓冲"进入"无缓冲"的压力阶段（类比 2019 年回购危机前夜）。</p>
+  <p><b>新人盯：</b>把 <code>SOFR-IORB</code> 和 <code>LPI 分数</code> 当核心。SOFR-IORB 转正是第一警报；LPI 越高流动性压力越大。</p>
+
+  <h3>🏗️ 经济（economy）</h3>
+  <p><b>看什么：</b>GDP（环比/同比）、失业率、CPI（通胀）、Sahm 规则等。</p>
+  <p><b>背后含义：</b>基本面是否健康。失业率上升、GDP 转负 = 经济走弱。</p>
+  <p><b>新人盯：</b>失业率与 Sahm 规则——失业率一旦较快上行，往往是衰退临近的确认。</p>
+
+  <h3>🏦 信用（credit）</h3>
+  <p><b>看什么：</b>高收益债利差（HY OAS）、金融状况指数（NFCI）、CCC/IG 评级利差。</p>
+  <p><b>背后含义：</b>违约风险与融资环境。HY OAS 走阔 = 企业借钱更难更贵 = 避险。</p>
+  <p><b>新人盯：</b>HY OAS 的"分位"——处于历史高位时分位，说明信用环境已偏紧。</p>
+
+  <h3>🚨 衰退信号（recession）</h3>
+  <p><b>看什么：</b>6 盏红绿灯：10Y-2Y 利差、3M-10Y 利差、Sahm 规则、纽约联储衰退概率、初请失业金(4 周均)、圣路易斯金融压力。外加综合评分/等级。</p>
+  <p><b>背后含义：</b>这是全站最"前瞻"的衰退雷达。每盏灯：<span class="pill r">triggered 红</span> 已触发、<span class="pill a">warning 黄</span> 逼近阈值、<span class="pill g">safe 绿</span> 正常。</p>
+  <p><b>新人盯：</b>综合评分 &gt; 60 = 高风险。灯从绿变黄就要警惕，变红说明该指标已进入历史危险区。</p>
+
+  <h3>🪙 加密货币（crypto）</h3>
+  <p><b>看什么：</b>BTC 周涨跌、ETF 资金流、ETH/BTC 比。</p>
+  <p><b>背后含义：</b>加密是风险偏好的"边缘"指标——它涨通常代表资金敢冒险，跌代表避险。</p>
+  <p><b>新人盯：</b>把它当"温度计的末梢"，不必深究，看方向即可。</p>
+</section>
+
+<section id="legend">
+  <h2 class="sec">五、颜色与标签速查表 <span class="tag">速查</span></h2>
+  <table>
+    <thead><tr><th>你看到的</th><th>含义</th><th>新人怎么读</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill g">risk-on / bullish</span></td><td>偏乐观 / 健康</td><td>可以松口气，但别忽视风险</td></tr>
+      <tr><td><span class="pill r">risk-off / bearish</span></td><td>偏避险 / 压力</td><td>开始警惕，去看细分板块哪出问题</td></tr>
+      <tr><td><span class="pill a">mixed</span></td><td>信号分化 / 胶着</td><td>方向不清，看周/月趋势而非单日</td></tr>
+      <tr><td><span class="pill r">triggered（红）</span></td><td>衰退指标已触发</td><td>该指标进入历史危险区</td></tr>
+      <tr><td><span class="pill a">warning（黄）</span></td><td>逼近阈值未触发</td><td>预警，值得关注</td></tr>
+      <tr><td><span class="pill g">safe（绿）</span></td><td>正常</td><td>暂无警报</td></tr>
+      <tr><td><span class="pill x">unknown（灰）</span></td><td>数据缺失</td><td>不是没风险，是没数据，别误读为安全</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>关于"涨/跌"颜色的重要提醒：</b>宏观里"涨"不等于"好"。例如 VIX 涨 = 市场更慌（坏），失业率涨 = 就业变差（坏），收益率涨 = 融资收紧（视情况）。所以本站的箭头只表示<b>数值方向</b>，而<b>颜色表达的是"信号含义"（压力红 / 健康绿）</b>。别把"红了"简单等同于"跌了"。</div>
+</section>
+
+<section id="tips">
+  <h2 class="sec">六、给新人的 6 条实操建议 <span class="tag">心法</span></h2>
+  <ol>
+    <li><b>每天先看"分析总览"分数</b>，再看哪几根因子条变红——红的板块就是今天的主矛盾。</li>
+    <li><b>盯 3 个最常亮的"红灯"：</b>收益率曲线倒挂、Sahm 规则、SOFR-IORB 转正。这三者是衰退/流动性压力的最早警报。</li>
+    <li><b>看周/月变化，别被单日跳动吓到。</b>宏观是慢变量，一天涨跌常是噪音。</li>
+    <li><b>"预计 / estimated"标注 = 推算值</b>，不是官方公布值，可信度略低，别当确定结论。</li>
+    <li><b>灰色 unknown ≠ 安全。</b>它只是数据缺失，别误读。</li>
+    <li><b>把它当"观察哨"而非"预测机"。</b>网站告诉你"现在在哪、风险在哪"，不保证"明天一定怎样"。结合新闻一起看最稳。</li>
+  </ol>
+</section>
+
+<section id="data">
+  <h2 class="sec">七、数据从哪来、更新多快 <span class="tag">透明</span></h2>
+  <div class="grid2">
+    <div class="kpi"><b>实时价（日/盘中）</b>股票、原油(WTI/Brent)、黄金、铜、BTC、VIX 等来自 Yahoo 实时行情</div>
+    <div class="kpi"><b>周度</b>美联储资产负债表(H.4.1)、初请失业金、流动性指标</div>
+    <div class="kpi"><b>月 / 季（有滞后）</b>非农/失业率、CPI、GDP 等官方数据发布有延迟</div>
+    <div class="kpi"><b>自动刷新</b>站点每天由 CI 自动重新抓取并生成，无需手动</div>
+  </div>
+  <div class="callout note"><b>时滞要知道：</b>GDP 等季度数据官方发布天然滞后约 2 个季度，本站已用 BEA 实际值 + 亚特兰大联储 GDPNow 实时预估补足"最新感"；其余月/季指标按官方节奏更新。看到"上周/上月"的数据是正常的，不代表网站坏了。</div>
+  <p class="muted">所有信号均由数据规则自动计算（阈值判定），不存在"分析师预设观点"——你看到的状态变化，背后一定有对应的真实数值变化。</p>
+</section>
+
+<footer>
+  本指南面向零宏观基础用户 · 配合美国宏观监控网站使用 · 信号为数据驱动，非投资建议
+</footer>
+
+</div>
+</body>
+</html>

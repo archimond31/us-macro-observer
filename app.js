@@ -1501,14 +1501,65 @@ function _aiCcySym(ccy) {
 }
 function renderAiValuePicks(list) {
   if (!list || !list.length) return '<div style="color:var(--text-tertiary);font-size:12px">当前未筛选出明显被低估的标的（可放宽阈值或等待动量回撤）。</div>';
-  var headers = ['公司', '所属层', 'AI价值分', '为何被低估'];
+  var headers = ['公司', '所属层', 'AI价值分', '层内分位', '为何被低估'];
   var rows = list.map(function (p) {
     return ['<b>' + p.ticker + '</b> <span style="font-size:11px;color:var(--text-secondary)">' + p.name + '</span>',
       '<span style="font-size:11px">' + p.layer + '</span>',
       '<span style="font-weight:700;color:#2a9d8f">' + p.aiValue + '</span>',
+      '<span style="font-size:11px;color:var(--text-tertiary)">P' + (p.layerPct != null ? p.layerPct : 50) + '</span>',
       '<span style="font-size:11px;color:var(--text-secondary)">' + p.why + '</span>'];
   });
-  return table(headers, rows);
+  return table(headers, rows)
+    + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5">⚠ 跨层排名仅供参考——各层商业模式/估值体系不同（如 15 倍代工厂与 60 倍 SaaS 不可直接比绝对分），价值挖掘更应看「层内分位 P」与基本面质量。</div>';
+}
+function renderAiCycle(cyc) {
+  if (!cyc) return '';
+  var heat = cyc.heat || 0, hc = _aiColor(heat);
+  var hlabel = (heat >= 65 ? '偏热 · 警惕' : heat >= 45 ? '温和偏热' : '冷静');
+  var inner = '';
+  inner += '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<div style="flex:1;min-width:230px"><div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">AI 产业链热度计（数据驱动：价格动量 + 估值昂贵度 + 领跑广度）</div>'
+    + _aiBar(heat, hc) + ' <b style="font-size:13px">' + heat + '</b> · ' + hlabel + '</div>'
+    + '<div style="font-size:12px;color:var(--text-secondary)">阶段：<b>' + (cyc.stage || '—') + '</b></div></div>';
+  if (cyc.capex && cyc.capex.length) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:6px 0 6px">💰 四大 hyperscaler 资本开支 ($B, 策展估计)</div>';
+    var ch = ['公司', 'FY25', 'FY26e', 'YoY', '备注'];
+    var rows = cyc.capex.map(function (r) {
+      return ['<b>' + r.name + '</b>' + (r.ticker ? ' <span style="font-size:10px;color:var(--text-tertiary)">' + r.ticker + '</span>' : ''),
+        (r.fy25 != null ? r.fy25 : '—'), (r.fy26e != null ? r.fy26e : '—'),
+        (r.yoy != null ? '<span style="color:' + (r.yoy >= 0 ? 'var(--up)' : 'var(--down)') + '">' + (r.yoy * 100).toFixed(0) + '%</span>' : '—'),
+        '<span style="font-size:11px;color:var(--text-secondary)">' + (r.note || '') + '</span>'];
+    });
+    inner += table(ch, rows);
+    inner += chartCard('💰 资本开支 ramp (FY25 → FY26e, $B)', '超级周期加速度：四大云厂 AI capex 同比继续扩张', 'aiCapex', '');
+  }
+  if (cyc.bottlenecks && cyc.bottlenecks.length) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:12px 0 6px">🔧 供给瓶颈</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    cyc.bottlenecks.forEach(function (b) {
+      var lv = b.level || 1, col = lv >= 3 ? '#e63946' : lv == 2 ? '#e9a23b' : '#2a9d8f';
+      inner += '<div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:8px 10px">'
+        + '<div style="font-weight:600;font-size:12px">' + b.name + ' <span style="font-size:10px;color:' + col + ';border:1px solid ' + col + ';border-radius:8px;padding:0 5px;margin-left:4px">' + (b.status || '') + '</span></div>'
+        + '<div style="font-size:11px;color:var(--text-secondary);margin-top:3px">' + (b.detail || '') + '</div></div>';
+    });
+    inner += '</div>';
+  }
+  if (cyc.transition) inner += '<div style="font-size:12px;margin-top:12px"><b>🔀 ' + cyc.transition + '</b></div>';
+  if (cyc.narrative) inner += '<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-top:6px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border-card);border-radius:8px">' + cyc.narrative + '</div>';
+  if (cyc.privateModels && cyc.privateModels.length) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:12px 0 6px">🛰️ 私有模型雷达（不可投，但决定下游估值）</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
+    cyc.privateModels.forEach(function (p) {
+      inner += '<div style="font-size:11px;padding:3px 9px;border:1px solid var(--border-card);border-radius:12px;color:var(--text-secondary)" title="' + p.note + '"><b>' + p.name + '</b></div>';
+    });
+    inner += '</div>';
+  }
+  if (cyc.riskFlags && cyc.riskFlags.length) {
+    inner += '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:12px 0 6px">⚠️ 风险旗标</div><div class="watch-list">';
+    cyc.riskFlags.forEach(function (r) {
+      inner += '<div class="watch-item"><div class="watch-trigger"><b>' + r.name + '</b></div><div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (r.detail || '') + '</div></div>';
+    });
+    inner += '</div>';
+  }
+  return sectionCard('🌀 AI 资本开支周期 · 超级周期位置', (cyc.asOf || ''), inner);
 }
 function renderAiLayer(L) {
   var s = L.stats || {};
@@ -1524,9 +1575,10 @@ function renderAiLayer(L) {
   var headers = ['公司', '技术路线 / 产品方向', '周', '月', '半年', 'AI价值分', '标签'];
   var rows = (L.companies || []).map(function (c) {
     var ch = c.ch || {}, sc = c.scores || {}, col = _aiColor(sc.aiValue);
-    var valCell = '<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;min-width:24px">' + sc.aiValue + '</span>' + _aiBar(sc.aiValue, col) + '</div>';
+    var valCell = '<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;min-width:24px">' + sc.aiValue + '</span>' + _aiBar(sc.aiValue, col) + '</div>'
+      + '<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">层内分位 P' + (c.layerPct != null ? c.layerPct : 50) + '</div>';
     return [
-      '<div><span class="ticker">' + c.ticker + '</span>' + _aiMkt(c.market) + '<br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span>'
+      '<div><span class="ticker">' + c.ticker + '</span>' + _aiMkt(c.market) + (c.stale ? ' <span style="font-size:10px;color:#e9a23b">⚠较旧</span>' : '') + '<br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span>'
         + (c.price != null ? '<br><span style="font-size:11px;color:var(--text-tertiary)">' + _aiCcySym(c.ccy) + Number(c.price).toFixed(2) + '</span>' : '') + '</div>',
       '<div style="font-size:12px"><div>' + (c.techRoute || '—') + '</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + (c.productDir || '') + '</div></div>',
       _aiPct(ch.w), _aiPct(ch.m), _aiPct(ch.h6), valCell, _aiTags(c.tags)
@@ -1554,9 +1606,12 @@ function renderAiLayer(L) {
     rs.forEach(function (c) {
       var r = c.research;
       var src = (r.sources && r.sources.length) ? '<a href="' + r.sources[0].url + '" target="_blank" style="color:var(--accent);font-size:11px;margin-left:6px">来源↗</a>' : '';
+      var eps = c.epsRevision, epsStr = (eps != null) ? ' <span style="color:' + (eps >= 0 ? 'var(--up)' : 'var(--down)') + '">EPS修正 ' + (eps >= 0 ? '+' : '') + eps + '%</span>' : '';
+      var rt = c.ratingTrend, rtStr = (rt != null) ? ' 评级' + (rt > 0.1 ? '↑' : rt < -0.1 ? '↓' : '→') : '';
+      var disp = (c.ratingDispersion != null) ? ' 分歧' + c.ratingDispersion : '';
       inner += '<div class="watch-item"><div class="watch-trigger"><b>' + c.ticker + '</b> · ' + (r.consensus || '—')
-        + ' <span style="color:var(--text-tertiary);font-weight:400">(' + (r.ratingScore || '—') + '/5, ' + (r.reports || 0) + '篇)</span>' + src + '</div>'
-        + '<div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (r.summary || '') + (c.notes ? ' ｜ ' + c.notes : '') + '</div></div>';
+        + ' <span style="color:var(--text-tertiary);font-weight:400">(' + (r.ratingScore || '—') + '/5, ' + (r.reports || 0) + '篇)</span>' + epsStr + rtStr + disp + src + '</div>'
+        + '<div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (r.summary || '') + (c.notes ? ' ｜ ' + c.notes : '') + ((c.aiRevPct != null) ? ' ｜ <span style="color:var(--text-tertiary)">AI卡位: 收入占比' + c.aiRevPct + '% · AI增速' + (c.aiRevGrowth || 0) + '% · 定价权' + (c.pricingPower || 0) + '</span>' : '') + (c.stale ? ' ｜ <span style="color:#e9a23b">⚠财务较旧(更新于 ' + (c.curatedDate || '?') + ')</span>' : '') + '</div></div>';
     });
     inner += '</div>';
   }
@@ -1566,7 +1621,7 @@ function renderAiChain(container) {
   var d = DATA.aiChain || { layers: [], bestValuePicks: [], summary: {}, meta: {} };
   var sm = d.summary || {};
   var html = '';
-  html += sectionH('AI 产业链 · 黄仁勋五层蛋糕', '应用 → 模型 → 基础设施 → 芯片 → 能源；股价动量自动(Yahoo)，基本面/研报为策展种子值');
+  html += sectionH('AI 产业链 · 黄仁勋五层蛋糕 + 网络连接层', '应用 → 模型 → 基础设施 → 网络连接 → 芯片 → 能源；股价动量自动(Yahoo)，基本面/研报/周期叙事为策展种子值');
   html += '<div class="metric-grid">';
   [['覆盖公司', (sm.companies || 0) + ' 家'], ['产业链层', (sm.layers || 0) + ' 层'], ['价值股候选', (sm.valuePicks || 0) + ' 只'],
    ['平均AI价值分', (sm.avgAiValue || 0) + ' /100'], ['平均动量', (sm.avgMomentum || 0) + ' /100']].forEach(function (kv) {
@@ -1588,7 +1643,21 @@ function renderAiChain(container) {
     });
     html += '</div>';
   }
-  html += sectionH('五层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
+  if (d.cycle) html += renderAiCycle(d.cycle);
+  // 国产替代 thesis 专题: 出口管制受益 + 政策赌注, 与 NVDA 等美股非同一驱动
+  var _sub = [];
+  (d.layers || []).forEach(function (L) { (L.companies || []).forEach(function (c) { if (c.thesis === 'china-substitution') _sub.push(c); }); });
+  if (_sub.length) {
+    var _subInner = '<div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px">这些标的核心驱动是「美对华先进芯片/设备出口管制 → 国产算力替代」政策 thesis，而非自由市场竞争。其溢价来自信创与自主可控预期，与英伟达等美股标的不可直接类比；若管制放松或国产良率/生态不及预期，逻辑会逆转。</div>';
+    _subInner += '<div class="watch-list">';
+    _sub.forEach(function (c) {
+      _subInner += '<div class="watch-item"><div class="watch-trigger"><b>' + c.ticker + '</b> <span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span> · <span style="font-size:11px;color:#e9a23b">国产替代</span> · AI价值分 ' + (c.scores ? c.scores.aiValue : '—') + ' (层内 P' + (c.layerPct != null ? c.layerPct : 50) + ')</div>'
+        + '<div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (c.notes || '') + '</div></div>';
+    });
+    _subInner += '</div>';
+    html += sectionCard('🇨🇳 国产替代 Thesis', '出口管制受益 · 政策赌注 · 与美股非同一驱动', _subInner);
+  }
+  html += sectionH('各层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">';
   (d.layers || []).forEach(function (L) {
     var s = L.stats || {}, col = _aiColor(s.avgAiValue || 0);
@@ -1600,8 +1669,118 @@ function renderAiChain(container) {
       + '<span style="font-weight:700;font-size:13px">' + (s.avgAiValue || 0) + '</span></div></div>';
   });
   html += '</div>';
+  // P3 可视化：性价比地图 + 价值-动量象限
+  html += sectionH('📊 可视化分析', '性价比地图：横轴越右=越便宜、纵轴越高=AI价值越高、气泡越大=市值越大；象限图：左上=待挖掘, 右上=已定价, 右下=泡沫/拥挤, 左下=回避（AI价值分为跨层综合分, 层间不完全可比）');
+  html += '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px">'
+    + '<div style="flex:1;min-width:320px">' + chartCard('🌐 中美韩性价比地图（气泡=市值）', '估值便宜度 × AI 价值分 × 市值', 'aiScatter', 'tall') + '</div>'
+    + '<div style="flex:1;min-width:320px">' + chartCard('🎯 价值-动量象限', '高价值 + 低动量 = 待挖掘标的', 'aiQuad', 'tall') + '</div>'
+    + '</div>';
   html += sectionCard('🔎 尚未被充分定价的 AI 价值股', '筛选：基本面强 + 估值便宜 + 尚未被拉涨', renderAiValuePicks(d.bestValuePicks || []));
   (d.layers || []).forEach(function (L) { html += renderAiLayer(L); });
   if (d.meta && d.meta.disclaimer) html += '<div style="font-size:11px;color:var(--text-tertiary);line-height:1.6;margin-top:14px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px">' + d.meta.disclaimer + '</div>';
   container.innerHTML = html;
+
+  // P3 可视化图表 (innerHTML 之后初始化)
+  if (typeof Chart !== 'undefined') {
+    var _cos = [];
+    (d.layers || []).forEach(function (L) { _cos = _cos.concat(L.companies || []); });
+    var _mkColor = { US: '#4f8cff', A: '#e63946', KR: '#2a9d8f' };
+    var _mkLabel = { US: '🇺🇸 美股', A: '🇨🇳 A股', KR: '🇰🇷 韩股' };
+    var _grid = 'rgba(140,140,160,0.12)';
+
+    // ① 中美韩性价比气泡图
+    if (document.getElementById('aiScatter')) {
+      if (charts.aiScatter) charts.aiScatter.destroy();
+      var _dsB = ['US', 'A', 'KR'].filter(function (m) { return _cos.some(function (c) { return c.market === m; }); })
+        .map(function (m) {
+          return {
+            label: _mkLabel[m],
+            data: _cos.filter(function (c) { return c.market === m; }).map(function (c) {
+              return { x: c.scores.valuation, y: c.scores.aiValue, r: Math.max(4, Math.min(26, Math.sqrt(c.marketCap || 1) * 2.2)), t: c.ticker };
+            }),
+            backgroundColor: _mkColor[m] + 'b3', borderColor: _mkColor[m], borderWidth: 1
+          };
+        });
+      charts.aiScatter = new Chart(document.getElementById('aiScatter'), {
+        type: 'bubble',
+        data: { datasets: _dsB },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12 } },
+            tooltip: { callbacks: { label: function (ctx) { var p = ctx.raw; return p.t + '：便宜度 ' + p.x + ' / AI价值 ' + p.y + ' / 市值约$' + Math.round(p.r * p.r / 4.84) + 'B'; } } }
+          },
+          scales: {
+            x: { min: 0, max: 100, title: { display: true, text: '估值便宜度 →', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } },
+            y: { min: 0, max: 100, title: { display: true, text: 'AI 价值分 →', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } }
+          }
+        }
+      });
+    }
+
+    // ② 价值-动量象限图 (自定义插件画分隔线+标签)
+    if (document.getElementById('aiQuad')) {
+      if (charts.aiQuad) charts.aiQuad.destroy();
+      var _qd = _cos.map(function (c) { return { x: c.scores.momentum, y: c.scores.aiValue, t: c.ticker, m: c.market }; });
+      var _quadPlugin = {
+        id: 'quadLines',
+        afterDraw: function (chart) {
+          var cx = chart.ctx, xa = chart.scales.x, ya = chart.scales.y;
+          var x50 = xa.getPixelForValue(50), y50 = ya.getPixelForValue(50);
+          cx.save();
+          cx.strokeStyle = 'rgba(150,150,170,0.45)'; cx.setLineDash([5, 4]); cx.lineWidth = 1;
+          cx.beginPath(); cx.moveTo(x50, ya.top); cx.lineTo(x50, ya.bottom); cx.stroke();
+          cx.beginPath(); cx.moveTo(xa.left, y50); cx.lineTo(xa.right, y50); cx.stroke();
+          cx.setLineDash([]); cx.fillStyle = 'rgba(150,150,170,0.85)'; cx.font = '11px sans-serif';
+          cx.fillText('待挖掘', xa.left + 8, ya.top + 16);
+          cx.fillText('已定价', xa.right - 52, ya.top + 16);
+          cx.fillText('回避', xa.left + 8, ya.bottom - 10);
+          cx.fillText('泡沫/拥挤', xa.right - 66, ya.bottom - 10);
+          cx.restore();
+        }
+      };
+      charts.aiQuad = new Chart(document.getElementById('aiQuad'), {
+        type: 'scatter',
+        data: { datasets: [{ label: '公司', data: _qd,
+          backgroundColor: _qd.map(function (p) { return _mkColor[p.m] + 'cc'; }),
+          borderColor: _qd.map(function (p) { return _mkColor[p.m]; }), pointRadius: 5, pointHoverRadius: 7 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: function (ctx) { var p = ctx.raw; return p.t + '：动量 ' + p.x + ' / 价值 ' + p.y; } } }
+          },
+          scales: {
+            x: { min: 0, max: 100, title: { display: true, text: '价格动量 →', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } },
+            y: { min: 0, max: 100, title: { display: true, text: 'AI 价值分 →', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } }
+          }
+        },
+        plugins: [_quadPlugin]
+      });
+    }
+
+    // ③ 资本开支 ramp 柱状图
+    if (d.cycle && d.cycle.capex && d.cycle.capex.length && document.getElementById('aiCapex')) {
+      if (charts.aiCapex) charts.aiCapex.destroy();
+      var _cx = d.cycle.capex;
+      charts.aiCapex = new Chart(document.getElementById('aiCapex'), {
+        type: 'bar',
+        data: {
+          labels: _cx.map(function (r) { return r.name; }),
+          datasets: [
+            { label: 'FY25', data: _cx.map(function (r) { return r.fy25; }), backgroundColor: '#4361ee' },
+            { label: 'FY26e', data: _cx.map(function (r) { return r.fy26e; }), backgroundColor: '#e63946' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: COLORS.text }, grid: { display: false } },
+            y: { title: { display: true, text: '资本开支 ($B)', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } }
+          }
+        }
+      });
+    }
+  }
 }

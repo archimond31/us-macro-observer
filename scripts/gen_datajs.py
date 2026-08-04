@@ -1703,12 +1703,33 @@ def _ai_research(rs):
         return _aiclip(rs['ratingScore'] / 5 * 100)
     return 50
 
+def _ai_revision(eps):
+    """盈利修正动量: 分析师EPS预估近90天调整幅度(%) -> 评分; 上调=好"""
+    if eps is None: return 50
+    return _aiclip(50 + eps * 3)
+
+def _ai_rating_trend(rt):
+    """研报评级修正: 净评级变动(-2..+2) -> 评分; 上调=好"""
+    if rt is None: return 50
+    return _aiclip(50 + rt * 25)
+
 def _ai_momentum(ch):
     """价格动量分: 周/月/半年收益加权; 越高=已上涨(越被定价)"""
     w, m, h6 = (ch or {}).get('w'), (ch or {}).get('m'), (ch or {}).get('h6')
     if w is None and m is None and h6 is None: return 50
     s = 50 + (w or 0) * 0.4 + (m or 0) * 0.9 + (h6 or 0) * 0.3
     return _aiclip(s)
+
+def _ai_relative_val(pe, pe_hist):
+    """相对自身历史估值: pe_hist=5年中枢P/E; 当前pe低于中枢=便宜(histRel高)"""
+    if not pe or not pe_hist or pe_hist <= 0:
+        return None
+    return _aiclip(100 - 100 * pe / pe_hist)
+
+def _ai_aie_score(rev_pct, rev_growth, pricing):
+    """AI卡位拆解: AI收入占比(45%) + AI收入增速(30%) + 定价权(25%) —— 替代单一拍脑袋值"""
+    _rg = _aiclip(40 + (rev_growth or 0) * 0.8)
+    return round(_aiclip(0.45 * (rev_pct or 0) + 0.30 * _rg + 0.25 * (pricing or 50)))
 
 _key2layer = {c['key']: _ly['name'] for _ly in AIC.get('layers', []) for c in _ly.get('companies', [])}
 _ai_layers_out = []
@@ -1720,17 +1741,39 @@ for _ly in AIC.get('layers', []):
         _price = val(_key) if _key else None
         _ch = asset_changes(_key) if _key else {}
         _mom = _ai_momentum(_ch)
-        _val = _ai_valuation(_c.get('pe'), _c.get('fwdPe'), _c.get('peg'))
-        _gro = _ai_growth(_c.get('revGrowth'))
+        _h6 = (_ch or {}).get('h6')
+        _falling = (_h6 is not None and _h6 < -8)  # 半年跌超8% = 下落的刀
+        _val_abs = _ai_valuation(_c.get('pe'), _c.get('fwdPe'), _c.get('peg'))
+        _val_hist = _ai_relative_val(_c.get('pe'), _c.get('peHist5y'))
+        # 估值便宜度 = 60%绝对 + 40%相对自身历史(若无可比历史则纯绝对)
+        _val = round(0.6 * _val_abs + 0.4 * _val_hist) if _val_hist is not None else _val_abs
+        # 成长 = 静态营收增速(60%) + 盈利修正动量(40%, 比静态增长更具预测力)
+        _gro = round(0.6 * _ai_growth(_c.get('revGrowth')) + 0.4 * _ai_revision(_c.get('epsRevision')))
         _qua = _ai_quality(_c.get('grossMargin'), _c.get('fcfMargin'), _c.get('roe'))
-        _res = _ai_research(_c.get('research'))
-        _aie = _c.get('aiExposure') or 50
+        # 研报共识 = 评级水平(70%) + 评级修正趋势(30%)
+        _res = round(0.7 * _ai_research(_c.get('research')) + 0.3 * _ai_rating_trend(_c.get('ratingTrend')))
+        # AI卡位拆解: 收入占比 + AI增速 + 定价权 (替代单一拍脑袋值)
+        _aie = _ai_aie_score(_c.get('aiRevPct'), _c.get('aiRevGrowth'), _c.get('pricingPower'))
+        # 陈旧性告警: 策展财务超过 3 个月未更新 -> 标灰提醒
+        _cd = _c.get('curatedDate')
+        _stale = True
+        if _cd:
+            try:
+                _yy, _mm = (int(x) for x in str(_cd).split('-')[:2])
+                _months = (datetime.date.today().year - _yy) * 12 + (datetime.date.today().month - _mm)
+                _stale = _months > 3
+            except Exception:
+                _stale = True
         # 基本面强度: 质量/成长/AI卡位/研报共识
         _fund = round(0.35 * _qua + 0.30 * _gro + 0.20 * _aie + 0.15 * _res)
         # AI 价值分: 强基本面 + 便宜 + 尚未被拉涨(动量低) = 被低估的价值股
         _aiv = round(0.45 * _fund + 0.35 * _val + 0.20 * (100 - _mom))
+        # 下落的刀惩罚: 半年大跌(>8%)的标的即便便宜也非"价值", 扣分避免误判
+        if _falling:
+            _aiv = max(0, _aiv - 8)
         _tags = []
-        if _aiv >= 62 and _val >= 55 and _mom < 62:
+        # 价值股候选: 强基本面+便宜+尚未被拉涨, 且非"下落的刀"(半年未大跌)
+        if _aiv >= 62 and _val >= 55 and _mom < 62 and not _falling:
             _tags.append('价值股候选')
         if _val < 35 and _mom >= 65:
             _tags.append('高估值')
@@ -1738,6 +1781,8 @@ for _ly in AIC.get('layers', []):
             _tags.append('领跑')
         if _qua >= 70 and _fund >= 70:
             _tags.append('高质量')
+        if _falling:
+            _tags.append('下行趋势')
         _comps.append({
             'ticker': _c.get('ticker'), 'name': _c.get('name'), 'key': _key,
             'market': _c.get('market', 'US'), 'ccy': _c.get('ccy', 'USD'),
@@ -1751,12 +1796,28 @@ for _ly in AIC.get('layers', []):
             'peg': _c.get('peg'), 'revGrowth': _c.get('revGrowth'),
             'grossMargin': _c.get('grossMargin'), 'fcfMargin': _c.get('fcfMargin'),
             'roe': _c.get('roe'),
-            'research': _c.get('research'), 'notes': _c.get('notes'), 'est': _c.get('est', True)
+            'research': _c.get('research'), 'notes': _c.get('notes'), 'est': _c.get('est', True),
+            'epsRevision': _c.get('epsRevision'), 'ratingTrend': _c.get('ratingTrend'),
+            'ratingDispersion': _c.get('ratingDispersion'), 'curatedDate': _c.get('curatedDate'),
+            'stale': _stale,
+            'thesis': _c.get('thesis'),
+            'aiRevPct': _c.get('aiRevPct'), 'aiRevGrowth': _c.get('aiRevGrowth'),
+            'pricingPower': _c.get('pricingPower'), 'peHist5y': _c.get('peHist5y')
         })
         _ai_all_companies.append(_comps[-1])
     def _avg(field):
         vs = [c['scores'][field] for c in _comps]
         return round(sum(vs) / len(vs)) if vs else 0
+    # 层内百分位中性化 (跨层苹果比橘子修复): 在层内对关键维度排名, 而非跨层绝对比
+    _ncomp = len(_comps)
+    if _ncomp > 1:
+        for _f in ('valuation', 'fundamental', 'momentum', 'aiValue'):
+            _sv = sorted(x['scores'][_f] for x in _comps)
+            for _cc in _comps:
+                _lt = sum(1 for x in _sv if x < _cc['scores'][_f])
+                _cc['scores']['lp_' + _f] = round(_lt / (_ncomp - 1) * 100)
+    for _cc in _comps:
+        _cc['layerPct'] = _cc['scores'].get('lp_aiValue', 50)
     _comps_sorted = sorted(_comps, key=lambda c: c['scores']['aiValue'], reverse=True)
     _value_picks = [c for c in _comps if '价值股候选' in c['tags']]
     # 每层跨市场对比: 各市场领头羊 + 跨市场最佳
@@ -1795,7 +1856,8 @@ def _ai_why(c):
             f"动量 {s['momentum']}/100(未充分定价), AI价值分 {s['aiValue']}/100")
 _ai_best_picks = [{'ticker': c['ticker'], 'name': c['name'],
                    'layer': _key2layer.get(c['key'], ''),
-                   'aiValue': c['scores']['aiValue'], 'why': _ai_why(c)} for c in _ai_best]
+                   'aiValue': c['scores']['aiValue'], 'layerPct': c.get('layerPct', 50),
+                   'why': _ai_why(c)} for c in _ai_best]
 _ai_summary = {
     'companies': len(_ai_all_companies), 'layers': len(_ai_layers_out),
     'valuePicks': len(_ai_best),
@@ -1810,13 +1872,24 @@ _ai_market_summary = {_mk: {'count': len(_lst),
                             'avgAiValue': round(sum(x['scores']['aiValue'] for x in _lst) / len(_lst)),
                             'best': max(_lst, key=lambda x: x['scores']['aiValue'])['ticker']}
                       for _mk, _lst in _ai_mk_all.items()}
+# ====== AI 资本开支周期 叙事层 (策展 + 数据驱动热度计) ======
+# 热度计用真实动量: 价格动量(已涨) + 估值昂贵度(便宜度低=贵) + 领跑广度
+_ai_cycle = AIC.get('cycle') or {}
+_avg_val_cycle = round(sum(c['scores']['valuation'] for c in _ai_all_companies) / max(len(_ai_all_companies), 1))
+_breadth_cycle = round(100 * sum(1 for c in _ai_all_companies if c['scores']['momentum'] > 65) / max(len(_ai_all_companies), 1))
+_ai_heat = _aiclip(round(0.45 * _ai_summary['avgMomentum'] + 0.30 * (100 - _avg_val_cycle) + 0.25 * _breadth_cycle))
+_ai_cycle_out = dict(_ai_cycle)
+_ai_cycle_out['heat'] = _ai_heat
+_ai_cycle_out['heatDriver'] = {'avgMomentum': _ai_summary['avgMomentum'],
+                               'avgValuationScore': _avg_val_cycle, 'breadthPct': _breadth_cycle}
 DATA['aiChain'] = {
     'meta': {'asOf': AIC.get('asOf', ''), 'disclaimer': AIC.get('disclaimer', ''),
-             'note': '五层=黄仁勋AI蛋糕: 应用→模型→基础设施→芯片→能源; 股价动量自动(Yahoo), 基本面/研报为策展种子值'},
+             'note': '六层(黄仁勋五层蛋糕+网络连接层): 应用→模型→基础设施→网络连接→芯片→能源; 股价动量自动(Yahoo), 基本面/研报/周期叙事为策展种子值(其中 cycle.capex 为公开指引估计)'},
     'layers': _ai_layers_out,
     'bestValuePicks': _ai_best_picks,
     'summary': _ai_summary,
-    'marketSummary': _ai_market_summary
+    'marketSummary': _ai_market_summary,
+    'cycle': _ai_cycle_out
 }
 print('[gen_datajs] aiChain section OK', file=sys.stderr, flush=True)
 

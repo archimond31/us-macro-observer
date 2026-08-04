@@ -728,7 +728,8 @@ AI_YH_IDS = {
     'ORCL': 'orcl', 'CRWV': 'crwv', 'ANET': 'anet', 'VRT': 'vrt', 'DELL': 'dell',
     'NVDA': 'nvda', 'AMD': 'amd', 'AVGO': 'avgo', 'TSM': 'tsm', 'ARM': 'arm',
     'MRVL': 'mrvl', 'AMAT': 'amat', 'ASML': 'asml', 'MU': 'mu',
-    'CEG': 'ceg', 'VST': 'vst', 'NEE': 'nee', 'GEV': 'gev', 'TLN': 'tln', 'CCJ': 'ccj', 'OKLO': 'oklo',
+    'COHR': 'cohr', 'LITE': 'lite',
+    'CEG': 'ceg', 'VST': 'vst', 'NEE': 'nee', 'GEV': 'gev', 'TLN': 'tln', 'CCJ': 'ccj', 'OKLO': 'oklo', 'ETN': 'etn',
     # A 股 (上交所 .SS / 深交所 .SZ)
     '300308.SZ': 'zhongji', '300502.SZ': 'xys', '601138.SS': 'fii',
     '000977.SZ': 'inspur', '002463.SZ': 'huadian', '002230.SZ': 'iflytek',
