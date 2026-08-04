@@ -958,6 +958,51 @@ v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (v
 _nl_m = tfm('netliq')['m']
 _liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) >= 0) else ('risk-on' if (v_sofr_iorb or 0) < 0 else 'mixed')
 _liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 资金价格仍平静')
+
+# LPI (流动性压力指数): 数据驱动合成, 替代硬编码 3.8
+# 三子维度各 0-10 分 (越高=压力越大), 权重 45%/35%/20% (与 UI 展示一致)
+_lpi_buf = 0.0
+if pct('rrp') is not None:
+    _lpi_buf = (100 - pct('rrp')) / 100 * 8          # RRP 分位越低=缓冲越薄
+if pct('tga') is not None:
+    _lpi_buf += pct('tga') / 100 * 2                 # TGA 分位越高=抽水越多
+_lpi_buf = min(round(_lpi_buf, 1), 9)
+_lpi_fund = 5.0
+if v_sofr_iorb is not None:
+    _lpi_fund = 8.0 if v_sofr_iorb > 0.0005 else (6.0 if v_sofr_iorb > 0 else (3.0 if v_sofr_iorb > -0.0005 else 1.0))
+_lpi_risk = 3.0
+if v_vix is not None:
+    _lpi_risk = max(_lpi_risk, min(10.0, (v_vix - 12) / 1.5))
+if v_hy is not None:
+    _lpi_risk = max(_lpi_risk, min(9.0, (v_hy - 3) / 0.7))
+_lpi_risk = round(_lpi_risk, 1)
+_lpi_score_dyn = round(_lpi_buf * 0.45 + _lpi_fund * 0.35 + _lpi_risk * 0.20, 1)
+_lpi_level = '偏紧' if _lpi_score_dyn >= 6 else ('中性偏紧' if _lpi_score_dyn >= 4 else '中性宽松')
+_nl_latest = val('netliq'); _nl_m_chg = tfm('netliq')['m']
+_lpi_trend = round((_nl_m_chg / _nl_latest) * 100, 1) if (_nl_latest and _nl_m_chg is not None) else 0.0
+_lpi_block = {
+    'score': _lpi_score_dyn, 'level': _lpi_level, 'trend': f'{_lpi_trend:+.1f}',
+    'components': [
+        {'name': '结构性缓冲', 'score': _lpi_buf, 'weight': '45%',
+         'note': f'RRP 分位 {pct("rrp")}, TGA 分位 {pct("tga")}, 缓冲垫变薄' if (pct('rrp') is not None and pct('tga') is not None) else 'RRP/TGA 数据缺失'},
+        {'name': '融资确认', 'score': _lpi_fund, 'weight': '35%',
+         'note': f'SOFR-IORB {bp(v_sofr_iorb*100)}, {"已转正" if (v_sofr_iorb or 0) >= 0 else "为负, 价格无压力"}'},
+        {'name': '风险传导', 'score': _lpi_risk, 'weight': '20%',
+         'note': f'VIX {f2(v_vix) if v_vix is not None else "—"}, HY OAS {f2(v_hy)+"%" if v_hy is not None else "—"}'},
+    ],
+    'confirmationConditions': [
+        {'name': 'SOFR-IORB 连续转正', 'current': bp(v_sofr_iorb*100),
+         'status': '已触发' if (v_sofr_iorb or 0) > 0 else '未触发', 'triggered': (v_sofr_iorb or 0) > 0},
+        {'name': 'SRF 出现数十亿级使用', 'current': '无数据', 'status': '未监测', 'triggered': False},
+        {'name': 'HY OAS 明显走阔', 'current': f2(v_hy)+'%' if v_hy is not None else '—',
+         'status': '已触发' if (v_hy or 0) > 4.5 else '未触发', 'triggered': (v_hy or 0) > 4.5},
+        {'name': 'NFCI 转正', 'current': f2(val('nfci')) if val('nfci') is not None else '—',
+         'status': '已触发' if (val('nfci') or 0) > 0 else '未触发', 'triggered': (val('nfci') or 0) > 0},
+        {'name': 'VIX 升至 20 上方', 'current': f2(v_vix) if v_vix is not None else '—',
+         'status': '已触发' if (v_vix or 0) > 20 else ('接近触发' if (v_vix or 0) > 15 else '未触发'),
+         'triggered': (v_vix or 0) > 20},
+    ],
+}
 DATA['liquidity'] = {
     'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':_confidence(_liq_signal, v_rrpn is not None, v_nl is not None, v_sofr_iorb is not None),
         'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。TGA 上升与 QT 收缩将更直接影响银行准备金——流动性框架从"有缓冲"切换到"无缓冲"阶段。当前 SOFR-IORB ({bp(v_sofr_iorb*100)}){(" 仍为负, 融资市场尚未出现真实资金争夺" if (v_sofr_iorb or 0) < 0 else " 已转正, 价格信号发出边际争夺压力, 但数量收缩尚未传导为真实流动性事件")}。'},
@@ -1017,19 +1062,7 @@ DATA['liquidity'] = {
         {'component':'银行准备金 (WRESBAL)','current':f'${comma(v_res/1000000,2)}T','weekChange':cell('resbal','w'),'monthChange':cell('resbal','m'),'source':'Fed H.4.1','signal':_msig(dir_of(tfm("resbal")["w"]), True)},
         {'component':'净流动性(计算值)','current':f'${comma(v_nl/1000,2)}T' if v_nl else '—','weekChange':(bp(tfm("netliq")["w"],"$B") if tfm("netliq")["w"] else '—'),'monthChange':(bp(tfm("netliq")["m"],"$B") if tfm("netliq")["m"] else '—'),'source':'计算','signal':_msig(dir_of(tfm("netliq")["w"]), False)},
     ],
-    'lpi': {'score':3.8,'level':'中性偏紧','trend':'+0.6',
-        'components':[
-            {'name':'结构性缓冲','score':4.0,'weight':'45%','note':'RRP耗尽+TGA高位, 缓冲垫变薄'},
-            {'name':'融资确认','score':4.0,'weight':'35%','note':'SOFR-IORB/SRF未确认, 价格无压力'},
-            {'name':'风险传导','score':3.0,'weight':'20%','note':'VIX/信用利差未共振'},
-        ],
-        'confirmationConditions':[
-            {'name':'SOFR-IORB 连续转正','current':bp(v_sofr_iorb*100),'status':'未触发','triggered':False},
-            {'name':'SRF 出现数十亿级使用','current':'极少','status':'未触发','triggered':False},
-            {'name':'HY OAS 明显走阔','current':f2(v_hy)+'%','status':'未触发','triggered':False},
-            {'name':'NFCI 转正','current':f2(val('nfci')),'status':'未触发','triggered':False},
-            {'name':'VIX 升至 20 上方','current':f2(v_vix),'status':'接近触发' if v_vix>15 else '未触发','triggered':False},
-        ]},
+    'lpi': _lpi_block,
     'analystView': {
         'risk-off': f'流动性真实压力确认: 净流动性月变化转负且 SOFR-IORB 已转正 ({bp(v_sofr_iorb*100)}), 价格信号先于数量信号恶化。RRP 耗尽 (${f2(v_rrpn)}B) 是结构性事件, 但 SOFR 与 SRF 的走阔才是压力确认。历史参照 2019年9月回购危机: 先 RRP 耗尽, 再 SOFR 突然飙升。盯住 SOFR-IORB 持续转正与 SRF 放量。',
         'risk-on': f'融资充裕: SOFR-IORB ({bp(v_sofr_iorb*100)}) 为负, 准备金管道通畅。RRP 耗尽 (${f2(v_rrpn)}B) 是结构性事件, 但价格信号平静。类比: 水库水位下降(结构)但下游供水未停(价格)。历史参照 2019年9月回购危机作为尾部情景。',
@@ -1501,9 +1534,19 @@ print('[gen_datajs] volatility section OK', file=sys.stderr, flush=True)
 # ====== 衰退信号仪表盘 (Phase 2) ======
 print('[gen_datajs] generating recession section...', file=sys.stderr, flush=True)
 def _recession_signal(label, value, threshold, triggered, meaning, color='red'):
-    """红绿灯面板每一行"""
-    status = 'triggered' if triggered else ('warning' if (value is not None and triggered is not False and abs(value) > threshold * 0.6) else 'safe')
-    if value is None: status = 'unknown'
+    """红绿灯面板每一行; status: triggered / warning / safe / unknown"""
+    if value is None:
+        status = 'unknown'
+    elif triggered:
+        status = 'triggered'
+    else:
+        # 危险方向上逼近阈值 (60%~100% 区间) 但未触发 = warning
+        if threshold > 0 and threshold * 0.6 <= value < threshold:
+            status = 'warning'
+        elif threshold < 0 and threshold < value <= threshold * 0.6:
+            status = 'warning'
+        else:
+            status = 'safe'
     return {'label': label, 'value': round(value, 2) if isinstance(value, (int, float)) else value,
             'threshold': threshold, 'status': status, 'meaning': meaning, 'color': color}
 
