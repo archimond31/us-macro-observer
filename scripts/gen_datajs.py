@@ -228,6 +228,17 @@ def _msig(d, up_is_good=True):
     if d == 'down': return 'bearish' if up_is_good else 'bullish'
     return 'mixed'
 
+def _confidence(signal, *flags):
+    """由信号清晰度 + 关键数据可用性推导 regime 置信度。
+    过半关键输入缺失 -> 低置信; 信号混杂 -> 中等置信; 信号一致且数据过半可用 -> 高置信。"""
+    n = len(flags)
+    if n == 0:
+        return '中等置信'
+    avail = sum(1 for f in flags if f)
+    if avail <= n // 2:
+        return '低置信'
+    return '高置信' if signal != 'mixed' else '中等置信'
+
 # 利率类: 原始是百分数, tf 是百分点差 -> 转 bp 需 *100
 def rate_val_str(key):
     return f2(val(key)) + '%'
@@ -493,12 +504,12 @@ _g_score += 1 if (_g_nfci or 0) > 0 else (-1 if (_g_nfci or 0) < 0 else 0)
 _g_hy_pct = pct('hy')
 _g_score += 1 if (_g_hy_pct or 0) > 70 else (-1 if (_g_hy_pct or 0) < 30 else 0)
 _g_signal = 'risk-off' if _g_score >= 2 else ('risk-on' if _g_score <= -2 else 'mixed')
-_g_name = '风险规避' if _g_signal == 'risk-off' else ('风险偏好' if _g_signal == 'risk-on' else '条件性紧张')
+_g_name = '风险规避' if _g_signal == 'risk-off' else ('风险偏好' if _g_signal == 'risk-on' else '多空交织')
 DATA['globalRegime'] = {
     'name': _g_name,
     'signal': _g_signal,
-    'confidence': '中等置信',
-    'description': f'10Y 美债 {f2(v_dgs10)}% 处于近一年高位 (分位 {pct("dgs10")}), 长端抛售是确立趋势; 与此同时信用市场内部已分层——CCC 利差 {f2(v_ccc)}% (分位 {pct("ccc")}, 极窄历史区间的另外一端是极高压力), 而 HY 整体仅 {f2(v_hy)}%。这种"高评级平静、低评级承压"的组合是周期中后期的典型特征。油价 (WTI {f2(v_wti)}) 与波动率 (VIX {f2(v_vix)}) 尚未失控, 当前属"利率驱动的条件性紧张", 而非流动性危机。'
+    'confidence': _confidence(_g_signal, _g_spread is not None, v_vix is not None, _g_nfci is not None, v_hy is not None),
+    'description': f'10Y 美债 {f2(v_dgs10)}% 处于近一年 {pct("dgs10")} 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 {f2(v_ccc)}% (分位 {pct("ccc")}), 而 HY 整体 {f2(v_hy)}%。油价 (WTI {f2(v_wti)}) 与波动率 (VIX {f2(v_vix)}) 当前处于"利率驱动的资产分化"阶段。'
 }
 
 # ====== 大类资产 ======
@@ -631,10 +642,10 @@ _a_hy_pct = pct('hy')
 if _a_hy_pct is not None and _a_hy_pct > 70: _a_score += 1
 elif _a_hy_pct is not None and _a_hy_pct < 30: _a_score -= 1
 _a_signal = 'risk-off' if _a_score >= 2 else ('risk-on' if _a_score <= -2 else 'mixed')
-_a_label = '利率驱动的风险规避' if _a_signal=='risk-off' else ('宽松驱动的风险偏好' if _a_signal=='risk-on' else '利率定价下的条件性紧张')
+_a_label = '利率驱动的风险规避' if _a_signal=='risk-off' else ('宽松驱动的风险偏好' if _a_signal=='risk-on' else '利率定价下的资产分化')
 DATA['assets'] = {
-    'regime': {'label':_a_label,'signal':_a_signal,'confidence':'中等置信',
-        'description': f'10Y 利率 {f2(v_dgs10)}% 的上行是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI {f2(v_wti)} 尚未失控, 但利率上行已压制估值。'},
+    'regime': {'label':_a_label,'signal':_a_signal,'confidence':_confidence(_a_signal, v_vix is not None, _a_spx_w is not None, _g_spread is not None, v_hy is not None),
+        'description': f'10Y 利率 {f2(v_dgs10)}% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI {f2(v_wti)} 波动影响通胀预期, 利率上行压制估值。'},
     'keySignals': [
         {'title': f'纳斯达克100 周{"涨" if float(asset_changes("ndx")["w"] or 0)>=0 else "跌"} {ret(asset_changes("ndx")["w"])}',
          'meaning':'长久期科技股对利率最敏感, 是本轮重定价的领先指标。',
@@ -693,7 +704,7 @@ v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val(_30y_key); v_tips=val('tips10');
 spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
 # 利率 regime: 由曲线形态+方向动态判定 (替代预置)
 _rates_signal = 'risk-off' if spread_10_2 > 0 else ('risk-on' if spread_10_2 < 0 else 'mixed')
-_rates_label = '熊陡确立' if spread_10_2 > 0 else ('牛平/曲线正常化' if spread_10_2 < 0 else '曲线平稳')
+_rates_label = '熊陡/曲线陡峭化' if spread_10_2 > 0 else ('牛平/曲线正常化' if spread_10_2 < 0 else '曲线平稳')
 
 # Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
 _v_2y_week = (tfm('dgs2')['w'] or 0) * 100  # bp
@@ -725,8 +736,8 @@ if _impl_pts:
         _impl_signal = 'risk-on' if _y2 < _ff_up_v - 0.25 else ('risk-off' if _y2 > _ff_up_v + 0.25 else 'mixed')
 
 DATA['rates'] = {
-    'regime': {'label':_rates_label,'signal':_rates_signal,'confidence':'高置信',
-        'description': f'长端利率上行快于短端 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%), 曲线{"熊市陡峭化" if (tfm("dgs10").get("w") or 0)>(tfm("dgs2").get("w") or 0) else "变化"}。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 共同上行。'},
+    'regime': {'label':_rates_label,'signal':_rates_signal,'confidence':_confidence(_rates_signal, v_10y is not None, v_2y is not None, v_tips is not None, v_bei is not None),
+        'description': f'长端利率相对短端变化 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%, 10Y-2Y {spread_10_2:+.0f}bp)。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 的边际变化。'},
     'keySignals': [
         {'title': f'10Y 国债 {f2(v_10y)}%',
          'meaning':(
@@ -823,8 +834,8 @@ if _ff is not None and _y2_f is not None:
     _fed_signal = 'risk-on' if _y2_f < _ff - 0.25 else ('risk-off' if _y2_f > _ff + 0.25 else 'mixed')
 _fed_label = '宽松预期主导' if _fed_signal=='risk-on' else ('收紧预期' if _fed_signal=='risk-off' else '观望/鹰鸽分化')
 DATA['fed'] = {
-    'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':'高置信',
-        'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 下一次行动大概率降息。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将直击准备金。'},
+    'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':_confidence(_fed_signal, _ff is not None, _y2_f is not None, v_walcl is not None, v_rrp2 is not None),
+        'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将更直接影响准备金。'},
     'keySignals': [
         {'title':f'RRP 余额 ${f2(v_rrp2)}B',
          'meaning':(
@@ -931,10 +942,10 @@ v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (v
 # 流动性 regime: 由净流动性趋势 + SOFR-IORB 动态判定
 _nl_m = tfm('netliq')['m']
 _liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) >= 0) else ('risk-on' if (v_sofr_iorb or 0) < 0 else 'mixed')
-_liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 但未失速')
+_liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 资金价格仍平静')
 DATA['liquidity'] = {
-    'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':'高置信',
-        'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。从此 TGA 每升 1 美元、QT 每缩 1 美元都直击银行准备金——流动性框架从"有缓冲"切换到"裸奔"的结构性转折。但 SOFR-IORB ({bp(v_sofr_iorb*100)}) 仍为负, 融资市场尚未出现真实资金争夺。'},
+    'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':_confidence(_liq_signal, v_rrpn is not None, v_nl is not None, v_sofr_iorb is not None),
+        'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。TGA 上升与 QT 收缩将更直接影响银行准备金——流动性框架从"有缓冲"切换到"无缓冲"阶段。当前 SOFR-IORB ({bp(v_sofr_iorb*100)}){(" 仍为负, 融资市场尚未出现真实资金争夺" if (v_sofr_iorb or 0) < 0 else " 已转正, 价格信号发出边际争夺压力, 但数量收缩尚未传导为真实流动性事件")}。'},
     'keySignals': [
         {'title':f'RRP 余额 ${f2(v_rrpn)}B',
          'meaning':(
@@ -1136,11 +1147,11 @@ if gdp_qoq is not None: _e_score += 1 if (gdp_qoq or 0) > 0 else -1
 if unrate_tf.get('m') is not None: _e_score += -1 if unrate_tf['m'] > 0 else (1 if unrate_tf['m'] < 0 else 0)
 if cpi_yoy is not None: _e_score += -1 if cpi_yoy > 3 else 0
 _e_signal = 'risk-on' if _e_score >= 1 else ('risk-off' if _e_score <= -1 else 'mixed')
-_e_label = '增长稳健+通胀受控' if _e_signal=='risk-on' else ('增长放缓+通胀回升' if _e_signal=='risk-off' else '增长分化')
+_e_label = '增长稳健+通胀温和' if _e_signal=='risk-on' else ('增长放缓+通胀回升' if _e_signal=='risk-off' else '增长分化')
 
 DATA['economy'] = {
-    'regime': {'label':_e_label,'signal':_e_signal,'confidence':'中等置信',
-        'description':f'就业消费降温 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 但通胀因能源回升 (CPI 同比 {f2(cpi_yoy)}%)。压缩美联储政策空间——降息怕通胀, 不降怕就业。'},
+    'regime': {'label':_e_label,'signal':_e_signal,'confidence':_confidence(_e_signal, gdp_qoq is not None, unrate_tf.get('m') is not None, cpi_yoy is not None),
+        'description':f'就业消费 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 与通胀 (CPI 同比 {f2(cpi_yoy)}%) 组合决定经济所处阶段。'},
     'keySignals': [
         {'title':f'CPI 同比 {f2(cpi_yoy)}% ({("回升" if (cpi_d1 or 0)>0 else ("回落" if (cpi_d1 or 0)<0 else "持平"))})',
          'meaning':(
@@ -1283,11 +1294,11 @@ _cr_signal = 'mixed'
 if _cr_hy_pct is not None and _cr_hy_pct > 70: _cr_signal = 'risk-off'
 elif _cr_nfci is not None and _cr_nfci > 0: _cr_signal = 'risk-off'
 elif _cr_hy_pct is not None and _cr_hy_pct < 30: _cr_signal = 'risk-on'
-_cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '平静下的分层')
+_cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '利差平静但内部分化')
 
 DATA['credit'] = {
-    'regime': {'label':_cr_label,'signal':_cr_signal,'confidence':'高置信',
-        'description':f'表面平静 (HY OAS {f2(hyv)}% 处历史低位) 但内部已分层: CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}) 率先走阔, 而 IG ({f2(igv)}%) 纹丝不动。信用市场是慢变量, 不预测冲击但最后确认冲击。'},
+    'regime': {'label':_cr_label,'signal':_cr_signal,'confidence':_confidence(_cr_signal, _cr_hy_pct is not None, _cr_nfci is not None, ccc is not None, igv is not None),
+        'description':f'HY OAS {f2(hyv)}% (历史分位 {_cr_hy_pct}), CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}), IG {f2(igv)}%。信用市场内部是否分层是风险偏好的关键观察。'},
     'keySignals': [
         {'title':f'CCC 利差 {f2(ccc)}% ({("走阔" if (tfm("ccc").get("w") or 0)>0 else ("收窄" if (tfm("ccc").get("w") or 0)<0 else "持平"))})',
          'meaning':(
@@ -1428,8 +1439,8 @@ _vix_v = vix or 0
 _vol_signal = 'risk-off' if (_n_stress >= 2 or _vix_v >= 25) else ('risk-on' if (_n_stress == 0 and _vix_v < 15) else 'mixed')
 _vol_label = '波动率分化/压力扩散' if _vol_signal=='risk-off' else ('波动率平静' if _vol_signal=='risk-on' else '波动率分化')
 DATA['volatility'] = {
-    'regime': {'label':_vol_label,'signal':_vol_signal,'confidence':'中等置信',
-        'description':f'当前处于压力区的: {(",".join(stress_assets) if stress_assets else "无")}。VIX {f2(vix)}' + (f', OVX {f2(ovx)}' if ovx else '') + (f', MOVE {f2(move)}' if move else '') + '。分化形态决定这是单资产冲击还是系统性重定价——看压力是否从单一资产外溢。'},
+    'regime': {'label':_vol_label,'signal':_vol_signal,'confidence':_confidence(_vol_signal, vix is not None, vix3m is not None, len(ca_rows) >= 3),
+        'description':f'当前处于压力区的资产: {(",".join(stress_assets) if stress_assets else "无")}。VIX {f2(vix)}' + (f', OVX {f2(ovx)}' if ovx else '') + (f', MOVE {f2(move)}' if move else '') + '。波动率分化形态反映压力是否从单一资产外溢。'},
     'keySignals': [s for s in [
         ({'title':f'OVX {f2(ovx)} vs VIX {f2(vix)} 剪刀差 {ovx_vix_gap}pt','meaning':'油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。','direction':('bearish' if (ovx_vix_gap or 0) > 8 else 'mixed')} if ovx_vix_gap is not None else None),
         {'title':f'VIX {f2(vix)}, 周 {bp(tfm("vix")["w"],"pt")}','meaning':'站上20将触发波动率目标基金被动减仓, 抛压自我强化。','direction':'bearish' if (vix or 0) >= 18 else 'mixed'},
@@ -1664,11 +1675,11 @@ if _v_ethbtc is not None:
     if _v_ethbtc < 0.04: _c_score += 1        # ETH/BTC 走弱=避险
     elif _v_ethbtc > 0.045: _c_score -= 1
 _crypto_signal = 'risk-off' if _c_score >= 1 else ('risk-on' if _c_score <= -1 else 'mixed')
-_crypto_label = '去风险/流动性收缩传导' if _crypto_signal=='risk-off' else ('风险资产联动走强' if _crypto_signal=='risk-on' else '震荡筑底')
+_crypto_label = '去风险/流动性收缩传导' if _crypto_signal=='risk-off' else ('风险资产联动走强' if _crypto_signal=='risk-on' else '震荡整理')
 DATA['crypto'] = {
     'regime': {
         'label': _crypto_label,
-        'signal': _crypto_signal, 'confidence': '中等置信',
+        'signal': _crypto_signal, 'confidence': _confidence(_crypto_signal, _v_btc is not None, _v_etf_btc is not None, _v_ethbtc is not None),
         'description': f'BTC ${comma(_v_btc,0) if _v_btc else "—"} · ETH ${comma(_v_eth,0) if _v_eth else "—"}'
             + f' · ETH/BTC {_v_ethbtc:.4f}' if _v_ethbtc else ''
             + '。加密市场与风险资产的联动性是关键观察变量——BTC 走强通常对应 risk-on，走弱则预示流动性收缩传导。',
