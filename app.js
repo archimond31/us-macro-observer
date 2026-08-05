@@ -18,6 +18,7 @@ const SECTION_CONFIG = {
   volatility: { title: '波动率',     subtitle: 'Volatility · 跨资产波动分化' },
   crypto:     { title: '加密货币',   subtitle: 'Crypto · BTC/ETH/ETF/比率' },
   ai:         { title: 'AI产业链',   subtitle: 'AI Chain · 五层蛋糕价值挖掘' },
+  signal:     { title: '矛盾信号',   subtitle: 'Signal · 主导矛盾/领先确认/交叉验证' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
   risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
@@ -70,7 +71,7 @@ function switchSection(section) {
     liquidity: renderLiquidity, economy: renderEconomy,
     credit: renderCredit, volatility: renderVolatility,
     crypto: renderCrypto, recession: renderRecession, risk: renderRisk,
-    ai: renderAiChain
+    ai: renderAiChain, signal: renderMacroSignal
   };
   renderers[section](content);
 }
@@ -1668,6 +1669,94 @@ function renderAiChain(container) {
   html += '<div id="aiTabBody"></div>';
   container.innerHTML = html;
   _renderAiTab('overview', d);
+}
+
+// 矛盾信号面板：主导矛盾 / 领先确认 / 交叉验证
+function renderMacroSignal(c) {
+  const d = DATA.macroSignal;
+  if (!d) { c.innerHTML = '<div class="loading">矛盾信号数据加载中...</div>'; return; }
+  const STATUS = {
+    on:      { bg: '#fef3e2', fg: '#b45309', label: '触发' },
+    off:     { bg: '#f3f4f6', fg: '#6b7280', label: '未触发' },
+    curated: { bg: '#e8ecff', fg: '#4361ee', label: '策展标注' },
+    unknown: { bg: '#f3f4f6', fg: '#6b7280', label: '数据不足' }
+  };
+  const astatus = {};
+  (d.anchors || []).forEach(function (a) { astatus[a.id] = a.status; });
+  const pill = function (st) {
+    const s = STATUS[st] || STATUS.unknown;
+    return '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:' + s.bg + ';color:' + s.fg + ';">' + s.label + '</span>';
+  };
+  const borderColor = function (st) {
+    if (st === 'on') return '#f59e0b';
+    if (st === 'curated') return '#4361ee';
+    return '#9ca3af';
+  };
+
+  let h = '';
+
+  // 主导矛盾
+  const dom = d.dominant || {};
+  h += '<div style="margin:6px 0 18px;padding:18px 20px;border-radius:12px;background:#15131f;color:#fff;border:1px solid #3a2f6b;">';
+  h += '<div style="font-size:12px;color:#b9a8ff;letter-spacing:.5px;margin-bottom:8px;">主导矛盾 · ' + (dom.keyTension || '') + '</div>';
+  h += '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">' + (dom.title || '') + '</div>';
+  h += '<div style="font-size:13px;line-height:1.8;color:#cfc7e6;">' + (dom.body || '') + '</div>';
+  h += '</div>';
+
+  // 当前情景判定
+  const act = (d.scenarios || []).find(function (s) { return s.id === d.activeScenario; });
+  h += sectionH('当前情景判定', act ? ('最匹配：' + act.label + ' · ' + act.desc) : '数据不足，无法自动判定');
+  const scHtml = (d.scenarios || []).map(function (s) {
+    const active = s.id === d.activeScenario;
+    const trigHtml = (s.triggers || []).map(function (t) {
+      const st = (s.triggerStatus && s.triggerStatus[t]) || 'unknown';
+      return '<span style="display:inline-flex;align-items:center;gap:5px;margin:3px 6px 3px 0;font-size:11px;color:#374151;">' + pill(st) + '<span>' + t + '</span></span>';
+    }).join('');
+    return '<div style="background:' + (active ? '#fff' : '#fafafa') + ';border:1px solid ' + (active ? '#4361ee' : '#e5e7eb') + ';border-radius:10px;padding:14px;' + (active ? 'box-shadow:0 2px 10px rgba(67,97,238,.15)' : '') + '">'
+      + '<div style="font-size:14px;font-weight:600;color:' + (active ? '#4361ee' : '#1a1d29') + ';margin-bottom:4px;">' + s.label + (s.tail ? ' ⚠️' : '') + '</div>'
+      + '<div style="font-size:12px;color:#6b7280;margin-bottom:8px;line-height:1.6;">' + (s.desc || '') + '</div>'
+      + '<div>' + trigHtml + '</div></div>';
+  }).join('');
+  h += '<div class="metric-grid" style="margin-bottom:24px;">' + scHtml + '</div>';
+
+  // 信号分级：领先确认 + 交叉验证
+  const lead = (d.anchors || []).filter(function (a) { return a.tier === 'leading'; });
+  const cross = (d.anchors || []).filter(function (a) { return a.tier === 'cross'; });
+  const anchorCard = function (a) {
+    return '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + borderColor(a.status) + ';border-radius:10px;padding:12px 14px;margin-bottom:10px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+      + '<div style="font-size:13px;font-weight:600;color:#1a1d29;">' + a.label + '</div>' + pill(a.status) + '</div>'
+      + '<div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5;">' + (a.detail || '') + '</div>'
+      + '<div style="font-size:11px;color:#9ca3af;margin-top:3px;">' + (a.note || '') + '</div></div>';
+  };
+  h += sectionH('信号分级', '主导矛盾之下的硬指标分层');
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;">';
+  h += '<div><div style="font-size:12px;font-weight:600;color:#7f77dd;margin-bottom:8px;">① 领先确认 · 触发情景转换</div>' + lead.map(anchorCard).join('') + '</div>';
+  h += '<div><div style="font-size:12px;font-weight:600;color:#1d9e75;margin-bottom:8px;">② 交叉验证 · 验证涨势广度与背离</div>' + cross.map(anchorCard).join('') + '</div>';
+  h += '</div>';
+
+  // 共识
+  h += sectionH('市场共识', '已被定价 / 普遍认同');
+  h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:24px;">'
+    + (d.consensus || []).map(function (t) {
+        return '<div style="font-size:13px;color:#374151;line-height:1.8;padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#4361ee;">•</span>' + t + '</div>';
+      }).join('')
+    + '</div>';
+
+  // 分歧
+  h += sectionH('分歧点', '真正决定方向、尚未定论');
+  h += (d.divergence || []).map(function (x) {
+    let stp = '';
+    if (x.anchor) { stp = ' <span style="margin-left:6px;">' + pill(astatus[x.anchor] || 'unknown') + '</span>'; }
+    return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;">'
+      + '<div style="font-size:13px;font-weight:600;color:#1a1d29;margin-bottom:4px;">' + x.label + stp + '</div>'
+      + '<div style="font-size:12px;color:#6b7280;line-height:1.6;">' + (x.text || '') + '</div></div>';
+  }).join('');
+
+  // footer
+  h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">策展日期 ' + (d.curatedDate || '') + ' · 数据截至 ' + (d.asOf || '') + '<br>' + (d.method || '') + '</div>';
+
+  c.innerHTML = h;
 }
 
 // 渲染指定子页面 (总览 / 各分层 index / china)

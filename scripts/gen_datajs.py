@@ -37,6 +37,14 @@ except Exception:
     AIC = {'layers': [], 'disclaimer': '', 'asOf': ''}
     print('[gen_datajs] ai_chain.json 缺失, AI板块将留空', file=sys.stderr, flush=True)
 
+# 矛盾信号面板 (主导矛盾/领先确认/交叉验证; 策展框架 + 实时锚点)
+try:
+    MS = json.load(open(SCRIPT_DIR / 'macro_signal.json', encoding='utf-8'))
+    print('[gen_datajs] loaded macro_signal.json', file=sys.stderr, flush=True)
+except Exception:
+    MS = {}
+    print('[gen_datajs] macro_signal.json 缺失, 矛盾信号面板将留空', file=sys.stderr, flush=True)
+
 def _iso(d):  # '2026-07-28' → date
     return datetime.date.fromisoformat(d)
 
@@ -2070,6 +2078,106 @@ DATA['crypto'] = {
 }
 
 print('[gen_datajs] crypto section OK', file=sys.stderr, flush=True)
+
+# ---------- 矛盾信号面板 (macroSignal) ----------
+def _ms_vals(key, n=None):
+    """取序列最近 n 个数值 (优先 computed.series90, 回退 raw_series)"""
+    arr = series90(key) if series90(key) else (RAW.get(key) or [])
+    out = []
+    for el in arr:
+        try:
+            v = float(el[1])
+            if v == v:
+                out.append(v)
+        except Exception:
+            pass
+    if n:
+        out = out[-n:]
+    return out
+
+def _ms_status(a):
+    t = a.get('type')
+    key = a.get('series')
+    if t == 'curated' or not key:
+        return 'curated', None, '策展标注 (无直接序列)'
+    full = _ms_vals(key)
+    if len(full) < 5:
+        return 'unknown', None, '序列缺失/不足'
+    n = a.get('window') or len(full)
+    vals = full[-n:] if n else full
+    if t in ('period_high',):
+        last = vals[-1]; hi = max(vals)
+        return ('on' if last >= hi * 0.999 else 'off'), round(last, 2), '当前 %.2f / 区间高 %.2f' % (last, hi)
+    if t in ('trend_up', 'rising'):
+        last = vals[-1]; mean = sum(vals) / len(vals)
+        return ('on' if last > mean else 'off'), round(last, 2), '当前 %.2f vs 均值 %.2f' % (last, mean)
+    if t == 'trend_down':
+        last = vals[-1]; mean = sum(vals) / len(vals)
+        return ('on' if last < mean else 'off'), round(last, 2), '当前 %.2f vs 均值 %.2f' % (last, mean)
+    if t == 'mom_accel':
+        chg = []
+        for i in range(1, len(vals)):
+            if vals[i - 1]:
+                chg.append((vals[i] - vals[i - 1]) / abs(vals[i - 1]))
+        if len(chg) < 2:
+            return 'unknown', None, '样本不足'
+        on = chg[-1] > chg[-2]
+        return ('on' if on else 'off'), round(chg[-1] * 100, 2), '最新环比 %.2f%% vs 前月 %.2f%%' % (chg[-1] * 100, chg[-2] * 100)
+    if t == 'relative_lag':
+        s = _ms_vals(key)[-n:] if n else _ms_vals(key)
+        b = _ms_vals(a.get('vs'))[-n:] if n else _ms_vals(a.get('vs'))
+        if len(s) < 5 or len(b) < 5:
+            return 'unknown', None, '序列缺失'
+        rs = (s[-1] - s[0]) / abs(s[0]) if s[0] else 0
+        rb = (b[-1] - b[0]) / abs(b[0]) if b[0] else 0
+        on = (rb > 0) and (rs < rb)
+        return ('on' if on else 'off'), round((rs - rb) * 100, 2), 'BTC %.1f%% vs SPX %.1f%%' % (rs * 100, rb * 100)
+    if t == 'bear_steep':
+        v10 = _ms_vals(a.get('series'))[-n:] if n else _ms_vals(a.get('series'))
+        v2 = _ms_vals(a.get('series2'))[-n:] if n else _ms_vals(a.get('series2'))
+        if len(v10) < 5 or len(v2) < 5:
+            return 'unknown', None, '序列缺失'
+        sn = v10[-1] - v2[-1]; sp = v10[0] - v2[0]
+        on = (sn > sp) and (v10[-1] > v10[0]) and (v2[-1] > v2[0])
+        return ('on' if on else 'off'), round(sn, 1), '10Y-2Y 斜率 %.0fbps' % sn
+    return 'unknown', None, ''
+
+_ms_anchors = []
+_ms_status_map = {}
+for _a in MS.get('anchors', []):
+    _st, _val, _detail = _ms_status(_a)
+    _rec = dict(_a); _rec['status'] = _st; _rec['value'] = _val; _rec['detail'] = _detail
+    _ms_anchors.append(_rec)
+    _ms_status_map[_a['id']] = _st
+
+_ms_scenarios = []
+for _sc in MS.get('scenarios', []):
+    _trig = _sc.get('triggers', [])
+    _on = sum(1 for _t in _trig if _ms_status_map.get(_t) == 'on')
+    _ms_scenarios.append(dict(_sc))
+    _ms_scenarios[-1]['triggeredCount'] = _on
+    _ms_scenarios[-1]['triggerStatus'] = {_t: _ms_status_map.get(_t) for _t in _trig}
+
+_ms_active = None
+for _sc in _ms_scenarios:
+    if _sc.get('baseline') and _sc['triggeredCount'] == len(_sc.get('triggers', [])):
+        _ms_active = _sc['id']; break
+if not _ms_active:
+    _best = max(_ms_scenarios, key=lambda x: x['triggeredCount']) if _ms_scenarios else None
+    _ms_active = _best['id'] if (_best and _best['triggeredCount'] > 0) else None
+
+DATA['macroSignal'] = {
+    'asOf': MS.get('asOf'),
+    'curatedDate': MS.get('curatedDate'),
+    'method': MS.get('method'),
+    'dominant': MS.get('dominant', {}),
+    'consensus': MS.get('consensus', []),
+    'divergence': MS.get('divergence', []),
+    'scenarios': _ms_scenarios,
+    'anchors': _ms_anchors,
+    'activeScenario': _ms_active,
+}
+print('[gen_datajs] macroSignal section OK', file=sys.stderr, flush=True)
 
 # ---------- 写出 data.js ----------
 HEADER = """/* ============================================================

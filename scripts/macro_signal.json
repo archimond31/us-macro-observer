@@ -1,0 +1,149 @@
+{
+  "asOf": "2026-08-05",
+  "curatedDate": "2026-08",
+  "method": "信号分级框架：主导矛盾(定性) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。锚点状态由 gen_datajs.py 实时计算；序列缺失时回退为策展标注。加密定性已修正为「未跟随股票涨=非确认/广度背离」，非折扣率先跌的 canary。",
+  "dominant": {
+    "title": "债券 vs 股票，对同一组宏观数据反向解读",
+    "keyTension": "增长韧性 vs 贴现率上行",
+    "body": "债市定价「通胀顽固 → 政策偏紧 / 加息风险」；股市定价「软着陆 → 盈利稳，增长盖过贴现率」。两叙事不可能同时永远正确，裂口在流动性中性下由折扣率上行驱动收敛。加密未跟涨属「非确认/广度背离」，而非折扣率已发难的第一块多米诺。"
+  },
+  "consensus": [
+    "短期无衰退：基本面尚可，增长有韧性。",
+    "通胀是头号风险，且比平滑回落到 2% 的路径更顽固（disinflation 交易证伪）。",
+    "美联储 higher for longer：下一次政策风险是「更高」而非「更低」，加息尾部风险重新进入定价。",
+    "流动性中性：既非顺风也非逆风，资产对利率 / 基本面更敏感。",
+    "偏好排序：美股 / 信用 / AI 链条 > 长久期债券；加密因最利率敏感而落单。"
+  ],
+  "divergence": [
+    {
+      "id": "yield_driver",
+      "label": "收益率新高驱动力",
+      "text": "实际利率(增长) / 通胀预期 / 期限溢价+供给？不同驱动含义不同：实际利率上行股债可共存，通胀预期上行债对股错，供给冲击两者脆弱。",
+      "anchor": "yields_high"
+    },
+    {
+      "id": "higher_or_higher",
+      "label": "higher for longer vs higher and higher",
+      "text": "当前定的是前者；若核心通胀环比二次抬头，是否真会重新加息？Fed 反应函数与 Fed put 行权价未定。",
+      "anchor": "cpi_accel"
+    },
+    {
+      "id": "when_discount_bites",
+      "label": "高收益率何时开始杀股票",
+      "text": "乐观派：增长能盖过折扣率（当前兑现）；谨慎派：长端成长估值已脆弱，收益率每破前高逼近临界点。",
+      "anchor": null
+    },
+    {
+      "id": "crypto_read",
+      "label": "加密未跟涨如何解读",
+      "text": "非确认 / 广度背离（宏观解读=涨势窄、AI/mega-cap 拉动），或加密自身周期（特异解读）。需交叉验证，勿过度解读为干净宏观信号。",
+      "anchor": "crypto_divergence"
+    },
+    {
+      "id": "long_bond",
+      "label": "是否抄底长久期债券",
+      "text": "「收益率在高位=买」 vs 「disinflation 叙事破产=还有上行空间」，多空各执一词。",
+      "anchor": null
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "growth_weak",
+      "label": "① 增长转弱",
+      "desc": "债券对了 · 衰退；股票补跌、收益率转而下行",
+      "baseline": false,
+      "triggers": ["equity_down", "credit_widen"]
+    },
+    {
+      "id": "inflation_reignite",
+      "label": "② 通胀再燃",
+      "desc": "加息 → 贴现率咬人 → 股票(尤其长端成长)补跌；加密只是前奏",
+      "baseline": false,
+      "tail": true,
+      "triggers": ["cpi_accel", "yields_high"]
+    },
+    {
+      "id": "goldilocks",
+      "label": "③ 金发姑娘延续",
+      "desc": "股票赢 · 债券承压；直到某根稻草",
+      "baseline": true,
+      "triggers": ["equity_up", "yields_high"]
+    }
+  ],
+  "anchors": [
+    {
+      "id": "yields_high",
+      "label": "多期限收益率创新高",
+      "tier": "leading",
+      "series": "dgs10",
+      "series2": "dgs2",
+      "type": "period_high",
+      "window": 250,
+      "note": "10Y 创约 250 交易日新高（同时参考 2Y）"
+    },
+    {
+      "id": "equity_up",
+      "label": "股指上涨（风险资产）",
+      "tier": "leading",
+      "series": "spx",
+      "type": "trend_up",
+      "window": 60,
+      "note": "SPX 近 60 交易日趋势向上"
+    },
+    {
+      "id": "equity_down",
+      "label": "股指转弱 / 下跌",
+      "tier": "leading",
+      "series": "spx",
+      "type": "trend_down",
+      "window": 60,
+      "note": "SPX 近 60 交易日趋势向下（情景①触发）"
+    },
+    {
+      "id": "cpi_accel",
+      "label": "核心通胀环比再加速",
+      "tier": "leading",
+      "series": "core_cpi",
+      "type": "mom_accel",
+      "window": 3,
+      "note": "核心CPI最新月环比 > 前月环比（加息 tail 开关）"
+    },
+    {
+      "id": "fed_hike_expect",
+      "label": "加息预期升温",
+      "tier": "leading",
+      "series": null,
+      "type": "curated",
+      "note": "无直接序列，策展标注；触发条件=核心通胀再加速+点阵图上移"
+    },
+    {
+      "id": "crypto_divergence",
+      "label": "加密未确认股票涨势",
+      "tier": "cross",
+      "series": "btc",
+      "vs": "spx",
+      "type": "relative_lag",
+      "window": 60,
+      "note": "BTC 相对 SPX 落后 = 非确认 / 广度背离"
+    },
+    {
+      "id": "credit_widen",
+      "label": "信用利差走阔",
+      "tier": "cross",
+      "series": "hy",
+      "type": "rising",
+      "window": 30,
+      "note": "高收益 OAS 走阔 = 风险偏好收窄（情景①交叉确认）"
+    },
+    {
+      "id": "curve_bear_steep",
+      "label": "曲线熊陡（增长驱动）",
+      "tier": "cross",
+      "series": "dgs10",
+      "series2": "dgs2",
+      "type": "bear_steep",
+      "window": 60,
+      "note": "10Y-2Y 斜率走陡且两期限均上行 = 增长驱动（股可扛）"
+    }
+  ]
+}
