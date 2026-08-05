@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-08-05 08:36
+ * 生成时间: 2026-08-05 09:02
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-08-05 08:36 (官方数据, 自动更新)",
+    "lastUpdated": "2026-08-05 09:02 (官方数据, 自动更新)",
     "dataAsOf": "2026-08-04",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,14 +17,14 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 4.70% 处于近一年 99 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.28% (分位 100), 而 HY 整体 2.78%。油价 (WTI 76.12) 与波动率 (VIX 15.97) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 4.70% 处于近一年 99 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.28% (分位 100), 而 HY 整体 2.78%。油价 (WTI 76.39) 与波动率 (VIX 16.13) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "regime": {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 4.70% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 76.12 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 4.70% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 76.39 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -33,17 +33,17 @@ const DATA = {
         "direction": "bullish"
       },
       {
-        "title": "WTI 原油周跌 -9.87%",
+        "title": "WTI 原油周跌 -9.55%",
         "meaning": "油价回落缓解通胀压力, 通胀预期下行空间打开。",
         "direction": "bullish"
       },
       {
-        "title": "布伦特原油周跌 -11.57%",
+        "title": "布伦特原油周跌 -11.22%",
         "meaning": "布伦特回落, 全球油价压力缓和。",
         "direction": "bullish"
       },
       {
-        "title": "黄金 +4.64% 上涨",
+        "title": "黄金 +4.60% 上涨",
         "meaning": "黄金上涨通常反映避险需求或滞胀担忧升温, 与风险资产呈替代关系, 对风险偏好构成压力。",
         "direction": "bearish"
       }
@@ -291,18 +291,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,221.90",
-        "change": "+3.09%",
+        "value": "$4,220.20",
+        "change": "+3.05%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 48,
         "signal": "up",
         "meaning": "当前位于近一年 48 分位",
         "changes": {
-          "d": "+3.09%",
-          "w": "+4.64%",
-          "m": "+1.85%",
-          "h6": "-13.90%"
+          "d": "+3.05%",
+          "w": "+4.60%",
+          "m": "+1.81%",
+          "h6": "-13.94%"
         },
         "sparkline": [
           3990.3,
@@ -334,23 +334,23 @@ const DATA = {
           4049.1001,
           4033.7,
           4095.3999,
-          4221.8999
+          4220.2002
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$76.12",
-        "change": "+0.46%",
+        "value": "$76.39",
+        "change": "+0.82%",
         "dir": "up",
         "tag": "CL=F",
         "percentile": 65,
         "signal": "down",
         "meaning": "当前位于近一年 65 分位",
         "changes": {
-          "d": "+0.46%",
-          "w": "-9.87%",
-          "m": "+8.06%",
-          "h6": "+20.42%"
+          "d": "+0.82%",
+          "w": "-9.55%",
+          "m": "+8.45%",
+          "h6": "+20.85%"
         },
         "sparkline": [
           70.34,
@@ -382,23 +382,23 @@ const DATA = {
           84.67,
           80.34,
           75.77,
-          76.12
+          76.39
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$80.24",
-        "change": "+1.11%",
+        "value": "$80.56",
+        "change": "+1.51%",
         "dir": "up",
         "tag": "BZ=F",
         "percentile": 65,
         "signal": "down",
         "meaning": "当前位于近一年 65 分位",
         "changes": {
-          "d": "+1.11%",
-          "w": "-11.57%",
-          "m": "+8.20%",
-          "h6": "+19.17%"
+          "d": "+1.51%",
+          "w": "-11.22%",
+          "m": "+8.63%",
+          "h6": "+19.65%"
         },
         "sparkline": [
           73.74,
@@ -430,23 +430,23 @@ const DATA = {
           90.12,
           83.77,
           79.36,
-          80.24
+          80.56
         ]
       },
       {
         "label": "铜",
-        "value": "6.63",
-        "change": "+0.22%",
+        "value": "6.64",
+        "change": "+0.29%",
         "dir": "up",
         "tag": "HG=F",
-        "percentile": 99,
+        "percentile": 100,
         "signal": "up",
-        "meaning": "当前位于近一年 99 分位",
+        "meaning": "当前位于近一年 100 分位",
         "changes": {
-          "d": "+0.22%",
-          "w": "+5.73%",
-          "m": "+7.48%",
-          "h6": "+9.41%"
+          "d": "+0.29%",
+          "w": "+5.81%",
+          "m": "+7.56%",
+          "h6": "+9.49%"
         },
         "sparkline": [
           5.943,
@@ -478,23 +478,23 @@ const DATA = {
           6.436,
           6.514,
           6.6185,
-          6.633
+          6.638
         ]
       },
       {
         "label": "美元指数",
-        "value": "99.82",
-        "change": "-0.07%",
+        "value": "99.88",
+        "change": "-0.01%",
         "dir": "down",
         "tag": "DX-Y.NYB",
-        "percentile": 79,
+        "percentile": 80,
         "signal": "down",
-        "meaning": "当前位于近一年 79 分位",
+        "meaning": "当前位于近一年 80 分位",
         "changes": {
-          "d": "-0.07%",
-          "w": "-0.97%",
-          "m": "-1.31%",
-          "h6": "+2.44%"
+          "d": "-0.01%",
+          "w": "-0.91%",
+          "m": "-1.25%",
+          "h6": "+2.50%"
         },
         "sparkline": [
           101.61,
@@ -526,23 +526,23 @@ const DATA = {
           99.8,
           99.96,
           99.89,
-          99.82
+          99.88
         ]
       },
       {
         "label": "美元/日元",
-        "value": "157.80",
-        "change": "+0.17%",
+        "value": "157.82",
+        "change": "+0.18%",
         "dir": "up",
         "tag": "USDJPY=X",
         "percentile": 58,
         "signal": "down",
         "meaning": "当前位于近一年 58 分位",
         "changes": {
-          "d": "+0.17%",
-          "w": "-3.70%",
-          "m": "-2.65%",
-          "h6": "+1.07%"
+          "d": "+0.18%",
+          "w": "-3.69%",
+          "m": "-2.63%",
+          "h6": "+1.08%"
         },
         "sparkline": [
           161.763,
@@ -574,7 +574,7 @@ const DATA = {
           160.183,
           157.582,
           157.529,
-          157.796
+          157.817
         ]
       },
       {
@@ -882,72 +882,72 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,221.90",
+        "current": "$4,220.20",
         "changes": {
-          "d": 3.09,
-          "w": 4.64,
-          "m": 1.85,
-          "h6": -13.9
+          "d": 3.05,
+          "w": 4.6,
+          "m": 1.81,
+          "h6": -13.94
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$76.12",
+        "current": "$76.39",
         "changes": {
-          "d": 0.46,
-          "w": -9.87,
-          "m": 8.06,
-          "h6": 20.42
+          "d": 0.82,
+          "w": -9.55,
+          "m": 8.45,
+          "h6": 20.85
         },
-        "meaning": "半年 +20% 但近周转弱——顶部预警"
+        "meaning": "半年 +21% 但近周转弱——顶部预警"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$80.24",
+        "current": "$80.56",
         "changes": {
-          "d": 1.11,
-          "w": -11.57,
-          "m": 8.2,
-          "h6": 19.17
+          "d": 1.51,
+          "w": -11.22,
+          "m": 8.63,
+          "h6": 19.65
         },
-        "meaning": "半年 +19% 但近周转弱——顶部预警"
+        "meaning": "半年 +20% 但近周转弱——顶部预警"
       },
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.63",
+        "current": "6.64",
         "changes": {
-          "d": 0.22,
-          "w": 5.73,
-          "m": 7.48,
-          "h6": 9.41
+          "d": 0.29,
+          "w": 5.81,
+          "m": 7.56,
+          "h6": 9.49
         },
-        "meaning": "半年 +9% 的上升趋势中, 近月 +7% 仍在加速"
+        "meaning": "半年 +9% 的上升趋势中, 近月 +8% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "99.82",
+        "current": "99.88",
         "changes": {
-          "d": -0.07,
-          "w": -0.97,
-          "m": -1.31,
-          "h6": 2.44
+          "d": -0.01,
+          "w": -0.91,
+          "m": -1.25,
+          "h6": 2.5
         },
         "meaning": "半年 +2% 但近月 -1% 回调——趋势内修正"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "157.80",
+        "current": "157.82",
         "changes": {
-          "d": 0.17,
-          "w": -3.7,
-          "m": -2.65,
-          "h6": 1.07
+          "d": 0.18,
+          "w": -3.69,
+          "m": -2.63,
+          "h6": 1.08
         },
         "meaning": "半年 +1% 但近月 -3% 回调——趋势内修正"
       },
@@ -1051,43 +1051,43 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,221.90",
-        "change": "+3.09%",
+        "price": "$4,220.20",
+        "change": "+3.05%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$76.12",
-        "change": "+0.46%",
+        "price": "$76.39",
+        "change": "+0.82%",
         "dir": "up"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$80.24",
-        "change": "+1.11%",
+        "price": "$80.56",
+        "change": "+1.51%",
         "dir": "up"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.63",
-        "change": "+0.22%",
+        "price": "6.64",
+        "change": "+0.29%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "99.82",
-        "change": "-0.07%",
+        "price": "99.88",
+        "change": "-0.01%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "157.80",
-        "change": "+0.17%",
+        "price": "157.82",
+        "change": "+0.18%",
         "dir": "up"
       },
       {
@@ -1254,7 +1254,7 @@ const DATA = {
           84.67,
           80.34,
           75.77,
-          76.12
+          76.39
         ],
         "Gold": [
           3990.3,
@@ -1286,7 +1286,7 @@ const DATA = {
           4049.1001,
           4033.7,
           4095.3999,
-          4221.8999
+          4220.2002
         ],
         "Copper": [
           5.943,
@@ -1318,7 +1318,7 @@ const DATA = {
           6.436,
           6.514,
           6.6185,
-          6.633
+          6.638
         ],
         "BTC": [
           63980.01,
@@ -1481,7 +1481,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.37"
     },
-    "analystView": "利率驱动的条件性重定价: 纳斯达克 (+7.10%) 与长债 (TLT -1.69%) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 (+4.64%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (15.97) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
+    "analystView": "利率驱动的条件性重定价: 纳斯达克 (+7.10%) 与长债 (TLT -1.69%) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 (+4.60%) 横盘说明实际利率上行对冲了避险需求。只要 VIX (16.13) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -1491,12 +1491,12 @@ const DATA = {
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 股市抛压自我强化",
-        "status": "距离 4.0"
+        "status": "距离 3.9"
       },
       {
         "trigger": "WTI 突破 <span class=\"watch-threshold\">$90</span>",
         "implication": "能源冲击确认, 通胀预期与利率进一步上行",
-        "status": "距离 13.9"
+        "status": "距离 13.6"
       }
     ],
     "usIndicesChart": {
@@ -6029,7 +6029,7 @@ const DATA = {
           "name": "风险传导",
           "score": 3.0,
           "weight": "20%",
-          "note": "VIX 15.97, HY OAS 2.78%"
+          "note": "VIX 16.13, HY OAS 2.78%"
         }
       ],
       "confirmationConditions": [
@@ -6059,7 +6059,7 @@ const DATA = {
         },
         {
           "name": "VIX 升至 20 上方",
-          "current": "15.97",
+          "current": "16.13",
           "status": "接近触发",
           "triggered": false
         }
@@ -7194,7 +7194,7 @@ const DATA = {
         "status": "关键事件"
       }
     ],
-    "generatedAt": "2026-08-05 08:36",
+    "generatedAt": "2026-08-05 09:02",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -8239,16 +8239,16 @@ const DATA = {
       "label": "波动率分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "当前处于压力区的资产: OVX 原油。VIX 15.97, OVX 53.45, MOVE 70.88。波动率分化形态反映压力是否从单一资产外溢。"
+      "description": "当前处于压力区的资产: OVX 原油。VIX 16.13, OVX 53.45, MOVE 70.88。波动率分化形态反映压力是否从单一资产外溢。"
     },
     "keySignals": [
       {
-        "title": "OVX 53.45 vs VIX 15.97 剪刀差 37.5pt",
+        "title": "OVX 53.45 vs VIX 16.13 剪刀差 37.3pt",
         "meaning": "油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。",
         "direction": "bearish"
       },
       {
-        "title": "VIX 15.97, 周 -4.7pt",
+        "title": "VIX 16.13, 周 -4.5pt",
         "meaning": "站上20将触发波动率目标基金被动减仓, 抛压自我强化。",
         "direction": "mixed"
       },
@@ -8261,18 +8261,18 @@ const DATA = {
     "metrics": [
       {
         "label": "VIX (股票)",
-        "value": "15.97",
-        "change": "-0.53",
+        "value": "16.13",
+        "change": "-0.37",
         "dir": "down",
         "tag": "VIX",
-        "percentile": 24,
+        "percentile": 27,
         "signal": "mixed",
         "meaning": "20是系统性风险确认线",
         "changes": {
-          "d": "-0.53",
-          "w": "-4.69",
-          "m": "-0.16",
-          "h6": "-2.67"
+          "d": "-0.37",
+          "w": "-4.53",
+          "m": "+0.00",
+          "h6": "-2.51"
         },
         "sparkline": [
           18.63,
@@ -8304,7 +8304,7 @@ const DATA = {
           15.99,
           15.86,
           16.5,
-          15.97
+          16.13
         ]
       },
       {
@@ -8552,12 +8552,12 @@ const DATA = {
       {
         "name": "VIX 股票波动率",
         "unit": "pt",
-        "current": "15.97",
+        "current": "16.13",
         "changes": {
-          "d": -0.53,
-          "w": -4.69,
-          "m": -0.16,
-          "h6": -2.67
+          "d": -0.37,
+          "w": -4.53,
+          "m": 0.0,
+          "h6": -2.51
         },
         "meaning": "四尺度方向即风险偏好的温度计"
       },
@@ -8794,7 +8794,7 @@ const DATA = {
           -47.8,
           -48.2,
           -46.1,
-          -47.8
+          -47.3
         ],
         "VVIX": [
           0.0,
@@ -9082,7 +9082,7 @@ const DATA = {
       ],
       "values": [
         16.9,
-        16.0,
+        16.1,
         20.5
       ],
       "state": "Contango(升水)"
@@ -9097,7 +9097,7 @@ const DATA = {
         "SKEW"
       ],
       "current": [
-        16.0,
+        16.1,
         70.9,
         53.5,
         23.5,
@@ -9105,7 +9105,7 @@ const DATA = {
         126.4
       ],
       "pctRank30d": [
-        24,
+        27,
         42,
         60,
         33,
@@ -9128,12 +9128,12 @@ const DATA = {
         120,
         150
       ],
-      "note": "OVX-VIX剪刀差 37.5pt · 压力区: OVX 原油"
+      "note": "OVX-VIX剪刀差 37.3pt · 压力区: OVX 原油"
     },
     "regimeTable": [
       {
         "indicator": "VIX 股票",
-        "value": "15.97",
+        "value": "16.13",
         "current": "中性",
         "range": "<15 低 / 15-20 中 / 20+ 警戒",
         "note": "系统性风险确认线=20"
@@ -9174,12 +9174,12 @@ const DATA = {
         "note": "尾部保护定价"
       }
     ],
-    "analystView": "波动率分化: 压力集中在 OVX 原油; VIX 15.97 距20确认线 4.0pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 126.4 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
+    "analystView": "波动率分化: 压力集中在 OVX 原油; VIX 16.13 距20确认线 3.9pt; 期限结构 Contango(升水)——近月高于远月才是即时风险定价。SKEW 126.4 说明机构在买尾部保护, 表面平静下对冲需求真实存在。策略: 若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是风险回报比好的对冲。",
     "whatToWatch": [
       {
         "trigger": "VIX 收盘站上 <span class=\"watch-threshold\">20</span>",
         "implication": "波动率目标基金强制减仓, 抛压自我强化",
-        "status": "距离 4.0"
+        "status": "距离 3.9"
       },
       {
         "trigger": "VIX期限结构转为 <span class=\"watch-threshold\">倒挂</span>",
@@ -9196,7 +9196,7 @@ const DATA = {
       "volNote": "四条曲线累计涨跌(起点=0%) · 形状真实, 便于比较相对变化",
       "tsNote": "VIX期限结构: Contango(升水) · 9D/1M/3M 真实读数",
       "dashNote": "压力区: OVX 原油 —— 冲击源头定位",
-      "trendNote": "VIX周Δ-4.7pt · OVX月Δ13.1pt · SKEW 126.4"
+      "trendNote": "VIX周Δ-4.5pt · OVX月Δ13.1pt · SKEW 126.4"
     }
   },
   "recession": {
@@ -9307,7 +9307,7 @@ const DATA = {
       },
       {
         "label": "波动率风险",
-        "score": 51.1,
+        "score": 51.6,
         "weight": 12,
         "status": "bearish",
         "color": "#e63946"
@@ -14824,11 +14824,31 @@ const DATA = {
   "macroSignal": {
     "asOf": "2026-08-05",
     "curatedDate": "2026-08",
-    "method": "信号分级框架：主导矛盾(定性) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。锚点状态由 gen_datajs.py 实时计算；序列缺失时回退为策展标注。加密定性已修正为「未跟随股票涨=非确认/广度背离」，非折扣率先跌的 canary。",
+    "method": "信号分级框架：主导矛盾(数据自动选原型) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。主导矛盾由 gen_datajs.py 依据实时复合指标(债股背离/通胀压力/增长/流动性/广度)从 archetypes[] 自动选出原型；manualOverride=true 时改回使用下方 dominant 策展文案。锚点状态实时计算；序列缺失回退策展。加密定性已修正为「未跟随股票涨=非确认/广度背离」，非折扣率先跌的 canary。",
     "dominant": {
-      "title": "债券 vs 股票，对同一组宏观数据反向解读",
-      "keyTension": "增长韧性 vs 贴现率上行",
-      "body": "债市定价「通胀顽固 → 政策偏紧 / 加息风险」；股市定价「软着陆 → 盈利稳，增长盖过贴现率」。两叙事不可能同时永远正确，裂口在流动性中性下由折扣率上行驱动收敛。加密未跟涨属「非确认/广度背离」，而非折扣率已发难的第一块多米诺。"
+      "title": "通胀再燃成为主轴，贴现率咬人",
+      "keyTension": "通胀预期上行 vs 风险资产估值",
+      "body": "核心通胀环比二次抬头 + 长端收益率创新高，市场开始重定价「更高更久甚至再加息」。债市抢跑紧缩，股票(尤其长端成长)面临估值折现率抬升的实质性压力；加密的落后从「广度背离」升级为「领先走弱」信号。"
+    },
+    "dominantMeta": {
+      "source": "auto",
+      "archetypeId": "inflation_reignite",
+      "composites": {
+        "disagreement": true,
+        "yldUp": true,
+        "eqUp": true,
+        "inflation": "high",
+        "growth": "strong",
+        "liquidity": "neutral",
+        "breadth": "broad"
+      },
+      "archetypeScores": {
+        "bond_vs_equity": 1,
+        "inflation_reignite": 1,
+        "growth_rolling": 0,
+        "liquidity_shock": 0,
+        "calm_goldilocks": 2
+      }
     },
     "consensus": [
       "短期无衰退：基本面尚可，增长有韧性。",
