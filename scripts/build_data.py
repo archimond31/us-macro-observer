@@ -17,6 +17,10 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 import csv, io, json, os, sys, time, subprocess, re
 from datetime import datetime, timedelta
 from html import unescape
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_DIR = SCRIPT_DIR.parent
 
 def http_get(url, timeout=25, use_ua=False, headers=None):
     """通过 curl 拉取。注意: 本环境代理对 Mozilla UA 会卡死，FRED/NYFed/DTS 必须不带 UA；Yahoo 需要 UA。
@@ -778,7 +782,7 @@ if S.get('btc') and S.get('eth'):
 
 # 与上次运行合并: 本次拉取失败(空)的序列沿用昨日缓存, 避免瞬时故障导致前端数据回退为空
 try:
-    PREV = json.load(open('raw_series.json'))
+    PREV = json.load(open(SCRIPT_DIR / 'raw_series.json'))
     healed = []
     for k in list(S.keys()):
         if not S[k] and PREV.get(k):
@@ -804,7 +808,7 @@ else:
 _gnow = fetch_gdpnow()
 
 # 保存原始数据供检查
-with open('raw_series.json', 'w') as f:
+with open(SCRIPT_DIR / 'raw_series.json', 'w') as f:
     json.dump({k: v for k, v in S.items()}, f)
 print(f'\n原始序列已存 raw_series.json ({time.time()-T0:.1f}s)')
 
@@ -942,7 +946,7 @@ if _gnow:
     HEALTH['gdpnow'] = {'status': 'OK', 'source': 'AtlantaFed:GDPNow',
                         'last_date': _gnow[0][0], 'value': _gnow[0][1]}
 
-with open('data_health.json', 'w') as f:
+with open(SCRIPT_DIR / 'data_health.json', 'w') as f:
     json.dump({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
                'series': HEALTH}, f, indent=2, default=str)
 _stale = [k for k, v in HEALTH.items() if v['status'] == 'STALE' or v['status'] == 'NO_DATA']
@@ -950,7 +954,7 @@ print(f'[数据源自检] 共 {len(HEALTH)} 个序列, 健康 {len(HEALTH)-len(_
 if _stale:
     print(f'[数据源自检] 需关注: {", ".join(_stale)}')
 
-with open('computed.json', 'w') as f:
+with open(SCRIPT_DIR / 'computed.json', 'w') as f:
     R['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     R['pmi_meta'] = PMI_META
     R['empire_meta'] = EMPIRE_META
@@ -1027,7 +1031,7 @@ def write_events():
         'jackson_hole': JACKSON_HOLE,
         'speeches': fetch_speeches(),
     }
-    with open('events.json', 'w') as f:
+    with open(SCRIPT_DIR / 'events.json', 'w') as f:
         json.dump(ev, f, ensure_ascii=False)
     print('事件数据已存 events.json')
 

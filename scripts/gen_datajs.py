@@ -8,9 +8,13 @@ gen_datajs.py — 把 computed.json (真实数值/分位/四尺度变化) + raw_
 依赖: build_data.py 先跑完, 生成 computed.json / raw_series.json
 """
 import json, datetime, sys, re, calendar
+from pathlib import Path
 
-C = json.load(open('computed.json'))
-RAW = json.load(open('raw_series.json'))
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_DIR = SCRIPT_DIR.parent
+
+C = json.load(open(SCRIPT_DIR / 'computed.json'))
+RAW = json.load(open(SCRIPT_DIR / 'raw_series.json'))
 GEN_AT = C.get('generated_at', '')   # 数据获取时间 (build_data.py 运行时刻)
 # 自动更新日期: 取 build_data.py 实际运行时刻 (而非某序列最新数据点), 确保每次 workflow 跑都刷新
 GEN_DATE = GEN_AT.split(' ')[0] if GEN_AT else datetime.datetime.now().strftime('%Y-%m-%d')
@@ -19,7 +23,7 @@ print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, fl
 
 # Fed 事件 (FOMC 官方日程 + 真实官员讲话), 由 build_data.py 抓取写入 events.json
 try:
-    EV = json.load(open('events.json'))
+    EV = json.load(open(SCRIPT_DIR / 'events.json'))
     print('[gen_datajs] loaded events.json', file=sys.stderr, flush=True)
 except Exception:
     EV = {'fomc': [], 'jackson_hole': None, 'speeches': []}
@@ -27,7 +31,7 @@ except Exception:
 
 # AI 产业链知识库 (五层蛋糕: 应用/模型/基础设施/芯片/能源; 策展基本面 + 研报共识)
 try:
-    AIC = json.load(open('ai_chain.json'))
+    AIC = json.load(open(SCRIPT_DIR / 'ai_chain.json'))
     print('[gen_datajs] loaded ai_chain.json', file=sys.stderr, flush=True)
 except Exception:
     AIC = {'layers': [], 'disclaimer': '', 'asOf': ''}
@@ -974,7 +978,7 @@ DATA['fed'] = {
 v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (val('sofr')-val('iorb'))
 # 流动性 regime: 由净流动性趋势 + SOFR-IORB 动态判定
 _nl_m = tfm('netliq')['m']
-_liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) >= 0) else ('risk-on' if (v_sofr_iorb or 0) < 0 else 'mixed')
+_liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) > 0.0001) else ('risk-on' if (v_sofr_iorb or 0) < -0.0001 else 'mixed')
 _liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 资金价格仍平静')
 
 # LPI (流动性压力指数): 数据驱动合成, 替代硬编码 3.8
@@ -1004,13 +1008,13 @@ _lpi_block = {
         {'name': '结构性缓冲', 'score': _lpi_buf, 'weight': '45%',
          'note': f'RRP 分位 {pct("rrp")}, TGA 分位 {pct("tga")}, 缓冲垫变薄' if (pct('rrp') is not None and pct('tga') is not None) else 'RRP/TGA 数据缺失'},
         {'name': '融资确认', 'score': _lpi_fund, 'weight': '35%',
-         'note': f'SOFR-IORB {bp(v_sofr_iorb*100)}, {"已转正" if (v_sofr_iorb or 0) >= 0 else "为负, 价格无压力"}'},
+         'note': f'SOFR-IORB {bp(v_sofr_iorb*100)}, {"已转正(>1bp)" if (v_sofr_iorb or 0) > 0.0001 else ("归零/接近零, 价格平静" if abs(v_sofr_iorb or 0) <= 0.0001 else "为负, 价格无压力")}'},
         {'name': '风险传导', 'score': _lpi_risk, 'weight': '20%',
          'note': f'VIX {f2(v_vix) if v_vix is not None else "—"}, HY OAS {f2(v_hy)+"%" if v_hy is not None else "—"}'},
     ],
     'confirmationConditions': [
-        {'name': 'SOFR-IORB 连续转正', 'current': bp(v_sofr_iorb*100),
-         'status': '已触发' if (v_sofr_iorb or 0) > 0 else '未触发', 'triggered': (v_sofr_iorb or 0) > 0},
+        {'name': 'SOFR-IORB 连续转正(>1bp)', 'current': bp(v_sofr_iorb*100),
+         'status': '已触发' if (v_sofr_iorb or 0) > 0.0001 else '未触发', 'triggered': (v_sofr_iorb or 0) > 0.0001},
         {'name': 'SRF 出现数十亿级使用', 'current': '无数据', 'status': '未监测', 'triggered': False},
         {'name': 'HY OAS 明显走阔', 'current': f2(v_hy)+'%' if v_hy is not None else '—',
          'status': '已触发' if (v_hy or 0) > 4.5 else '未触发', 'triggered': (v_hy or 0) > 4.5},
@@ -1023,30 +1027,32 @@ _lpi_block = {
 }
 DATA['liquidity'] = {
     'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':_confidence(_liq_signal, v_rrpn is not None, v_nl is not None, v_sofr_iorb is not None),
-        'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。TGA 上升与 QT 收缩将更直接影响银行准备金——流动性框架从"有缓冲"切换到"无缓冲"阶段。当前 SOFR-IORB ({bp(v_sofr_iorb*100)}){(" 仍为负, 融资市场尚未出现真实资金争夺" if (v_sofr_iorb or 0) < 0 else " 已转正, 价格信号发出边际争夺压力, 但数量收缩尚未传导为真实流动性事件")}。'},
+        'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。TGA 上升与 QT 收缩将更直接影响银行准备金——流动性框架从"有缓冲"切换到"无缓冲"阶段。当前 SOFR-IORB ({bp(v_sofr_iorb*100)}){(" 仍为负, 融资市场尚未出现真实资金争夺" if (v_sofr_iorb or 0) < -0.0001 else (" 接近归零, 价格信号平静但处于分水岭" if abs(v_sofr_iorb or 0) <= 0.0001 else " 已转正(>1bp), 价格信号发出边际争夺压力, 但数量收缩尚未传导为真实流动性事件"))}。'},
     'keySignals': [
         {'title':f'RRP 余额 ${f2(v_rrpn)}B',
          'meaning':(
-             '过去两年 QT 冲击被 RRP 吸收, 未来每一美元缩表直击准备金, 充裕度下滑加速。'
+             'RRP 持续下降, 货币市场基金可搬回美联储的缓冲持续耗尽, 未来 QT 缩表将更直接冲击银行准备金。'
              if (tfm('rrp').get('w') or 0) < 0
-             else ('RRP 回升, 缓冲边际增厚。'
+             else (f'RRP 边际回升, 资金短暂回流美联储, 银行体系可用流动性边际收紧; 但余额仅 ${f2(v_rrpn)}B, 仍处历史极低水平, 缓冲实质耗尽。'
                    if (tfm('rrp').get('w') or 0) > 0
-                   else 'RRP 持平, 缓冲实质归零。')),
+                   else 'RRP 持平, 缓冲实质归零, QT 已无处可躲。')),
          'direction':_msig(dir_of(tfm('rrp').get('w')), False)},
         {'title':(f'TGA 余额 ${comma(v_tgan,1)}B' if v_tgan else 'TGA 数据缺失'),
          'meaning':(
-             '财政部现金上升=从银行体系抽水, 若向 9000 亿迈进将单周收缩数百亿。'
+             f'财政部现金上升=从银行体系抽水; 当前余额 ${comma(v_tgan,1)}B 已处高位, 需警惕后续发债进一步回收流动性。'
              if (tfm('tga').get('w') or 0) > 0
-             else ('财政部现金下降=向银行体系回注流动性。'
+             else (f'财政部现金边际下降=向银行体系回注流动性; 但绝对水平仍处高位 (${comma(v_tgan,1)}B), 宽松幅度受限。'
                    if (tfm('tga').get('w') or 0) < 0
                    else 'TGA 持平。')),
          'direction':_msig(dir_of(tfm('tga').get('w') if v_tgan else None), False)},
         {'title':f'SOFR-IORB {bp(v_sofr_iorb*100)}',
          'meaning':(
              '回购利率转正, 融资市场出现真实资金争夺压力。'
-             if (v_sofr_iorb or 0) >= 0
-             else '回购利率低于准备金利率, 融资充裕; 转正才是压力第一确认信号。'),
-         'direction':_msig(('down' if (v_sofr_iorb or 0) < 0 else ('up' if (v_sofr_iorb or 0) > 0 else 'neutral')), False)},
+             if (v_sofr_iorb or 0) > 0.0001
+             else ('SOFR-IORB 利差归零, 融资市场处于充裕与压力的分水岭; 持续转正才是压力第一确认。'
+                   if abs(v_sofr_iorb or 0) <= 0.0001
+                   else '回购利率低于准备金利率, 融资充裕; 转正才是压力第一确认信号。')),
+         'direction':_msig(('down' if (v_sofr_iorb or 0) < -0.0001 else ('up' if (v_sofr_iorb or 0) > 0.0001 else 'neutral')), False)},
     ],
     'metrics': [
         {'label':'净流动性','value':f'${comma(v_nl/1000,2)}T' if v_nl else '—','change':f'{bp(tfm("netliq")["w"], "$B") if tfm("netliq")["w"] else "—"}','dir':dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else 'neutral','tag':'NetLiq','percentile':pct('netliq'),'signal':_msig(dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else None, False),'meaning':'WALCL−RRP−TGA','changes':{k:(bp(tfm("netliq")[k], "$B") if tfm("netliq")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('netliq')},
@@ -2061,13 +2067,13 @@ HEADER = """/* ============================================================
  * ============================================================\n */\n""" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
 out = HEADER + 'const DATA = ' + json.dumps(DATA, ensure_ascii=False, indent=2) + ';\n'
-with open('../data.js', 'w', encoding='utf-8', newline='\n') as f:
+with open(REPO_DIR / 'data.js', 'w', encoding='utf-8', newline='\n') as f:
     f.write(out)
 print('[gen_datajs] DONE — data.js generated:', len(out), 'chars, sections:', list(DATA.keys()), file=sys.stderr, flush=True)
 
 # ---------- 缓存破坏: 更新 index.html 中 data.js 的版本号 ----------
 ts = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-idx_path = '../index.html'
+idx_path = REPO_DIR / 'index.html'
 try:
     with open(idx_path, 'r', encoding='utf-8') as f:
         html = f.read()
