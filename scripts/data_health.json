@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-05 07:39",
+  "generated_at": "2026-08-05 08:36",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -726,7 +726,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 4223.0,
+      "value": 4221.89990234375,
       "fallback": false
     },
     "silver": {
@@ -734,7 +734,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 61.8650016784668,
+      "value": 61.75,
       "fallback": false
     },
     "natgas": {
@@ -742,7 +742,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 2.7070000171661377,
+      "value": 2.691999912261963,
       "fallback": false
     },
     "copper": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 6.668000221252441,
+      "value": 6.632999897003174,
       "fallback": false
     },
     "dxy": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 99.84500122070312,
+      "value": 99.81999969482422,
       "fallback": false
     },
     "wti_rt": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:CL=F",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 76.11000061035156,
+      "value": 76.12000274658203,
       "fallback": false
     },
     "brent_rt": {
@@ -782,7 +782,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 1.1539349555969238,
+      "value": 1.1544678211212158,
       "fallback": false
     },
     "gbpusd": {
@@ -790,7 +790,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 1.3460400104522705,
+      "value": 1.3466744422912598,
       "fallback": false
     },
     "usdjpy": {
@@ -798,7 +798,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 157.68299865722656,
+      "value": 157.79600524902344,
       "fallback": false
     },
     "usdcnh": {
@@ -806,7 +806,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 6.746809959411621,
+      "value": 6.748419761657715,
       "fallback": false
     },
     "tlt": {
@@ -902,7 +902,7 @@
       "source": "Yahoo:^VIX",
       "last_date": "2026-08-05",
       "age": 0,
-      "value": 16.139999389648438,
+      "value": 15.970000267028809,
       "fallback": false
     },
     "ovx": {
