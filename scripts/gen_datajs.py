@@ -663,8 +663,13 @@ DATA['assets'] = {
         'description': f'10Y 利率 {f2(v_dgs10)}% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI {f2(v_wti)} 波动影响通胀预期, 利率上行压制估值。'},
     'keySignals': [
         {'title': f'纳斯达克100 周{"涨" if float(asset_changes("ndx")["w"] or 0)>=0 else "跌"} {ret(asset_changes("ndx")["w"])}',
-         'meaning':'长久期科技股对利率最敏感, 是本轮重定价的领先指标。',
-         'direction':_msig(dir_of(tfm('ndx')['w']), False)},
+         'meaning':(
+             '纳斯达克上涨反映风险偏好修复, 长久期科技股领涨, 是风险资产偏好的领先指标。'
+             if float(asset_changes("ndx")["w"] or 0) > 0
+             else ('纳斯达克下跌反映利率上行或衰退担忧压制长久期科技股估值, 风险偏好回落。'
+                   if float(asset_changes("ndx")["w"] or 0) < 0
+                   else '纳斯达克横盘, 市场等待利率与盈利方向确认。')),
+         'direction':_msig(dir_of(tfm('ndx')['w']), True)},
         {'title': f'WTI 原油周{"涨" if float(asset_changes("wti")["w"] or 0)>=0 else "跌"} {ret(asset_changes("wti")["w"])}',
          'meaning':(
              '油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。'
@@ -682,7 +687,12 @@ DATA['assets'] = {
                    else '布伦特持平。')),
          'direction':_msig(dir_of(tfm('brent')['w']), False)},
         {'title': f'黄金 {ret(asset_changes("gold")["w"])} {"横盘" if abs(float(asset_changes("gold")["w"] or 0))<1 else ("上涨" if float(asset_changes("gold")["w"] or 0)>0 else "下跌")}',
-         'meaning':'实际利率上行对冲了避险买需, 黄金方向选择临近。',
+         'meaning':(
+             '黄金上涨通常反映避险需求或滞胀担忧升温, 与风险资产呈替代关系, 对风险偏好构成压力。'
+             if float(asset_changes("gold")["w"] or 0) > 0
+             else ('黄金回落说明实际利率上行或风险偏好修复, 资金从避险资产回流风险资产。'
+                   if float(asset_changes("gold")["w"] or 0) < 0
+                   else '黄金横盘, 实际利率上行与避险买需相互对冲, 方向选择临近。')),
          'direction':_msig(dir_of(tfm('gold')['w']), False)},
     ],
     'metrics': metrics_assets,
