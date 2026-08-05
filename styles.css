@@ -568,3 +568,61 @@ body {
   .traffic-grid { grid-template-columns: 1fr; }
   .risk-score-bar { flex-direction: column; align-items: flex-start; }
 }
+
+/* ===== AI 板块子页面导航 ===== */
+.ai-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 18px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+}
+.ai-subnav-btn {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.ai-subnav-btn:hover { background: var(--accent-light); color: var(--accent); }
+.ai-subnav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== AI 折叠面板 ===== */
+.ai-collapse {
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  margin: 12px 0;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.ai-collapse > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.ai-collapse > summary::-webkit-details-marker { display: none; }
+.ai-collapse > summary::before {
+  content: '▸';
+  color: var(--accent);
+  font-size: 12px;
+  transition: transform .15s;
+}
+.ai-collapse[open] > summary::before { transform: rotate(90deg); }
+.ai-collapse > summary:hover { background: var(--accent-light); }
+.ai-collapse > .ai-collapse-body { padding: 4px 14px 14px; }
