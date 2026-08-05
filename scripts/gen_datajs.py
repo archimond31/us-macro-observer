@@ -2081,16 +2081,24 @@ print('[gen_datajs] crypto section OK', file=sys.stderr, flush=True)
 
 # ---------- 矛盾信号面板 (macroSignal) ----------
 def _ms_vals(key, n=None):
-    """取序列最近 n 个数值 (优先 computed.series90, 回退 raw_series)"""
+    """取序列最近 n 个数值 (优先 computed.series90 的纯值列表, 回退 raw_series 的 [date,value] 列表)"""
     arr = series90(key) if series90(key) else (RAW.get(key) or [])
     out = []
-    for el in arr:
-        try:
-            v = float(el[1])
-            if v == v:
-                out.append(v)
-        except Exception:
-            pass
+    for x in arr:
+        if isinstance(x, (list, tuple)) and len(x) >= 2:
+            try:
+                v = float(x[1])
+                if v == v:
+                    out.append(v)
+            except Exception:
+                pass
+        else:
+            try:
+                v = float(x)
+                if v == v:
+                    out.append(v)
+            except Exception:
+                pass
     if n:
         out = out[-n:]
     return out
