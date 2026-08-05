@@ -743,6 +743,27 @@ spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
 _rates_signal = 'risk-off' if spread_10_2 > 0 else ('risk-on' if spread_10_2 < 0 else 'mixed')
 _rates_label = '熊陡/曲线陡峭化' if spread_10_2 > 0 else ('牛平/曲线正常化' if spread_10_2 < 0 else '曲线平稳')
 
+# 实际利率关键信号：以半年趋势为主，避免单周回落掩盖高位压制
+_tips_w = tfm('tips10').get('w') or 0
+_tips_h6 = tfm('tips10').get('h6') or 0
+_tips_pct = pct('tips10')
+if _tips_h6 > 0.0001:
+    _tips_meaning = f'实际利率半年 +{(_tips_h6*100):.0f}bp 上行至 {f2(v_tips)}% (分位 {_tips_pct}), 是估值真实折现率, 高位压制未解除。'
+    _tips_direction = 'bearish'
+elif _tips_h6 < -0.0001:
+    _tips_meaning = f'实际利率半年 -{(abs(_tips_h6)*100):.0f}bp 回落, 估值压力缓和。'
+    _tips_direction = 'bullish'
+elif _tips_w > 0:
+    _tips_meaning = '实际利率周度上行, 折现率压力边际增加。'
+    _tips_direction = 'bearish'
+elif _tips_w < 0:
+    _tips_meaning = '实际利率周度回落, 折现率压力边际缓和。'
+    _tips_direction = 'bullish'
+else:
+    _tips_meaning = '实际利率横盘, 方向待确认。'
+    _tips_direction = 'mixed'
+_tips_signal = {'title': f'10Y 实际利率 {f2(v_tips)}% (分位 {_tips_pct})', 'meaning': _tips_meaning, 'direction': _tips_direction}
+
 # Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
 _v_2y_week = (tfm('dgs2')['w'] or 0) * 100  # bp
 _v_2y_month = (tfm('dgs2')['m'] or 0) * 100
@@ -792,14 +813,7 @@ DATA['rates'] = {
                    if (spread_10_2 or 0) < 0
                    else '曲线平坦, 方向中性。')),
          'direction': _msig(dir_of(((tfm('dgs10').get('w') or 0)-(tfm('dgs2').get('w') or 0))), False)},
-        {'title': f'10Y 实际利率 {f2(v_tips)}% (分位 {pct("tips10")})',
-         'meaning':(
-             '实际利率是估值真实折现率, 高位上行对高估值科技股最不利。'
-             if (tfm('tips10').get('w') or 0) > 0
-             else ('实际利率回落, 估值压力缓和。'
-                   if (tfm('tips10').get('w') or 0) < 0
-                   else '实际利率横盘。')),
-         'direction': _msig(dir_of(tfm('tips10').get('w')), False)},
+        _tips_signal,
     ],
     'metrics': [
         rate_metric('联邦基金利率(上限)','ffr_up','FFR'),
