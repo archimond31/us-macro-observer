@@ -2166,18 +2166,100 @@ if not _ms_active:
     _best = max(_ms_scenarios, key=lambda x: x['triggeredCount']) if _ms_scenarios else None
     _ms_active = _best['id'] if (_best and _best['triggeredCount'] > 0) else None
 
+# ---------- 主导矛盾原型自动判定 (数据驱动) ----------
+def _ms_composites():
+    """由实时序列合成 5 维复合指标，用于从 archetypes[] 选出当前主导矛盾原型。"""
+    _d10 = (tfm('dgs10') or {}).get('m') or 0      # 10Y 月变化 (百分点)
+    _spx = (tfm('spx') or {}).get('m') or 0        # SPX 月变化 (%)
+    _cpi = (tfm('core_cpi') or {}).get('m') or 0    # 核心CPI 月变化 (pt)
+    _yld_up = _d10 > 0.05                           # 10Y 上行 > 5bp/月 = 债跌
+    _eq_up = _spx > 0
+    _disagreement = _yld_up and _eq_up             # 债跌 + 股涨 = 反向解读
+    _cpi_on = _ms_status_map.get('cpi_accel') == 'on'
+    _infl_high = _cpi_on or _cpi > 0
+    _eq_down = _spx < 0
+    _credit_on = _ms_status_map.get('credit_widen') == 'on'
+    _growth_weak = _eq_down or _credit_on
+    _growth_strong = (_spx > 1) and not _credit_on
+    _sofr_iorb = (val('sofr') or 0) - (val('iorb') or 0)
+    _nl_m = (tfm('netliq') or {}).get('m')
+    _liq_tight = (_sofr_iorb or 0) > 0.0001 or (_nl_m is not None and _nl_m < 0)
+    _liq_easy = (_sofr_iorb or 0) < -0.0001
+    _crypto_on = _ms_status_map.get('crypto_divergence') == 'on'
+    _breadth_narrow = _crypto_on or _credit_on
+    _breadth_broad = (not _breadth_narrow) and _spx > 0
+    return {
+        'disagreement': _disagreement,
+        'yldUp': _yld_up,
+        'eqUp': _eq_up,
+        'inflation': 'high' if _infl_high else ('low' if not (_cpi_on or _cpi > 0) else 'mod'),
+        'growth': 'weak' if _growth_weak else ('strong' if _growth_strong else 'mod'),
+        'liquidity': 'tight' if _liq_tight else ('easy' if _liq_easy else 'neutral'),
+        'breadth': 'narrow' if _breadth_narrow else ('broad' if _breadth_broad else 'neutral'),
+    }
+
+_MS_COMP = _ms_composites()
+
+def _ms_match(req, comp):
+    if isinstance(req, bool):
+        return req == comp
+    return req == comp
+
+def _ms_scores():
+    _sc = {}
+    for _a in MS.get('archetypes', []):
+        _trig = _a.get('trigger', {})
+        _s = 0
+        for _k, _v in _trig.items():
+            if _k in _MS_COMP and _ms_match(_v, _MS_COMP[_k]):
+                _s += 1
+        _sc[_a['id']] = _s
+    return _sc
+
+_MS_SCORES = _ms_scores()
+_MS_ARCHS = MS.get('archetypes', [])
+_PRIO = {'high': 3, 'normal': 2, 'low': 1}
+# 先在「非 calm」原型中取最高分; calm 仅作为全 0 分时的回退, 避免其宽松条件(disagreement=false+inflation=low)抢分
+_MS_NON_CALM = [x for x in _MS_ARCHS if x['id'] != 'calm_goldilocks']
+_MS_BEST = None; _MS_BEST_S = -1
+for _a in _MS_NON_CALM:
+    _s = _MS_SCORES.get(_a['id'], 0)
+    _p = _PRIO.get(_a.get('priority', 'normal'), 2)
+    if _s > _MS_BEST_S or (_s == _MS_BEST_S and _MS_BEST is not None and _p > _PRIO.get(_MS_BEST.get('priority', 'normal'), 2)):
+        _MS_BEST = _a; _MS_BEST_S = _s
+if _MS_BEST_S <= 0:
+    _calm = next((x for x in _MS_ARCHS if x['id'] == 'calm_goldilocks'), None)
+    if _calm:
+        _MS_BEST = _calm; _MS_BEST_S = _MS_SCORES.get('calm_goldilocks', 0)
+    elif MS.get('dominant'):
+        _MS_BEST = None   # 全部 0 分且无 calm -> 回退策展 dominant
+
+if MS.get('manualOverride') and MS.get('dominant'):
+    _MS_DOMINANT = MS['dominant']; _MS_SOURCE = 'override'
+elif _MS_BEST:
+    _MS_DOMINANT = {'title': _MS_BEST['title'], 'keyTension': _MS_BEST['keyTension'], 'body': _MS_BEST['body']}
+    _MS_SOURCE = 'auto'
+else:
+    _MS_DOMINANT = MS.get('dominant', {}); _MS_SOURCE = 'curated'
+
 DATA['macroSignal'] = {
     'asOf': MS.get('asOf'),
     'curatedDate': MS.get('curatedDate'),
     'method': MS.get('method'),
-    'dominant': MS.get('dominant', {}),
+    'dominant': _MS_DOMINANT,
+    'dominantMeta': {
+        'source': _MS_SOURCE,
+        'archetypeId': (_MS_BEST['id'] if _MS_BEST else None),
+        'composites': _MS_COMP,
+        'archetypeScores': _MS_SCORES,
+    },
     'consensus': MS.get('consensus', []),
     'divergence': MS.get('divergence', []),
     'scenarios': _ms_scenarios,
     'anchors': _ms_anchors,
     'activeScenario': _ms_active,
 }
-print('[gen_datajs] macroSignal section OK', file=sys.stderr, flush=True)
+print('[gen_datajs] macroSignal section OK (dominant source=%s, archetype=%s)' % (_MS_SOURCE, (_MS_BEST['id'] if _MS_BEST else 'curated')), file=sys.stderr, flush=True)
 
 # ---------- 写出 data.js ----------
 HEADER = """/* ============================================================

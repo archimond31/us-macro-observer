@@ -1695,6 +1695,30 @@ function renderMacroSignal(c) {
 
   let h = '';
 
+  // 判定依据 (数据驱动复合指标)
+  const meta = d.dominantMeta || {};
+  const comps = meta.composites || {};
+  const CCOL = {
+    on: {bg:'#fef3e2',fg:'#b45309'}, off:{bg:'#f3f4f6',fg:'#6b7280'},
+    high:{bg:'#fde2e2',fg:'#c0392b'}, mod:{bg:'#fef3e2',fg:'#b45309'}, low:{bg:'#e6f6ee',fg:'#1d9e75'},
+    tight:{bg:'#fde2e2',fg:'#c0392b'}, neutral:{bg:'#f3f4f6',fg:'#6b7280'}, easy:{bg:'#e6f6ee',fg:'#1d9e75'},
+    weak:{bg:'#fde2e2',fg:'#c0392b'}, strong:{bg:'#e6f6ee',fg:'#1d9e75'},
+    narrow:{bg:'#fde2e2',fg:'#c0392b'}, broad:{bg:'#e6f6ee',fg:'#1d9e75'}
+  };
+  const _chip = function (label, val, col) {
+    const c = CCOL[col] || CCOL.neutral;
+    return '<span style="display:inline-block;padding:3px 10px;border-radius:18px;font-size:11px;font-weight:600;background:' + c.bg + ';color:' + c.fg + ';margin:3px 5px 3px 0;">' + label + '：' + val + '</span>';
+  };
+  let compChips = '';
+  if (comps.disagreement !== undefined) compChips += _chip('债股背离', comps.disagreement ? '触发' : '未触发', comps.disagreement ? 'on' : 'off');
+  if (comps.inflation) compChips += _chip('通胀压力', comps.inflation === 'high' ? '高' : (comps.inflation === 'low' ? '低' : '中'), comps.inflation);
+  if (comps.growth) compChips += _chip('增长', comps.growth === 'weak' ? '弱' : (comps.growth === 'strong' ? '强' : '中'), comps.growth);
+  if (comps.liquidity) compChips += _chip('流动性', comps.liquidity === 'tight' ? '紧' : (comps.liquidity === 'easy' ? '松' : '中'), comps.liquidity);
+  if (comps.breadth) compChips += _chip('涨势广度', comps.breadth === 'narrow' ? '窄' : (comps.breadth === 'broad' ? '广' : '中'), comps.breadth);
+  const srcBadge = meta.source === 'override'
+    ? '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#e8ecff;color:#4361ee;">✍️ 策展覆盖</span>'
+    : '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#e6f6ee;color:#1d9e75;">🔄 数据自动判定</span>';
+
   // 主导矛盾
   const dom = d.dominant || {};
   h += '<div style="margin:6px 0 18px;padding:18px 20px;border-radius:12px;background:#15131f;color:#fff;border:1px solid #3a2f6b;">';
@@ -1702,6 +1726,8 @@ function renderMacroSignal(c) {
   h += '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">' + (dom.title || '') + '</div>';
   h += '<div style="font-size:13px;line-height:1.8;color:#cfc7e6;">' + (dom.body || '') + '</div>';
   h += '</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;">' + srcBadge + compChips
+     + (meta.archetypeId ? ' <span style="font-size:11px;color:#9ca3af;">原型: ' + meta.archetypeId + '</span>' : '') + '</div>';
 
   // 当前情景判定
   const act = (d.scenarios || []).find(function (s) { return s.id === d.activeScenario; });
@@ -1754,7 +1780,8 @@ function renderMacroSignal(c) {
   }).join('');
 
   // footer
-  h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">策展日期 ' + (d.curatedDate || '') + ' · 数据截至 ' + (d.asOf || '') + '<br>' + (d.method || '') + '</div>';
+  const _srcTxt = meta.source === 'override' ? '策展覆盖' : (meta.archetypeId || '策展默认');
+  h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">主导矛盾来源 ' + _srcTxt + ' · 策展日期 ' + (d.curatedDate || '') + ' · 数据截至 ' + (d.asOf || '') + '<br>' + (d.method || '') + '</div>';
 
   c.innerHTML = h;
 }
