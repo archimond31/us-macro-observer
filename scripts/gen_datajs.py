@@ -1382,12 +1382,18 @@ DATA['economy']['empire_meta'] = C.get('empire_meta', {})
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)
 ccc=val('ccc'); hyv=val('hy'); igv=val('ig'); bbb=val('bbb'); bb=val('bb'); b=val('b'); aaa=val('aaa'); aa=val('aa'); av=val('a')
 
-# 信用 regime: 由 HY 利差分位 + NFCI 符号动态判定
-_cr_hy_pct = pct('hy'); _cr_nfci = val('nfci')
+# 信用 regime: 由 HY 利差分位 + CCC 分位 + NFCI 符号动态判定
+# HY 整体窄通常代表风险偏好, 但如果 CCC 已同时处于历史高位,
+# 说明信用市场内部分层, 应判为 risk-off/信用分层而非风险偏好。
+_cr_hy_pct = pct('hy'); _cr_ccc_pct = pct('ccc'); _cr_nfci = val('nfci')
 _cr_signal = 'mixed'
 if _cr_hy_pct is not None and _cr_hy_pct > 70: _cr_signal = 'risk-off'
 elif _cr_nfci is not None and _cr_nfci > 0: _cr_signal = 'risk-off'
-elif _cr_hy_pct is not None and _cr_hy_pct < 30: _cr_signal = 'risk-on'
+elif _cr_hy_pct is not None and _cr_hy_pct < 30:
+    if _cr_ccc_pct is not None and _cr_ccc_pct > 80:
+        _cr_signal = 'risk-off'
+    else:
+        _cr_signal = 'risk-on'
 _cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '利差平静但内部分化')
 
 DATA['credit'] = {
