@@ -322,6 +322,24 @@ function baseOpts(yUnit) {
   return opts;
 }
 
+/** 根据数据 min/max 计算更紧的 Y 轴范围，让涨跌更明显
+ *  arr: 数据数组
+ *  padRatio: 上下边距占 range 的比例
+ *  hardMin/hardMax: 可选的硬边界（如利差图保留一点负区间）
+ */
+function _chartRange(arr, padRatio, hardMin, hardMax) {
+  const vals = arr.filter(v => v !== null && v !== undefined && !isNaN(v));
+  if (vals.length === 0) return null;
+  const min = Math.min.apply(null, vals);
+  const max = Math.max.apply(null, vals);
+  const range = Math.max(max - min, 0.05); // 至少 5bp/0.05% 的 span，避免单点数据压扁
+  const pad = range * padRatio;
+  return {
+    min: hardMin !== undefined ? Math.min(hardMin, min - pad) : min - pad,
+    max: hardMax !== undefined ? Math.max(hardMax, max + pad) : max + pad
+  };
+}
+
 function sparkline(data, dir) {
   const max = Math.max.apply(null, data), min = Math.min.apply(null, data), range = max - min || 1;
   const color = dir === 'up' ? COLORS.up : dir === 'down' ? COLORS.down : COLORS.neutral;
@@ -665,9 +683,10 @@ function renderRates(c) {
   });
 
   const sd = d.spreadData;
-  // 图1: 10Y-2Y 利差 (独立 Y 轴 -3~+3)
+  // 图1: 10Y-2Y 利差 (Y 轴按数据动态收紧，保留一点负区间以感知倒挂风险)
   const _spArr = sd.series['10Y-2Y利差'] || [];
   if (_spArr.length > 0) {
+    const _spRange = _chartRange(_spArr, 0.25, -0.3);
     charts.spread = new Chart(document.getElementById('spreadChart'), {
       type: 'line',
       data: {
@@ -678,7 +697,8 @@ function renderRates(c) {
       options: Object.assign(baseOpts('%'), {
         scales: Object.assign({}, baseOpts('%').scales, {
           y: Object.assign({}, baseOpts('%').scales.y, {
-            min: -1.5, max: 1.5,
+            min: _spRange ? _spRange.min : -1.5,
+            max: _spRange ? _spRange.max : 1.5,
             ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
               callback: function(v) { return v.toFixed(1) + '%'; }
             })
@@ -687,9 +707,10 @@ function renderRates(c) {
       })
     });
   }
-  // 图2: Breakeven 通胀预期 (独立 Y 轴 ~1.5~3.5%)
+  // 图2: Breakeven 通胀预期 (Y 轴按数据动态收紧，让 2.0~2.5% 区间的波动更明显)
   const _beArr = sd.series['通胀预期(Breakeven)'] || [];
   if (_beArr.length > 0) {
+    const _beRange = _chartRange(_beArr, 0.2);
     charts.breakeven = new Chart(document.getElementById('breakevenChart'), {
       type: 'line',
       data: {
@@ -700,7 +721,8 @@ function renderRates(c) {
       options: Object.assign(baseOpts('%'), {
         scales: Object.assign({}, baseOpts('%').scales, {
           y: Object.assign({}, baseOpts('%').scales.y, {
-            min: 1.5, max: 3.5,
+            min: _beRange ? _beRange.min : 1.5,
+            max: _beRange ? _beRange.max : 3.5,
             ticks: Object.assign({}, baseOpts('%').scales.y.ticks, {
               callback: function(v) { return v.toFixed(2) + '%'; }
             })
