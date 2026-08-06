@@ -252,7 +252,7 @@
           "ccy": "CNY",
           "techRoute": "认知大模型 + 行业应用",
           "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-          "marketCap": 155,
+          "marketCap": 137,
           "pe": 0,
           "fwdPe": 0,
           "peg": 2.5,
@@ -586,7 +586,7 @@
           "ccy": "CNY",
           "techRoute": "AI 服务器 (代工)",
           "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
-          "marketCap": 184,
+          "marketCap": 170,
           "pe": 20,
           "fwdPe": 17,
           "peg": 1.4,
@@ -666,7 +666,7 @@
           "ccy": "CNY",
           "techRoute": "AI 服务器 PCB",
           "productDir": "高速 PCB、交换机板、AI 服务器主板",
-          "marketCap": 34,
+          "marketCap": 313,
           "pe": 28,
           "fwdPe": 23,
           "peg": 1.4,
@@ -721,7 +721,7 @@
           "techRoute": "光模块 (800G/1.6T)",
           "productDir": "800G/1.6T 光模块、硅光、LPO",
           "marketCap": 155,
-          "pe": 32,
+          "pe": 40,
           "fwdPe": 26,
           "peg": 1.2,
           "revGrowth": 190,
@@ -741,7 +741,7 @@
               }
             ]
           },
-          "notes": "光模块全球龙头，800G/1.6T 放量+份额领先；客户集中(北美云厂)是风险。",
+          "notes": "光模块全球龙头，800G/1.6T 放量+份额领先(1.6T占英伟达采购~50%-80%)；7/28 单日-15.69%后董事长提议 40-80亿回购；客户集中(北美云厂)是风险。",
           "curatedDate": "2026-08",
           "epsRevision": 18,
           "ratingTrend": 0.5,
@@ -760,7 +760,7 @@
           "ccy": "CNY",
           "techRoute": "光模块 (800G)",
           "productDir": "800G 光模块、相干光模块",
-          "marketCap": 95,
+          "marketCap": 82,
           "pe": 35,
           "fwdPe": 28,
           "peg": 1.3,
@@ -773,7 +773,7 @@
             "consensus": "增持",
             "ratingScore": 4.3,
             "reports": 24,
-            "summary": "H1 2026 预告归母净利 70-80亿元(+77%~103%)、扣非 69.8-79.8亿；Q1 营收 83.38亿(+105.76%)、归母 27.8亿(+76.8%)；800G 主力、1.6T 放量提速，高端占比提升。订单能见度至2027。",
+            "summary": "H1 2026 预告归母净利 70-80亿(+77.6%~102.9%)、扣非 69.8-79.8亿；Q1 营收 83.38亿(+105.76%)、归母 27.8亿(+76.8%)，Q2 单季 42.2-52.2亿(环比+52%~88%)；800G 主力、1.6T 放量提速；将于 8/25 披露中报。",
             "sources": [
               {
                 "title": "新易盛投资者关系",
@@ -1275,8 +1275,8 @@
           "ccy": "CNY",
           "techRoute": "AI 训练/推理芯片 (国产)",
           "productDir": "思元系列 AI 芯片、训练/推理卡",
-          "marketCap": 140,
-          "pe": 369,
+          "marketCap": 101,
+          "pe": 268,
           "fwdPe": 120,
           "peg": 3.0,
           "revGrowth": 160,
@@ -1288,7 +1288,7 @@
             "consensus": "中性偏多",
             "ratingScore": 3.6,
             "reports": 28,
-            "summary": "国产 AI 芯片核心，Q1 营收 +160%、首次盈利；思元690 2026Q4 流片；估值极高、实体清单风险。",
+            "summary": "国产 AI 芯片核心，Q1 营收 28.85亿(+160%)、归母 10.13亿(+185%)；思元690 已量产(196GB HBM3、FP16>700 TFLOPS，适配 DeepSeek V4)；8/8 披露中报，26年一致预期营收~159亿/净利~54亿；估值仍高(PE TTM~268)、实体清单风险。",
             "sources": [
               {
                 "title": "寒武纪投资者关系",
@@ -1296,7 +1296,7 @@
               }
             ]
           },
-          "notes": "国产算力核心，市值破万亿；思元690待量产，估值极高、实体清单风险。",
+          "notes": "国产算力核心，市值约 101B USD(7270亿RMB)；思元690 已量产，适配 DeepSeek V4 等；2025 首次全年盈利 20.59亿，26Q1 净利+185%；估值极高、实体清单风险。",
           "curatedDate": "2026-08",
           "epsRevision": 15,
           "ratingTrend": 0.5,
@@ -1316,7 +1316,7 @@
           "ccy": "CNY",
           "techRoute": "x86 CPU + DCU (国产)",
           "productDir": "海光 CPU、深算 DCU (GPGPU)",
-          "marketCap": 50,
+          "marketCap": 94,
           "pe": 100,
           "fwdPe": 70,
           "peg": 2.5,
@@ -1329,7 +1329,7 @@
             "consensus": "增持",
             "ratingScore": 4.0,
             "reports": 26,
-            "summary": "国产 CPU+DCU 双线，H1 预增 >55%；DCU 已适配 365 款大模型，信创+AI 双驱动。",
+            "summary": "国产 CPU+DCU 双线，H1 营收 85-93亿(+55.6%~70.2%)、归母 17-18.3亿(+41.5%~52.3%)；DCU 已适配 365 款大模型(覆盖99%非闭源)，信创+AI 双驱动。",
             "sources": [
               {
                 "title": "海光信息投资者关系",
