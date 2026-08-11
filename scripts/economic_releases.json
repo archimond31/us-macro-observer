@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-11",
-  "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/CPI/Core/GDP）。",
+  "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP/劳动参与率）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/LPR/CPI/Core/GDP）。",
   "releases": [
     {
       "indicator": "非农就业 (月增)",
@@ -29,6 +29,20 @@
       "higherIsBetter": false,
       "tolerance": 0.05,
       "note": "微降至4.1%，但主因劳动力减少（参与率降至61.4%，2021年来最低），并非就业改善。"
+    },
+    {
+      "indicator": "劳动参与率",
+      "tag": "LPR",
+      "periodLabel": "2026年7月",
+      "releaseDate": "2026-08-07",
+      "unit": "%",
+      "actual": 61.4,
+      "consensus": 61.6,
+      "previous": 61.5,
+      "previousLabel": "6月",
+      "higherIsBetter": true,
+      "tolerance": 0.05,
+      "note": "61.4%（彭博预期61.6%），为2021年来最低；自年初累计降0.7pt，壮年人口退出求职市场，供给收缩压低失业率读数。"
     },
     {
       "indicator": "CPI 同比",
