@@ -1231,7 +1231,7 @@ function renderRates(c) {
       })
     });
   }
-  // 美债收益率走势 (3M/1Y/2Y/10Y/30Y, tooltip 时间点值 + 底部滑块)
+  // 美债收益率走势 (3M/1Y/2Y/10Y/30Y, 真实收益率水平值, tooltip 时间点值 + 底部滑块)
   const yt = d.yieldTrendsChart;
   if (yt && yt.labels && yt.labels.length && yt.series && Object.keys(yt.series).length) {
     const ytNames = Object.keys(yt.series);
@@ -1242,19 +1242,26 @@ function renderRates(c) {
       const idx = ctx.dataIndex;
       const raw = (ds.rawData && ds.rawData[idx]) ? ds.rawData[idx] : '';
       const y = ctx.parsed.y;
-      return ds.origLabel + (raw ? ' ' + raw : '') + ' · ' + y.toFixed(2) + '%';
+      // 直接展示该时间点的真实收益率 (水平值), 不统计涨跌
+      return ds.origLabel + ' 收益率: ' + (raw || (y == null ? '—' : y.toFixed(2) + '%'));
     };
     charts.yieldTrends = new Chart(document.getElementById('yieldTrends'), {
       type: 'line',
       data: {
         labels: yt.labels,
-        datasets: ytNames.map(n => ({
-          label: n, origLabel: n,
-          data: yt.series[n],
-          rawData: (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null,
-          borderColor: ytColors[n] || COLORS.series[ytNames.indexOf(n) % COLORS.series.length],
-          backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
-        }))
+        datasets: ytNames.map(n => {
+          // 图例标注当前真实收益率, 便于一眼确认是水平值
+          const raws = (yt.rawSeries && yt.rawSeries[n]) || [];
+          let cur = '';
+          for (let i = raws.length - 1; i >= 0; i--) { if (raws[i]) { cur = '  ' + raws[i]; break; } }
+          return {
+            label: n + cur, origLabel: n,
+            data: yt.series[n],
+            rawData: (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null,
+            borderColor: ytColors[n] || COLORS.series[ytNames.indexOf(n) % COLORS.series.length],
+            backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+          };
+        })
       },
       options: ytOpts
     });
