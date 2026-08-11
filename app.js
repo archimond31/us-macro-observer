@@ -2005,13 +2005,10 @@ function _renderAiFlow(d) {
     var col = _aiFlowColor(ly.flowScore);
     svg += '<defs>'
       + '<linearGradient id="flowGrad' + i + '" x1="0%" y1="0%" x2="100%" y2="0%">'
-      + '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.35"/>'
-      + '<stop offset="60%" stop-color="' + col + '" stop-opacity="0.65"/>'
-      + '<stop offset="100%" stop-color="' + col + '" stop-opacity="0.9"/>'
+      + '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.45"/>'
+      + '<stop offset="55%" stop-color="' + col + '" stop-opacity="0.8"/>'
+      + '<stop offset="100%" stop-color="' + col + '" stop-opacity="1"/>'
       + '</linearGradient>'
-      + '<marker id="flowArr' + i + '" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">'
-      + '<path d="M0,0 L0,10 L9,5 z" fill="' + col + '"/>'
-      + '</marker>'
       + '</defs>';
   });
 
@@ -2024,26 +2021,30 @@ function _renderAiFlow(d) {
   var positions = layers.map(function (ly, i) {
     var y = topMargin + i * gap + (gap - nodeH) / 2;
     var share = totalScore ? ly.flowScore / totalScore : 0;
-    var band = Math.max(4, Math.min(share * (poolBottom - poolTop) * 0.9, gap * 0.85));
+    var band = Math.max(5, Math.min(share * (poolBottom - poolTop) * 0.9, gap * 0.85));
     return { y: y, cy: y + nodeH / 2, band: band, share: share };
   });
 
-  // 绘制 band: 从资金池右边缘对应垂直段 → 各层节点左边缘
+  // 绘制 band: 从资金池右边缘对应垂直段 → 各层节点左侧(缩回 8px 给箭头留位)
   // 左端按层在资金池内均匀分布, 避免所有带汇聚到一个点
   positions.forEach(function (pos, i) {
     var ly = layers[i];
     var col = _aiFlowColor(ly.flowScore);
     var leftY0 = poolTop + (i + 0.08) * ((poolBottom - poolTop) / layers.length);
     var leftY1 = leftY0 + pos.band;
+    var arrowW = 8;
+    var rightEdge = rightX - nodeW / 2 - arrowW;
     var rightY0 = pos.cy - pos.band / 2;
     var rightY1 = pos.cy + pos.band / 2;
-    var midX = (leftX + leftW / 2 + rightX - nodeW / 2) / 2;
+    var midX = (leftX + leftW / 2 + rightEdge) / 2;
     var dPath = 'M' + (leftX + leftW / 2) + ',' + leftY0
-      + ' C' + midX + ',' + leftY0 + ' ' + (rightX - nodeW / 2 - 20) + ',' + rightY0 + ' ' + (rightX - nodeW / 2) + ',' + rightY0
-      + ' L' + (rightX - nodeW / 2) + ',' + rightY1
-      + ' C' + (rightX - nodeW / 2 - 20) + ',' + rightY1 + ' ' + midX + ',' + leftY1 + ' ' + (leftX + leftW / 2) + ',' + leftY1
+      + ' C' + midX + ',' + leftY0 + ' ' + (rightEdge - 20) + ',' + rightY0 + ' ' + rightEdge + ',' + rightY0
+      + ' L' + rightEdge + ',' + rightY1
+      + ' C' + (rightEdge - 20) + ',' + rightY1 + ' ' + midX + ',' + leftY1 + ' ' + (leftX + leftW / 2) + ',' + leftY1
       + ' Z';
-    svg += '<path d="' + dPath + '" fill="url(#flowGrad' + i + ')" stroke="none" marker-end="url(#flowArr' + i + ')"/>';
+    svg += '<path d="' + dPath + '" fill="url(#flowGrad' + i + ')" stroke="none"/>';
+    // 独立绘制指向节点的实心三角箭头, 避免 marker 在闭合路径上的错位/反向问题
+    svg += '<path d="M' + rightEdge + ',' + (pos.cy - 6) + ' L' + rightEdge + ',' + (pos.cy + 6) + ' L' + (rightEdge + arrowW + 2) + ',' + pos.cy + ' Z" fill="' + col + '" stroke="' + col + '" stroke-width="1"/>';
   });
 
   // 右侧层节点 + 标签
