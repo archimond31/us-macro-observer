@@ -513,18 +513,27 @@ function renderAssets(c) {
   // 黄金定价五因子: 黄金 vs 实际利率(反向)/美元(反向)/避险VIX/通胀预期BEI (归一化累计涨跌, 因子按利好黄金方向翻转)
   if (d.goldNarrativeChart && d.goldNarrativeChart.labels && d.goldNarrativeChart.labels.length) {
     const gn = d.goldNarrativeChart;
+    const gnOrder = ['黄金', '实际利率(反向)', '美元指数(反向)', '避险 VIX', '通胀预期 BEI'];
+    const gnColors = { '黄金': '#e0a800', '实际利率(反向)': '#4361ee', '美元指数(反向)': '#10b981', '避险 VIX': '#ef4444', '通胀预期 BEI': '#8b5cf6' };
+    const gnDash = { '避险 VIX': [5, 3] };
+    const gnDatasets = gnOrder.filter(function (n) { return gn.series[n]; }).map(function (n) {
+      const isGold = (n === '黄金');
+      const cur = (gn.current && gn.current[n]) ? '  ' + gn.current[n] : '';
+      return {
+        label: n + cur,
+        data: gn.series[n],
+        borderColor: gnColors[n],
+        backgroundColor: isGold ? 'rgba(224,168,0,0.12)' : 'transparent',
+        borderWidth: isGold ? 3 : 2,
+        pointRadius: 0,
+        tension: 0.3,
+        borderDash: gnDash[n] || undefined,
+        fill: isGold
+      };
+    });
     charts.goldNarr = new Chart(document.getElementById('goldNarr'), {
       type: 'line',
-      data: {
-        labels: gn.labels,
-        datasets: [
-          { label: '黄金', data: gn.series['黄金'], borderColor: '#e0a800', backgroundColor: 'rgba(224,168,0,0.12)', borderWidth: 3, pointRadius: 0, tension: 0.3, fill: true },
-          { label: '实际利率(反向)', data: gn.series['实际利率(反向)'], borderColor: '#4361ee', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-          { label: '美元指数(反向)', data: gn.series['美元指数(反向)'], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-          { label: '避险 VIX', data: gn.series['避险 VIX'], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, borderDash: [5, 3] },
-          { label: '通胀预期 BEI', data: gn.series['通胀预期 BEI'], borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 }
-        ]
-      },
+      data: { labels: gn.labels, datasets: gnDatasets },
       options: baseOpts('%')
     });
   }
