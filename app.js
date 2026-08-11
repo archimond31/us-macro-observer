@@ -3,6 +3,17 @@
  * ============================================================ */
 
 const charts = {};
+
+// 确保 chartjs-plugin-zoom 已注册到 Chart.js (v2 UMD 仅暴露 window.ChartZoom，需手动注册)
+(function () {
+  try {
+    const g = window.ChartZoom || (window['chartjs-plugin-zoom'] && window['chartjs-plugin-zoom'].Zoom);
+    if (g && typeof Chart !== 'undefined' && Chart.register) {
+      Chart.register(g);
+    }
+  } catch (e) { /* 插件缺失时静默降级，图表仍正常渲染(仅无缩放) */ }
+})();
+
 const COLORS = {
   up: '#e63946', down: '#2a9d8f', neutral: '#6b7280', accent: '#4361ee',
   grid: '#e5e7eb', text: '#6b7280',
@@ -267,8 +278,10 @@ function table(headers, rows) {
   return html + '</tbody></table></div>';
 }
 
-function chartCard(title, sub, id, h) {
-  return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div></div><div class="chart-body ' + (h || '') + '"><canvas id="' + id + '"></canvas></div></div>';
+function chartCard(title, sub, id, h, actions, footer) {
+  const act = actions ? '<div class="chart-actions">' + actions + '</div>' : '';
+  const ft = footer ? '<div class="chart-footer">' + footer + '</div>' : '';
+  return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div>' + act + '</div><div class="chart-body ' + (h || '') + '"><canvas id="' + id + '"></canvas></div>' + ft + '</div>';
 }
 function sectionCard(title, sub, inner) {
   return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">' + title + '</div><div class="chart-subtitle">' + sub + '</div></div></div><div style="padding:4px 4px">' + inner + '</div></div>';
@@ -334,6 +347,156 @@ function baseOpts(yUnit) {
     };
   }
   return opts;
+}
+
+// 横轴拖拽缩放配置：拖拽框选时间区间放大 / 滚轮缩放 / Shift+拖拽平移
+// 用于多折线相关性观察，方便锁定某段时间窗口
+// dragEnabled=false 时关闭框选放大（用于黄金图，由底部 range slider 选择区间）
+function zoomXOpts(dragEnabled) {
+  dragEnabled = dragEnabled !== false;
+  return {
+    zoom: {
+      wheel: { enabled: true, speed: 0.08 },
+      pinch: { enabled: true },
+      drag: dragEnabled ? {
+        enabled: true,
+        backgroundColor: 'rgba(224,168,0,0.12)',
+        borderColor: 'rgba(224,168,0,0.6)',
+        borderWidth: 1,
+        mode: 'x'
+      } : { enabled: false },
+      mode: 'x'
+    },
+    pan: {
+      enabled: true,
+      mode: 'x',
+      modifierKey: dragEnabled ? 'shift' : null   // 无框选时直接拖拽平移
+    },
+    limits: {
+      x: { minRange: 5 }     // 至少保留约 5 个数据点，防止无限放大
+    }
+  };
+}
+
+/* ================= 底部时间区间滑块 (双 thumb range slider) ================= */
+function rangeSliderHTML(id) {
+  return '<div class="range-slider-wrap" id="' + id + 'Slider" data-chart="' + id + '">' +
+    '<div class="range-slider-track">' +
+      '<div class="range-slider-fill"></div>' +
+      '<div class="range-slider-thumb start" data-side="start"></div>' +
+      '<div class="range-slider-thumb end" data-side="end"></div>' +
+    '</div>' +
+    '<div class="range-slider-labels">' +
+      '<span class="range-start"></span>' +
+      '<span class="range-end"></span>' +
+    '</div>' +
+  '</div>';
+}
+
+function initRangeSlider(chart, id, labels) {
+  const wrap = document.getElementById(id + 'Slider');
+  if (!wrap || !chart) return;
+  const track = wrap.querySelector('.range-slider-track');
+  const fill = wrap.querySelector('.range-slider-fill');
+  const thumbs = {
+    start: wrap.querySelector('.range-slider-thumb.start'),
+    end: wrap.querySelector('.range-slider-thumb.end')
+  };
+  const lbls = {
+    start: wrap.querySelector('.range-start'),
+    end: wrap.querySelector('.range-end')
+  };
+  const len = labels.length;
+  if (len < 2) return;
+
+  let state = { start: 0, end: len - 1 };
+
+  function fmtShortDate(d) {
+    if (!d || typeof d !== 'string') return '—';
+    const p = d.split('-');
+    return p.length === 3 ? p[0].slice(2) + '/' + p[1] : d;
+  }
+
+  function updateUI() {
+    const sPct = (state.start / (len - 1)) * 100;
+    const ePct = (state.end / (len - 1)) * 100;
+    thumbs.start.style.left = sPct + '%';
+    thumbs.end.style.left = ePct + '%';
+    fill.style.left = sPct + '%';
+    fill.style.width = (ePct - sPct) + '%';
+    lbls.start.textContent = fmtShortDate(labels[state.start]);
+    lbls.end.textContent = fmtShortDate(labels[state.end]);
+  }
+
+  function applyChart() {
+    chart.options.scales.x.min = state.start;
+    chart.options.scales.x.max = state.end;
+    chart.update('none');
+  }
+
+  function indexFromEvent(e) {
+    const rect = track.getBoundingClientRect();
+    const cx = e.touches && e.touches.length ? e.touches[0].clientX : e.clientX;
+    let pct = (cx - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    return Math.round(pct * (len - 1));
+  }
+
+  let activeSide = null;
+
+  function onMove(e) {
+    if (!activeSide) return;
+    e.preventDefault();
+    let idx = indexFromEvent(e);
+    if (activeSide === 'start') {
+      idx = Math.min(idx, state.end - 5);
+      state.start = Math.max(0, idx);
+    } else {
+      idx = Math.max(idx, state.start + 5);
+      state.end = Math.min(len - 1, idx);
+    }
+    updateUI();
+    applyChart();
+  }
+
+  function onUp(e) {
+    activeSide = null;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    if (thumbs.start) thumbs.start.classList.remove('dragging');
+    if (thumbs.end) thumbs.end.classList.remove('dragging');
+  }
+
+  function onDown(e, side) {
+    e.preventDefault();
+    e.stopPropagation();
+    activeSide = side;
+    if (thumbs[side]) thumbs[side].classList.add('dragging');
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+  }
+
+  thumbs.start.addEventListener('pointerdown', function (e) { onDown(e, 'start'); });
+  thumbs.end.addEventListener('pointerdown', function (e) { onDown(e, 'end'); });
+
+  // 点击轨道空白处：把较近的一侧 thumb 跳到该位置
+  track.addEventListener('pointerdown', function (e) {
+    if (e.target.classList.contains('range-slider-thumb')) return;
+    const idx = indexFromEvent(e);
+    const side = (Math.abs(idx - state.start) <= Math.abs(idx - state.end)) ? 'start' : 'end';
+    onDown(e, side);
+    if (side === 'start') {
+      state.start = Math.max(0, Math.min(idx, state.end - 5));
+    } else {
+      state.end = Math.min(len - 1, Math.max(idx, state.start + 5));
+    }
+    updateUI();
+    applyChart();
+  });
+
+  updateUI();
 }
 
 /** 根据数据 min/max 计算更紧的 Y 轴范围，让涨跌更明显
@@ -465,10 +628,10 @@ function renderAssets(c) {
   '</div>';
   html += chartCard('大类资产热力图', '日涨跌幅 · 红=涨 绿=跌', 'heatmap', 'short');
   html += '<div class="chart-row one-col">' +
-    chartCard('美股指数走势（累计涨跌）', d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
+    chartCard('美股指数走势（累计涨跌）', (d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体') + ' · 可框选/滚轮缩放横轴', 'usIndices', 'tall', '<button class="chart-zoom-reset" id="usIndicesReset">重置缩放</button>') +
     '</div>';
   html += '<div class="chart-row one-col">' +
-    chartCard('黄金定价 · 五因子 vs 黄金走势', d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 五因子与黄金走势对比', 'goldNarr', 'tall') +
+    chartCard('黄金定价 · 五因子 vs 黄金走势', (d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 五因子与黄金走势对比') + ' · 拖动下方滑块调整时间区间', 'goldNarr', 'tall', '<button class="chart-zoom-reset" id="goldNarrReset">重置</button>', rangeSliderHTML('goldNarr')) +
     '</div>';
   html += renderGoldDrivers(d.goldNarrativeChart);
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
@@ -497,6 +660,8 @@ function renderAssets(c) {
   // 美股五大指数归一化走势
   if (d.usIndicesChart && d.usIndicesChart.series && Object.keys(d.usIndicesChart.series).length > 0) {
     const uid = d.usIndicesChart;
+    const uiOpts = baseOpts('%');
+    uiOpts.plugins.zoom = zoomXOpts();
     charts.usIndices = new Chart(document.getElementById('usIndices'), {
       type: 'line',
       data: {
@@ -507,7 +672,7 @@ function renderAssets(c) {
           backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
         }))
       },
-      options: baseOpts('%')
+      options: uiOpts
     });
   }
   // 黄金定价五因子: 黄金 vs 实际利率(反向)/美元(反向)/避险VIX/通胀预期BEI (归一化累计涨跌, 因子按利好黄金方向翻转)
@@ -521,7 +686,9 @@ function renderAssets(c) {
       const cur = (gn.current && gn.current[n]) ? '  ' + gn.current[n] : '';
       return {
         label: n + cur,
+        origLabel: n,
         data: gn.series[n],
+        rawData: (gn.rawSeries && gn.rawSeries[n]) ? gn.rawSeries[n] : null,
         borderColor: gnColors[n],
         backgroundColor: isGold ? 'rgba(224,168,0,0.12)' : 'transparent',
         borderWidth: isGold ? 3 : 2,
@@ -531,12 +698,33 @@ function renderAssets(c) {
         fill: isGold
       };
     });
+    const gnOpts = baseOpts('%');
+    // tooltip 显示横坐标对应时间点的源数据真实值 + 累计涨跌，避免图例固定当前值造成误读
+    gnOpts.plugins.tooltip.callbacks.label = function (ctx) {
+      const ds = ctx.dataset;
+      const idx = ctx.dataIndex;
+      const raw = (ds.rawData && ds.rawData[idx]) ? ds.rawData[idx] : '';
+      const y = ctx.parsed.y;
+      const sign = y >= 0 ? '+' : '';
+      return ds.origLabel + (raw ? ' ' + raw : '') + ' · 累计 ' + sign + y.toFixed(2) + '%';
+    };
+    // 黄金图使用底部 range slider 选择区间，关闭框选放大，保留滚轮/捏合缩放与平移
+    gnOpts.plugins.zoom = zoomXOpts(false);
     charts.goldNarr = new Chart(document.getElementById('goldNarr'), {
       type: 'line',
       data: { labels: gn.labels, datasets: gnDatasets },
-      options: baseOpts('%')
+      options: gnOpts
     });
+    // 初始化底部时间区间滑块
+    initRangeSlider(charts.goldNarr, 'goldNarr', gn.labels);
   }
+  // 横轴缩放重置按钮
+  const resetZoom = function (id, key) {
+    const btn = document.getElementById(id);
+    if (btn) btn.onclick = function () { if (charts[key]) charts[key].resetZoom(); };
+  };
+  resetZoom('usIndicesReset', 'usIndices');
+  resetZoom('goldNarrReset', 'goldNarr');
 }
 
 // 黄金定价五因子驱动模型 (专家框架) + 三阶段叙事

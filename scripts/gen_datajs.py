@@ -856,7 +856,27 @@ def _build_gold_narrative():
         c = _fmt_cur(_key)
         if c:
             current[_name] = c
-    return {'labels': dates, 'series': series, 'current': current,
+    # 同时保存每个时间点的源数据真实值，便于前端 tooltip 按横坐标时间点显示真实水平
+    rawSeries = {}
+    for _name, _key, _inv in defs:
+        arr = s(_key)
+        if not arr:
+            rawSeries[_name] = [None] * len(dates)
+            continue
+        m = dict(arr)
+        raw_vals = [m.get(d) for d in dates]
+        fmt_vals = []
+        for v in raw_vals:
+            if v is None:
+                fmt_vals.append(None)
+            elif _key == 'gold':
+                fmt_vals.append('$' + format(int(round(v)), ','))
+            elif _key in ('tips10', 'bei10'):
+                fmt_vals.append(format(v, '.2f') + '%')
+            else:
+                fmt_vals.append(format(v, '.1f'))
+        rawSeries[_name] = fmt_vals
+    return {'labels': dates, 'series': series, 'current': current, 'rawSeries': rawSeries,
             'note': '近1年同起点累计涨跌% · 各因子已按"利好黄金"方向翻转(实际利率/美元取反向)，与黄金同向=支撑金价；结构性(央行购金)无报价序列，见下方因子评分卡',
             'regime': _gold_driver_model()}
 

@@ -181,9 +181,73 @@ body {
 }
 .chart-title { font-size: 14px; font-weight: 600; }
 .chart-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.chart-actions { flex-shrink: 0; }
+.chart-zoom-reset {
+  font-size: 11px; color: var(--text-secondary);
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  transition: all .15s ease;
+}
+.chart-zoom-reset:hover { color: var(--accent); border-color: var(--accent); }
 .chart-body { position: relative; height: 280px; }
 .chart-body.tall { height: 340px; }
 .chart-body.short { height: 200px; }
+
+/* ===== 底部时间区间滑块 (双 thumb range slider) ===== */
+.chart-footer {
+  padding: 12px 16px 14px;
+  border-top: 1px dashed var(--border-card);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.range-slider-wrap { padding-top: 6px; }
+.range-slider-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-card);
+  cursor: pointer;
+  touch-action: none;
+}
+.range-slider-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(224,168,0,0.45), var(--accent, #4361ee));
+  pointer-events: none;
+}
+.range-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 15px; height: 15px;
+  margin: -7.5px 0 0 -7.5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid var(--accent, #4361ee);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+  cursor: grab;
+  z-index: 2;
+  touch-action: none;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.range-slider-thumb.start { border-color: #e0a800; }
+.range-slider-thumb.end   { border-color: #4361ee; }
+.range-slider-thumb:hover { transform: scale(1.15); }
+.range-slider-thumb.dragging {
+  cursor: grabbing;
+  transform: scale(1.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.range-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.range-slider-labels span:first-child::before { content: '◂ '; opacity: .6; }
+.range-slider-labels span:last-child::after  { content: ' ▸'; opacity: .6; }
 
 /* ===== Data Table ===== */
 .table-card {
