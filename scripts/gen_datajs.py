@@ -1372,6 +1372,72 @@ for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
     _rk = RELEASE_MAP.get(_m.get('tag'))
     if _rk:
         _m['source'] = SOURCE_MAP.get(_rk[0], '')
+
+# ===== 经济数据公布对比：公布值 vs 市场预期值（策展） =====
+# 载入 economic_releases.json（公布值来自BLS/BEA，市场预期为彭博/路透一致预期中值），
+# 计算 预期差 与 结论（好于/差于/符合预期，按市场反应方向），供前端对比面板与指标卡使用。
+try:
+    _ER = json.load(open(SCRIPT_DIR / 'economic_releases.json', encoding='utf-8'))
+    print('[gen_datajs] loaded economic_releases.json', file=sys.stderr, flush=True)
+except Exception:
+    _ER = None
+    print('[gen_datajs] economic_releases.json 缺失, 公布对比面板留空', file=sys.stderr, flush=True)
+
+_ER_RELEASES = []
+_ER_BY_TAG = {}
+if _ER:
+    for _r in _ER.get('releases', []):
+        _unit = _r.get('unit', '%')
+        _hib = _r.get('higherIsBetter', True)
+        _tol = float(_r.get('tolerance', 0.1))
+        _act, _con, _prev = _r.get('actual'), _r.get('consensus'), _r.get('previous')
+
+        def _fmt(v):
+            if v is None:
+                return '—'
+            if _unit == 'K':
+                return ('+' if v >= 0 else '') + ('%.0f' % v) + 'K'
+            return ('%.1f' % v) + '%'
+
+        _surp = (None if (_act is None or _con is None) else _act - _con)
+        if _surp is None:
+            _verdict = 'na'
+        elif abs(_surp) <= _tol:
+            _verdict = 'inline'
+        else:
+            _verdict = 'beat' if ((_act > _con) if _hib else (_act < _con)) else 'miss'
+        _item = dict(_r)
+        _item['actualStr'] = _fmt(_act)
+        _item['consensusStr'] = _fmt(_con)
+        _item['previousStr'] = _fmt(_prev)
+        _item['surprise'] = _surp
+        if _surp is None:
+            _item['surpriseStr'] = '—'
+        elif _unit == 'K':
+            _item['surpriseStr'] = ('低于预期 ' if _surp < 0 else '高于预期 ') + ('%.0f' % abs(_surp)) + 'K'
+        else:
+            _item['surpriseStr'] = ('低于预期 ' if _surp < 0 else '高于预期 ') + ('%.1f' % abs(_surp)) + 'pt'
+        _item['verdict'] = _verdict
+        _ER_RELEASES.append(_item)
+        _ER_BY_TAG[_r.get('tag')] = _item
+    _ER_RELEASES.sort(key=lambda x: x.get('releaseDate', ''), reverse=True)
+
+DATA['economy']['releases'] = _ER_RELEASES
+DATA['economy']['releasesMeta'] = {
+    'asOf': (_ER or {}).get('asOf'),
+    'source': (_ER or {}).get('source', ''),
+}
+
+# 交叉链接到指标卡：在 CPI/核心CPI/非农/失业率/GDP 卡上显示"市场预期 + 结论"
+for _m in DATA['economy']['metrics']:
+    _ri = _ER_BY_TAG.get(_m.get('tag'))
+    if _ri:
+        _m['consensusInfo'] = {
+            'consensus': _ri['consensusStr'],
+            'verdict': _ri['verdict'],
+            'periodLabel': _ri.get('periodLabel', ''),
+        }
+
 # 数据获取时间 (全局, 用于板块内统一标注)
 DATA['economy']['generatedAt'] = GEN_AT
 # PMI 数据源元信息 (是否静态兜底): 供前端打"数据可能过期"警告标

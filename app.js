@@ -130,6 +130,7 @@ function metricCardsV3(metrics) {
       '<div class="metric-pct-labels"><span>1年低分位</span><span>当前 ' + pct + ' 分位</span><span>高分位</span></div>' +
       (m.meaning ? '<div class="metric-meaning">' + m.meaning + '</div>' : '') +
       releaseLine(m) +
+      consensusBadge(m) +
     '</div>';
   });
   return html + '</div>';
@@ -159,6 +160,19 @@ function releaseLine(m) {
     + '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#9aa3b2;flex:0 0 auto"></span>'
     + parts.join(' · ')
     + '</div>';
+}
+
+// 指标卡上的"市场预期 + 结论"徽章（公布值 vs 彭博/路透一致预期）
+function consensusBadge(m) {
+  if (!m || !m.consensusInfo) return '';
+  const ci = m.consensusInfo;
+  const vmap = {
+    beat:   ['好于预期', '#1d9e75', 'rgba(42,157,143,0.14)'],
+    miss:   ['差于预期', '#c0392b', 'rgba(230,57,70,0.14)'],
+    inline: ['符合预期', '#6b7280', 'rgba(107,114,128,0.12)'],
+  };
+  const v = vmap[ci.verdict] || vmap.inline;
+  return '<div class="metric-consensus">市场预期 <b>' + ci.consensus + '</b> <span style="color:var(--text-tertiary)">(' + ci.periodLabel + ')</span> · <span class="verdict-badge" style="color:' + v[1] + ';background:' + v[2] + '">' + v[0] + '</span></div>';
 }
 
 // 四尺度变化行（日/周/月/半年）
@@ -1095,6 +1109,7 @@ function renderEconomy(c) {
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
+  html += renderReleaseCompare(d.releases, d.releasesMeta);
   const cn = d.chartNotes || {};
   html += '<div class="chart-row two-col">' +
     chartCard('通胀三线图 (真实同比)', cn.inflNote || 'CPI/核心CPI/核心PCE 同比走势', 'inflChart', 'tall') +
@@ -1212,6 +1227,43 @@ function renderInflationBreakdown(items) {
       '<div style="flex:1;height:6px;background:#eef0f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px"></div></div></div>';
   });
   return html + '</div>';
+}
+
+// 经济数据公布对比：公布值 vs 市场预期（策展）
+// 结论按"市场反应方向"着色：好于预期=绿、差于预期=红、符合预期=灰
+function renderReleaseCompare(releases, meta) {
+  if (!releases || !releases.length) return '';
+  const V = {
+    beat:   { t: '好于预期', c: '#1d9e75', bg: 'rgba(42,157,143,0.14)' },
+    miss:   { t: '差于预期', c: '#c0392b', bg: 'rgba(230,57,70,0.14)' },
+    inline: { t: '符合预期', c: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+    na:     { t: '—', c: '#9ca3af', bg: 'rgba(107,114,128,0.10)' },
+  };
+  let nb = 0, nm = 0, ni = 0;
+  const rows = releases.map(function (r) {
+    const v = V[r.verdict] || V.na;
+    if (r.verdict === 'beat') nb++; else if (r.verdict === 'miss') nm++; else if (r.verdict === 'inline') ni++;
+    return '<tr>' +
+      '<td><div style="font-weight:600;font-size:13px;color:var(--text-primary,#1f2937)">' + r.indicator + '</div>' +
+        '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">' + r.periodLabel + ' · 公布 ' + r.releaseDate + '</div></td>' +
+      '<td style="text-align:right"><b style="font-size:16px;font-weight:700">' + r.actualStr + '</b></td>' +
+      '<td style="text-align:right;color:var(--text-secondary);font-size:14px">' + r.consensusStr + '</td>' +
+      '<td style="text-align:right;color:var(--text-tertiary);font-size:13px">' + r.previousStr + '</td>' +
+      '<td style="text-align:right;font-size:12px;font-weight:600;color:' + v.c + '">' + r.surpriseStr + '</td>' +
+      '<td style="text-align:center"><span class="verdict-badge" style="color:' + v.c + ';background:' + v.bg + '">' + v.t + '</span></td>' +
+      '<td style="font-size:11px;color:var(--text-secondary);line-height:1.5;max-width:260px">' + r.note + '</td>' +
+    '</tr>';
+  }).join('');
+  const summary = '本批公布：<b style="color:#1d9e75">' + nb + ' 项好于预期</b> · <b style="color:#c0392b">' + nm + ' 项差于预期</b>' + (ni ? (' · <b style="color:#6b7280">' + ni + ' 项符合预期</b>') : '');
+  const metaNote = (meta && meta.asOf) ? ('数据截至 ' + meta.asOf + ' · 市场预期=彭博/路透一致预期中值') : '市场预期=彭博/路透一致预期中值';
+  return '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">数据公布对比：公布值 vs 市场预期</div>' +
+    '<div class="chart-subtitle">对比"市场预期值"比"与上期比较"更能反映预期差；结论按市场反应方向（通胀走低=好，就业/增长走高=好）</div></div></div>' +
+    '<div style="padding:12px 16px">' +
+      '<div style="font-size:12px;margin-bottom:10px;color:var(--text-secondary)">' + summary + ' &nbsp;·&nbsp; <span style="color:var(--text-tertiary)">' + metaNote + '</span></div>' +
+      '<div class="table-card"><table class="data-table release-table"><thead><tr>' +
+        '<th>指标 (参考期)</th><th style="text-align:right">公布值</th><th style="text-align:right">市场预期</th><th style="text-align:right">前值</th><th style="text-align:right">预期差</th><th style="text-align:center">结论</th><th>解读</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '</div></div>';
 }
 
 /* ================= 6. 信用市场 ================= */

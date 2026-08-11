@@ -626,3 +626,28 @@ body {
 .ai-collapse[open] > summary::before { transform: rotate(90deg); }
 .ai-collapse > summary:hover { background: var(--accent-light); }
 .ai-collapse > .ai-collapse-body { padding: 4px 14px 14px; }
+
+/* ===== 经济数据公布对比：公布值 vs 市场预期 ===== */
+.verdict-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.release-table td { vertical-align: top; padding: 11px 13px; }
+.release-table th { font-size: 11px; white-space: nowrap; }
+.metric-consensus {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--border-card);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  line-height: 1.6;
+}
