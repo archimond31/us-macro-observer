@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-08-11 09:46
+ * 生成时间: 2026-08-11 09:53
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-08-11 09:46 (官方数据, 自动更新)",
+    "lastUpdated": "2026-08-11 09:53 (官方数据, 自动更新)",
     "dataAsOf": "2026-08-10",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,14 +17,14 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 4.65% 处于近一年 96 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.13% (分位 98), 而 HY 整体 2.70%。油价 (WTI 84.12) 与波动率 (VIX 15.51) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 4.65% 处于近一年 96 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.13% (分位 98), 而 HY 整体 2.70%。油价 (WTI 84.17) 与波动率 (VIX 15.51) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "regime": {
       "label": "宽松驱动的风险偏好",
       "signal": "risk-on",
       "confidence": "高置信",
-      "description": "10Y 利率 4.65% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 84.12 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 4.65% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 84.17 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -33,17 +33,17 @@ const DATA = {
         "direction": "bullish"
       },
       {
-        "title": "WTI 原油周涨 +11.02%",
+        "title": "WTI 原油周涨 +11.09%",
         "meaning": "油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。",
         "direction": "bearish"
       },
       {
-        "title": "布伦特原油周涨 +12.78%",
+        "title": "布伦特原油周涨 +12.94%",
         "meaning": "布伦特对地缘与海运风险更敏感, 其溢价反映全球供需而非仅美国库存。",
         "direction": "bearish"
       },
       {
-        "title": "黄金 +8.23% 上涨",
+        "title": "黄金 +8.22% 上涨",
         "meaning": "黄金上涨通常反映避险需求或滞胀担忧升温, 与风险资产呈替代关系, 对风险偏好构成压力。",
         "direction": "bearish"
       }
@@ -291,16 +291,16 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,432.40",
-        "change": "+1.62%",
+        "value": "$4,432.10",
+        "change": "+1.61%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 58,
         "signal": "up",
         "meaning": "当前位于近一年 58 分位",
         "changes": {
-          "d": "+1.62%",
-          "w": "+8.23%",
+          "d": "+1.61%",
+          "w": "+8.22%",
           "m": "+10.89%",
           "h6": "-12.25%"
         },
@@ -334,23 +334,23 @@ const DATA = {
           4242.0,
           4340.7002,
           4361.7998,
-          4432.3999
+          4432.1001
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$84.12",
-        "change": "+2.42%",
+        "value": "$84.17",
+        "change": "+2.48%",
         "dir": "up",
         "tag": "CL=F",
         "percentile": 71,
         "signal": "up",
         "meaning": "当前位于近一年 71 分位",
         "changes": {
-          "d": "+2.42%",
-          "w": "+11.02%",
-          "m": "+7.65%",
-          "h6": "+30.70%"
+          "d": "+2.48%",
+          "w": "+11.09%",
+          "m": "+7.72%",
+          "h6": "+30.78%"
         },
         "sparkline": [
           69.5,
@@ -382,23 +382,23 @@ const DATA = {
           77.29,
           78.18,
           82.13,
-          84.12
+          84.17
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$89.50",
-        "change": "+2.03%",
+        "value": "$89.63",
+        "change": "+2.18%",
         "dir": "up",
         "tag": "BZ=F",
         "percentile": 71,
         "signal": "up",
         "meaning": "当前位于近一年 71 分位",
         "changes": {
-          "d": "+2.03%",
-          "w": "+12.78%",
-          "m": "+7.44%",
-          "h6": "+29.63%"
+          "d": "+2.18%",
+          "w": "+12.94%",
+          "m": "+7.60%",
+          "h6": "+29.82%"
         },
         "sparkline": [
           72.92,
@@ -430,23 +430,23 @@ const DATA = {
           82.49,
           83.55,
           87.72,
-          89.5
+          89.63
         ]
       },
       {
         "label": "铜",
         "value": "6.67",
-        "change": "+1.21%",
+        "change": "+1.17%",
         "dir": "up",
         "tag": "HG=F",
         "percentile": 99,
         "signal": "up",
         "meaning": "当前位于近一年 99 分位",
         "changes": {
-          "d": "+1.21%",
-          "w": "+0.85%",
-          "m": "+7.08%",
-          "h6": "+12.27%"
+          "d": "+1.17%",
+          "w": "+0.80%",
+          "m": "+7.04%",
+          "h6": "+12.22%"
         },
         "sparkline": [
           6.1925,
@@ -478,7 +478,7 @@ const DATA = {
           6.687,
           6.5705,
           6.5945,
-          6.6745
+          6.6715
         ]
       },
       {
@@ -531,18 +531,18 @@ const DATA = {
       },
       {
         "label": "美元/日元",
-        "value": "159.31",
-        "change": "+0.90%",
+        "value": "159.28",
+        "change": "+0.88%",
         "dir": "up",
         "tag": "USDJPY=X",
         "percentile": 75,
         "signal": "up",
         "meaning": "当前位于近一年 75 分位",
         "changes": {
-          "d": "+0.90%",
-          "w": "+1.13%",
-          "m": "-1.58%",
-          "h6": "+4.28%"
+          "d": "+0.88%",
+          "w": "+1.11%",
+          "m": "-1.60%",
+          "h6": "+4.26%"
         },
         "sparkline": [
           162.628,
@@ -574,7 +574,7 @@ const DATA = {
           157.6,
           158.409,
           157.891,
-          159.313
+          159.28
         ]
       },
       {
@@ -882,10 +882,10 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,432.40",
+        "current": "$4,432.10",
         "changes": {
-          "d": 1.62,
-          "w": 8.23,
+          "d": 1.61,
+          "w": 8.22,
           "m": 10.89,
           "h6": -12.25
         },
@@ -894,36 +894,36 @@ const DATA = {
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$84.12",
+        "current": "$84.17",
         "changes": {
-          "d": 2.42,
-          "w": 11.02,
-          "m": 7.65,
-          "h6": 30.7
+          "d": 2.48,
+          "w": 11.09,
+          "m": 7.72,
+          "h6": 30.78
         },
         "meaning": "半年 +31% 的上升趋势中, 近月 +8% 仍在加速"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$89.50",
+        "current": "$89.63",
         "changes": {
-          "d": 2.03,
-          "w": 12.78,
-          "m": 7.44,
-          "h6": 29.63
+          "d": 2.18,
+          "w": 12.94,
+          "m": 7.6,
+          "h6": 29.82
         },
-        "meaning": "半年 +30% 的上升趋势中, 近月 +7% 仍在加速"
+        "meaning": "半年 +30% 的上升趋势中, 近月 +8% 仍在加速"
       },
       {
         "name": "铜",
         "unit": "%",
         "current": "6.67",
         "changes": {
-          "d": 1.21,
-          "w": 0.85,
-          "m": 7.08,
-          "h6": 12.27
+          "d": 1.17,
+          "w": 0.8,
+          "m": 7.04,
+          "h6": 12.22
         },
         "meaning": "半年 +12% 的上升趋势中, 近月 +7% 仍在加速"
       },
@@ -942,12 +942,12 @@ const DATA = {
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "159.31",
+        "current": "159.28",
         "changes": {
-          "d": 0.9,
-          "w": 1.13,
-          "m": -1.58,
-          "h6": 4.28
+          "d": 0.88,
+          "w": 1.11,
+          "m": -1.6,
+          "h6": 4.26
         },
         "meaning": "半年 +4% 但近月转弱——底部可能形成"
       },
@@ -1051,29 +1051,29 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,432.40",
-        "change": "+1.62%",
+        "price": "$4,432.10",
+        "change": "+1.61%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$84.12",
-        "change": "+2.42%",
+        "price": "$84.17",
+        "change": "+2.48%",
         "dir": "up"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$89.50",
-        "change": "+2.03%",
+        "price": "$89.63",
+        "change": "+2.18%",
         "dir": "up"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
         "price": "6.67",
-        "change": "+1.21%",
+        "change": "+1.17%",
         "dir": "up"
       },
       {
@@ -1086,8 +1086,8 @@ const DATA = {
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "159.31",
-        "change": "+0.90%",
+        "price": "159.28",
+        "change": "+0.88%",
         "dir": "up"
       },
       {
@@ -1254,7 +1254,7 @@ const DATA = {
           77.29,
           78.18,
           82.13,
-          84.12
+          84.17
         ],
         "Gold": [
           4022.8999,
@@ -1286,7 +1286,7 @@ const DATA = {
           4242.0,
           4340.7002,
           4361.7998,
-          4432.3999
+          4432.1001
         ],
         "Copper": [
           6.1925,
@@ -1318,7 +1318,7 @@ const DATA = {
           6.687,
           6.5705,
           6.5945,
-          6.6745
+          6.6715
         ],
         "BTC": [
           63809.21,
@@ -1481,7 +1481,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.41 / 油股 -0.37"
     },
-    "analystView": "风险偏好修复: 纳斯达克 (+2.94%) 与长债 (TLT -0.16%) 走势分化, 实际利率压力缓解。黄金 (+8.23%) 反映避险需求变化。当前非系统性危机, 关注 VIX (15.51) 是否突破 20。",
+    "analystView": "风险偏好修复: 纳斯达克 (+2.94%) 与长债 (TLT -0.16%) 走势分化, 实际利率压力缓解。黄金 (+8.22%) 反映避险需求变化。当前非系统性危机, 关注 VIX (15.51) 是否突破 20。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -1496,7 +1496,7 @@ const DATA = {
       {
         "trigger": "WTI 突破 <span class=\"watch-threshold\">$90</span>",
         "implication": "能源冲击确认, 通胀预期与利率进一步上行",
-        "status": "距离 5.9"
+        "status": "距离 5.8"
       }
     ],
     "usIndicesChart": {
@@ -7802,7 +7802,7 @@ const DATA = {
           26.51,
           29.45,
           30.08,
-          32.19
+          32.18
         ],
         "实际利率": [
           0.0,
@@ -10353,7 +10353,7 @@ const DATA = {
           4242.0,
           4340.7001953125,
           4361.7998046875,
-          4432.39990234375
+          4432.10009765625
         ],
         "实际利率": [
           1.87,
@@ -14738,7 +14738,12 @@ const DATA = {
           "next": "2026-08-31",
           "estimated": true
         },
-        "source": "BEA"
+        "source": "BEA",
+        "consensusInfo": {
+          "consensus": "3.3%",
+          "verdict": "inline",
+          "periodLabel": "2026年6月"
+        }
       },
       {
         "label": "失业率",
@@ -15083,7 +15088,12 @@ const DATA = {
           "next": "2026-08-31",
           "estimated": true
         },
-        "source": "BEA"
+        "source": "BEA",
+        "consensusInfo": {
+          "consensus": "—",
+          "verdict": "na",
+          "periodLabel": "2026年6月"
+        }
       },
       {
         "label": "纽约联储制造业指数",
@@ -15826,6 +15836,46 @@ const DATA = {
         "verdict": "miss"
       },
       {
+        "indicator": "核心PCE 同比",
+        "tag": "PCE",
+        "periodLabel": "2026年6月",
+        "releaseDate": "2026-07-30",
+        "unit": "%",
+        "actual": 3.3,
+        "consensus": 3.3,
+        "previous": 3.4,
+        "previousLabel": "5月",
+        "higherIsBetter": false,
+        "tolerance": 0.1,
+        "note": "同比3.3%符合预期；环比仅+0.1%(预期+0.2%)，为2025年3月以来最小增幅，美联储首选通胀指标连续64个月高于2%目标。",
+        "actualStr": "3.3%",
+        "consensusStr": "3.3%",
+        "previousStr": "3.4%",
+        "surprise": 0.0,
+        "surpriseStr": "高于预期 0.0pt",
+        "verdict": "inline"
+      },
+      {
+        "indicator": "超级核心PCE 同比",
+        "tag": "SuperCore",
+        "periodLabel": "2026年6月",
+        "releaseDate": "2026-07-30",
+        "unit": "%",
+        "actual": 3.8,
+        "consensus": null,
+        "previous": 4.1,
+        "previousLabel": "5月",
+        "higherIsBetter": false,
+        "tolerance": 0.1,
+        "note": "PCE服务除能源除住房(超级核心)，美联储最看重的通胀口径；同比回落至3.8%但仍在高位，通胀病根顽固。市场无独立一致预期，参考机构监测口径。",
+        "actualStr": "3.8%",
+        "consensusStr": "—",
+        "previousStr": "4.1%",
+        "surprise": null,
+        "surpriseStr": "—",
+        "verdict": "na"
+      },
+      {
         "indicator": "CPI 同比",
         "tag": "CPI",
         "periodLabel": "2026年6月",
@@ -15868,9 +15918,9 @@ const DATA = {
     ],
     "releasesMeta": {
       "asOf": "2026-08-11",
-      "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP/劳动参与率）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/LPR/CPI/Core/GDP）。"
+      "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP/劳动参与率/核心PCE/超级核心PCE）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/LPR/CPI/Core/GDP/PCE/SuperCore）。超级核心PCE(SuperCore)市场无独立一致预期，consensus 置 null 显示'无一致预期'。"
     },
-    "generatedAt": "2026-08-11 09:46",
+    "generatedAt": "2026-08-11 09:53",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
