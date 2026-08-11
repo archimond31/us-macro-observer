@@ -677,6 +677,107 @@ def _build_cb_purchases_chart():
         'source': 'World Gold Council · Gold Demand Trends',
     }
 
+
+def _build_labor_triangle():
+    """劳动力市场 '需求-供给-价格' 三角框架图表数据 (近 3 年月度, 9 序列, 3 panel)。
+    便于观察三个维度的中长期趋势与交叉信号。"""
+    ref = s('unrate')
+    if not ref:
+        return {'labels': [], 'panels': {}, 'note': '数据不足'}
+    months = {}
+    for d, v in ref:
+        if v is None: continue
+        months[d[:7]] = d
+    ref_dates = sorted(months.values())[-36:]
+
+    def _align_level(key, scale=1):
+        m = {}
+        for d, v in s(key):
+            if v is None: continue
+            m.setdefault(d[:7], (d, v))
+        return [m.get(rd[:7], (None, None))[1] * scale if m.get(rd[:7]) else None for rd in ref_dates]
+
+    def _align_monthly_mean(key):
+        weekly = {}
+        for d, v in s(key):
+            if v is None: continue
+            weekly.setdefault(d[:7], []).append(v)
+        out = []
+        for rd in ref_dates:
+            vs = weekly.get(rd[:7], [])
+            out.append(round(sum(vs) / len(vs)) if vs else None)
+        return out
+
+    def _align_mom(key):
+        items = [(d, v) for d, v in s(key) if v is not None]
+        out = []
+        for i in range(1, len(items)):
+            out.append((items[i][0], items[i][1] - items[i - 1][1]))
+        m = {}
+        for d, v in out:
+            m.setdefault(d[:7], (d, v))
+        return [m.get(rd[:7], (None, None))[1] for rd in ref_dates]
+
+    # 工资 - 通胀差 = 时薪同比 - CPI 同比
+    wage_m = {}
+    for d, v in s('wage_yoy'):
+        if v is not None: wage_m.setdefault(d[:7], v)
+    cpi_arr = [(d, v) for d, v in s('cpi') if v is not None]
+    cpi_yoy_by_month = {}
+    for i in range(12, len(cpi_arr)):
+        prev = cpi_arr[i - 12][1]
+        if prev:
+            cpi_yoy_by_month[cpi_arr[i][0][:7]] = (cpi_arr[i][1] / prev - 1) * 100
+    wage_minus = []
+    for rd in ref_dates:
+        w = wage_m.get(rd[:7])
+        c = cpi_yoy_by_month.get(rd[:7])
+        if w is not None and c is not None:
+            wage_minus.append(round(w - c, 2))
+        else:
+            wage_minus.append(None)
+
+    panels = {
+        'demand': {
+            'title': '需求 Demand',
+            'series': {
+                'JOLTS 职位空缺(百万)': _align_level('jolts', 1/1000),
+                '非农就业(月增, K)': _align_mom('payems'),
+                '初请失业金(月均, K)': _align_monthly_mean('claims'),
+            },
+            'colors': {'JOLTS 职位空缺(百万)': '#4361ee',
+                       '非农就业(月增, K)': '#10b981',
+                       '初请失业金(月均, K)': '#f59e0b'},
+            'interpretation': '需求走弱 → JOLTS 下降、非农降温、初请走高, 为美联储转向鸽派提供依据。',
+        },
+        'supply': {
+            'title': '供给 Supply',
+            'series': {
+                '劳动参与率(%)': _align_level('participation'),
+                '失业率(%)': _align_level('unrate'),
+                '续请失业金(月均, K)': _align_monthly_mean('cont_claims'),
+            },
+            'colors': {'劳动参与率(%)': '#06b6d4',
+                       '失业率(%)': '#8b5cf6',
+                       '续请失业金(月均, K)': '#ec4899'},
+            'interpretation': '供给收缩 → 参与率下降 / 失业率因分子缩小走低（质量差）, 与续请走高并存是衰退先兆。',
+        },
+        'price': {
+            'title': '价格 Price',
+            'series': {
+                '时薪同比(%)': _align_level('wage_yoy'),
+                '辞职率(%)': _align_level('quits_rate'),
+                '工资-通胀差(pt)': wage_minus,
+            },
+            'colors': {'时薪同比(%)': '#e63946',
+                       '辞职率(%)': '#7209b7',
+                       '工资-通胀差(pt)': '#14b8a6'},
+            'interpretation': '价格粘性 → 时薪增速若持续>4% 且大于通胀, 工资-物价螺旋风险; 辞职率反映议价能力。',
+        },
+    }
+    return {'labels': ref_dates, 'panels': panels,
+            'note': '劳动力供需价格三角 · 近 3 年月度 · 9 序列 · 拖动下方滑块调整区间'}
+
 def _chg_map(key, n=120):
     """序列水平日度绝对变化 (适用于收益率/波动率等水平型序列); 返回 {date: chg}。"""
     arr = s(key)[-(n + 1):]
@@ -1798,6 +1899,8 @@ DATA['economy']['generatedAt'] = GEN_AT
 # PMI 数据源元信息 (是否静态兜底): 供前端打"数据可能过期"警告标
 DATA['economy']['pmi_meta'] = C.get('pmi_meta', {})
 DATA['economy']['empire_meta'] = C.get('empire_meta', {})
+# 劳动力市场供需价格三角框架 (近 3 年月度 9 序列, 3 panel)
+DATA['economy']['laborTriangleChart'] = _build_labor_triangle()
 
 # 信用市场
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)

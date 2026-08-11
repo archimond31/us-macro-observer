@@ -530,6 +530,106 @@ function initRangeSlider(chart, id, opts) {
   updateUI();
 }
 
+/* ===== 共享时间区间滑块 (多 chart 同步切片, 不重新归一化 — 用于量纲不同的多 panel) =====
+// panels: [{ chart, series: {seriesName: [..]}, labelFmt? }, ...]
+function initSharedSlider(panels, id, labels) {
+  const wrap = document.getElementById(id + 'Slider');
+  if (!wrap || !panels || !panels.length) return;
+  const track = wrap.querySelector('.range-slider-track');
+  const fill = wrap.querySelector('.range-slider-fill');
+  const thumbs = {
+    start: wrap.querySelector('.range-slider-thumb.start'),
+    end: wrap.querySelector('.range-slider-thumb.end')
+  };
+  const lbls = {
+    start: wrap.querySelector('.range-start'),
+    end: wrap.querySelector('.range-end')
+  };
+  const len = labels.length;
+  if (len < 2) return;
+
+  let state = { start: 0, end: len - 1 };
+
+  function updateUI() {
+    const sPct = (state.start / (len - 1)) * 100;
+    const ePct = (state.end / (len - 1)) * 100;
+    thumbs.start.style.left = sPct + '%';
+    thumbs.end.style.left = ePct + '%';
+    fill.style.left = sPct + '%';
+    fill.style.width = (ePct - sPct) + '%';
+    lbls.start.textContent = labels[state.start].slice(0, 7);
+    lbls.end.textContent = labels[state.end].slice(0, 7);
+  }
+
+  function applyChart() {
+    const s = state.start, e = state.end;
+    const sl = labels.slice(s, e + 1).map(function (s) { return s.slice(0, 7); });
+    panels.forEach(function (p) {
+      p.chart.data.labels = sl;
+      p.chart.data.datasets.forEach(function (ds) {
+        const key = ds.origLabel || ds.label;
+        const arr = p.series[key];
+        if (arr) ds.data = arr.slice(s, e + 1);
+      });
+      p.chart.update();
+    });
+  }
+
+  function indexFromEvent(e) {
+    const rect = track.getBoundingClientRect();
+    const cx = e.touches && e.touches.length ? e.touches[0].clientX : e.clientX;
+    let pct = (cx - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    return Math.round(pct * (len - 1));
+  }
+
+  let activeSide = null;
+  function onMove(e) {
+    if (!activeSide) return;
+    e.preventDefault();
+    let idx = indexFromEvent(e);
+    if (activeSide === 'start') {
+      idx = Math.min(idx, state.end - 1);
+      state.start = Math.max(0, idx);
+    } else {
+      idx = Math.max(idx, state.start + 1);
+      state.end = Math.min(len - 1, idx);
+    }
+    updateUI();
+    applyChart();
+  }
+  function onUp() {
+    activeSide = null;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    if (thumbs.start) thumbs.start.classList.remove('dragging');
+    if (thumbs.end) thumbs.end.classList.remove('dragging');
+  }
+  function onDown(e, side) {
+    e.preventDefault();
+    e.stopPropagation();
+    activeSide = side;
+    if (thumbs[side]) thumbs[side].classList.add('dragging');
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+  }
+  thumbs.start.addEventListener('pointerdown', function (e) { onDown(e, 'start'); });
+  thumbs.end.addEventListener('pointerdown', function (e) { onDown(e, 'end'); });
+  track.addEventListener('pointerdown', function (e) {
+    if (e.target.classList.contains('range-slider-thumb')) return;
+    const idx = indexFromEvent(e);
+    const side = (Math.abs(idx - state.start) <= Math.abs(idx - state.end)) ? 'start' : 'end';
+    onDown(e, side);
+    if (side === 'start') state.start = Math.max(0, Math.min(idx, state.end - 1));
+    else state.end = Math.min(len - 1, Math.max(idx, state.start + 1));
+    updateUI();
+    applyChart();
+  });
+  updateUI();
+}
+
 /** 根据数据 min/max 计算更紧的 Y 轴范围，让涨跌更明显
  *  arr: 数据数组
  *  padRatio: 上下边距占 range 的比例
@@ -1501,6 +1601,21 @@ function renderEconomy(c) {
   html += '<div class="chart-row one-col">' +
     chartCard('就业市场', cn.empNote || '失业率 + 劳动参与率', 'empChart', 'tall') +
   '</div>';
+  // 劳动力市场供需价格三角框架 (3 联图: 需求 / 供给 / 价格)
+  if (d.laborTriangleChart && d.laborTriangleChart.panels && Object.keys(d.laborTriangleChart.panels).length) {
+    const lt = d.laborTriangleChart;
+    html += sectionH('劳动力供需价格三角', lt.note + ' · 解读见三图下方');
+    html += '<div class="chart-row three-col">' +
+      chartCard('需求 Demand', lt.panels.demand.interpretation, 'labDemand', 'short') +
+      chartCard('供给 Supply', lt.panels.supply.interpretation, 'labSupply', 'short') +
+      chartCard('价格 Price', lt.panels.price.interpretation, 'labPrice', 'short') +
+    '</div>';
+    html += '<div class="chart-row one-col">' +
+      '<div class="chart-card"><div class="chart-body" style="height:auto;padding:8px 16px 14px">' +
+        rangeSliderHTML('laborTriangle') +
+      '</div></div>' +
+    '</div>';
+  }
   html += '<div class="chart-row one-col">' +
     chartCard('PMI 景气指数 (荣枯线追踪)', cn.pmiNote || '制造业 + 服务业 PMI · 荣枯线50', 'pmiChart', 'tall') +
   '</div>';
@@ -1572,6 +1687,53 @@ function renderEconomy(c) {
       }
     }
   });
+
+  // 劳动力市场供需价格三角 (3 panel chart + 共享滑块)
+  if (d.laborTriangleChart && d.laborTriangleChart.panels && Object.keys(d.laborTriangleChart.panels).length) {
+    const lt = d.laborTriangleChart;
+    const datesFull = lt.labels;
+    function _buildLaborChart(canvasId, panel) {
+      const ds = Object.keys(panel.series).map(n => ({
+        label: n,
+        origLabel: n,
+        data: panel.series[n],
+        rawData: null,
+        borderColor: panel.colors[n],
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 1.5,
+        tension: 0.3
+      }));
+      return new Chart(document.getElementById(canvasId), {
+        type: 'line',
+        data: { labels: datesFull.map(function (s) { return s.slice(0, 7); }), datasets: ds },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: COLORS.text, font: { size: 10 }, boxWidth: 10 } },
+            tooltip: { callbacks: { label: function (ctx) {
+              return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2));
+            } } }
+          },
+          scales: {
+            x: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 9 }, maxRotation: 0, autoSkip: true } },
+            y: { position: 'left', grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 9 } } }
+          }
+        }
+      });
+    }
+    charts.labDemand = _buildLaborChart('labDemand', lt.panels.demand);
+    charts.labSupply = _buildLaborChart('labSupply', lt.panels.supply);
+    charts.labPrice = _buildLaborChart('labPrice', lt.panels.price);
+    // 共享滑块: 同时切 3 个 chart 的数据 (单位各异, 不重新归一化, 仅切片)
+    initSharedSlider([
+      { chart: charts.labDemand, series: lt.panels.demand.series },
+      { chart: charts.labSupply, series: lt.panels.supply.series },
+      { chart: charts.labPrice, series: lt.panels.price.series }
+    ], 'laborTriangle', datesFull);
+  }
 
   const pd = d.pmiChart;
   if (pd && pd.labels && pd.labels.length) {

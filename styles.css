@@ -167,6 +167,7 @@ body {
   display: grid; gap: 16px; margin-bottom: 20px;
 }
 .chart-row.two-col { grid-template-columns: 1fr 1fr; }
+.chart-row.three-col { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .chart-row.one-col { grid-template-columns: 1fr; }
 
 .chart-card {
