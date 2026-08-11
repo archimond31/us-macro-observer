@@ -621,6 +621,214 @@ def _build_us_indices_chart():
             series[name] = [round((x / base - 1) * 100, 2) if x else None for _, x in arr]
     return {'labels': dates, 'series': series, 'note': f'累计涨跌(起点=0%) · 近{take}个交易日'}
 
+def _chg_map(key, n=120):
+    """序列水平日度绝对变化 (适用于收益率/波动率等水平型序列); 返回 {date: chg}。"""
+    arr = s(key)[-(n + 1):]
+    out = {}
+    for i in range(1, len(arr)):
+        if arr[i - 1][1] is not None and arr[i][1] is not None:
+            out[arr[i][0]] = arr[i][1] - arr[i - 1][1]
+    return out
+
+def _level_trend(key, dates):
+    """窗口首尾水平差 (实际序列值, 非日变化); 用于方向信号。"""
+    arr = s(key)
+    m = {d: v for d, v in arr}
+    a = m.get(dates[0]); b = m.get(dates[-1])
+    return (b - a) if (a is not None and b is not None) else 0
+
+def _gold_phases(current):
+    """黄金定价的三阶段框架 (专家视角)。current: 'structural' | 'rate'。"""
+    stages = [
+        {'phase': '阶段一 · 2013–2021', 'driver': '实际利率锚定',
+         'desc': '黄金与10年实际利率(TIPS)高度负相关。美联储紧缩→实际利率上行压制金价；QE/实际利率下行→推升金价。最"教科书"的关系。'},
+        {'phase': '阶段二 · 2022–2023', 'driver': '通胀 + 利率背离',
+         'desc': '高通胀初期黄金与实际利率短暂脱钩：2022实际利率飙升但黄金抗跌，因通胀预期与避险对冲了实际利率上行。'},
+        {'phase': '阶段三 · 2024–2026', 'driver': '央行购金 / 去美元化',
+         'desc': '黄金与实际利率显著脱钩——即便实际利率维持高位，央行(尤其新兴市场)持续购金、地缘多元化储备，叠加财政赤字货币化担忧(美元信用)，形成结构性买盘。'},
+    ]
+    current_stage = '阶段三' if current == 'structural' else '阶段一'
+    label = ('当前主线：央行购金 / 去美元化结构性牛市（黄金与实际利率脱钩）'
+             if current == 'structural'
+             else '当前主线：实际利率锚定（美元走弱 / 避险 / 抗通胀在利率框架内轮动）')
+    return {'current': current, 'currentStage': current_stage, 'currentLabel': label, 'stages': stages}
+
+def _gold_analysis(gold_ret, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir):
+    gr = f'{gold_ret:+.1f}%' if gold_ret is not None else '—'
+    L = [f'近90个交易日黄金累计 {gr}。']
+    if primary == 'consolidation':
+        L.append('黄金近期未形成明确上行叙事，各因子贡献均偏弱，宜观察而非追涨。')
+        return ''.join(L)
+    if primary == 'mixed':
+        L.append('黄金上行由多因素共振推动，无单一主导叙事；下列因子均提供正贡献。')
+    else:
+        d = next((x for x in drivers if x['key'] == primary), None)
+        if d:
+            L.append(f'主导叙事为【{primary_label}】——该因子与金价相关系数 {("+" + format(d["corr"], ".2f")) if d["corr"] is not None else "—"}，贡献评分 {d["score"]}/100。')
+    sup = [x for x in drivers if x['role'] == 'support']
+    if sup:
+        L.append('辅助支撑：' + '、'.join(
+            f'【{x["name"]}】(相关 {("+" + format(x["corr"], ".2f")) if x["corr"] is not None else "—"}, 评分 {x["score"]})'
+            for x in sup) + '。')
+    struct = next((x for x in drivers if x['key'] == 'structural'), None)
+    if struct and struct['score'] >= 25:
+        L.append('结构性底色：金价与实际利率出现同向（脱钩）信号，提示央行购金 / 去美元化的长期买盘仍在场——即便实际利率不下行，黄金也未必回调。')
+    L.append('注：DXY 约 58% 权重为欧元，"美元指数走弱"≠"美元信用下跌"；后者应由实际利率、期限溢价与央行购金共同印证，单一 DXY 易误判。')
+    return ''.join(L)
+
+def _gold_driver_model():
+    """黄金定价五因子驱动模型 (专家框架)。
+    基于近90交易日日度收益/变化的 Pearson 相关 + 方向信号, 量化各叙事贡献,
+    识别主导 regime 与定价阶段(实际利率锚定 vs 央行购金/去美元化结构性)。
+
+    五因子:
+      actual_rate 实际利率(10Y TIPS)下行 → 金涨        (经典锚定)
+      dollar      美元指数 DXY 走弱        → 金涨        (货币贬值/信用)
+      haven       避险(VIX↑/美股↓/日元↑)  → 金涨        (风险偏好)
+      inflation   抗通胀(BEI↑/原油↑)       → 金涨        (通胀预期)
+      structural  金价与实际利率同向(脱钩) → 结构性买盘   (央行购金/去美元化)
+    """
+    WIN = 90
+    g_ret = daily_ret_map('gold', WIN)
+    dxy_ret = daily_ret_map('dxy', WIN)
+    spx_ret = daily_ret_map('spx', WIN)
+    oil_ret = daily_ret_map('wti', WIN)
+    uj_ret = daily_ret_map('usdjpy', WIN)
+    ry_chg = _chg_map('tips10', WIN)
+    bei_chg = _chg_map('bei10', WIN)
+    vix_chg = _chg_map('vix', WIN)
+
+    keysets = [g_ret, dxy_ret, spx_ret, oil_ret, uj_ret, ry_chg, bei_chg, vix_chg]
+    common = None
+    for m in keysets:
+        common = set(m) if common is None else (common & set(m))
+    dates = sorted(common)[-WIN:] if common else []
+    if len(dates) < 20 or not g_ret:
+        return {'ok': False, 'drivers': [], 'primary': 'mixed', 'primaryLabel': '数据不足',
+                'analysis': '实际利率/波动率等底层序列缺失, 无法量化驱动模型。', 'goldReturn': None,
+                'phases': _gold_phases('rate')}
+
+    g = [g_ret[d] for d in dates]
+    ry_sup = corr_pair(g, [-ry_chg[d] for d in dates])            # 实际利率↓ → 金涨
+    dxy_sup = corr_pair(g, [-dxy_ret[d] for d in dates])          # 美元↓ → 金涨
+    haven_cands = [corr_pair(g, [vix_chg[d] for d in dates]),
+                   corr_pair(g, [-spx_ret[d] for d in dates]),
+                   corr_pair(g, [-uj_ret[d] for d in dates])]
+    haven_sup = max([c for c in haven_cands if c is not None], default=None)
+    inf_cands = [corr_pair(g, [bei_chg[d] for d in dates]),
+                 corr_pair(g, [oil_ret[d] for d in dates])]
+    inf_sup = max([c for c in inf_cands if c is not None], default=None)
+    struct_sup = corr_pair(g, [ry_chg[d] for d in dates])         # 金涨伴随实际利率↑ = 脱钩 = 结构性
+
+    ry_t = _level_trend('tips10', dates)
+    dxy_t = _level_trend('dxy', dates)
+    spx_t = _level_trend('spx', dates)
+    vix_t = _level_trend('vix', dates)
+    uj_t = _level_trend('usdjpy', dates)
+    bei_t = _level_trend('bei10', dates)
+    oil_t = _level_trend('wti', dates)
+
+    gold_ret_win = None
+    if len(dates) >= 2:
+        ga = s('gold'); gm = {dd: vv for dd, vv in ga[-(WIN + 1):]}
+        a = gm.get(dates[0]); b = gm.get(dates[-1])
+        if a and b:
+            gold_ret_win = (b / a - 1) * 100
+
+    gold_up = (gold_ret_win or 0) > 0
+    ry_down = ry_t < 0
+    dxy_down = dxy_t < 0
+    haven_dir = (vix_t > 0) or (spx_t < 0) or (uj_t < 0)
+    inf_dir = (bei_t > 0) or (oil_t > 0)
+
+    def _score(c, ok):
+        if c is None:
+            return 0
+        return round(100 * max(0.0, c) * (1.0 if ok else 0.0))
+
+    scores = {
+        'actual_rate': _score(ry_sup, ry_down),
+        'dollar': _score(dxy_sup, dxy_down),
+        'haven': _score(haven_sup, haven_dir),
+        'inflation': _score(inf_sup, inf_dir),
+        'structural': _score(struct_sup, gold_up),
+    }
+    META = {
+        'actual_rate': ('实际利率（10Y TIPS）', '实际利率下行'),
+        'dollar': ('美元指数 DXY', '美元走弱 / 货币贬值'),
+        'haven': ('避险（VIX / 美股 / 日元）', '避险需求'),
+        'inflation': ('抗通胀（BEI / 原油）', '抗通胀叙事'),
+        'structural': ('央行购金 / 去美元化', '结构性买盘（脱钩）'),
+    }
+    corr_map = {'actual_rate': ry_sup, 'dollar': dxy_sup, 'haven': haven_sup,
+                'inflation': inf_sup, 'structural': struct_sup}
+    drivers = []
+    for k, (nm, lbl) in META.items():
+        if k == 'actual_rate':
+            dir_txt = ('实际利率↓' if ry_down else '实际利率↑')
+        elif k == 'dollar':
+            dir_txt = ('DXY↓' if dxy_down else 'DXY↑')
+        elif k == 'haven':
+            dir_txt = ('风险偏好回落' if haven_dir else '风险偏好平稳')
+        elif k == 'inflation':
+            dir_txt = ('通胀预期↑' if inf_dir else '通胀预期平稳')
+        else:
+            dir_txt = ('金价与实际利率同向' if (struct_sup or 0) > 0 else '金价跟随实际利率')
+        drivers.append({'key': k, 'name': nm, 'score': scores[k], 'dir': dir_txt,
+                        'corr': (round(corr_map[k], 2) if corr_map[k] is not None else None),
+                        'active': scores[k] >= 35, 'role': 'none'})
+    prime_key = max(scores, key=scores.get)
+    prime_score = scores[prime_key]
+    if not gold_up:
+        primary, primary_label = 'consolidation', '震荡 / 回调：黄金未形成明确上行叙事'
+    elif prime_score < 25:
+        primary, primary_label = 'mixed', '多因素共振：无单一主导叙事'
+    else:
+        primary, primary_label = prime_key, META[prime_key][1]
+    for dr in drivers:
+        if dr['key'] == primary and primary not in ('consolidation', 'mixed'):
+            dr['role'] = 'primary'
+        elif dr['score'] >= 35 and dr['key'] != primary:
+            dr['role'] = 'support'
+        else:
+            dr['role'] = 'none'
+
+    phase_current = 'structural' if (scores['structural'] >= scores['actual_rate'] and scores['structural'] >= 25) else 'rate'
+    analysis = _gold_analysis(gold_ret_win, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir)
+    return {'ok': True, 'drivers': drivers, 'primary': primary, 'primaryLabel': primary_label,
+            'analysis': analysis, 'goldReturn': round(gold_ret_win, 1) if gold_ret_win is not None else None,
+            'phases': _gold_phases(phase_current)}
+
+def _build_gold_narrative():
+    """黄金定价叙事：四资产对比图(近1年累计涨跌) + 五因子驱动模型(近90日真实相关)。"""
+    base = s('gold')
+    if not base:
+        return {'labels': [], 'series': {}, 'note': '数据不足'}
+    take = min(252, len(base))
+    dates = [d for d, _ in base[-take:]]
+    defs = [
+        ('黄金', 'gold'),
+        ('美元指数', 'dxy'),
+        ('美元/日元', 'usdjpy'),
+        ('WTI原油', 'wti'),
+    ]
+    series = {}
+    for name, key in defs:
+        arr = s(key)
+        if not arr:
+            series[name] = [None] * len(dates)
+            continue
+        m = dict(arr)
+        vals = [m.get(d) for d in dates]
+        b0 = next((v for v in vals if v), None)
+        if b0 and b0 != 0:
+            series[name] = [round((x / b0 - 1) * 100, 2) if x else None for x in vals]
+        else:
+            series[name] = [None] * len(dates)
+    return {'labels': dates, 'series': series,
+            'note': '近1年同起点累计涨跌% · 下方五因子评分量化各叙事贡献（实际利率/美元/避险/通胀/央行购金）',
+            'regime': _gold_driver_model()}
+
 ASSET_MAP = [
     ('标普500','spx','^GSPC',2,''), ('纳斯达克100','ndx','^NDX',2,''),
     ('道琼斯','dji','^DJI',2,''), ('罗素2000','rut','^RUT',2,''),
@@ -732,6 +940,8 @@ DATA['assets'] = {
     ],
     # 美股五大指数累计涨跌走势 (起点=0%, 用较长序列展示相对强弱)
     'usIndicesChart': _build_us_indices_chart(),
+    # 黄金定价三叙事观测: 黄金 vs 美元指数/美元日元/原油 (归一化累计涨跌%)
+    'goldNarrativeChart': _build_gold_narrative(),
 }
 
 # ====== 利率 ======

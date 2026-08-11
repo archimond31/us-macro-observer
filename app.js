@@ -467,6 +467,10 @@ function renderAssets(c) {
   html += '<div class="chart-row one-col">' +
     chartCard('美股指数走势（累计涨跌）', d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
     '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('黄金定价叙事 · 四资产对比', d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 观测黄金定价驱动', 'goldNarr', 'tall') +
+    '</div>';
+  html += renderGoldDrivers(d.goldNarrativeChart);
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
   html += analystBox(d.analystView);
@@ -506,6 +510,69 @@ function renderAssets(c) {
       options: baseOpts('%')
     });
   }
+  // 黄金定价三叙事: 黄金 vs 美元指数/美元日元/原油 (归一化累计涨跌)
+  if (d.goldNarrativeChart && d.goldNarrativeChart.labels && d.goldNarrativeChart.labels.length) {
+    const gn = d.goldNarrativeChart;
+    charts.goldNarr = new Chart(document.getElementById('goldNarr'), {
+      type: 'line',
+      data: {
+        labels: gn.labels,
+        datasets: [
+          { label: '黄金', data: gn.series['黄金'], borderColor: '#e0a800', backgroundColor: 'rgba(224,168,0,0.10)', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: true },
+          { label: '美元指数', data: gn.series['美元指数'], borderColor: '#4361ee', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+          { label: '美元/日元', data: gn.series['美元/日元'], borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, borderDash: [5, 3] },
+          { label: 'WTI原油', data: gn.series['WTI原油'], borderColor: '#374151', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 }
+        ]
+      },
+      options: baseOpts('%')
+    });
+  }
+}
+
+// 黄金定价五因子驱动模型 (专家框架) + 三阶段叙事
+function renderGoldDrivers(gn) {
+  const r = (gn && gn.regime) || {};
+  if (!r.ok) return '';
+  let h = sectionH('黄金定价驱动因子', '五因子评分 · 量化各叙事对金价上行的贡献（基于近90日真实相关性，非互斥）');
+  const gr = (r.goldReturn == null) ? '' : ('近90日黄金累计 ' + (r.goldReturn >= 0 ? '+' : '') + r.goldReturn + '%');
+  const primeCls = (r.primary === 'consolidation') ? 'gv-down' : ((r.primary === 'mixed') ? 'gv-mixed' : 'gv-up');
+  h += '<div class="gold-verdict ' + primeCls + '">' +
+    '<div class="gold-verdict-main">主导叙事：<b>' + (r.primaryLabel || '—') + '</b></div>' +
+    (gr ? '<div class="gold-verdict-sub">' + gr + '</div>' : '') +
+    '</div>';
+  h += '<div class="gold-drivers">';
+  (r.drivers || []).forEach(function (dr) {
+    const roleCls = dr.role === 'primary' ? 'role-primary' : (dr.role === 'support' ? 'role-support' : 'role-none');
+    const roleTxt = dr.role === 'primary' ? '主因' : (dr.role === 'support' ? '辅助' : '不成立');
+    const corrTxt = dr.corr == null ? '—' : ((dr.corr >= 0 ? '+' : '') + dr.corr.toFixed(2));
+    const corrCls = (dr.corr == null) ? '' : (dr.corr > 0 ? 'corr-pos' : 'corr-neg');
+    h += '<div class="gold-driver ' + roleCls + '">' +
+      '<div class="gd-head"><span class="gd-name">' + dr.name + '</span>' +
+        '<span class="gd-role">' + roleTxt + '</span></div>' +
+      '<div class="gd-dir">' + dr.dir + '</div>' +
+      '<div class="gd-bar-wrap"><div class="gd-bar" style="width:' + Math.min(100, dr.score) + '%"></div>' +
+        '<span class="gd-score">' + dr.score + '</span></div>' +
+      '<div class="gd-corr ' + corrCls + '">相关 ' + corrTxt + '</div>' +
+      '</div>';
+  });
+  h += '</div>';
+  // 专家解读
+  h += '<div class="gold-analysis"><div class="ga-title">专家解读</div><div class="ga-body">' +
+    (r.analysis || '') + '</div></div>';
+  // 三阶段叙事
+  const ph = r.phases || {};
+  h += sectionH('黄金定价的三个阶段', ph.currentLabel || '');
+  h += '<div class="gold-phases">';
+  (ph.stages || []).forEach(function (st) {
+    const cur = (ph.currentStage && st.phase.indexOf(ph.currentStage) === 0);
+    h += '<div class="gold-phase' + (cur ? ' phase-current' : '') + '">' +
+      '<div class="gp-phase">' + st.phase + '</div>' +
+      '<div class="gp-driver">' + st.driver + '</div>' +
+      '<div class="gp-desc">' + st.desc + '</div>' +
+      '</div>';
+  });
+  h += '</div>';
+  return h;
 }
 
 /* ================= 10. 加密货币 ================= */
