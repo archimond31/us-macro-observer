@@ -530,7 +530,7 @@ function initRangeSlider(chart, id, opts) {
   updateUI();
 }
 
-/* ===== 共享时间区间滑块 (多 chart 同步切片, 不重新归一化 — 用于量纲不同的多 panel) =====
+// ===== 共享时间区间滑块 (多 chart 同步切片, 不重新归一化 — 用于量纲不同的多 panel) =====
 // panels: [{ chart, series: {seriesName: [..]}, labelFmt? }, ...]
 function initSharedSlider(panels, id, labels) {
   const wrap = document.getElementById(id + 'Slider');
