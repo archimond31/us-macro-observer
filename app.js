@@ -393,7 +393,8 @@ function rangeSliderHTML(id) {
   '</div>';
 }
 
-function initRangeSlider(chart, id, labels) {
+function initRangeSlider(chart, id, opts) {
+  // opts: { labels: [日期...], nums: [[原始数值]×datasets顺序], raws: [[原始值字符串]×datasets顺序] }
   const wrap = document.getElementById(id + 'Slider');
   if (!wrap || !chart) return;
   const track = wrap.querySelector('.range-slider-track');
@@ -406,6 +407,7 @@ function initRangeSlider(chart, id, labels) {
     start: wrap.querySelector('.range-start'),
     end: wrap.querySelector('.range-end')
   };
+  const labels = opts.labels || [];
   const len = labels.length;
   if (len < 2) return;
 
@@ -428,20 +430,27 @@ function initRangeSlider(chart, id, labels) {
     lbls.end.textContent = fmtShortDate(labels[state.end]);
   }
 
+  // 数据切片方案：直接裁剪 labels/datasets，并按区间内起点重新归一化(%)
+  // 不依赖 scale min/max(Chart.js v4 category 轴对其更新有兼容问题)，100% 可靠
   function applyChart() {
-    // Chart.js v4: chart.options.scales.x 的 min/max 修改在 update 时不会传播到内部 scale,
-    // 必须用 chart.scales.x.setOptions() 或直接改 chart.scales.x.options 才能重绘横轴范围
-    const xs = chart.scales && chart.scales.x;
-    const newOpts = { min: state.start, max: state.end };
-    if (xs && typeof xs.setOptions === 'function') {
-      xs.setOptions(newOpts);
-    } else if (xs) {
-      xs.options.min = state.start;
-      xs.options.max = state.end;
-    }
-    chart.options.scales.x.min = state.start;
-    chart.options.scales.x.max = state.end;
-    chart.update('none');
+    const s = state.start, e = state.end;
+    chart.data.labels = labels.slice(s, e + 1);
+    chart.data.datasets.forEach(function (ds, i) {
+      const nums = (opts.nums && opts.nums[i]) || [];
+      const sl = nums.slice(s, e + 1);
+      let b0 = null;
+      for (let j = 0; j < sl.length; j++) {
+        if (sl[j] != null) { b0 = sl[j]; break; }
+      }
+      ds.data = sl.map(function (v) {
+        if (v == null || b0 == null || b0 === 0) return null;
+        return Math.round((v / b0 - 1) * 10000) / 100;
+      });
+      if (ds.rawData && opts.raws && opts.raws[i]) {
+        ds.rawData = opts.raws[i].slice(s, e + 1);
+      }
+    });
+    chart.update();
   }
 
   function indexFromEvent(e) {
@@ -505,6 +514,17 @@ function initRangeSlider(chart, id, labels) {
     updateUI();
     applyChart();
   });
+
+  // 重置按钮：恢复全时间范围
+  const resetBtn = document.getElementById(id + 'Reset');
+  if (resetBtn) {
+    resetBtn.onclick = function () {
+      state.start = 0;
+      state.end = len - 1;
+      updateUI();
+      applyChart();
+    };
+  }
 
   updateUI();
 }
@@ -685,13 +705,14 @@ function renderAssets(c) {
       options: uiOpts
     });
   }
-  // 黄金定价五因子: 黄金 vs 实际利率(反向)/美元(反向)/避险VIX/通胀预期BEI (归一化累计涨跌, 因子按利好黄金方向翻转)
+  // 黄金定价五因子: 黄金 vs 实际利率/美元指数/避险VIX/通胀预期BEI (归一化累计涨跌, 因子均为原始方向不翻转)
   if (d.goldNarrativeChart && d.goldNarrativeChart.labels && d.goldNarrativeChart.labels.length) {
     const gn = d.goldNarrativeChart;
-    const gnOrder = ['黄金', '实际利率(反向)', '美元指数(反向)', '避险 VIX', '通胀预期 BEI'];
-    const gnColors = { '黄金': '#e0a800', '实际利率(反向)': '#4361ee', '美元指数(反向)': '#10b981', '避险 VIX': '#ef4444', '通胀预期 BEI': '#8b5cf6' };
+    const gnOrder = ['黄金', '实际利率', '美元指数', '避险 VIX', '通胀预期 BEI'];
+    const gnColors = { '黄金': '#e0a800', '实际利率': '#4361ee', '美元指数': '#10b981', '避险 VIX': '#ef4444', '通胀预期 BEI': '#8b5cf6' };
     const gnDash = { '避险 VIX': [5, 3] };
-    const gnDatasets = gnOrder.filter(function (n) { return gn.series[n]; }).map(function (n) {
+    const gnNames = gnOrder.filter(function (n) { return gn.series[n]; });
+    const gnDatasets = gnNames.map(function (n) {
       const isGold = (n === '黄金');
       const cur = (gn.current && gn.current[n]) ? '  ' + gn.current[n] : '';
       return {
@@ -718,23 +739,25 @@ function renderAssets(c) {
       const sign = y >= 0 ? '+' : '';
       return ds.origLabel + (raw ? ' ' + raw : '') + ' · 累计 ' + sign + y.toFixed(2) + '%';
     };
-    // 黄金图使用底部 range slider 选择区间，关闭框选放大，保留滚轮/捏合缩放与平移
-    gnOpts.plugins.zoom = zoomXOpts(false);
     charts.goldNarr = new Chart(document.getElementById('goldNarr'), {
       type: 'line',
       data: { labels: gn.labels, datasets: gnDatasets },
       options: gnOpts
     });
-    // 初始化底部时间区间滑块
-    initRangeSlider(charts.goldNarr, 'goldNarr', gn.labels);
+    // 滑块用数据切片方案(区间内按区间起点重新归一化)，100% 可靠，不依赖 scale min/max；
+    // 故黄金图不再启用 zoom 插件，滑块是唯一横轴控制器
+    initRangeSlider(charts.goldNarr, 'goldNarr', {
+      labels: gn.labels,
+      nums: gnNames.map(function (n) { return (gn.rawNums && gn.rawNums[n]) ? gn.rawNums[n] : null; }),
+      raws: gnNames.map(function (n) { return (gn.rawSeries && gn.rawSeries[n]) ? gn.rawSeries[n] : null; })
+    });
   }
-  // 横轴缩放重置按钮
+  // 横轴缩放重置按钮 (usIndices 用 resetZoom; goldNarr 的滑块复位在 initRangeSlider 内绑定)
   const resetZoom = function (id, key) {
     const btn = document.getElementById(id);
     if (btn) btn.onclick = function () { if (charts[key]) charts[key].resetZoom(); };
   };
   resetZoom('usIndicesReset', 'usIndices');
-  resetZoom('goldNarrReset', 'goldNarr');
 }
 
 // 黄金定价五因子驱动模型 (专家框架) + 三阶段叙事

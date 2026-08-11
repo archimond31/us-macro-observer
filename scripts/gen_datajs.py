@@ -800,19 +800,19 @@ def _gold_driver_model():
             'phases': _gold_phases(phase_current)}
 
 def _build_gold_narrative():
-    """黄金定价叙事：五因子 vs 黄金走势对比图(近1年累计涨跌, 因子按利好黄金方向翻转) + 五因子驱动模型(近90日真实相关)。"""
+    """黄金定价叙事：五因子 vs 黄金走势对比图(近1年累计涨跌, 因子均为原始方向) + 五因子驱动模型(近90日真实相关)。"""
     base = s('gold')
     if not base:
         return {'labels': [], 'series': {}, 'note': '数据不足'}
     take = min(252, len(base))
     dates = [d for d, _ in base[-take:]]
-    # (名称, key, 反向): 把"利空黄金"的方向翻转为"利好黄金=向上", 与黄金同向即支撑金价
-    #   实际利率↑→金↓ 故取反向; 美元↑→金↓ 故取反向; 避险(VIX↑)/通胀(BEI↑)本就利好金→不翻
+    # (名称, key, 反向): 序列均为原始方向(不翻转)。实际利率↑/美元↑ 与金价通常负相关,
+    #   观察原始走势可判断"锚定"(反向联动) vs "脱钩"(同向) 两种 regime。
     #   结构性(央行购金)为模型推算, 无直接报价序列, 见下方因子评分卡
     defs = [
         ('黄金', 'gold', False),
-        ('实际利率(反向)', 'tips10', True),
-        ('美元指数(反向)', 'dxy', True),
+        ('实际利率', 'tips10', False),
+        ('美元指数', 'dxy', False),
         ('避险 VIX', 'vix', False),
         ('通胀预期 BEI', 'bei10', False),
     ]
@@ -858,13 +858,16 @@ def _build_gold_narrative():
             current[_name] = c
     # 同时保存每个时间点的源数据真实值，便于前端 tooltip 按横坐标时间点显示真实水平
     rawSeries = {}
+    rawNums = {}
     for _name, _key, _inv in defs:
         arr = s(_key)
         if not arr:
             rawSeries[_name] = [None] * len(dates)
+            rawNums[_name] = [None] * len(dates)
             continue
         m = dict(arr)
         raw_vals = [m.get(d) for d in dates]
+        rawNums[_name] = raw_vals  # 原始数值(无格式)，前端区间切片后按区间起点重新归一化
         fmt_vals = []
         for v in raw_vals:
             if v is None:
@@ -876,8 +879,8 @@ def _build_gold_narrative():
             else:
                 fmt_vals.append(format(v, '.1f'))
         rawSeries[_name] = fmt_vals
-    return {'labels': dates, 'series': series, 'current': current, 'rawSeries': rawSeries,
-            'note': '近1年同起点累计涨跌% · 各因子已按"利好黄金"方向翻转(实际利率/美元取反向)，与黄金同向=支撑金价；结构性(央行购金)无报价序列，见下方因子评分卡',
+    return {'labels': dates, 'series': series, 'current': current, 'rawSeries': rawSeries, 'rawNums': rawNums,
+            'note': '近1年同起点累计涨跌% · 各因子均为原始方向(不翻转)：实际利率/美元指数与黄金同向=脱钩背离，反向=经典锚定联动；结构性(央行购金)无报价序列，见下方因子评分卡',
             'regime': _gold_driver_model()}
 
 ASSET_MAP = [
