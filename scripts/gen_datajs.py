@@ -1260,6 +1260,24 @@ if _impl_pts:
     if _ff_up_v is not None and _y2 is not None:
         _impl_signal = 'risk-on' if _y2 < _ff_up_v - 0.25 else ('risk-off' if _y2 > _ff_up_v + 0.25 else 'mixed')
 
+def _build_yield_trends_chart():
+    """美债收益率走势图 (3M/1Y/2Y/10Y/30Y, 近 2 年)。
+    含 rawNums/rawSeries 供前端 tooltip 时间点值显示与底部滑块切片。"""
+    keys = [('3M', 'dgs3mo'), ('1Y', 'dgs1'), ('2Y', 'dgs2'), ('10Y', 'dgs10'), ('30Y', _30y_key)]
+    ref = s('dgs10')
+    if not ref:
+        return {'labels': [], 'series': {}, 'note': '数据不足'}
+    dates = [d for d, _ in ref[-500:]]
+    series, rawNums, rawSeries = {}, {}, {}
+    for name, key in keys:
+        m = dict(s(key))
+        vals = [m.get(d) for d in dates]
+        rawNums[name] = vals
+        rawSeries[name] = [None if v is None else format(v, '.2f') + '%' for v in vals]
+        series[name] = [None if v is None else round(v, 2) for v in vals]
+    return {'labels': dates, 'series': series, 'rawNums': rawNums, 'rawSeries': rawSeries,
+            'note': '美债收益率走势 % · 3M / 1Y / 2Y / 10Y / 30Y · 近 2 年 · 拖动滑块调整区间'}
+
 DATA['rates'] = {
     'regime': {'label':_rates_label,'signal':_rates_signal,'confidence':_confidence(_rates_signal, v_10y is not None, v_2y is not None, v_tips is not None, v_bei is not None),
         'description': f'长端利率相对短端变化 (10Y {f2(v_10y)}% vs 2Y {f2(v_2y)}%, 10Y-2Y {spread_10_2:+.0f}bp)。拆解: 实际利率 (TIPS 10Y {f2(v_tips)}%) 与通胀预期 (Breakeven {f2(v_bei)}%) 的边际变化。'},
@@ -1317,6 +1335,7 @@ DATA['rates'] = {
     },
     'chartData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y名义': series90('dgs10'), '10Y实际': series90('tips10'), '2Y': series90('dgs2'), '30Y': series90(_30y_key)}},
+    'yieldTrendsChart': _build_yield_trends_chart(),
     'spreadData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y-2Y利差': [round((a-b),2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
         '通胀预期(Breakeven)': series90('bei10')}},

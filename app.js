@@ -1144,6 +1144,9 @@ function renderRates(c) {
     chartCard('10Y-2Y 利差', (d.chartNotes || {}).spreadNote || '曲线陡峭化/倒挂/平坦', 'spreadChart', 'tall') +
     chartCard('10Y 通胀预期 (Breakeven)', '名义利率 − 实际利率 = 市场通胀预期', 'breakevenChart', 'tall') +
   '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('美债收益率走势', (d.yieldTrendsChart.note || '3M/1Y/2Y/10Y/30Y 收益率走势') + ' · 拖动下方滑块调整时间区间', 'yieldTrends', 'tall', '<button class="chart-zoom-reset" id="yieldTrendsReset">重置</button>', rangeSliderHTML('yieldTrends')) +
+    '</div>';
   html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
   html += analystBox(d.analystView);
@@ -1228,9 +1231,40 @@ function renderRates(c) {
       })
     });
   }
+  // 美债收益率走势 (3M/1Y/2Y/10Y/30Y, tooltip 时间点值 + 底部滑块)
+  const yt = d.yieldTrendsChart;
+  if (yt && yt.labels && yt.labels.length && yt.series && Object.keys(yt.series).length) {
+    const ytNames = Object.keys(yt.series);
+    const ytColors = { '3M': '#f59e0b', '1Y': '#10b981', '2Y': '#3a86ff', '10Y': '#4361ee', '30Y': '#7209b7' };
+    const ytOpts = baseOpts('%');
+    ytOpts.plugins.tooltip.callbacks.label = function (ctx) {
+      const ds = ctx.dataset;
+      const idx = ctx.dataIndex;
+      const raw = (ds.rawData && ds.rawData[idx]) ? ds.rawData[idx] : '';
+      const y = ctx.parsed.y;
+      return ds.origLabel + (raw ? ' ' + raw : '') + ' · ' + y.toFixed(2) + '%';
+    };
+    charts.yieldTrends = new Chart(document.getElementById('yieldTrends'), {
+      type: 'line',
+      data: {
+        labels: yt.labels,
+        datasets: ytNames.map(n => ({
+          label: n, origLabel: n,
+          data: yt.series[n],
+          rawData: (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null,
+          borderColor: ytColors[n] || COLORS.series[ytNames.indexOf(n) % COLORS.series.length],
+          backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+        }))
+      },
+      options: ytOpts
+    });
+    initRangeSlider(charts.yieldTrends, 'yieldTrends', {
+      labels: yt.labels,
+      nums: ytNames.map(function (n) { return (yt.rawNums && yt.rawNums[n]) ? yt.rawNums[n] : null; }),
+      raws: ytNames.map(function (n) { return (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null; })
+    });
+  }
 }
-
-/* ================= 3. 美联储 ================= */
 function renderFed(c) {
   const d = DATA.fed;
   let html = '';
