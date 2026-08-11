@@ -1937,48 +1937,88 @@ function _renderAiFlow(d) {
   var totalScore = layers.reduce(function (a, b) { return a + b.flowScore; }, 0);
   var maxLayer = fd.maxLayer || layers[0].name;
 
-  // SVG 流向图：左侧资金池 → 右侧各层
-  var h = 280, w = 680, leftX = 90, rightX = 520, nodeW = 120, nodeH = 30;
-  var gap = (h - 30) / Math.max(layers.length, 1);
-  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:260px">'
-    + '<defs><marker id="aiFlowArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#9ca3af"/></marker></defs>';
-  // 资金池节点
-  svg += '<rect x="' + (leftX - nodeW / 2) + '" y="' + (h / 2 - nodeH) + '" width="' + nodeW + '" height="' + (nodeH * 2) + '" rx="10" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>'
-    + '<text x="' + leftX + '" y="' + (h / 2 - 4) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#374151">市场资金池</text>'
-    + '<text x="' + leftX + '" y="' + (h / 2 + 14) + '" text-anchor="middle" font-size="10" fill="#6b7280">按动量+广度估算</text>';
+  // SVG 桑基风格流向图：左侧资金池(竖条) → 右侧各层节点, band 宽度 ∝ 资金份额
+  var h = 320, w = 720, leftW = 72, leftX = 86, rightX = 560, nodeW = 132, nodeH = 28;
+  var topMargin = 22, bottomMargin = 18;
+  var usableH = h - topMargin - bottomMargin;
+  var gap = usableH / Math.max(layers.length, 1);
+  var poolTop = topMargin, poolBottom = h - bottomMargin;
+
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:280px">';
+  // 为每层定义渐变
   layers.forEach(function (ly, i) {
-    var y = 25 + i * gap;
-    var pct = totalScore ? (ly.flowScore / totalScore) : 0;
-    var strokeW = 4 + (ly.flowScore / maxScore) * 22;
     var col = _aiFlowColor(ly.flowScore);
-    // 连线
-    svg += '<path d="M' + (leftX + nodeW / 2) + ',' + (h / 2) + ' C' + ((leftX + rightX) / 2) + ',' + (h / 2) + ' ' + ((leftX + rightX) / 2) + ',' + (y + nodeH / 2) + ' ' + (rightX - nodeW / 2) + ',' + (y + nodeH / 2) + '"'
-      + ' fill="none" stroke="' + col + '" stroke-width="' + strokeW + '" stroke-opacity="0.5" marker-end="url(#aiFlowArrow)"/>';
-    // 层节点
-    svg += '<rect x="' + (rightX - nodeW / 2) + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8" fill="#fff" stroke="' + col + '" stroke-width="2"/>'
-      + '<text x="' + (rightX - 6) + '" y="' + (y + 13) + '" text-anchor="end" font-size="11" font-weight="600" fill="#1a1d29">' + ly.name + '</text>'
-      + '<text x="' + (rightX + 6) + '" y="' + (y + 13) + '" text-anchor="start" font-size="11" font-weight="700" fill="' + col + '">' + ly.flowScore + '</text>';
-    // 右侧详情
-    svg += '<text x="' + (rightX + nodeW / 2 + 8) + '" y="' + (y + 12) + '" font-size="10" fill="#6b7280">动量 ' + ly.avgMomentum + ' · 领涨 ' + ly.breadthPct + '% · ' + Math.round(pct * 100) + '%</text>';
+    svg += '<defs>'
+      + '<linearGradient id="flowGrad' + i + '" x1="0%" y1="0%" x2="100%" y2="0%">'
+      + '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.35"/>'
+      + '<stop offset="60%" stop-color="' + col + '" stop-opacity="0.65"/>'
+      + '<stop offset="100%" stop-color="' + col + '" stop-opacity="0.9"/>'
+      + '</linearGradient>'
+      + '<marker id="flowArr' + i + '" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">'
+      + '<path d="M0,0 L0,10 L9,5 z" fill="' + col + '"/>'
+      + '</marker>'
+      + '</defs>';
+  });
+
+  // 左侧资金池竖条
+  svg += '<rect x="' + (leftX - leftW / 2) + '" y="' + poolTop + '" width="' + leftW + '" height="' + (poolBottom - poolTop) + '" rx="10" fill="#f8fafc" stroke="#9ca3af" stroke-width="1"/>'
+    + '<text x="' + leftX + '" y="' + (h / 2 - 6) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#374151">市场资金池</text>'
+    + '<text x="' + leftX + '" y="' + (h / 2 + 12) + '" text-anchor="middle" font-size="10" fill="#6b7280">按份额估算</text>';
+
+  // 计算各层 y 位置与 band 宽度(基于 flowScore / totalScore)
+  var positions = layers.map(function (ly, i) {
+    var y = topMargin + i * gap + (gap - nodeH) / 2;
+    var share = totalScore ? ly.flowScore / totalScore : 0;
+    var band = Math.max(4, Math.min(share * (poolBottom - poolTop) * 0.9, gap * 0.85));
+    return { y: y, cy: y + nodeH / 2, band: band, share: share };
+  });
+
+  // 绘制 band: 从资金池右边缘对应垂直段 → 各层节点左边缘
+  // 左端按层在资金池内均匀分布, 避免所有带汇聚到一个点
+  positions.forEach(function (pos, i) {
+    var ly = layers[i];
+    var col = _aiFlowColor(ly.flowScore);
+    var leftY0 = poolTop + (i + 0.08) * ((poolBottom - poolTop) / layers.length);
+    var leftY1 = leftY0 + pos.band;
+    var rightY0 = pos.cy - pos.band / 2;
+    var rightY1 = pos.cy + pos.band / 2;
+    var midX = (leftX + leftW / 2 + rightX - nodeW / 2) / 2;
+    var dPath = 'M' + (leftX + leftW / 2) + ',' + leftY0
+      + ' C' + midX + ',' + leftY0 + ' ' + (rightX - nodeW / 2 - 20) + ',' + rightY0 + ' ' + (rightX - nodeW / 2) + ',' + rightY0
+      + ' L' + (rightX - nodeW / 2) + ',' + rightY1
+      + ' C' + (rightX - nodeW / 2 - 20) + ',' + rightY1 + ' ' + midX + ',' + leftY1 + ' ' + (leftX + leftW / 2) + ',' + leftY1
+      + ' Z';
+    svg += '<path d="' + dPath + '" fill="url(#flowGrad' + i + ')" stroke="none" marker-end="url(#flowArr' + i + ')"/>';
+  });
+
+  // 右侧层节点 + 标签
+  positions.forEach(function (pos, i) {
+    var ly = layers[i];
+    var col = _aiFlowColor(ly.flowScore);
+    svg += '<rect x="' + (rightX - nodeW / 2) + '" y="' + pos.y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8" fill="#fff" stroke="' + col + '" stroke-width="2"/>'
+      + '<text x="' + (rightX - 8) + '" y="' + (pos.y + 12) + '" text-anchor="end" font-size="11" font-weight="600" fill="#1a1d29">' + ly.name + '</text>'
+      + '<text x="' + (rightX + 10) + '" y="' + (pos.y + 12) + '" text-anchor="start" font-size="12" font-weight="700" fill="' + col + '">' + ly.flowScore + '</text>'
+      + '<text x="' + (rightX + nodeW / 2 + 10) + '" y="' + (pos.y + 12) + '" font-size="10" fill="#6b7280">占比 ' + Math.round(pos.share * 100) + '% · 动量 ' + ly.avgMomentum + ' · 领涨 ' + ly.breadthPct + '%</text>';
   });
   svg += '</svg>';
 
   var rankHtml = layers.map(function (ly, idx) {
     var col = _aiFlowColor(ly.flowScore);
+    var share = totalScore ? ly.flowScore / totalScore : 0;
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border-card);font-size:12px">'
       + '<div style="font-weight:700;color:var(--text-tertiary);width:20px">#' + (idx + 1) + '</div>'
       + '<div style="flex:1;font-weight:600">' + ly.name + '</div>'
-      + '<div style="width:120px">' + _aiBar(ly.flowScore, col) + '</div>'
-      + '<div style="font-weight:700;color:' + col + ';width:40px;text-align:right">' + ly.flowScore + '</div>'
-      + '<div style="font-size:11px;color:var(--text-secondary);width:140px;text-align:right">领涨 ' + ly.breadthPct + '% · ' + ly.companyCount + ' 家</div></div>';
+      + '<div style="width:110px">' + _aiBar(ly.flowScore, col) + '</div>'
+      + '<div style="font-weight:700;color:' + col + ';width:36px;text-align:right">' + ly.flowScore + '</div>'
+      + '<div style="font-size:11px;color:var(--text-secondary);width:90px;text-align:right">占比 ' + Math.round(share * 100) + '%</div></div>';
   }).join('');
 
-  var inner = '<div style="display:grid;grid-template-columns:minmax(300px,1.2fr) minmax(260px,1fr);gap:18px;align-items:start">'
+  var inner = '<div style="display:grid;grid-template-columns:minmax(340px,1.4fr) minmax(260px,1fr);gap:18px;align-items:start">'
     + '<div>' + svg + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:6px">' + (fd.method || '') + '</div></div>'
     + '<div style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;overflow:hidden">'
     + '<div style="padding:10px 12px;font-size:12px;font-weight:600;background:#fff;border-bottom:1px solid var(--border-card)">资金流向强度排行</div>' + rankHtml + '</div></div>';
 
-  return sectionCard('💧 AI 产业链资金流向 · 当前资金聚焦：' + maxLayer, '箭头粗细 ≈ 估算资金流入强度；分数 = 0.45×平均动量 + 0.35×领涨广度 + 0.20×市值加权动量', inner);
+  return sectionCard('💧 AI 产业链资金流向 · 当前资金聚焦：' + maxLayer, '箭头带宽 ≈ 资金份额；分数由 5 维度(动量/领涨广度/资金加速度/市值加权动量/估值热度)经 z-score + softmax 标准化得到，加总≈100', inner);
 }
 
 // 总览页：周期 + 各层热力 + 可视化 + 价值股
