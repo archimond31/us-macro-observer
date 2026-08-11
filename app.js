@@ -663,6 +663,9 @@ function renderAssets(c) {
   html += '<div class="chart-row one-col">' +
     chartCard('黄金定价 · 五因子 vs 黄金走势', (d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 五因子与黄金走势对比') + ' · 拖动下方滑块调整时间区间', 'goldNarr', 'tall', '<button class="chart-zoom-reset" id="goldNarrReset">重置</button>', rangeSliderHTML('goldNarr')) +
     '</div>';
+  html += '<div class="chart-row one-col">' +
+    chartCard('全球央行净购金（WGC 季度）', (d.cbPurchasesChart.note || 'WGC 季度央行净购金(吨) · 含12个月滚动累计') + ' · 参与黄金驱动模型评分', 'cbPurchases', 'tall') +
+    '</div>';
   html += renderGoldDrivers(d.goldNarrativeChart);
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
   html += trendTable(d.trendData);
@@ -767,6 +770,74 @@ function renderAssets(c) {
       labels: gn.labels,
       nums: gnNames.map(function (n) { return (gn.rawNums && gn.rawNums[n]) ? gn.rawNums[n] : null; }),
       raws: gnNames.map(function (n) { return (gn.rawSeries && gn.rawSeries[n]) ? gn.rawSeries[n] : null; })
+    });
+  }
+  // 央行净购金走势图 (WGC 季度数据, 柱状 + 12个月滚动累计线)
+  if (d.cbPurchasesChart && d.cbPurchasesChart.labels && d.cbPurchasesChart.labels.length) {
+    const cb = d.cbPurchasesChart;
+    charts.cbPurchases = new Chart(document.getElementById('cbPurchases'), {
+      type: 'bar',
+      data: {
+        labels: cb.labels.map(function (s) { return s.slice(0, 7); }),
+        datasets: [
+          {
+            type: 'bar',
+            label: '季度净购金(吨)',
+            data: cb.series['季度净购金(吨)'] || [],
+            backgroundColor: 'rgba(224,168,0,0.55)',
+            borderColor: '#e0a800',
+            borderWidth: 1.5,
+            yAxisID: 'y',
+            order: 2
+          },
+          {
+            type: 'line',
+            label: '12个月滚动累计(吨)',
+            data: cb.series['12个月滚动累计(吨)'] || [],
+            borderColor: '#4361ee',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointBackgroundColor: '#4361ee',
+            tension: 0.25,
+            yAxisID: 'y1',
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#6b7280', font: { size: 11 }, boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                const v = ctx.parsed.y;
+                return ctx.dataset.label + ': ' + (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(0) + ' 吨');
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#eef0f3', drawBorder: false },
+            ticks: { color: '#6b7280', font: { size: 10 } }
+          },
+          y: {
+            position: 'left',
+            title: { display: true, text: '季度净购金(吨)', color: '#6b7280', font: { size: 10 } },
+            grid: { color: '#eef0f3', drawBorder: false },
+            ticks: { color: '#6b7280', font: { size: 10 } }
+          },
+          y1: {
+            position: 'right',
+            title: { display: true, text: '12个月累计(吨)', color: '#6b7280', font: { size: 10 } },
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#6b7280', font: { size: 10 } }
+          }
+        }
+      }
     });
   }
   // 两个带滑块图表的"重置"按钮复位逻辑在 initRangeSlider 内绑定(id+Reset);

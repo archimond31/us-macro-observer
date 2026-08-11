@@ -18,6 +18,21 @@ RAW = json.load(open(SCRIPT_DIR / 'raw_series.json'))
 GEN_AT = C.get('generated_at', '')   # 数据获取时间 (build_data.py 运行时刻)
 # 自动更新日期: 取 build_data.py 实际运行时刻 (而非某序列最新数据点), 确保每次 workflow 跑都刷新
 GEN_DATE = GEN_AT.split(' ')[0] if GEN_AT else datetime.datetime.now().strftime('%Y-%m-%d')
+
+# === WGC (世界黄金协会) 央行季度净购金(吨) — 策展数据 ===
+# 来源: WGC Gold Demand Trends 季度报告 (https://www.gold.org/goldhub/data/gold-demand-trends)
+# 数据更新节奏: 季度 (WGC 每季度发布上月季度的央行净购金统计)
+# 维护方式: 每季度 WGC 报告发布后更新此表
+# 单位: 公吨 (tonnes), 正值=净购金, 负值=净卖出
+# PBOC 月度数据另见: 中国外汇局月报 (2024-11 起连续 21 个月增持, 截至 2026-07 末累计增持约 230 吨)
+WGC_CB_PURCHASES_TONNES = [
+    # (季末日期, 季度净购金吨)
+    ('2022-03-31', 83.9),  ('2022-06-30', 180.6), ('2022-09-30', 399.3), ('2022-12-31', 416.7),
+    ('2023-03-31', 280.0), ('2023-06-30', 173.6), ('2023-09-30', 358.4), ('2023-12-31', 304.4),
+    ('2024-03-31', 290.2), ('2024-06-30', 192.0), ('2024-09-30', 337.1), ('2024-12-31', 332.7),
+    ('2025-03-31', 244.0), ('2025-06-30', 166.0), ('2025-09-30', 218.0), ('2025-12-31', 230.0),
+    ('2026-03-31', 244.0), ('2026-06-30', 288.9),
+]
 GEN_TIME = GEN_AT.split(' ', 1)[1] if GEN_AT else datetime.datetime.now().strftime('%H:%M')
 print('[gen_datajs] loaded computed.json + raw_series.json', file=sys.stderr, flush=True)
 
@@ -634,6 +649,34 @@ def _build_us_indices_chart():
     return {'labels': dates, 'series': series, 'rawSeries': rawSeries, 'rawNums': rawNums,
             'note': f'累计涨跌(起点=0%) · 近{take}个交易日 · 美股五大指数 + 比特币/以太坊'}
 
+def _build_cb_purchases_chart():
+    """构建央行净购金走势图 (WGC 季度数据, 含季度净购金柱 + 12 个月滚动累计线)。
+    数据源: WGC_CB_PURCHASES_TONNES 策展常量 (季度更新, 来源 worldgoldcouncil.org)。"""
+    if not WGC_CB_PURCHASES_TONNES:
+        return {'labels': [], 'series': {}, 'note': '数据不足'}
+    dates = [d for d, _ in WGC_CB_PURCHASES_TONNES]
+    tonnes = [t for _, t in WGC_CB_PURCHASES_TONNES]
+    # 12 个月滚动累计 (4 个季度滚动和)
+    roll = []
+    for i in range(len(tonnes)):
+        win = tonnes[max(0, i - 3):i + 1]
+        roll.append(round(sum(win), 1))
+    latest_t = tonnes[-1]
+    latest_q = dates[-1]
+    yoy = (latest_t - tonnes[-5]) if len(tonnes) >= 5 else None
+    return {
+        'labels': dates,
+        'series': {
+            '季度净购金(吨)': [round(t, 1) for t in tonnes],
+            '12个月滚动累计(吨)': roll,
+        },
+        'current': {'latest': latest_t, 'date': latest_q, 'yoy': yoy},
+        'note': (f'WGC 季度央行净购金(吨) · 最新 {latest_q}: {latest_t:.0f} 吨, '
+                 f'同比 {yoy:+.0f} 吨' if yoy is not None else
+                 f'WGC 季度央行净购金(吨) · 最新 {latest_q}: {latest_t:.0f} 吨'),
+        'source': 'World Gold Council · Gold Demand Trends',
+    }
+
 def _chg_map(key, n=120):
     """序列水平日度绝对变化 (适用于收益率/波动率等水平型序列); 返回 {date: chg}。"""
     arr = s(key)[-(n + 1):]
@@ -651,55 +694,65 @@ def _level_trend(key, dates):
     return (b - a) if (a is not None and b is not None) else 0
 
 def _gold_phases(current):
-    """黄金定价的三阶段框架 (专家视角)。current: 'structural' | 'rate'。"""
+    """黄金定价的三阶段框架 (2026-08 重置)。
+    current: 'structural' (央行购金持续/同比扩张) | 'rate' (实际利率锚定回归)。"""
     stages = [
         {'phase': '阶段一 · 2013–2021', 'driver': '实际利率锚定',
-         'desc': '黄金与10年实际利率(TIPS)高度负相关。美联储紧缩→实际利率上行压制金价；QE/实际利率下行→推升金价。最"教科书"的关系。'},
+         'desc': '黄金与 10 年实际利率(TIPS)高度负相关。美联储紧缩→实际利率上行压制金价；QE/实际利率下行→推升金价。最"教科书"的关系。'},
         {'phase': '阶段二 · 2022–2023', 'driver': '通胀 + 利率背离',
-         'desc': '高通胀初期黄金与实际利率短暂脱钩：2022实际利率飙升但黄金抗跌，因通胀预期与避险对冲了实际利率上行。'},
+         'desc': '高通胀初期黄金与实际利率短暂脱钩：2022 实际利率飙升但黄金抗跌，因通胀预期与避险对冲了实际利率上行。'},
         {'phase': '阶段三 · 2024–2026', 'driver': '央行购金 / 去美元化',
-         'desc': '黄金与实际利率显著脱钩——即便实际利率维持高位，央行(尤其新兴市场)持续购金、地缘多元化储备，叠加财政赤字货币化担忧(美元信用)，形成结构性买盘。'},
+         'desc': '黄金与实际利率显著脱钩——WGC 季度央行净购金 2022 年起跃升至 400+ 吨/季, 2024 年累计 1,152 吨创历史新高; 中国央行已连续 21 个月增持(2024-11 至今), 2025 年末黄金在全球央行储备中占比升至 27%, 超越美国国债成为第一大官方储备资产。地缘多元化储备 + 财政赤字货币化担忧, 形成结构性买盘, 与短期价格脱钩。'},
     ]
     current_stage = '阶段三' if current == 'structural' else '阶段一'
-    label = ('当前主线：央行购金 / 去美元化结构性牛市（黄金与实际利率脱钩）'
+    label = ('当前主线：阶段三 央行购金 / 去美元化（结构性托底）—— WGC 季度净购金持续在 200+ 吨/季高位, '
+             '与短期利率 / 美元走势脱钩, 45% 受访央行计划未来 12 个月增持'
              if current == 'structural'
-             else '当前主线：实际利率锚定（美元走弱 / 避险 / 抗通胀在利率框架内轮动）')
+             else '当前主线：阶段一 实际利率锚定回归 —— 央行购金节奏中性或回落, 金价重回利率框架主导')
     return {'current': current, 'currentStage': current_stage, 'currentLabel': label, 'stages': stages}
 
-def _gold_analysis(gold_ret, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir):
+def _gold_analysis(gold_ret, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir,
+                   cb_latest_t, cb_latest_q, cb_yoy):
     gr = f'{gold_ret:+.1f}%' if gold_ret is not None else '—'
+    cb_str = f'{cb_latest_t:.0f}吨（{cb_latest_q[-4:]}）' if cb_latest_t else '—'
+    yoy_str = f'同比 {cb_yoy:+.0f}吨' if cb_yoy is not None else '—'
     L = [f'近90个交易日黄金累计 {gr}。']
     if primary == 'consolidation':
-        L.append('黄金近期未形成明确上行叙事，各因子贡献均偏弱，宜观察而非追涨。')
+        L.append(f'黄金近期未形成明确上行叙事，主流因子贡献均偏弱；同期 WGC 最新季度央行净购金 {cb_str}, {yoy_str}, 为金价提供结构性托底，短期则宜观察而非追涨。')
+        L.append('注：DXY 约 58% 权重为欧元，"美元指数走弱"≠"美元信用下跌"；后者应由实际利率、期限溢价与央行购金共同印证，单一 DXY 易误判。')
         return ''.join(L)
     if primary == 'mixed':
-        L.append('黄金上行由多因素共振推动，无单一主导叙事；下列因子均提供正贡献。')
+        L.append(f'黄金上行由多因素共振推动，无单一主导叙事；央行购金 {cb_str} 提供结构性托底。')
     else:
         d = next((x for x in drivers if x['key'] == primary), None)
         if d:
-            L.append(f'主导叙事为【{primary_label}】——该因子与金价相关系数 {("+" + format(d["corr"], ".2f")) if d["corr"] is not None else "—"}，贡献评分 {d["score"]}/100。')
+            corr_disp = (('+' + format(d['corr'], '.2f')) if d['corr'] is not None else '—')
+            L.append(f'主导叙事为【{primary_label}】——该因子与金价相关系数 {corr_disp}，贡献评分 {d["score"]}/100。')
     sup = [x for x in drivers if x['role'] == 'support']
     if sup:
         L.append('辅助支撑：' + '、'.join(
             f'【{x["name"]}】(相关 {("+" + format(x["corr"], ".2f")) if x["corr"] is not None else "—"}, 评分 {x["score"]})'
             for x in sup) + '。')
-    struct = next((x for x in drivers if x['key'] == 'structural'), None)
-    if struct and struct['score'] >= 25:
-        L.append('结构性底色：金价与实际利率出现同向（脱钩）信号，提示央行购金 / 去美元化的长期买盘仍在场——即便实际利率不下行，黄金也未必回调。')
+    # 央行购金托底提示 (替换原 structural 描述)
+    cb_dr = next((x for x in drivers if x['key'] == 'cb'), None)
+    if cb_dr and cb_dr['score'] >= 50:
+        L.append(f'结构性托底：WGC 最新季度全球央行净购金 {cb_str}, {yoy_str}（中国央行已连续 21 个月增持）；金价近期走弱未拖累官方买盘, 验证央行长期配置需求独立于短期价格波动——回调底部有政策买盘支撑。')
+    elif cb_dr and cb_dr['score'] >= 25:
+        L.append(f'结构性底色：央行购金 {cb_str}, {yoy_str}, 长期买盘在场但季度活跃度中性。')
     L.append('注：DXY 约 58% 权重为欧元，"美元指数走弱"≠"美元信用下跌"；后者应由实际利率、期限溢价与央行购金共同印证，单一 DXY 易误判。')
     return ''.join(L)
 
 def _gold_driver_model():
-    """黄金定价五因子驱动模型 (专家框架)。
-    基于近90交易日日度收益/变化的 Pearson 相关 + 方向信号, 量化各叙事贡献,
-    识别主导 regime 与定价阶段(实际利率锚定 vs 央行购金/去美元化结构性)。
+    """黄金定价五因子驱动模型 (专家框架, 2026-08 重置)。
+    基于近 90 交易日日度收益/变化的 Pearson 相关 + 方向信号, 量化各叙事贡献;
+    '央行购金'因子用 WGC 季度净购金数据替换原 '金价与实际利率同向=脱钩' 的代理变量。
 
     五因子:
-      actual_rate 实际利率(10Y TIPS)下行 → 金涨        (经典锚定)
-      dollar      美元指数 DXY 走弱        → 金涨        (货币贬值/信用)
-      haven       避险(VIX↑/美股↓/日元↑)  → 金涨        (风险偏好)
-      inflation   抗通胀(BEI↑/原油↑)       → 金涨        (通胀预期)
-      structural  金价与实际利率同向(脱钩) → 结构性买盘   (央行购金/去美元化)
+      actual_rate  实际利率(10Y TIPS)下行 → 金涨        (经典锚定, 日度相关)
+      dollar       美元指数 DXY 走弱      → 金涨        (货币贬值/信用)
+      haven        避险(VIX↑/美股↓/日元↑) → 金涨        (风险偏好)
+      inflation    抗通胀(BEI↑/原油↑)     → 金涨        (通胀预期)
+      cb           央行净购金(WGC 季度)    → 金价托底    (结构性买盘/去美元化, 季度数据)
     """
     WIN = 90
     g_ret = daily_ret_map('gold', WIN)
@@ -731,7 +784,6 @@ def _gold_driver_model():
     inf_cands = [corr_pair(g, [bei_chg[d] for d in dates]),
                  corr_pair(g, [oil_ret[d] for d in dates])]
     inf_sup = max([c for c in inf_cands if c is not None], default=None)
-    struct_sup = corr_pair(g, [ry_chg[d] for d in dates])         # 金涨伴随实际利率↑ = 脱钩 = 结构性
 
     ry_t = _level_trend('tips10', dates)
     dxy_t = _level_trend('dxy', dates)
@@ -754,6 +806,22 @@ def _gold_driver_model():
     haven_dir = (vix_t > 0) or (spx_t < 0) or (uj_t < 0)
     inf_dir = (bei_t > 0) or (oil_t > 0)
 
+    # === 央行购金因子 (WGC 季度数据) ===
+    # 取最新季度 vs 1 年前同季度的同比变化判断'托底是否增强'; 并以最新季度 vs 90 日窗口内金价的
+    # 季度级相关(若有重叠季度)作为参考。季度数据天然'慢变量', 不参与日度赢家逻辑.
+    cb_latest_t = WGC_CB_PURCHASES_TONNES[-1][1] if WGC_CB_PURCHASES_TONNES else 0
+    cb_latest_q = WGC_CB_PURCHASES_TONNES[-1][0] if WGC_CB_PURCHASES_TONNES else ''
+    cb_yoy = (cb_latest_t - WGC_CB_PURCHASES_TONNES[-5][1]) if len(WGC_CB_PURCHASES_TONNES) >= 5 else None
+    cb_active = (cb_latest_t >= 200) or (cb_yoy is not None and cb_yoy > 0)   # 季度净购金≥200吨 或 同比扩张 → 托底仍在
+    cb_strength = 0
+    if cb_active:
+        cb_strength = 50
+    if cb_latest_t >= 250:
+        cb_strength += 25   # 极活跃(Q2'26 288.9 吨级别)
+    if cb_yoy is not None and cb_yoy > 0:
+        cb_strength += 25   # 同比扩张
+    cb_strength = min(100, cb_strength)
+
     def _score(c, ok):
         if c is None:
             return 0
@@ -764,17 +832,17 @@ def _gold_driver_model():
         'dollar': _score(dxy_sup, dxy_down),
         'haven': _score(haven_sup, haven_dir),
         'inflation': _score(inf_sup, inf_dir),
-        'structural': _score(struct_sup, gold_up),
+        'cb': cb_strength,
     }
     META = {
         'actual_rate': ('实际利率（10Y TIPS）', '实际利率下行'),
         'dollar': ('美元指数 DXY', '美元走弱 / 货币贬值'),
         'haven': ('避险（VIX / 美股 / 日元）', '避险需求'),
         'inflation': ('抗通胀（BEI / 原油）', '抗通胀叙事'),
-        'structural': ('央行购金 / 去美元化', '结构性买盘（脱钩）'),
+        'cb': ('央行购金（WGC 季度）', '结构性托底 / 去美元化'),
     }
     corr_map = {'actual_rate': ry_sup, 'dollar': dxy_sup, 'haven': haven_sup,
-                'inflation': inf_sup, 'structural': struct_sup}
+                'inflation': inf_sup, 'cb': None}
     drivers = []
     for k, (nm, lbl) in META.items():
         if k == 'actual_rate':
@@ -786,7 +854,9 @@ def _gold_driver_model():
         elif k == 'inflation':
             dir_txt = ('通胀预期↑' if inf_dir else '通胀预期平稳')
         else:
-            dir_txt = ('金价与实际利率同向' if (struct_sup or 0) > 0 else '金价跟随实际利率')
+            yoy_txt = f'同比 {("+" + format(cb_yoy, ".0f") + "吨") if cb_yoy is not None else "—"}' if cb_yoy is not None else '—'
+            q_num = int(cb_latest_q[5:7]) // 3 if len(cb_latest_q) >= 7 else 0
+            dir_txt = f'Q{q_num} 净购 {cb_latest_t:.0f}吨, {yoy_txt}'
         drivers.append({'key': k, 'name': nm, 'score': scores[k], 'dir': dir_txt,
                         'corr': (round(corr_map[k], 2) if corr_map[k] is not None else None),
                         'active': scores[k] >= 35, 'role': 'none'})
@@ -806,11 +876,15 @@ def _gold_driver_model():
         else:
             dr['role'] = 'none'
 
-    phase_current = 'structural' if (scores['structural'] >= scores['actual_rate'] and scores['structural'] >= 25) else 'rate'
-    analysis = _gold_analysis(gold_ret_win, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir)
+    # 阶段判断: 央行购金持续(Q 净购金≥200吨 或同比扩张)→ 阶段三(结构性); 否则按传统锚定逻辑
+    phase_current = 'structural' if cb_active else 'rate'
+    analysis = _gold_analysis(gold_ret_win, primary, primary_label, drivers, scores, ry_t, dxy_t, haven_dir, inf_dir,
+                              cb_latest_t, cb_latest_q, cb_yoy)
     return {'ok': True, 'drivers': drivers, 'primary': primary, 'primaryLabel': primary_label,
             'analysis': analysis, 'goldReturn': round(gold_ret_win, 1) if gold_ret_win is not None else None,
-            'phases': _gold_phases(phase_current)}
+            'phases': _gold_phases(phase_current),
+            'cbLatest': {'date': cb_latest_q, 'tonnes': cb_latest_t, 'yoy': cb_yoy,
+                         'history': WGC_CB_PURCHASES_TONNES[-8:]}}
 
 def _build_gold_narrative():
     """黄金定价叙事：五因子 vs 黄金走势对比图(近1年累计涨跌, 因子均为原始方向) + 五因子驱动模型(近90日真实相关)。"""
@@ -1009,6 +1083,8 @@ DATA['assets'] = {
     'usIndicesChart': _build_us_indices_chart(),
     # 黄金定价三叙事观测: 黄金 vs 美元指数/美元日元/原油 (归一化累计涨跌%)
     'goldNarrativeChart': _build_gold_narrative(),
+    # 全球央行净购金走势 (WGC 季度) —— 参与黄金驱动模型+独立走势图
+    'cbPurchasesChart': _build_cb_purchases_chart(),
 }
 
 # ====== 利率 ======
