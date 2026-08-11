@@ -1596,6 +1596,108 @@ function renderAiCycle(cyc) {
   }
   return sectionCard('🌀 AI 资本开支周期 · 超级周期位置', (cyc.asOf || ''), inner);
 }
+function _aiFmt(x, suffix) {
+  if (x === null || x === undefined) return '—';
+  if (suffix === '%') return Number(x).toFixed(x >= 10 || x <= -10 ? 0 : 1) + '%';
+  if (suffix === 'x') return Number(x).toFixed(x >= 10 ? 1 : 1) + 'x';
+  if (suffix === 'B') return '$' + Number(x).toFixed(1) + 'B';
+  return String(x);
+}
+function _aiValColor(v, kind) {
+  // 估值: 越低越绿(便宜); 质量: 越高越绿; 增速: 越高越绿
+  if (kind === 'pe' || kind === 'fwdPe' || kind === 'peg') {
+    if (v === null || v === undefined) return 'var(--text-secondary)';
+    if (v <= 0) return '#9ca3af';
+    if (v <= 15) return '#2a9d8f';
+    if (v <= 30) return '#4361ee';
+    if (v <= 50) return '#f59e0b';
+    return '#e63946';
+  }
+  if (v === null || v === undefined) return 'var(--text-secondary)';
+  if (v >= 70) return '#2a9d8f';
+  if (v >= 45) return '#4361ee';
+  if (v >= 25) return '#f59e0b';
+  return '#e63946';
+}
+function _aiHighlightSummary(text) {
+  if (!text) return '';
+  // 高亮金额 $X.XB/M、百分比 +/-X%、季度/财年、指引
+  var t = text.replace(/(\$[\d\.]+[BMK]?)/g, '<b style="color:#4361ee">$1</b>');
+  t = t.replace(/([\+\-]?\d+(?:\.\d+)?%)/g, '<b style="color:#2a9d8f">$1</b>');
+  t = t.replace(/\b(Q[1-4]|H1|H2|FY\d{2,4})\b/g, '<b style="color:#7f77dd">$1</b>');
+  // 风险关键词标红
+  var risks = ['风险', '承压', '客户集中', '债务', '下修', '不及预期', '估值过高', '放缓', '疲软', '亏损', '高 beta'];
+  risks.forEach(function (w) {
+    var re = new RegExp(w, 'g');
+    t = t.replace(re, '<span style="color:#e63946;font-weight:600">' + w + '</span>');
+  });
+  return t;
+}
+function _aiResearchCard(c) {
+  var r = c.research || {};
+  var src = (r.sources && r.sources.length) ? '<a href="' + r.sources[0].url + '" target="_blank" style="color:var(--accent);font-size:11px;margin-left:6px">来源↗</a>' : '';
+  var eps = c.epsRevision, epsStr = '';
+  if (eps != null) {
+    epsStr = '<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;background:' + (eps >= 0 ? '#e6f6ee' : '#fde2e2') + ';color:' + (eps >= 0 ? '#1d9e75' : '#c0392b') + ';margin-left:6px">EPS修正 ' + (eps >= 0 ? '+' : '') + eps + '%</span>';
+  }
+  var rt = c.ratingTrend, rtStr = '';
+  if (rt != null) rtStr = '<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#f3f4f6;color:#6b7280;margin-left:4px">评级' + (rt > 0.1 ? '↑' : rt < -0.1 ? '↓' : '→') + '</span>';
+  var disp = (c.ratingDispersion != null) ? '<span style="font-size:11px;color:#9ca3af;margin-left:4px">分歧 ' + c.ratingDispersion + '</span>' : '';
+  var consensusBadge = r.consensus ? '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#e8ecff;color:#4361ee;margin-right:6px">' + r.consensus + '</span>' : '';
+
+  // 拆分 summary / notes：数字与风险高亮
+  var summaryHtml = _aiHighlightSummary(r.summary || '');
+  var notesHtml = _aiHighlightSummary(c.notes || '');
+
+  // AI 卡位指标
+  var aiKpi = '';
+  if (c.aiRevPct != null) {
+    aiKpi += '<div style="flex:1;min-width:80px;text-align:center;padding:8px;border:1px solid var(--border-card);border-radius:8px;background:#f8f9fc">'
+      + '<div style="font-size:10px;color:var(--text-tertiary)">AI收入占比</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#4361ee">' + c.aiRevPct + '%</div></div>';
+  }
+  if (c.aiRevGrowth != null) {
+    aiKpi += '<div style="flex:1;min-width:80px;text-align:center;padding:8px;border:1px solid var(--border-card);border-radius:8px;background:#f8f9fc">'
+      + '<div style="font-size:10px;color:var(--text-tertiary)">AI增速</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#2a9d8f">+' + c.aiRevGrowth + '%</div></div>';
+  }
+  if (c.pricingPower != null) {
+    aiKpi += '<div style="flex:1;min-width:80px;text-align:center;padding:8px;border:1px solid var(--border-card);border-radius:8px;background:#f8f9fc">'
+      + '<div style="font-size:10px;color:var(--text-tertiary)">定价权</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#7f77dd">' + c.pricingPower + '</div></div>';
+  }
+
+  return '<div style="background:#fff;border:1px solid var(--border-card);border-radius:12px;padding:14px 16px;margin-bottom:10px">'
+    + '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px">'
+    + '<span class="ticker" style="font-size:14px">' + c.ticker + '</span>' + _aiMkt(c.market)
+    + '<span style="font-size:12px;color:var(--text-secondary);margin-left:4px">' + c.name + '</span>'
+    + '<div style="margin-left:auto;display:flex;align-items:center;gap:4px">'
+    + consensusBadge + '<span style="font-size:12px;color:var(--text-secondary)">' + (r.ratingScore || '—') + '/5 · ' + (r.reports || 0) + '篇</span>' + epsStr + rtStr + disp + src + '</div></div>'
+    + (aiKpi ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' + aiKpi + '</div>' : '')
+    + (summaryHtml ? '<div style="font-size:13px;line-height:1.8;color:var(--text-primary);margin-bottom:8px">' + summaryHtml + '</div>' : '')
+    + (notesHtml ? '<div style="font-size:12px;line-height:1.7;color:var(--text-secondary);padding:8px 10px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-card)">' + notesHtml + '</div>' : '')
+    + (c.stale ? '<div style="font-size:11px;color:#e9a23b;margin-top:8px">⚠ 财务数据较旧，更新于 ' + (c.curatedDate || '?') + '</div>' : '')
+    + '</div>';
+}
+function _renderAiFinancials(L) {
+  var rows = (L.companies || []).map(function (c) {
+    return [
+      '<div><span class="ticker">' + c.ticker + '</span>' + _aiMkt(c.market) + '<br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span></div>',
+      '<div style="font-size:13px;font-weight:700;color:' + _aiValColor(c.marketCap, 'pe') + '">' + _aiFmt(c.marketCap, 'B') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.pe, 'pe') + '">' + _aiFmt(c.pe, 'x') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.fwdPe, 'pe') + '">' + _aiFmt(c.fwdPe, 'x') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.peg, 'pe') + '">' + _aiFmt(c.peg, 'x') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.revGrowth, '') + '">' + _aiFmt(c.revGrowth, '%') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.grossMargin, '') + '">' + _aiFmt(c.grossMargin, '%') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.fcfMargin, '') + '">' + _aiFmt(c.fcfMargin, '%') + '</div>',
+      '<div style="font-size:13px;color:' + _aiValColor(c.roe, '') + '">' + _aiFmt(c.roe, '%') + '</div>'
+    ];
+  });
+  return table(
+    ['公司', '市值', 'PE', 'Fwd PE', 'PEG', '营收增速', '毛利率', 'FCF率', 'ROE'],
+    rows
+  ) + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:6px">市值统一为 USD $B；带 <span style="color:#e9a23b">⚠</span> 或 est=true 的字段为策展估计值，需随财报刷新。</div>';
+}
 function renderAiLayer(L) {
   var s = L.stats || {};
   var inner = '';
@@ -1620,6 +1722,9 @@ function renderAiLayer(L) {
     ];
   });
   inner += table(headers, rows);
+  // 财务基本面模块
+  inner += sectionH('💵 财务基本面', '估值 / 盈利质量 / 成长（市值统一 USD $B；颜色越深/红=越高估或越弱）');
+  inner += _renderAiFinancials(L);
   // 中美韩对比面板: 该层各市场领头羊 + 跨市场最佳 (折叠)
   var cmp = L.comparison || {}, leaders = cmp.leaders || {}, mkKeys = Object.keys(leaders);
   if (mkKeys.length > 1) {
@@ -1636,18 +1741,7 @@ function renderAiLayer(L) {
   }
   var rs = (L.companies || []).filter(function (c) { return c.research; });
   if (rs.length) {
-    var _rsInner = '<div class="watch-list">';
-    rs.forEach(function (c) {
-      var r = c.research;
-      var src = (r.sources && r.sources.length) ? '<a href="' + r.sources[0].url + '" target="_blank" style="color:var(--accent);font-size:11px;margin-left:6px">来源↗</a>' : '';
-      var eps = c.epsRevision, epsStr = (eps != null) ? ' <span style="color:' + (eps >= 0 ? 'var(--up)' : 'var(--down)') + '">EPS修正 ' + (eps >= 0 ? '+' : '') + eps + '%</span>' : '';
-      var rt = c.ratingTrend, rtStr = (rt != null) ? ' 评级' + (rt > 0.1 ? '↑' : rt < -0.1 ? '↓' : '→') : '';
-      var disp = (c.ratingDispersion != null) ? ' 分歧' + c.ratingDispersion : '';
-      _rsInner += '<div class="watch-item"><div class="watch-trigger"><b>' + c.ticker + '</b> · ' + (r.consensus || '—')
-        + ' <span style="color:var(--text-tertiary);font-weight:400">(' + (r.ratingScore || '—') + '/5, ' + (r.reports || 0) + '篇)</span>' + epsStr + rtStr + disp + src + '</div>'
-        + '<div class="watch-implication" style="font-size:11px;color:var(--text-secondary)">' + (r.summary || '') + (c.notes ? ' ｜ ' + c.notes : '') + ((c.aiRevPct != null) ? ' ｜ <span style="color:var(--text-tertiary)">AI卡位: 收入占比' + c.aiRevPct + '% · AI增速' + (c.aiRevGrowth || 0) + '% · 定价权' + (c.pricingPower || 0) + '</span>' : '') + (c.stale ? ' ｜ <span style="color:#e9a23b">⚠财务较旧(更新于 ' + (c.curatedDate || '?') + ')</span>' : '') + '</div></div>';
-    });
-    _rsInner += '</div>';
+    var _rsInner = rs.map(_aiResearchCard).join('');
     inner += _aiCollapse('📑 研报共识与备注', _rsInner, false);
   }
   return sectionCard(L.name + ' · ' + (L.en || ''), (s.count || 0) + ' 家公司 · 平均AI价值分 ' + (s.avgAiValue || 0) + (s.topPick ? ' · 优选 ' + s.topPick : ''), inner);
@@ -1829,10 +1923,69 @@ function _renderAiTab(tab, d) {
   btns.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-ai-tab') === tab); });
 }
 
+function _aiFlowColor(score) {
+  if (score >= 70) return '#e63946';
+  if (score >= 55) return '#f59e0b';
+  if (score >= 40) return '#4361ee';
+  return '#2a9d8f';
+}
+function _renderAiFlow(d) {
+  var fd = d.flowData || {};
+  var layers = fd.layers || [];
+  if (!layers.length) return '<div class="loading">资金流向数据加载中...</div>';
+  var maxScore = Math.max.apply(null, layers.map(function (x) { return x.flowScore; })) || 1;
+  var totalScore = layers.reduce(function (a, b) { return a + b.flowScore; }, 0);
+  var maxLayer = fd.maxLayer || layers[0].name;
+
+  // SVG 流向图：左侧资金池 → 右侧各层
+  var h = 280, w = 680, leftX = 90, rightX = 520, nodeW = 120, nodeH = 30;
+  var gap = (h - 30) / Math.max(layers.length, 1);
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:260px">'
+    + '<defs><marker id="aiFlowArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#9ca3af"/></marker></defs>';
+  // 资金池节点
+  svg += '<rect x="' + (leftX - nodeW / 2) + '" y="' + (h / 2 - nodeH) + '" width="' + nodeW + '" height="' + (nodeH * 2) + '" rx="10" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>'
+    + '<text x="' + leftX + '" y="' + (h / 2 - 4) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#374151">市场资金池</text>'
+    + '<text x="' + leftX + '" y="' + (h / 2 + 14) + '" text-anchor="middle" font-size="10" fill="#6b7280">按动量+广度估算</text>';
+  layers.forEach(function (ly, i) {
+    var y = 25 + i * gap;
+    var pct = totalScore ? (ly.flowScore / totalScore) : 0;
+    var strokeW = 4 + (ly.flowScore / maxScore) * 22;
+    var col = _aiFlowColor(ly.flowScore);
+    // 连线
+    svg += '<path d="M' + (leftX + nodeW / 2) + ',' + (h / 2) + ' C' + ((leftX + rightX) / 2) + ',' + (h / 2) + ' ' + ((leftX + rightX) / 2) + ',' + (y + nodeH / 2) + ' ' + (rightX - nodeW / 2) + ',' + (y + nodeH / 2) + '"'
+      + ' fill="none" stroke="' + col + '" stroke-width="' + strokeW + '" stroke-opacity="0.5" marker-end="url(#aiFlowArrow)"/>';
+    // 层节点
+    svg += '<rect x="' + (rightX - nodeW / 2) + '" y="' + y + '" width="' + nodeW + '" height="' + nodeH + '" rx="8" fill="#fff" stroke="' + col + '" stroke-width="2"/>'
+      + '<text x="' + (rightX - 6) + '" y="' + (y + 13) + '" text-anchor="end" font-size="11" font-weight="600" fill="#1a1d29">' + ly.name + '</text>'
+      + '<text x="' + (rightX + 6) + '" y="' + (y + 13) + '" text-anchor="start" font-size="11" font-weight="700" fill="' + col + '">' + ly.flowScore + '</text>';
+    // 右侧详情
+    svg += '<text x="' + (rightX + nodeW / 2 + 8) + '" y="' + (y + 12) + '" font-size="10" fill="#6b7280">动量 ' + ly.avgMomentum + ' · 领涨 ' + ly.breadthPct + '% · ' + Math.round(pct * 100) + '%</text>';
+  });
+  svg += '</svg>';
+
+  var rankHtml = layers.map(function (ly, idx) {
+    var col = _aiFlowColor(ly.flowScore);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border-card);font-size:12px">'
+      + '<div style="font-weight:700;color:var(--text-tertiary);width:20px">#' + (idx + 1) + '</div>'
+      + '<div style="flex:1;font-weight:600">' + ly.name + '</div>'
+      + '<div style="width:120px">' + _aiBar(ly.flowScore, col) + '</div>'
+      + '<div style="font-weight:700;color:' + col + ';width:40px;text-align:right">' + ly.flowScore + '</div>'
+      + '<div style="font-size:11px;color:var(--text-secondary);width:140px;text-align:right">领涨 ' + ly.breadthPct + '% · ' + ly.companyCount + ' 家</div></div>';
+  }).join('');
+
+  var inner = '<div style="display:grid;grid-template-columns:minmax(300px,1.2fr) minmax(260px,1fr);gap:18px;align-items:start">'
+    + '<div>' + svg + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:6px">' + (fd.method || '') + '</div></div>'
+    + '<div style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;overflow:hidden">'
+    + '<div style="padding:10px 12px;font-size:12px;font-weight:600;background:#fff;border-bottom:1px solid var(--border-card)">资金流向强度排行</div>' + rankHtml + '</div></div>';
+
+  return sectionCard('💧 AI 产业链资金流向 · 当前资金聚焦：' + maxLayer, '箭头粗细 ≈ 估算资金流入强度；分数 = 0.45×平均动量 + 0.35×领涨广度 + 0.20×市值加权动量', inner);
+}
+
 // 总览页：周期 + 各层热力 + 可视化 + 价值股
 function _renderAiOverview(d) {
   var html = '';
   if (d.cycle) html += renderAiCycle(d.cycle);
+  html += _renderAiFlow(d);
   html += sectionH('各层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">';
   (d.layers || []).forEach(function (L) {

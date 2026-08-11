@@ -1926,6 +1926,27 @@ _ai_cycle_out = dict(_ai_cycle)
 _ai_cycle_out['heat'] = _ai_heat
 _ai_cycle_out['heatDriver'] = {'avgMomentum': _ai_summary['avgMomentum'],
                                'avgValuationScore': _avg_val_cycle, 'breadthPct': _breadth_cycle}
+# 计算 AI 产业链各层资金流向强度 (用于总览页流向图)
+# 资金流强度 = 价格动量(50%) + 领涨广度(30%) + 市值变化热度(20%, 用估值昂贵度反推资金追捧)
+_ai_flow = []
+for _ly in _ai_layers_out:
+    _cs = _ly.get('companies', [])
+    if not _cs:
+        continue
+    _avg_mom = sum(c['scores']['momentum'] for c in _cs) / len(_cs)
+    _breadth = 100 * sum(1 for c in _cs if c['scores']['momentum'] > 65) / len(_cs)
+    _cap_w_mom = sum(c['scores']['momentum'] * (c.get('marketCap') or 1) for c in _cs) / sum((c.get('marketCap') or 1) for c in _cs)
+    _flow = round(0.45 * _avg_mom + 0.35 * _breadth + 0.20 * _cap_w_mom)
+    _ai_flow.append({
+        'name': _ly['name'], 'id': _ly['id'], 'flowScore': _aiclip(_flow),
+        'avgMomentum': round(_avg_mom), 'breadthPct': round(_breadth),
+        'capWeightedMomentum': round(_cap_w_mom),
+        'companyCount': len(_cs), 'totalMarketCap': round(sum(c.get('marketCap') or 0 for c in _cs), 1),
+        'topMover': max(_cs, key=lambda x: x['scores']['momentum'])['ticker'],
+        'topMoverMomentum': max(c['scores']['momentum'] for c in _cs)
+    })
+_ai_flow_sorted = sorted(_ai_flow, key=lambda x: x['flowScore'], reverse=True)
+
 DATA['aiChain'] = {
     'meta': {'asOf': AIC.get('asOf', ''), 'disclaimer': AIC.get('disclaimer', ''),
              'note': '六层(黄仁勋五层蛋糕+网络连接层): 应用→模型→基础设施→网络连接→芯片→能源; 股价动量自动(Yahoo), 基本面/研报/周期叙事为策展种子值(其中 cycle.capex 为公开指引估计)'},
@@ -1933,7 +1954,13 @@ DATA['aiChain'] = {
     'bestValuePicks': _ai_best_picks,
     'summary': _ai_summary,
     'marketSummary': _ai_market_summary,
-    'cycle': _ai_cycle_out
+    'cycle': _ai_cycle_out,
+    'flowData': {
+        'asOf': str(datetime.date.today()),
+        'layers': _ai_flow_sorted,
+        'maxLayer': _ai_flow_sorted[0]['name'] if _ai_flow_sorted else None,
+        'method': '资金流向强度 = 0.45×平均动量 + 0.35×领涨广度(动量>65占比) + 0.20×市值加权动量。分数越高=近期资金流入/关注度越高。'
+    }
 }
 print('[gen_datajs] aiChain section OK', file=sys.stderr, flush=True)
 
