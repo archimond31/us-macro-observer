@@ -658,7 +658,7 @@ function renderAssets(c) {
   '</div>';
   html += chartCard('大类资产热力图', '日涨跌幅 · 红=涨 绿=跌', 'heatmap', 'short');
   html += '<div class="chart-row one-col">' +
-    chartCard('美股指数走势（累计涨跌）', (d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体') + ' · 可框选/滚轮缩放横轴', 'usIndices', 'tall', '<button class="chart-zoom-reset" id="usIndicesReset">重置缩放</button>') +
+    chartCard('美股指数 + 加密货币走势（累计涨跌）', (d.usIndicesChart.note || '累计涨跌(起点=0%) · 美股五大指数 + 比特币/以太坊') + ' · 拖动下方滑块调整时间区间', 'usIndices', 'tall', '<button class="chart-zoom-reset" id="usIndicesReset">重置</button>', rangeSliderHTML('usIndices')) +
     '</div>';
   html += '<div class="chart-row one-col">' +
     chartCard('黄金定价 · 五因子 vs 黄金走势', (d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 五因子与黄金走势对比') + ' · 拖动下方滑块调整时间区间', 'goldNarr', 'tall', '<button class="chart-zoom-reset" id="goldNarrReset">重置</button>', rangeSliderHTML('goldNarr')) +
@@ -687,22 +687,39 @@ function renderAssets(c) {
   });
   renderCorr(document.getElementById('corr').parentElement, d.correlation);
   renderAssetHeat(document.getElementById('heatmap').parentElement, d.table);
-  // 美股五大指数归一化走势
+  // 美股五大指数 + 加密货币归一化走势 (与黄金图一致: tooltip 显示时间点真实值 + 底部时间区间滑块)
   if (d.usIndicesChart && d.usIndicesChart.series && Object.keys(d.usIndicesChart.series).length > 0) {
     const uid = d.usIndicesChart;
+    const uiNames = Object.keys(uid.series);
     const uiOpts = baseOpts('%');
-    uiOpts.plugins.zoom = zoomXOpts();
+    uiOpts.plugins.tooltip.callbacks.label = function (ctx) {
+      const ds = ctx.dataset;
+      const idx = ctx.dataIndex;
+      const raw = (ds.rawData && ds.rawData[idx]) ? ds.rawData[idx] : '';
+      const y = ctx.parsed.y;
+      const sign = y >= 0 ? '+' : '';
+      return ds.origLabel + (raw ? ' ' + raw : '') + ' · 累计 ' + sign + y.toFixed(2) + '%';
+    };
     charts.usIndices = new Chart(document.getElementById('usIndices'), {
       type: 'line',
       data: {
         labels: uid.labels,
-        datasets: Object.keys(uid.series).map((n, i) => ({
-          label: n, data: uid.series[n],
+        datasets: uiNames.map((n, i) => ({
+          label: n,
+          origLabel: n,
+          data: uid.series[n],
+          rawData: (uid.rawSeries && uid.rawSeries[n]) ? uid.rawSeries[n] : null,
           borderColor: COLORS.series[i % COLORS.series.length],
           backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
         }))
       },
       options: uiOpts
+    });
+    // 底部时间区间滑块 (数据切片方案, 与黄金图一致); 不再启用 zoom 插件
+    initRangeSlider(charts.usIndices, 'usIndices', {
+      labels: uid.labels,
+      nums: uiNames.map(function (n) { return (uid.rawNums && uid.rawNums[n]) ? uid.rawNums[n] : null; }),
+      raws: uiNames.map(function (n) { return (uid.rawSeries && uid.rawSeries[n]) ? uid.rawSeries[n] : null; })
     });
   }
   // 黄金定价五因子: 黄金 vs 实际利率/美元指数/避险VIX/通胀预期BEI (归一化累计涨跌, 因子均为原始方向不翻转)
@@ -752,12 +769,8 @@ function renderAssets(c) {
       raws: gnNames.map(function (n) { return (gn.rawSeries && gn.rawSeries[n]) ? gn.rawSeries[n] : null; })
     });
   }
-  // 横轴缩放重置按钮 (usIndices 用 resetZoom; goldNarr 的滑块复位在 initRangeSlider 内绑定)
-  const resetZoom = function (id, key) {
-    const btn = document.getElementById(id);
-    if (btn) btn.onclick = function () { if (charts[key]) charts[key].resetZoom(); };
-  };
-  resetZoom('usIndicesReset', 'usIndices');
+  // 两个带滑块图表的"重置"按钮复位逻辑在 initRangeSlider 内绑定(id+Reset);
+  // 黄金图五因子驱动模型以下不再需要单独 resetZoom
 }
 
 // 黄金定价五因子驱动模型 (专家框架) + 三阶段叙事

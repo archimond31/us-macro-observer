@@ -590,13 +590,14 @@ def trend_meaning(name, ch):
     return '多尺度方向不一, 趋势不明'
 
 def _build_us_indices_chart():
-    """构建美股五大指数走势图数据 (归一化至起点=0%, 即累计收益率)。
+    """构建美股指数 + 加密货币走势图数据 (归一化至起点=0%, 即累计收益率)。
     数据源优先级: Yahoo 实时 > FRED 滞后。取最近 ~500 个交易日(约2年)。
-    X轴改为时间轴(日期)。"""
+    X轴改为时间轴(日期)。含 rawSeries/rawNums 供前端 tooltip 时间点值显示与区间滑块重新归一化。"""
     indices = [
         ('标普500', 'spx'), ('纳斯达克100', 'ndx'),
         ('道琼斯', 'dji_yahoo' if s('dji_yahoo') else 'dji'),
         ('罗素2000', 'rut'), ('费城半导体', 'sox'),
+        ('比特币', 'btc'), ('以太坊', 'eth'),
     ]
     raw_series = {}
     for name, key in indices:
@@ -605,21 +606,33 @@ def _build_us_indices_chart():
             raw_series[name] = [(d, v) for d, v in arr]
     if len(raw_series) < 3:
         return {'labels': [], 'series': {}, 'note': '数据不足'}
-    min_len = min(len(v) for v in raw_series.values())
-    take = min(500, min_len)
-    # 用参考序列(spx 优先)的日期作为 X 轴时间轴
+    # 用参考序列(spx 优先)的日期作为 X 轴时间轴, 其他序列按日期对齐(加密资产周末无指数点位→None)
     ref_name = '标普500' if '标普500' in raw_series else list(raw_series.keys())[0]
-    dates = [d for d, _ in raw_series[ref_name][-take:]]
-    series = {}
+    ref_dates = [d for d, _ in raw_series[ref_name]]
+    take = min(500, len(ref_dates))
+    dates = ref_dates[-take:]
+    series, rawSeries, rawNums = {}, {}, {}
     for name, key in indices:
         if name not in raw_series:
             continue
-        arr = raw_series[name][-take:]
-        base = next((v for _, v in arr if v), None)
+        m = dict(raw_series[name])
+        vals = [m.get(d) for d in dates]
+        rawNums[name] = vals
+        fmt_vals = []
+        for v in vals:
+            if v is None:
+                fmt_vals.append(None)
+            elif name in ('比特币', '以太坊'):
+                fmt_vals.append('$' + format(int(round(v)), ','))
+            else:
+                fmt_vals.append(format(round(v), ','))
+        rawSeries[name] = fmt_vals
+        base = next((v for v in vals if v), None)
         if base and base != 0:
             # 归一化至累计收益率(起点=0%), 而非起点=100
-            series[name] = [round((x / base - 1) * 100, 2) if x else None for _, x in arr]
-    return {'labels': dates, 'series': series, 'note': f'累计涨跌(起点=0%) · 近{take}个交易日'}
+            series[name] = [round((x / base - 1) * 100, 2) if x else None for x in vals]
+    return {'labels': dates, 'series': series, 'rawSeries': rawSeries, 'rawNums': rawNums,
+            'note': f'累计涨跌(起点=0%) · 近{take}个交易日 · 美股五大指数 + 比特币/以太坊'}
 
 def _chg_map(key, n=120):
     """序列水平日度绝对变化 (适用于收益率/波动率等水平型序列); 返回 {date: chg}。"""
