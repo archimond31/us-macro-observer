@@ -429,6 +429,16 @@ function initRangeSlider(chart, id, labels) {
   }
 
   function applyChart() {
+    // Chart.js v4: chart.options.scales.x 的 min/max 修改在 update 时不会传播到内部 scale,
+    // 必须用 chart.scales.x.setOptions() 或直接改 chart.scales.x.options 才能重绘横轴范围
+    const xs = chart.scales && chart.scales.x;
+    const newOpts = { min: state.start, max: state.end };
+    if (xs && typeof xs.setOptions === 'function') {
+      xs.setOptions(newOpts);
+    } else if (xs) {
+      xs.options.min = state.start;
+      xs.options.max = state.end;
+    }
     chart.options.scales.x.min = state.start;
     chart.options.scales.x.max = state.end;
     chart.update('none');
