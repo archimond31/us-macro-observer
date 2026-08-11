@@ -1,6 +1,6 @@
 {
   "asOf": "2026-08-11",
-  "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP/劳动参与率）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/LPR/CPI/Core/GDP）。",
+  "source": "公布值来自 BLS/BEA 官方发布；市场预期值为彭博/路透一致预期中值。本文件为策展维护：每次重大数据（CPI/PPI/非农/GDP/劳动参与率/核心PCE/超级核心PCE）发布后，更新对应条目即可；tag 需与 gen_datajs.py 中指标卡的 tag 一致（NFP/UNRATE/LPR/CPI/Core/GDP/PCE/SuperCore）。超级核心PCE(SuperCore)市场无独立一致预期，consensus 置 null 显示'无一致预期'。",
   "releases": [
     {
       "indicator": "非农就业 (月增)",
@@ -85,6 +85,34 @@
       "higherIsBetter": true,
       "tolerance": 0.1,
       "note": "增速放缓且低于预期；政府支出转负拖累，但私人最终销售加速至3.9%。"
+    },
+    {
+      "indicator": "核心PCE 同比",
+      "tag": "PCE",
+      "periodLabel": "2026年6月",
+      "releaseDate": "2026-07-30",
+      "unit": "%",
+      "actual": 3.3,
+      "consensus": 3.3,
+      "previous": 3.4,
+      "previousLabel": "5月",
+      "higherIsBetter": false,
+      "tolerance": 0.1,
+      "note": "同比3.3%符合预期；环比仅+0.1%(预期+0.2%)，为2025年3月以来最小增幅，美联储首选通胀指标连续64个月高于2%目标。"
+    },
+    {
+      "indicator": "超级核心PCE 同比",
+      "tag": "SuperCore",
+      "periodLabel": "2026年6月",
+      "releaseDate": "2026-07-30",
+      "unit": "%",
+      "actual": 3.8,
+      "consensus": null,
+      "previous": 4.1,
+      "previousLabel": "5月",
+      "higherIsBetter": false,
+      "tolerance": 0.1,
+      "note": "PCE服务除能源除住房(超级核心)，美联储最看重的通胀口径；同比回落至3.8%但仍在高位，通胀病根顽固。市场无独立一致预期，参考机构监测口径。"
     }
   ]
 }

@@ -181,6 +181,7 @@ function consensusBadge(m) {
     beat:   ['好于预期', '#1d9e75', 'rgba(42,157,143,0.14)'],
     miss:   ['差于预期', '#c0392b', 'rgba(230,57,70,0.14)'],
     inline: ['符合预期', '#6b7280', 'rgba(107,114,128,0.12)'],
+    na:     ['无一致预期', '#8a93a3', 'rgba(138,147,163,0.12)'],
   };
   const v = vmap[ci.verdict] || vmap.inline;
   return '<div class="metric-consensus">市场预期 <b>' + ci.consensus + '</b> <span style="color:var(--text-tertiary)">(' + ci.periodLabel + ')</span> · <span class="verdict-badge" style="color:' + v[1] + ';background:' + v[2] + '">' + v[0] + '</span></div>';
