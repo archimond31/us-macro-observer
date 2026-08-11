@@ -800,33 +800,46 @@ def _gold_driver_model():
             'phases': _gold_phases(phase_current)}
 
 def _build_gold_narrative():
-    """黄金定价叙事：四资产对比图(近1年累计涨跌) + 五因子驱动模型(近90日真实相关)。"""
+    """黄金定价叙事：五因子 vs 黄金走势对比图(近1年累计涨跌, 因子按利好黄金方向翻转) + 五因子驱动模型(近90日真实相关)。"""
     base = s('gold')
     if not base:
         return {'labels': [], 'series': {}, 'note': '数据不足'}
     take = min(252, len(base))
     dates = [d for d, _ in base[-take:]]
+    # (名称, key, 反向): 把"利空黄金"的方向翻转为"利好黄金=向上", 与黄金同向即支撑金价
+    #   实际利率↑→金↓ 故取反向; 美元↑→金↓ 故取反向; 避险(VIX↑)/通胀(BEI↑)本就利好金→不翻
+    #   结构性(央行购金)为模型推算, 无直接报价序列, 见下方因子评分卡
     defs = [
-        ('黄金', 'gold'),
-        ('美元指数', 'dxy'),
-        ('美元/日元', 'usdjpy'),
-        ('WTI原油', 'wti'),
+        ('黄金', 'gold', False),
+        ('实际利率(反向)', 'tips10', True),
+        ('美元指数(反向)', 'dxy', True),
+        ('避险 VIX', 'vix', False),
+        ('通胀预期 BEI', 'bei10', False),
     ]
     series = {}
-    for name, key in defs:
+    for name, key, inv in defs:
         arr = s(key)
         if not arr:
             series[name] = [None] * len(dates)
             continue
         m = dict(arr)
         vals = [m.get(d) for d in dates]
-        b0 = next((v for v in vals if v), None)
+        b0 = next((v for v in vals if v is not None), None)
         if b0 and b0 != 0:
-            series[name] = [round((x / b0 - 1) * 100, 2) if x else None for x in vals]
+            out = []
+            for x in vals:
+                if x is None:
+                    out.append(None)
+                else:
+                    pct = (x / b0 - 1) * 100
+                    if inv:
+                        pct = -pct
+                    out.append(round(pct, 2))
+            series[name] = out
         else:
             series[name] = [None] * len(dates)
     return {'labels': dates, 'series': series,
-            'note': '近1年同起点累计涨跌% · 下方五因子评分量化各叙事贡献（实际利率/美元/避险/通胀/央行购金）',
+            'note': '近1年同起点累计涨跌% · 各因子已按"利好黄金"方向翻转(实际利率/美元取反向)，与黄金同向=支撑金价；结构性(央行购金)无报价序列，见下方因子评分卡',
             'regime': _gold_driver_model()}
 
 ASSET_MAP = [

@@ -468,7 +468,7 @@ function renderAssets(c) {
     chartCard('美股指数走势（累计涨跌）', d.usIndicesChart.note || '累计涨跌(起点=0%) · 标普500/纳斯达克100/道琼斯/罗素2000/费城半导体', 'usIndices', 'tall') +
     '</div>';
   html += '<div class="chart-row one-col">' +
-    chartCard('黄金定价叙事 · 四资产对比', d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 观测黄金定价驱动', 'goldNarr', 'tall') +
+    chartCard('黄金定价 · 五因子 vs 黄金走势', d.goldNarrativeChart.note || '近1年同起点累计涨跌% · 五因子与黄金走势对比', 'goldNarr', 'tall') +
     '</div>';
   html += renderGoldDrivers(d.goldNarrativeChart);
   html += sectionH('多尺度趋势追踪', '日/周/月/半年变化 → 识别趋势确立、加速与反转');
@@ -510,7 +510,7 @@ function renderAssets(c) {
       options: baseOpts('%')
     });
   }
-  // 黄金定价三叙事: 黄金 vs 美元指数/美元日元/原油 (归一化累计涨跌)
+  // 黄金定价五因子: 黄金 vs 实际利率(反向)/美元(反向)/避险VIX/通胀预期BEI (归一化累计涨跌, 因子按利好黄金方向翻转)
   if (d.goldNarrativeChart && d.goldNarrativeChart.labels && d.goldNarrativeChart.labels.length) {
     const gn = d.goldNarrativeChart;
     charts.goldNarr = new Chart(document.getElementById('goldNarr'), {
@@ -518,10 +518,11 @@ function renderAssets(c) {
       data: {
         labels: gn.labels,
         datasets: [
-          { label: '黄金', data: gn.series['黄金'], borderColor: '#e0a800', backgroundColor: 'rgba(224,168,0,0.10)', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: true },
-          { label: '美元指数', data: gn.series['美元指数'], borderColor: '#4361ee', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-          { label: '美元/日元', data: gn.series['美元/日元'], borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, borderDash: [5, 3] },
-          { label: 'WTI原油', data: gn.series['WTI原油'], borderColor: '#374151', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 }
+          { label: '黄金', data: gn.series['黄金'], borderColor: '#e0a800', backgroundColor: 'rgba(224,168,0,0.12)', borderWidth: 3, pointRadius: 0, tension: 0.3, fill: true },
+          { label: '实际利率(反向)', data: gn.series['实际利率(反向)'], borderColor: '#4361ee', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+          { label: '美元指数(反向)', data: gn.series['美元指数(反向)'], borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+          { label: '避险 VIX', data: gn.series['避险 VIX'], borderColor: '#ef4444', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, borderDash: [5, 3] },
+          { label: '通胀预期 BEI', data: gn.series['通胀预期 BEI'], borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3 }
         ]
       },
       options: baseOpts('%')
