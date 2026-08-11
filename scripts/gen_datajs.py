@@ -719,8 +719,10 @@ def _build_labor_triangle():
         return [m.get(rd[:7], (None, None))[1] for rd in ref_dates]
 
     # 工资 - 通胀差 = 时薪同比 - CPI 同比
+    # 注意: raw 'wage_yoy' 实际是 CES0500000003 平均时薪水平($/hr), 需先用 yoy_series 换算成同比%
+    wage_yoy_series_raw = yoy_series('wage_yoy', 40)   # [(date, 同比%), ...]
     wage_m = {}
-    for d, v in s('wage_yoy'):
+    for d, v in wage_yoy_series_raw:
         if v is not None: wage_m.setdefault(d[:7], v)
     cpi_arr = [(d, v) for d, v in s('cpi') if v is not None]
     cpi_yoy_by_month = {}
@@ -728,10 +730,12 @@ def _build_labor_triangle():
         prev = cpi_arr[i - 12][1]
         if prev:
             cpi_yoy_by_month[cpi_arr[i][0][:7]] = (cpi_arr[i][1] / prev - 1) * 100
+    wage_yoy_monthly = []
     wage_minus = []
     for rd in ref_dates:
         w = wage_m.get(rd[:7])
         c = cpi_yoy_by_month.get(rd[:7])
+        wage_yoy_monthly.append(w)
         if w is not None and c is not None:
             wage_minus.append(round(w - c, 2))
         else:
@@ -765,7 +769,7 @@ def _build_labor_triangle():
         'price': {
             'title': '价格 Price',
             'series': {
-                '时薪同比(%)': _align_level('wage_yoy'),
+                '时薪同比(%)': wage_yoy_monthly,
                 '辞职率(%)': _align_level('quits_rate'),
                 '工资-通胀差(pt)': wage_minus,
             },
@@ -1698,6 +1702,32 @@ if cpi_yoy is not None: _e_score += -1 if cpi_yoy > 3 else 0
 _e_signal = 'risk-on' if _e_score >= 1 else ('risk-off' if _e_score <= -1 else 'mixed')
 _e_label = '增长稳健+通胀温和' if _e_signal=='risk-on' else ('增长放缓+通胀回升' if _e_signal=='risk-off' else '增长分化')
 
+def _build_labor_panel():
+    """劳动力市场'需求-供给-价格'三角框架面板 (卡片数据)。
+    时薪同比从 CES0500000003(水平$/hr) 序列换算, 避免把 37.6$/hr 误当 37.6%。"""
+    _wage_ys = yoy_series('wage_yoy', 14)
+    _wage_cur = _wage_ys[-1][1] if _wage_ys else None
+    _wage_d = (_wage_cur - _wage_ys[-2][1]) if len(_wage_ys) >= 2 and _wage_cur is not None and _wage_ys[-2][1] is not None else None
+    _gap = wage_inflation_gap()
+    return {
+        'demand': [
+            {'indicator':'JOLTS职位空缺', 'value':(f'{val("jolts")/1000:.1f}M' if val('jolts') else '—'), 'prev':(f'{raw_calc_diff("jolts",1)/1000:+.1f}M 月变' if val('jolts') and raw_calc_diff('jolts',1) else '—'), 'trend':('up' if raw_calc_diff('jolts',1) and raw_calc_diff('jolts',1) > 0 else 'down'), 'note':'企业招聘需求, 美联储最关注的劳动力需求指标'},
+            {'indicator':'非农就业(月增)', 'value':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'), 'prev':(f'6月均 {nfp_avg6:+.0f}K' if nfp_avg6 is not None else '—'), 'trend':('up' if payems_mom and payems_mom > 180 else 'down'), 'note':f'6个月累计 {nfp_h6:+.0f}K' if nfp_h6 else '月度变化'},
+            {'indicator':'初请失业金(周)', 'value':(f'{val("claims")/1000:.0f}K' if val('claims') else '—'), 'trend':('down' if claims_w and claims_w < 0 else 'up'), 'prev':(f'{claims_w/1000:+.0f}K 周变' if claims_w else '—'), 'note':'最敏感就业指标, 4周均' + (f'{_claims_4wk/1000:.0f}K' if _claims_4wk else '')},
+        ],
+        'supply': [
+            {'indicator':'劳动参与率', 'value':(f'{val("participation"):.1f}%' if val('participation') else '—'), 'trend':('up' if raw_calc_diff('participation',1) and raw_calc_diff('participation',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("participation",1):+.1f}pt 月变' if raw_calc_diff('participation',1) else '—'), 'note':'劳动力供给池大小, 区分失业率下降的质量'},
+            {'indicator':'失业率', 'value':f'{unrate:.1f}%' if unrate else '—', 'trend':('down' if unrate_tf['m'] and unrate_tf['m'] < 0 else 'up'), 'prev':(f'{unrate_tf["m"]:+.1f}pt 月变' if unrate_tf['m'] else '—'), 'note':f'Sahm Rule: {_sahm["value"]}' if _sahm['value'] else '劳动力供给收缩或需求走弱'},
+            {'indicator':'续请失业金', 'value':(f'{val("cont_claims")/1000:.0f}K' if val('cont_claims') else '—'), 'trend':('up' if raw_calc_diff('cont_claims',1) and raw_calc_diff('cont_claims',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("cont_claims",1)/1000:+.0f}K 月变' if raw_calc_diff('cont_claims',1) else '—'), 'note':'比初请更滞后的确认信号'},
+        ],
+        'price': [
+            {'indicator':'时薪同比', 'value':(f'{_wage_cur:.1f}%' if _wage_cur is not None else '—'), 'trend':('up' if _wage_d is not None and _wage_d > 0 else 'down'), 'prev':(f'{_wage_d:+.1f}pt 月变' if _wage_d is not None else '—'), 'note':'工资-通胀螺旋的核心验证 (CES0500000003 水平序列换算同比)'},
+            {'indicator':'辞职率(Quits)', 'value':(f'{val("quits_rate"):.1f}%' if val('quits_rate') else '—'), 'trend':('up' if raw_calc_diff('quits_rate',1) and raw_calc_diff('quits_rate',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("quits_rate",1):+.1f}pt 月变' if raw_calc_diff('quits_rate',1) else '—'), 'note':'自愿离职=对劳动力市场有信心, 议价能力'},
+            {'indicator':'工资-通胀差', 'value':(f'{_gap:+.1f}pt' if _gap is not None else '—'), 'trend':('up' if _gap is not None and _gap > 0 else 'down'), 'note':'时薪同比-核心服务CPI同比 · 正=实际工资增长'},
+        ],
+        'analystNote': f'劳动力市场"需求-供给-价格"三角框架。Sahm Rule 当前 {_sahm["value"]} ({ "触发" if _sahm["triggered"] else "未触发"})。失业率 {unrate:.1f}%' + ('从低点回升' if (unrate_tf.get('m') or 0) > 0 else ('回落' if (unrate_tf.get('m') or 0) < 0 else '走平')) + ', 美联储关注劳动参与率与JOLTS的交叉信号。'
+    }
+
 DATA['economy'] = {
     'regime': {'label':_e_label,'signal':_e_signal,'confidence':_confidence(_e_signal, gdp_qoq is not None, unrate_tf.get('m') is not None, cpi_yoy is not None),
         'description':f'就业消费 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 与通胀 (CPI 同比 {f2(cpi_yoy)}%) 组合决定经济所处阶段。'},
@@ -1766,25 +1796,8 @@ DATA['economy'] = {
                   '服务业PMI':[dict(s('svc_pmi')[-24:]).get(d) for d, _ in s('mfg_pmi')[-24:]],
                   '荣枯线(50)':[50]*len(s('mfg_pmi')[-24:])}} if s('mfg_pmi') else {'labels':[],'series':{}},
     'inflationBreakdown': infl_rows,
-    # Phase2: 劳动力市场三角面板
-    'laborPanel': {
-        'demand': [
-            {'indicator':'JOLTS职位空缺', 'value':(f'{val("jolts")/1000:.1f}M' if val('jolts') else '—'), 'prev':(f'{raw_calc_diff("jolts",1)/1000:+.1f}M 月变' if val('jolts') and raw_calc_diff('jolts',1) else '—'), 'trend':('up' if raw_calc_diff('jolts',1) and raw_calc_diff('jolts',1) > 0 else 'down'), 'note':'企业招聘需求, 美联储最关注的劳动力需求指标'},
-            {'indicator':'非农就业(月增)', 'value':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'), 'prev':(f'6月均 {nfp_avg6:+.0f}K' if nfp_avg6 is not None else '—'), 'trend':('up' if payems_mom and payems_mom > 180 else 'down'), 'note':f'6个月累计 {nfp_h6:+.0f}K' if nfp_h6 else '月度变化'},
-            {'indicator':'初请失业金(周)', 'value':(f'{val("claims")/1000:.0f}K' if val('claims') else '—'), 'trend':('down' if claims_w and claims_w < 0 else 'up'), 'prev':(f'{claims_w/1000:+.0f}K 周变' if claims_w else '—'), 'note':'最敏感就业指标, 4周均' + (f'{_claims_4wk/1000:.0f}K' if _claims_4wk else '')},
-        ],
-        'supply': [
-            {'indicator':'劳动参与率', 'value':(f'{val("participation"):.1f}%' if val('participation') else '—'), 'trend':('up' if raw_calc_diff('participation',1) and raw_calc_diff('participation',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("participation",1):+.1f}pt 月变' if raw_calc_diff('participation',1) else '—'), 'note':'劳动力供给池大小, 区分失业率下降的质量'},
-            {'indicator':'失业率', 'value':f'{unrate:.1f}%' if unrate else '—', 'trend':('down' if unrate_tf['m'] and unrate_tf['m'] < 0 else 'up'), 'prev':(f'{unrate_tf["m"]:+.1f}pt 月变' if unrate_tf['m'] else '—'), 'note':f'Sahm Rule: {_sahm["value"]}' if _sahm['value'] else '劳动力供给收缩或需求走弱'},
-            {'indicator':'续请失业金', 'value':(f'{val("cont_claims")/1000:.0f}K' if val('cont_claims') else '—'), 'trend':('up' if raw_calc_diff('cont_claims',1) and raw_calc_diff('cont_claims',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("cont_claims",1)/1000:+.0f}K 月变' if raw_calc_diff('cont_claims',1) else '—'), 'note':'比初请更滞后的确认信号'},
-        ],
-        'price': [
-            {'indicator':'时薪同比', 'value':(f'{val("wage_yoy"):.1f}%' if val('wage_yoy') else '—'), 'trend':('up' if raw_calc_diff('wage_yoy',1) and raw_calc_diff('wage_yoy',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("wage_yoy",1):+.1f}pt 月变' if raw_calc_diff('wage_yoy',1) else '—'), 'note':'工资-通胀螺旋的核心验证'},
-            {'indicator':'辞职率(Quits)', 'value':(f'{val("quits_rate"):.1f}%' if val('quits_rate') else '—'), 'trend':('up' if raw_calc_diff('quits_rate',1) and raw_calc_diff('quits_rate',1) > 0 else 'down'), 'prev':(f'{raw_calc_diff("quits_rate",1):+.1f}pt 月变' if raw_calc_diff('quits_rate',1) else '—'), 'note':'自愿离职=对劳动力市场有信心, 议价能力'},
-            {'indicator':'工资-通胀差', 'value':(f'{wage_inflation_gap():+.1f}pt' if wage_inflation_gap() else '—'), 'trend':('up' if wage_inflation_gap() and wage_inflation_gap() > 0 else 'down'), 'note':'时薪同比-核心服务CPI同比 · 正=实际工资增长'},
-        ],
-        'analystNote': f'劳动力市场"需求-供给-价格"三角框架。Sahm Rule 当前 {_sahm["value"]} ({ "触发" if _sahm["triggered"] else "未触发"})。失业率 {unrate:.1f}%' + ('从低点回升' if (unrate_tf.get('m') or 0) > 0 else ('回落' if (unrate_tf.get('m') or 0) < 0 else '走平')) + ', 美联储关注劳动参与率与JOLTS的交叉信号。'
-    },
+    # 平均时薪同比 (从 CES0500000003 水平序列换算): 最新值 + 月差
+    'laborPanel': _build_labor_panel(),
     # Phase2: 通胀深化 (3M/6M年化)
     'inflationDeepening': {
         'annualized3m': infl_annualized('core_cpi', 3),
