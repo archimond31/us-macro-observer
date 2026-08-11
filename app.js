@@ -1116,7 +1116,7 @@ function renderEconomy(c) {
     chartCard('GDP 增长: 名义 vs 实际', cn.gdpNote || '季度同比', 'gdpChart', 'tall') +
   '</div>';
   html += '<div class="chart-row one-col">' +
-    chartCard('就业市场', cn.empNote || '非农月增 + 失业率', 'empChart', 'tall') +
+    chartCard('就业市场', cn.empNote || '失业率 + 劳动参与率', 'empChart', 'tall') +
   '</div>';
   html += '<div class="chart-row one-col">' +
     chartCard('PMI 景气指数 (荣枯线追踪)', cn.pmiNote || '制造业 + 服务业 PMI · 荣枯线50', 'pmiChart', 'tall') +
@@ -1158,17 +1158,17 @@ function renderEconomy(c) {
 
   const ed = d.employmentChart;
   charts.emp = new Chart(document.getElementById('empChart'), {
-    type: 'bar',
+    type: 'line',
     data: {
       labels: ed.labels,
       datasets: [
         {
-          label: '非农就业变动(K)', data: ed.series['非农就业变动(K)'],
-          backgroundColor: 'rgba(67,97,238,0.6)', borderRadius: 3, yAxisID: 'y'
+          label: '失业率(%)', data: ed.series['失业率(%)'],
+          borderColor: '#e63946', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 3, tension: 0.3, yAxisID: 'y'
         },
         {
-          label: '失业率(%)', data: ed.series['失业率(%)'], type: 'line',
-          borderColor: '#e63946', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y1'
+          label: '劳动参与率(%)', data: ed.series['劳动参与率(%)'],
+          borderColor: '#4361ee', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 3, tension: 0.3, yAxisID: 'y1'
         }
       ]
     },
@@ -1177,12 +1177,15 @@ function renderEconomy(c) {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 } } },
-        tooltip: { backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4', padding: 10 }
+        tooltip: {
+          backgroundColor: 'rgba(26,29,41,0.9)', titleColor: '#fff', bodyColor: '#c4c9d4', padding: 10,
+          callbacks: { label: function (c) { return c.dataset.label + ': ' + c.parsed.y + '%'; } }
+        }
       },
       scales: {
         x: { grid: { color: COLORS.grid }, ticks: { color: COLORS.text, callback: fmtDate } },
-        y: { position: 'left', grid: { color: COLORS.grid }, ticks: { color: COLORS.text }, title: { display: true, text: 'K', color: COLORS.text } },
-        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: COLORS.text, callback: function (v) { return v + '%'; } } }
+        y: { position: 'left', grid: { color: COLORS.grid }, ticks: { color: COLORS.text, callback: function (v) { return v + '%'; } }, title: { display: true, text: '失业率 %', color: COLORS.text } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: COLORS.text, callback: function (v) { return v + '%'; } }, title: { display: true, text: '参与率 %', color: COLORS.text } }
       }
     }
   });
