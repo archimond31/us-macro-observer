@@ -2653,8 +2653,8 @@ function renderTradeRadar(c) {
     });
   }
 
-  // 全品类交易映射 (假设卡片: 方向 + 非对称性 + 证据平衡 + 证伪退出)
-  h += sectionH('全品类交易映射', '每个候选 = 一个可下注的假设: 主观概率(证据平衡) + 非对称性 + 证伪退出 · 不构成投资建议');
+  // 全品类交易映射 (可折叠假设卡片: 摘要行 + 展开详情)
+  h += sectionH('全品类交易映射', '每个候选 = 一个可下注的假设: 主观概率(证据平衡) + 非对称性 + 证伪退出 · 点击展开 · 不构成投资建议');
   const trades = d.trades || [];
   if (!trades.length) {
     h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">当前无规则触发的交易候选。</div>';
@@ -2667,17 +2667,17 @@ function renderTradeRadar(c) {
       const asym = t.asymmetry || { score: 3, note: '' };
       const asymCls = asym.score >= 4 ? '#0f6e56' : (asym.score === 3 ? '#854f0b' : '#a32d2d');
       const asymBg = asym.score >= 4 ? '#e1f5ee' : (asym.score === 3 ? '#faeeda' : '#fcebeb');
-      const asymLabel = asym.score >= 4 ? '凸性机会' : (asym.score === 3 ? '中性' : '⚠ 负凸性');
+      const asymLabel = asym.score >= 4 ? '凸性' : (asym.score === 3 ? '中性' : '⚠负凸');
       const falsify = t.falsify || [];
       const evFor = t.evidenceFor || [];
       const evAg = t.evidenceAgainst || [];
-      h += '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + sideCls + ';border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
-        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
-        + '<span style="font-size:14px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
-        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + sideCls + '22;color:' + sideCls + ';">' + t.side + '</span>'
-        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + asymBg + ';color:' + asymCls + ';">非对称性 ' + asym.score + '/5 · ' + asymLabel + '</span>'
-        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>'
-        + '</div>'
+      // 摘要行 (默认显示)
+      const summaryHtml = '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+        + '<span style="margin-left:8px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + sideCls + '22;color:' + sideCls + ';">' + t.side + '</span>'
+        + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + asymBg + ';color:' + asymCls + ';">非对称 ' + asym.score + '/5 ' + asymLabel + '</span>'
+        + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>';
+      // 展开详情
+      const bodyHtml = '<div style="padding:10px 4px 2px;">'
         + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + t.thesis + '</div>'
         + (asym.note ? '<div style="font-size:11px;color:' + asymCls + ';line-height:1.6;margin-bottom:8px;">非对称性解读: ' + asym.note + '</div>' : '')
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">'
@@ -2693,6 +2693,10 @@ function renderTradeRadar(c) {
         + '</div>'
         + '<div style="font-size:11px;color:#854f0b;">入场催化剂: ' + t.trigger + '</div>'
         + '</div>';
+      h += '<details class="trade-details" style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + sideCls + ';border-radius:10px;padding:10px 14px;margin-bottom:10px;">'
+        + '<summary style="cursor:pointer;list-style:none;outline:none;">'
+        + '<span style="font-size:11px;color:#9ca3af;margin-right:6px;">▸</span>' + summaryHtml
+        + '</summary>' + bodyHtml + '</details>';
     });
   }
   h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">数据截至 ' + (d.asOf || '') + ' · 预期差是概率优势而非确定信号: 单次数据是噪音, 连续同向 surprise 才是系统性定价错误; 分歧大时等催化剂, 赔率好时再下注。</div>';
