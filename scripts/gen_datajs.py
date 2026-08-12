@@ -1713,13 +1713,11 @@ _sc_ys = _sc_all[-24:]
 _sc_yoy = _sc_all[-1][1] if _sc_all else None
 _sc_d1 = (_sc_all[-1][1] - _sc_all[-2][1]) if len(_sc_all) >= 2 else None
 
-# 经济 regime: 由增长/就业/通胀 三因子动态判定
-_e_score = 0
-if gdp_qoq is not None: _e_score += 1 if (gdp_qoq or 0) > 0 else -1
-if unrate_tf.get('m') is not None: _e_score += -1 if unrate_tf['m'] > 0 else (1 if unrate_tf['m'] < 0 else 0)
-if cpi_yoy is not None: _e_score += -1 if cpi_yoy > 3 else 0
-_e_signal = 'risk-on' if _e_score >= 1 else ('risk-off' if _e_score <= -1 else 'mixed')
-_e_label = '增长稳健+通胀温和' if _e_signal=='risk-on' else ('增长放缓+通胀回升' if _e_signal=='risk-off' else '增长分化')
+# 经济 regime: 由 劳动力/通胀/增长 三块评分 + 市场预期差 动态判定
+# (2026-08-12 优化: 见 _build_econ_regime 函数, 在 economic_releases 载入后计算)
+# 占位默认值: DATA['economy'] dict 定义时引用, 后续被 _build_econ_regime() 覆盖
+_e_signal = 'mixed'
+_e_label = '数据计算中'
 
 def _build_labor_panel():
     """劳动力市场'需求-供给-价格'三角框架面板 (卡片数据)。
@@ -1840,17 +1838,14 @@ DATA['economy'] = {
         'trendNote': f'CPI同比半年Δ{pctpt(cpi_d6)} · 非农6个月累计{(f"{nfp_h6:+.0f}K" if nfp_h6 is not None else "—")} · 失业率半年Δ{pctpt(unrate_tf["h6"])}',
         'breakdownSub': '分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ',
     },
-    'analystView': {
-        'risk-on': f'数据偏暖: 增长 (GDP 同比 {f2(gdp_yoy)}%) 稳健、就业 (失业率 {f2(unrate)}%) 健康、通胀 (CPI 同比 {f2(cpi_yoy)}%) 受控。对美联储, 降息窗口相对从容; 变量仍是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、降息顺理成章, 站稳高位则"higher for longer"构成上行风险。',
-        'risk-off': f'数据转弱: 增长 (GDP 同比 {f2(gdp_yoy)}%) 放缓、就业 (失业率 {f2(unrate)}%) 走高、通胀 (CPI 同比 {f2(cpi_yoy)}%) 回升。对美联储, 滞胀式组合压缩政策空间; 变量是油价: WTI 站稳高位则"higher for longer", 构成主要下行风险场景。',
-        'mixed': f'数据分化: 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 一强一弱、通胀 (CPI 同比 {f2(cpi_yoy)}%) 能源推升核心横盘。对美联储无压倒性论据, 政策取决于边际变化; 变量是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、9月降息顺理成章, 站稳高位则"higher for longer"是下行风险场景。',
-    }[_e_signal],
+    'analystView': '占位(regime 计算后按 signal 覆盖)',
     'whatToWatch': [
         {'trigger':'<span class="watch-threshold">下月 CPI 报告</span>','implication':'将完整体现油价冲击, 核心环比>0.3%冲击降息定价','status':'关键事件'},
         {'trigger':f'失业率触及 <span class="watch-threshold">4.4%</span>','implication':'接近 Sahm 衰退规则, 鸽派论据压倒鹰派','status':f'距离 {max(0,4.4-unrate):.1f}pt'},
         {'trigger':'<span class="watch-threshold">下月非农</span>','implication':'若连续<180K, 就业降温趋势确认','status':'关键事件'},
     ]
 }
+
 
 # 经济指标: 增补"最新公布 / 下次公布" + 数据源 (基于发布频率规律推算, 标注预计)
 for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
@@ -1915,6 +1910,144 @@ DATA['economy']['releasesMeta'] = {
     'asOf': (_ER or {}).get('asOf'),
     'source': (_ER or {}).get('source', ''),
 }
+
+def _build_econ_regime():
+    """经济 regime 判定 (2026-08-12 优化版)。
+    三块评分 (劳动力 0-100 健康 / 通胀 0-100 压力 / 增长 0-100 强劲) + 市场预期差修正,
+    输出 risk-on / risk-off / stagflation / reflation / disinflation / mixed。"""
+    # ---------- 1. 劳动力市场评分 (高=健康) ----------
+    labor = 50.0
+    labor_pts = []
+    _u = unrate_tf.get('m')
+    if _u is not None:
+        if _u < -0.05: labor += 12; labor_pts.append(f'失业率回落 ({_u:+.1f}pt)')
+        elif _u > 0.05: labor -= 15; labor_pts.append(f'失业率回升 ({_u:+.1f}pt)')
+        else: labor_pts.append('失业率走平')
+    if payems_mom is not None:
+        if payems_mom >= 180: labor += 12; labor_pts.append(f'非农 {payems_mom:+.0f}K 强劲')
+        elif payems_mom >= 50: labor += 4; labor_pts.append(f'非农 {payems_mom:+.0f}K 温和')
+        else: labor -= 12; labor_pts.append(f'非农 {payems_mom:+.0f}K 偏弱')
+    if _claims_4wk is not None:
+        if _claims_4wk < 220000: labor += 6; labor_pts.append('初请低位')
+        elif _claims_4wk > 280000: labor -= 12; labor_pts.append('初请走高')
+        else: labor_pts.append('初请中性')
+    if _sahm.get('triggered'):
+        labor -= 25; labor_pts.append('⚠ Sahm 规则触发!')
+    if val('quits_rate'):
+        if val('quits_rate') >= 2.0: labor += 6; labor_pts.append('辞职率回升(信心)')
+        elif val('quits_rate') <= 1.5: labor -= 5; labor_pts.append('辞职率低位')
+    if val('participation'):
+        if val('participation') >= 63: labor += 4; labor_pts.append('参与率健康')
+        elif val('participation') <= 61.5: labor -= 6; labor_pts.append('参与率走低')
+    labor = max(0.0, min(100.0, round(labor)))
+
+    # ---------- 2. 通胀评分 (高=压力大) ----------
+    infl = 50.0
+    infl_pts = []
+    if cpi_yoy is not None:
+        if cpi_yoy > 4: infl += 20; infl_pts.append(f'CPI {cpi_yoy:.1f}% 高位')
+        elif cpi_yoy > 3: infl += 10; infl_pts.append(f'CPI {cpi_yoy:.1f}% 偏高')
+        elif cpi_yoy < 2.5: infl -= 12; infl_pts.append(f'CPI {cpi_yoy:.1f}% 低位')
+        else: infl_pts.append(f'CPI {cpi_yoy:.1f}% 中性')
+    if core_cpi_yoy is not None:
+        infl += 0 if core_cpi_yoy <= 3 else (8 if core_cpi_yoy <= 4 else 15)
+        infl_pts.append(f'核心CPI {core_cpi_yoy:.1f}%')
+    if core_pce_yoy is not None:
+        infl += 0 if core_pce_yoy <= 2.6 else (6 if core_pce_yoy <= 3.3 else 12)
+        infl_pts.append(f'核心PCE {core_pce_yoy:.1f}%')
+    if _sc_yoy is not None:
+        if _sc_yoy > 3.5: infl += 10; infl_pts.append(f'超级核心 {_sc_yoy:.1f}% 压力')
+        elif _sc_yoy < 3.0: infl -= 6; infl_pts.append(f'超级核心 {_sc_yoy:.1f}% 缓和')
+    if cpi_d1 is not None:
+        if cpi_d1 < -0.2: infl -= 8; infl_pts.append(f'CPI 环比 {cpi_d1:+.1f}pt 回落')
+        elif cpi_d1 > 0.2: infl += 8; infl_pts.append(f'CPI 环比 {cpi_d1:+.1f}pt 回升')
+    if val('bei10'):
+        if val('bei10') > 2.6: infl += 6; infl_pts.append('通胀预期走高')
+        elif val('bei10') < 2.2: infl -= 5; infl_pts.append('通胀预期回落')
+    infl = max(0.0, min(100.0, round(infl)))
+
+    # ---------- 3. 增长评分 (高=强劲) ----------
+    growth = 50.0
+    growth_pts = []
+    if gdp_qoq is not None:
+        if gdp_qoq >= 2.5: growth += 15; growth_pts.append(f'GDP {gdp_qoq:.1f}% 强劲')
+        elif gdp_qoq >= 1: growth += 5; growth_pts.append(f'GDP {gdp_qoq:.1f}% 温和')
+        else: growth -= 15; growth_pts.append(f'GDP {gdp_qoq:.1f}% 疲弱')
+    if val('gdpnow') is not None:
+        if val('gdpnow') >= 2.5: growth += 8; growth_pts.append(f'GDPNow {val("gdpnow"):.1f}%')
+        elif val('gdpnow') <= 0.5: growth -= 10; growth_pts.append(f'GDPNow {val("gdpnow"):.1f}% 低迷')
+    if val('wei') is not None:
+        if val('wei') >= 2: growth += 6; growth_pts.append('WEI 动能强')
+        elif val('wei') <= -1: growth -= 10; growth_pts.append('WEI 转负')
+    if val('mfg_pmi') is not None:
+        if val('mfg_pmi') >= 52: growth += 6; growth_pts.append(f'制造业PMI {val("mfg_pmi"):.1f} 扩张')
+        elif val('mfg_pmi') < 48: growth -= 10; growth_pts.append(f'制造业PMI {val("mfg_pmi"):.1f} 收缩')
+    if val('svc_pmi') is not None:
+        if val('svc_pmi') >= 52: growth += 5; growth_pts.append(f'服务业PMI {val("svc_pmi"):.1f} 扩张')
+        elif val('svc_pmi') < 48: growth -= 8; growth_pts.append(f'服务业PMI {val("svc_pmi"):.1f} 收缩')
+    if retail is not None:
+        if retail_mom and retail_mom[-1][1] is not None:
+            if retail_mom[-1][1] >= 0.4: growth += 4; growth_pts.append('零售环比强')
+            elif retail_mom[-1][1] <= -0.3: growth -= 6; growth_pts.append('零售环比弱')
+    growth = max(0.0, min(100.0, round(growth)))
+
+    # ---------- 4. 市场预期差修正 (最近 5 条发布) ----------
+    exp_pts = []
+    for _r in _ER_RELEASES[:5]:
+        v = _r.get('verdict')
+        tag = _r.get('tag', '')
+        if v not in ('beat', 'miss'):
+            continue
+        nm = _r.get('indicator', tag)
+        if tag in ('NFP', 'UNRATE', 'LPR', 'GDP'):
+            if v == 'beat': growth += 6; labor += 4; exp_pts.append(f'{nm} 好于预期')
+            else: growth -= 6; labor -= 4; exp_pts.append(f'{nm} 差于预期')
+        elif tag in ('CPI', 'Core', 'PCE', 'SuperCore'):
+            # 通胀指标: 公布值低=好消息(降通胀), 公布值高=坏消息
+            if v == 'beat': infl -= 8; exp_pts.append(f'{nm} 低于预期(利好)')
+            else: infl += 8; exp_pts.append(f'{nm} 高于预期(利空)')
+    growth = max(0.0, min(100.0, growth))
+    labor = max(0.0, min(100.0, labor))
+    infl = max(0.0, min(100.0, infl))
+
+    # ---------- 5. 综合判定 ----------
+    if labor <= 38 and infl >= 58:
+        signal, label = 'stagflation', '滞胀风险：就业走弱 + 通胀高企'
+    elif growth <= 42:
+        signal = 'risk-off' if labor <= 48 else 'mixed'
+        label = '增长放缓 + 就业转弱' if signal == 'risk-off' else '增长分化（动能不足）'
+    elif infl >= 65:
+        signal = 'reflation' if growth >= 55 else 'stagflation'
+        label = '再通胀：增长回升 + 通胀升温' if signal == 'reflation' else '滞胀风险：增长乏力 + 通胀高企'
+    elif growth >= 58 and labor >= 55 and infl <= 55:
+        signal, label = 'risk-on', '金发女孩：增长稳健 + 就业健康 + 通胀温和'
+    elif infl <= 45 and growth >= 50:
+        signal, label = 'disinflation', '通胀回落：增长平稳 + 通胀趋势下行'
+    else:
+        signal, label = 'mixed', '多因子分化：无单一主导'
+    confidence = _confidence(signal, gdp_qoq is not None, unrate_tf.get('m') is not None, cpi_yoy is not None,
+                             _claims_4wk is not None, _sc_yoy is not None, bool(_ER_RELEASES))
+    desc = (f'劳动力 {labor}/100 · 通胀 {infl}/100 · 增长 {growth}/100。'
+            + (' / '.join((labor_pts + infl_pts + growth_pts + exp_pts)[:6]) or '数据待更新'))
+    return {'signal': signal, 'label': label, 'confidence': confidence, 'description': desc,
+            'scores': {'labor': labor, 'inflation': infl, 'growth': growth}, 'drivers': (labor_pts + infl_pts + growth_pts + exp_pts)}
+
+# 计算经济 regime (需在 economic_releases 载入后, 以便纳入市场预期差)
+_econ_regime = _build_econ_regime()
+_e_signal = _econ_regime['signal']
+_e_label = _econ_regime['label']
+DATA['economy']['regime'] = _econ_regime
+
+# 按实际 signal 选择分析师解读文案 (覆盖占位)
+_ANALYST_VIEWS = {
+    'risk-on': f'数据偏暖: 增长 (GDP 同比 {f2(gdp_yoy)}%) 稳健、就业 (失业率 {f2(unrate)}%) 健康、通胀 (CPI 同比 {f2(cpi_yoy)}%) 受控。对美联储, 降息窗口相对从容; 变量仍是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、降息顺理成章, 站稳高位则"higher for longer"构成上行风险。',
+    'risk-off': f'数据转弱: 增长 (GDP 同比 {f2(gdp_yoy)}%) 放缓、就业 (失业率 {f2(unrate)}%) 走高、通胀 (CPI 同比 {f2(cpi_yoy)}%) 回升。对美联储, 滞胀式组合压缩政策空间; 变量是油价: WTI 站稳高位则"higher for longer", 构成主要下行风险场景。',
+    'mixed': f'数据分化: 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 一强一弱、通胀 (CPI 同比 {f2(cpi_yoy)}%) 能源推升核心横盘。对美联储无压倒性论据, 政策取决于边际变化; 变量是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、9月降息顺理成章, 站稳高位则"higher for longer"是下行风险场景。',
+    'stagflation': f'滞胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 乏力 + 通胀 (CPI 同比 {f2(cpi_yoy)}%, 核心 {f2(core_cpi_yoy)}%) 高企 + 就业边际转弱 (失业率 {f2(unrate)}%)。美联储最被动的场景——加息压通胀伤增长、降息稳增长助通胀; 政策空间极小, 股债双杀风险高, 黄金/能源相对占优。',
+    'reflation': f'再通胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 回升 + 通胀 (CPI 同比 {f2(cpi_yoy)}%) 重新上行, 就业 (失业率 {f2(unrate)}%) 仍有韧性。名义增长上行利好商品/顺周期/价值股; 对美联储意味着"higher for longer", 长端利率与收益率曲线陡峭化是主要交易。',
+    'disinflation': f'通胀回落组合: 通胀 (CPI 同比 {f2(cpi_yoy)}%, 核心 {f2(core_cpi_yoy)}%) 趋势下行, 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 尚稳。美联储最可能"维持观望→转鸽", 利好长久期债券与成长股; 风险是若就业失速则切向衰退交易。',
+}
+DATA['economy']['analystView'] = _ANALYST_VIEWS.get(_e_signal, _ANALYST_VIEWS['mixed'])
 
 # 交叉链接到指标卡：在 CPI/核心CPI/非农/失业率/GDP 卡上显示"市场预期 + 结论"
 for _m in DATA['economy']['metrics']:

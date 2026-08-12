@@ -91,11 +91,18 @@ function switchSection(section) {
 
 // Regime 横幅
 function regimeBanner(r, extraClass) {
-  const cls = r.signal === 'risk-off' ? 'risk-off' : r.signal === 'risk-on' ? 'risk-on' : 'mixed';
-  const sigLabel = r.signal === 'risk-off' ? '对风险资产利空' : r.signal === 'risk-on' ? '对风险资产利多' : '信号混杂';
-  return '<div class="regime-banner ' + cls + ' ' + (extraClass || '') + '">' +
+  const sigMap = {
+    'risk-on':      { cls: 'risk-on', label: '对风险资产利多' },
+    'risk-off':     { cls: 'risk-off', label: '对风险资产利空' },
+    'stagflation':  { cls: 'risk-off', label: '滞胀 · 股债双杀风险' },
+    'reflation':    { cls: 'risk-on', label: '再通胀 · 利好商品/顺周期' },
+    'disinflation': { cls: 'mixed', label: '通胀回落 · 温和利多债市/成长' },
+    'mixed':        { cls: 'mixed', label: '信号混杂' }
+  };
+  const s = sigMap[r.signal] || sigMap.mixed;
+  return '<div class="regime-banner ' + s.cls + ' ' + (extraClass || '') + '">' +
     '<div class="regime-left">' +
-      '<div class="regime-label">当前 Regime · ' + sigLabel + '</div>' +
+      '<div class="regime-label">当前 Regime · ' + s.label + '</div>' +
       '<div class="regime-name">' + r.label + '</div>' +
       '<div class="regime-conf">' + r.confidence + '</div>' +
     '</div>' +
