@@ -2429,38 +2429,60 @@ def _risk_factor(score_val, weight, label, status):
     return {'label': label, 'score': round(score_val, 1), 'weight': weight, 'status': status, 'color': color}
 
 _risk_factors = []
-# 利率: 10Y 分位 → 分位高=利率高=利空
-_rate_risk = min(pct('dgs10') * 0.7 + (30 if (val('dgs10') or 0) > 4.5 else 0), 100)
-_rate_status = 'bearish' if _rate_risk >= 60 else ('mixed' if _rate_risk >= 30 else 'bullish')
-_risk_factors.append(_risk_factor(_rate_risk, 15, '利率环境', _rate_status))
+# ==== 评分基线与各板块优化后的 regime 联动 (2026-08-12) ====
+_RR = {'risk-off': 70, 'mixed': 45, 'risk-on': 25}   # signal → 风险分
 
-# 流动性: LPI 评分
+# 1. 利率环境: 用 rates regime (曲线形态+10Y 分位+方向), 叠加 10Y 历史分位修正
+_rate_risk = _RR.get(_rates_signal, 50)
+if _r_10y_pct is not None:
+    _rate_risk += (_r_10y_pct - 50) * 0.3   # 10Y 分位高 → 风险更高
+_rate_risk = max(0, min(100, round(_rate_risk)))
+_rate_status = 'bearish' if _rate_risk >= 60 else ('mixed' if _rate_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_rate_risk, 14, '利率环境', _rate_status))
+
+# 2. 流动性压力: LPI 评分 (liquidity 板块已数据驱动合成)
 _lpi = DATA.get('liquidity', {}).get('lpi', {})
 _lpi_score = _lpi.get('score', 5) * 10
 _lpi_status = 'bearish' if _lpi_score >= 60 else ('mixed' if _lpi_score >= 30 else 'bullish')
-_risk_factors.append(_risk_factor(_lpi_score, 18, '流动性压力', _lpi_status))
+_risk_factors.append(_risk_factor(_lpi_score, 16, '流动性压力', _lpi_status))
 
-# 信用: CCC OAS 分位
-_credit_risk = pct('ccc') * 0.8
+# 3. 信用市场: 用 credit regime (HY/CCC 分位 + NFCI + 走阔方向), 叠加 CCC 分位修正
+_credit_risk = _RR.get(_cr_signal, 50)
+if _cr_ccc_pct is not None:
+    _credit_risk += (_cr_ccc_pct - 50) * 0.3
+_credit_risk = max(0, min(100, round(_credit_risk)))
 _credit_status = 'bearish' if _credit_risk >= 60 else ('mixed' if _credit_risk >= 30 else 'bullish')
-_risk_factors.append(_risk_factor(_credit_risk, 14, '信用市场', _credit_status))
+_risk_factors.append(_risk_factor(_credit_risk, 12, '信用市场', _credit_status))
 
-# 波动率: VIX 风险
-_vix_risk = min((val('vix') or 15) / 25 * 80, 100)
-_vix_status = 'bearish' if _vix_risk >= 50 else ('mixed' if _vix_risk >= 25 else 'bullish')
-_risk_factors.append(_risk_factor(_vix_risk, 12, '波动率风险', _vix_status))
+# 4. 波动率风险: 用 volatility 评分 (_vol_score -4..+3 → 0-100)
+_vix_risk = max(0, min(100, round(50 - (_vol_score or 0) * 12)))
+_vix_status = 'bearish' if _vix_risk >= 55 else ('mixed' if _vix_risk >= 28 else 'bullish')
+_risk_factors.append(_risk_factor(_vix_risk, 11, '波动率风险', _vix_status))
 
-# 经济: 失业率分位 + Sahm
-_econ_risk = pct('unrate') * 0.5 + (_sahm['value'] or 0) * 50
+# 5. 经济基本面: 用 economy regime 三块评分 (劳动力+通胀+增长)
+_eS = _econ_regime.get('scores', {})
+_econ_risk = round((100 - _eS.get('labor', 50)) * 0.35 + _eS.get('inflation', 50) * 0.35 + (100 - _eS.get('growth', 50)) * 0.30)
+_econ_risk = max(0, min(100, _econ_risk))
 _econ_status = 'bearish' if _econ_risk >= 60 else ('mixed' if _econ_risk >= 30 else 'bullish')
-_risk_factors.append(_risk_factor(_econ_risk, 14, '经济基本面', _econ_status))
+_risk_factors.append(_risk_factor(_econ_risk, 13, '经济基本面', _econ_status))
 
-# 资产: 股债相关
-_asset_risk = 40 if (spx_tlt_corr and spx_tlt_corr > 0) else 25
-_asset_status = 'mixed'
-_risk_factors.append(_risk_factor(_asset_risk, 10, '跨资产信号', _asset_status))
+# 6. 政策路径: 用 fed regime (隐含降/加息次数), 加息定价越多风险越高
+_fed_risk = _RR.get(_fed_signal, 50) + (_fed_hikes or 0) * 10
+_fed_risk = max(0, min(100, _fed_risk))
+_fed_status = 'bearish' if _fed_risk >= 60 else ('mixed' if _fed_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_fed_risk, 9, '政策路径', _fed_status))
 
-# 衰退: 衰退概率评分
+# 7. 跨资产信号: 股债相关 + OVX-VIX 剪刀差 + 压力资产数
+_asset_risk = 35 if (spx_tlt_corr and spx_tlt_corr > 0) else 22
+if ovx_vix_gap is not None and ovx_vix_gap > 8:
+    _asset_risk += 20   # 油股波动率极端分化
+if _n_stress >= 2:
+    _asset_risk += 20   # 多资产进入压力区
+_asset_risk = max(0, min(100, _asset_risk))
+_asset_status = 'bearish' if _asset_risk >= 60 else ('mixed' if _asset_risk >= 30 else 'bullish')
+_risk_factors.append(_risk_factor(_asset_risk, 8, '跨资产信号', _asset_status))
+
+# 8. 衰退风险: 衰退概率评分 (保留, 已含 10Y-2Y/Sahm/初请/金融压力)
 _rec_risk = _recession_score * 0.7
 _rec_status = 'bearish' if _rec_risk >= 50 else ('mixed' if _rec_risk >= 25 else 'bullish')
 _risk_factors.append(_risk_factor(_rec_risk, 17, '衰退风险', _rec_status))
@@ -2473,7 +2495,7 @@ _risk_color = '#e63946' if _total_score >= 65 else ('#f59e0b' if _total_score >=
 
 DATA['riskScore'] = {
     'score': _total_score, 'level': _risk_level, 'color': _risk_color,
-    'description': f'7板块加权聚合风险评分 {_total_score}/100 ({_risk_level})。权重: 流动性18% + 衰退17% + 利率15% + 经济14% + 信用14% + 波动率12% + 资产10%。',
+    'description': f'8板块加权聚合风险评分 {_total_score}/100 ({_risk_level})。权重: 流动性16% + 衰退17% + 利率14% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 跨资产8%。',
     'factors': _risk_factors,
     'summary': f'当前宏观风险画像: {"利率+衰退主导" if _rate_risk > 50 or _rec_risk > 40 else ("流动性为主的结构性压力" if _lpi_score > 50 else "风险可控, 关注边际变化")}。核心风险点: ' + 
         (', '.join(f['label'] for f in _risk_factors if f['score'] >= 50) or '无单一板块超警戒线') + '。',
