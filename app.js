@@ -2675,7 +2675,117 @@ function renderTradeRadar(c) {
     h += '</tbody></table></div>';
   }
   h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">数据截至 ' + (d.asOf || '') + ' · 预期差是概率优势而非确定信号: 单次数据是噪音, 连续同向 surprise 才是系统性定价错误; 分歧大时等催化剂, 赔率好时再下注。</div>';
+
+  // ===== 催化剂日历 =====
+  const cats = d.catalystCalendar || [];
+  if (cats.length) {
+    h += sectionH('催化剂日历', '未来数据/FOMC 发布 → 收敛或扩大哪个预期差');
+    h += '<div class="table-wrap"><table class="data-table"><thead><tr><th>日期</th><th>事件</th><th>影响预期差</th><th>方向含义</th></tr></thead><tbody>';
+    cats.forEach(function (c) {
+      h += '<tr>'
+        + '<td style="white-space:nowrap;font-weight:600;color:#185fa5;">' + c.date + (c.importance === 'high' ? ' <span style="color:#e24b4a;font-size:11px;">★</span>' : '') + '</td>'
+        + '<td style="font-weight:500;color:#1a1d29;">' + c.event + '</td>'
+        + '<td style="font-size:12px;color:#854f0b;">' + (c.gapTitle ? c.gapTitle : c.gapId) + '</td>'
+        + '<td style="font-size:12px;color:#374151;line-height:1.6;">' + c.effect + '</td>'
+        + '</tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+
+  // ===== AI 链条估值预期差 =====
+  const av = d.aiValuation;
+  if (av && av.stats && av.stats.count) {
+    h += sectionH('AI 链条估值预期差', '板块整体估值 vs 盈利增速 · PEG 高低估扫描');
+    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#374151;line-height:1.7;">'
+      + av.summary + '</div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+    const valCard = function (title, list, color, isOver) {
+      if (!list || !list.length) return '<div><div style="font-size:12px;font-weight:600;color:' + color + ';margin-bottom:6px;">' + title + ' · 无</div></div>';
+      let rows = list.map(function (x) {
+        const peg = x.peg != null ? x.peg.toFixed(1) : '—';
+        const fpe = x.fwdPe != null ? x.fwdPe.toFixed(0) + 'x' : '—';
+        const rg = x.revGrowth != null ? x.revGrowth + '%' : '—';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fafafa;border-radius:8px;margin-bottom:6px;border-left:3px solid ' + color + ';">'
+          + '<div><span style="font-size:13px;font-weight:600;color:#1a1d29;">' + x.name + '</span>'
+          + '<span style="font-size:11px;color:#9ca3af;"> ' + x.ticker + ' · ' + x.layer + '</span></div>'
+          + '<div style="font-size:11px;color:#6b7280;white-space:nowrap;">PEG ' + peg + ' · FwdPE ' + fpe + ' · 增速 ' + rg + '</div></div>';
+      }).join('');
+      return '<div><div style="font-size:12px;font-weight:600;color:' + color + ';margin-bottom:6px;">' + title + ' (' + list.length + ')</div>' + rows + '</div>';
+    };
+    h += valCard('⚠ 高估候选', av.overvalued, '#a32d2d', true);
+    h += valCard('✓ 低估候选', av.undervalued, '#0f6e56', false);
+    h += '</div>';
+  }
+
+  // ===== 交易日志 (localStorage) =====
+  h += sectionH('交易日志与复盘', '记录你的入场 → 对照系统提示是否兑现 (本地存储, 不清除浏览器不丢失)');
+  h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+    + '<input id="tlAsset" placeholder="资产 (如 黄金/2Y/纳指)" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<input id="tlSide" placeholder="方向 (多/空)" style="flex:0 0 70px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<input id="tlPrice" placeholder="入场价" style="flex:0 0 90px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<input id="tlNote" placeholder="基于哪个预期差/信号" style="flex:1;min-width:140px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<button onclick="_tlAdd()" style="padding:7px 14px;background:#4361ee;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">记录</button>'
+    + '<button onclick="_tlClear()" style="padding:7px 14px;background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;font-size:12px;cursor:pointer;">清空</button>'
+    + '</div>'
+    + '<div id="tlList" style="margin-top:10px;"></div>'
+    + '</div>';
+
   c.innerHTML = h;
+  _tlRender();
+}
+
+// 交易日志: localStorage 存储
+function _tlGet() {
+  try { return JSON.parse(localStorage.getItem('umo_trade_log') || '[]'); } catch (e) { return []; }
+}
+function _tlSave(list) {
+  try { localStorage.setItem('umo_trade_log', JSON.stringify(list)); } catch (e) {}
+}
+function _tlAdd() {
+  const a = document.getElementById('tlAsset'), s = document.getElementById('tlSide'),
+        p = document.getElementById('tlPrice'), n = document.getElementById('tlNote');
+  const asset = (a && a.value || '').trim(), side = (s && s.value || '').trim(),
+        price = (p && p.value || '').trim(), note = (n && n.value || '').trim();
+  if (!asset) return;
+  const list = _tlGet();
+  list.push({ asset: asset, side: side, price: price, note: note, date: new Date().toISOString().slice(0, 10) });
+  _tlSave(list);
+  if (a) a.value = ''; if (s) s.value = ''; if (p) p.value = ''; if (n) n.value = '';
+  _tlRender();
+}
+function _tlClear() {
+  if (!confirm('清空全部交易日志？')) return;
+  _tlSave([]);
+  _tlRender();
+}
+function _tlRender() {
+  const el = document.getElementById('tlList');
+  if (!el) return;
+  const list = _tlGet();
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#9ca3af;">暂无记录。用上方表单记录一笔交易, 之后每次打开交易雷达都能复盘"系统提示 vs 实际结果"。</div>';
+    return;
+  }
+  el.innerHTML = list.slice().reverse().map(function (t, i) {
+    const idx = list.length - 1 - i;
+    const sideCls = t.side.indexOf('空') >= 0 ? '#a32d2d' : '#0f6e56';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;background:#fafafa;border-radius:8px;margin-bottom:6px;border-left:3px solid ' + sideCls + ';">'
+      + '<div><span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+      + (t.side ? ' <span style="font-size:11px;font-weight:600;color:' + sideCls + ';">' + t.side + '</span>' : '')
+      + (t.price ? ' <span style="font-size:11px;color:#6b7280;">入场 ' + t.price + '</span>' : '')
+      + (t.note ? ' <span style="font-size:11px;color:#854f0b;">' + t.note + '</span>' : '')
+      + '</div>'
+      + '<div style="font-size:11px;color:#9ca3af;white-space:nowrap;">' + t.date
+      + ' <button onclick="_tlDel(' + idx + ')" style="border:none;background:none;color:#a32d2d;cursor:pointer;font-size:11px;">✕</button></div>'
+      + '</div>';
+  }).join('');
+}
+function _tlDel(idx) {
+  const list = _tlGet();
+  list.splice(idx, 1);
+  _tlSave(list);
+  _tlRender();
 }
 function _renderAiFlow(d) {
   var fd = d.flowData || {};

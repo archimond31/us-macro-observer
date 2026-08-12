@@ -2598,6 +2598,100 @@ _prepend_section_alerts()
 # 再由规则引擎输出全品类资产映射候选。纯规则, 数据全部来自上面各板块已计算的 regime/评分。
 print('[gen_datajs] generating tradeRadar section...', file=sys.stderr, flush=True)
 
+def _build_catalyst_calendar(gaps):
+    """催化剂日历: 未来关键数据/FOMC → 收敛或扩大哪个预期差。
+    每个事件的 affect 说明双向触发条件 (数据方向决定收敛/扩大)。"""
+    gap_by_id = {g.get('id'): g for g in gaps}
+    cal = []
+
+    def _rel(tag, label, gid, affect, importance='high'):
+        ri = release_info(tag)
+        if ri and ri.get('next'):
+            cal.append({'date': ri['next'], 'event': label, 'importance': importance,
+                        'gapId': gid, 'gapTitle': gap_by_id.get(gid, {}).get('title', ''),
+                        'effect': affect})
+
+    # 通胀/政策类 (核心 CPI / PCE / 超级核心)
+    _rel('Core', '美国 7 月核心 CPI', 'policy_gap',
+         '核心 CPI 环比 <0.2% → 收敛(加息定价压缩, 利多短端); >0.3% → 扩大(加息尾部定价升温)')
+    _rel('CPI', '美国 7 月 CPI', 'infl_surprise',
+         'CPI 连续低于预期 → 收敛(通胀降温确认); 高于预期 → 扩大(粘性回归)')
+    _rel('SuperCore', '美国 6 月 PCE(含超级核心)', 'policy_gap',
+         '超级核心同比 <3.5% → 收敛; >4% → 扩大(服务通胀顽固)')
+    # 就业类
+    _rel('NFP', '美国 8 月非农就业', 'jobs_surprise',
+         '非农再负或 <80K → 收敛(就业拐点确认, 利多短端/黄金); >180K → 扩大(噪音, 软着陆强化)')
+    _rel('UNRATE', '美国 8 月失业率', 'jobs_surprise',
+         '失业率月变 >0.1pt → 收敛(Sahm 逼近触发); 回落 → 扩大')
+    # 增长类 (标注)
+    _rel('Retail', '美国 7 月零售销售', 'pct_10y',
+         '零售环比 >0.5% → 扩大(增长强, 利率高位延续); <-0.3% → 收敛(消费转弱)')
+    _rel('Conf', '美国 8 月消费者信心', 'pct_10y',
+         '信心大幅走弱 → 收敛(衰退式降息预期升温)')
+
+    # FOMC 未来会议
+    for _m in EV.get('fomc', []):
+        _s = _m.get('start', '')
+        if _s and _s >= GEN_DATE:
+            cal.append({'date': _s, 'event': _m.get('label', 'FOMC 会议'),
+                        'importance': 'high', 'gapId': 'policy_gap',
+                        'gapTitle': gap_by_id.get('policy_gap', {}).get('title', ''),
+                        'effect': '议息结果 + 点阵图 + 发布会: 对通胀定性(暂时性 vs 持续)决定政策路径差收敛或扩大; SEP 点是关键'})
+            break
+    # 杰克逊霍尔
+    _jh = EV.get('jackson_hole', {})
+    if _jh and _jh.get('start', '') >= GEN_DATE:
+        cal.append({'date': _jh['start'], 'event': 'Jackson Hole 央行年会', 'importance': 'high',
+                    'gapId': 'policy_gap', 'gapTitle': gap_by_id.get('policy_gap', {}).get('title', ''),
+                    'effect': 'Warsh 首次央行年会定调: 若重申"higher for longer" → 扩大; 若暗示就业权重上升 → 收敛'})
+
+    cal.sort(key=lambda x: x['date'])
+    return cal
+
+
+def _build_ai_valuation_gap():
+    """AI 链条估值预期差: 板块整体估值 vs 盈利增长, 挑出高估/低估候选。"""
+    rows = []
+    for L in AIC.get('layers', []):
+        for c in L.get('companies', []):
+            peg = c.get('peg'); fpe = c.get('fwdPe'); rg = c.get('revGrowth')
+            if peg is None and fpe is None:
+                continue
+            rows.append({'name': c.get('name'), 'ticker': c.get('ticker'),
+                         'layer': L.get('name', ''), 'peg': peg, 'fwdPe': fpe,
+                         'revGrowth': rg, 'mc': c.get('marketCap', 0),
+                         'aiExposure': c.get('aiExposure')})
+    if len(rows) < 3:
+        return {'summary': 'AI 链条数据不足', 'stats': {}, 'overvalued': [], 'undervalued': []}
+    fpes = [r['fwdPe'] for r in rows if r['fwdPe']]
+    pgs = [r['peg'] for r in rows if r['peg']]
+    rgs = [r['revGrowth'] for r in rows if r['revGrowth']]
+    stats = {
+        'count': len(rows),
+        'avgFwdPe': round(sum(fpes) / len(fpes), 1) if fpes else None,
+        'medianPeg': round(sorted(pgs)[len(pgs) // 2], 2) if pgs else None,
+        'medianGrowth': round(sorted(rgs)[len(rgs) // 2], 1) if rgs else None,
+    }
+    over, under = [], []
+    for r in rows:
+        if r['peg'] is not None and r['peg'] > 2.5:
+            over.append(r)
+        elif r['fwdPe'] is not None and r['fwdPe'] > 40 and r['revGrowth'] is not None and r['revGrowth'] < 25:
+            over.append(r)
+        if r['peg'] is not None and r['peg'] < 1.2 and r['revGrowth'] is not None and r['revGrowth'] > 30:
+            under.append(r)
+        elif r['fwdPe'] is not None and r['fwdPe'] < 22 and r['revGrowth'] is not None and r['revGrowth'] > 30:
+            under.append(r)
+    over.sort(key=lambda x: -(x['peg'] or x['fwdPe'] or 0))
+    under.sort(key=lambda x: x['peg'] or 99)
+    summary = (f'AI 链条 {stats["count"]} 家公司: 平均远期 PE {stats["avgFwdPe"]}x, PEG 中位 {stats["medianPeg"]}, '
+               f'营收增速中位 {stats["medianGrowth"]}%。'
+               + (f'高估候选 {len(over)} 家 / 低估候选 {len(under)} 家。' if over or under else '估值与增速基本匹配, 无明显分层。')
+               + ' PEG>2.5 或"高 PE+低增速"为高估; PEG<1.2 且增速>30% 为低估。估值预期差须与产业链景气度交叉验证。')
+    return {'summary': summary, 'stats': stats,
+            'overvalued': [{k: r[k] for k in ('name', 'ticker', 'layer', 'peg', 'fwdPe', 'revGrowth')} for r in over[:6]],
+            'undervalued': [{k: r[k] for k in ('name', 'ticker', 'layer', 'peg', 'fwdPe', 'revGrowth')} for r in under[:6]]}
+
 def _build_trade_radar():
     gaps = []
     trades = []
@@ -2612,8 +2706,8 @@ def _build_trade_radar():
     _spx_m = tfm('spx').get('m') or 0
     _corecpi_m = tfm('core_cpi').get('m') or 0
 
-    def _gap(gtype, title, detail, direction, confidence, category):
-        gaps.append({'type': gtype, 'title': title, 'detail': detail,
+    def _gap(gtype, title, detail, direction, confidence, category, gid=None):
+        gaps.append({'id': gid or ('gap_%d' % len(gaps)), 'type': gtype, 'title': title, 'detail': detail,
                      'direction': direction, 'confidence': confidence, 'category': category})
 
     def _trade(asset, side, thesis, trigger, confidence):
@@ -2624,11 +2718,11 @@ def _build_trade_radar():
     if _eSig == 'stagflation' and (_fed_hikes or 0) >= 1:
         _gap('policy', '政策路径差：滞胀组合下市场仍定价加息',
              f'经济 regime=滞胀 (劳动 {_eS2.get("labor")} / 通胀 {_eS2.get("inflation")} / 增长 {_eS2.get("growth")}), 但短端曲线隐含 {_fed_hikes} 次加息——非农已转负, 市场对政策转向反应滞后。',
-             'long_2y', 'high', '政策')
+             'long_2y', 'high', '政策', gid='policy_gap')
     elif _eSig in ('reflation', 'risk-on') and (_fed_cuts or 0) >= 2:
         _gap('policy', '政策路径差：市场过度定价宽松',
              f'经济 regime={_eSig} 但隐含 {_fed_cuts} 次降息——再通胀/金发姑娘组合下宽松定价过头, 若通胀粘性确认将反向修正。',
-             'short_2y', 'mid', '政策')
+             'short_2y', 'mid', '政策', gid='policy_easy')
 
     # ---- ② 数据 surprise 累积 (最近 5 条发布) ----
     _miss_jobs = sum(1 for r in _ER_RELEASES[:5] if r.get('tag') in ('NFP', 'UNRATE', 'LPR') and r.get('verdict') == 'miss')
@@ -2636,41 +2730,41 @@ def _build_trade_radar():
     if _miss_jobs >= 2:
         _gap('surprise', f'就业数据连续 {_miss_jobs} 期低于预期',
              '非农/失业率/参与率连续 miss, 市场对就业拐点定价不足, 衰退式降息预期将升温——利好短端利率。',
-             'long_2y', 'high', '就业')
+             'long_2y', 'high', '就业', gid='jobs_surprise')
     if _beat_infl >= 2:
         _gap('surprise', f'通胀数据连续 {_beat_infl} 期低于预期',
              'CPI/PCE 连续低于预期(降温), 加息尾部定价将被压缩, 利好长久期债券。',
-             'long_bond', 'mid', '通胀')
+             'long_bond', 'mid', '通胀', gid='infl_surprise')
 
     # ---- ③ regime-价格背离: 结构性信号 vs 价格走势 ----
     if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 < -3:
         _gap('divergence', '黄金与央行购金脱钩（买点候选）',
              f'央行购金评分 {_gold_cb_score}/100 (WGC Q2 289吨), 但金价 90 日 {_gold_ret90:+.1f}%——结构性买盘与价格短期背离, 若实际利率不再上行, 修复空间大。',
-             'long_gold', 'high', '黄金')
+             'long_gold', 'high', '黄金', gid='gold_delink')
     if _vol_signal == 'risk-off' and _spx_m > 2:
         _gap('divergence', '波动率压力 vs 股票上涨（波动率错价候选）',
              f'VIX {_vix_v:.1f} 压力扩散, 但 SPX 月 {_spx_m:+.1f}%——若实现波动未跟上, 波动率溢价高估, 卖波动率赔率佳。',
-             'short_vol', 'mid', '波动率')
+             'short_vol', 'mid', '波动率', gid='vol_mispricing')
     if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 > 0:
         _gap('divergence', '黄金与央行购金同向确认',
              f'央行购金 {_gold_cb_score}/100 + 金价 90 日 {_gold_ret90:+.1f}%, 脱钩后修复进行中——趋势多头延续概率高。',
-             'long_gold', 'mid', '黄金')
+             'long_gold', 'mid', '黄金', gid='gold_confirm')
 
     # ---- ④ 分位极端: 统计回归 vs 趋势延续 ----
     if _r_10y_pct is not None and _r_10y_pct > 90:
         _gap('percentile', f'10Y 处于历史极端分位 ({_r_10y_pct}/100)',
              '利率分位极值, 统计上未来 6-12 个月均值回归概率上升; 但趋势未确认反转前不逆势, 适合等反向信号或期权表达。',
-             'long_2y', 'mid', '利率')
+             'long_2y', 'mid', '利率', gid='pct_10y')
     if _cr_ccc_pct is not None and _cr_ccc_pct > 80:
         _gap('percentile', f'CCC 分位 {_cr_ccc_pct}（低评级极端承压）',
              '高收益最弱环节已在极值——若 HY 整体未走阔则分层修复, 若信用事件出现则补跌, 双向机会均需确认。',
-             'neutral', 'mid', '信用')
+             'neutral', 'mid', '信用', gid='pct_ccc')
 
     # ---- ⑤ 传导断裂: 某因子被市场忽略 ----
     if (payems_mom is not None and payems_mom < 0) and (_cr_hy_w or 0) < 3:
         _gap('transmission', '就业转负但信用利差未走阔（传导滞后）',
              f'非农 {payems_mom:+.0f}K 但 HY OAS 周仅 {_cr_hy_w:+.1f}bp——信用市场通常滞后 5-10 交易日反应, 若就业拐点确认则 HY 存在补跌风险。',
-             'short_hy', 'mid', '信用')
+             'short_hy', 'mid', '信用', gid='credit_lag')
 
     # ================= 全品类交易映射 (规则引擎) =================
     if _eSig == 'stagflation':
@@ -2702,13 +2796,17 @@ def _build_trade_radar():
     _summary = (f'扫描到 {_n_gaps} 个预期差 / {_n_trades} 个交易候选。'
                 + ('主要矛盾集中在: ' + '、'.join(sorted(set(g['category'] for g in gaps))) if gaps else '当前无显著预期差, 处于低矛盾状态。')
                 + ' 预期差是概率优势而非确定信号, 须等催化剂(trigger)确认后按风险评分定仓位。')
+    _catalysts = _build_catalyst_calendar(gaps)
+    _ai_val = _build_ai_valuation_gap()
     return {
         'asOf': GEN_DATE,
         'summary': _summary,
         'expectationGaps': gaps,
         'trades': trades,
-        'counts': {'gaps': _n_gaps, 'trades': _n_trades},
-        'method': '纯规则引擎: 政策路径差 / 数据surprise累积 / regime-价格背离 / 分位极端 / 传导断裂 → 全品类映射。不构成投资建议。',
+        'catalystCalendar': _catalysts,
+        'aiValuation': _ai_val,
+        'counts': {'gaps': _n_gaps, 'trades': _n_trades, 'catalysts': len(_catalysts)},
+        'method': '纯规则引擎: 政策路径差 / 数据surprise累积 / regime-价格背离 / 分位极端 / 传导断裂 → 全品类映射。催化剂日历关联数据发布与预期差; AI 估值预期差扫描板块高低估。不构成投资建议。',
     }
 
 DATA['tradeRadar'] = _build_trade_radar()
