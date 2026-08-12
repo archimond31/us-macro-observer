@@ -2237,11 +2237,17 @@ function renderAiCycle(cyc) {
   }
   return sectionCard('🌀 AI 资本开支周期 · 超级周期位置', (cyc.asOf || ''), inner);
 }
-function _aiFmt(x, suffix) {
+function _aiFmt(x, suffix, ccy) {
   if (x === null || x === undefined) return '—';
   if (suffix === '%') return Number(x).toFixed(x >= 10 || x <= -10 ? 0 : 1) + '%';
   if (suffix === 'x') return Number(x).toFixed(x >= 10 ? 1 : 1) + 'x';
-  if (suffix === 'B') return '$' + Number(x).toFixed(1) + 'B';
+  if (suffix === 'B') {
+    // marketCap 数值统一存 USD $B; 按 ccy 换算显示对应本地货币
+    var sym = _aiCcySym(ccy);
+    if (ccy === 'CNY') return sym + Math.round(Number(x) * 7.15) + 'B';        // ¥XXXXB
+    if (ccy === 'KRW') return sym + (Number(x) * 1350 / 10000).toFixed(1) + '万亿'; // ₩XX.X 万亿
+    return sym + Number(x).toFixed(1) + 'B';
+  }
   return String(x);
 }
 function _aiValColor(v, kind) {
@@ -2324,7 +2330,7 @@ function _renderAiFinancials(L) {
   var rows = (L.companies || []).map(function (c) {
     return [
       '<div><span class="ticker">' + c.ticker + '</span>' + _aiMkt(c.market) + '<br><span style="font-size:11px;color:var(--text-secondary)">' + c.name + '</span></div>',
-      '<div style="font-size:13px;font-weight:700;color:' + _aiValColor(c.marketCap, 'pe') + '">' + _aiFmt(c.marketCap, 'B') + '</div>',
+      '<div style="font-size:13px;font-weight:700;color:' + _aiValColor(c.marketCap, 'pe') + '">' + _aiFmt(c.marketCap, 'B', c.ccy) + '</div>',
       '<div style="font-size:13px;color:' + _aiValColor(c.pe, 'pe') + '">' + _aiFmt(c.pe, 'x') + '</div>',
       '<div style="font-size:13px;color:' + _aiValColor(c.fwdPe, 'pe') + '">' + _aiFmt(c.fwdPe, 'x') + '</div>',
       '<div style="font-size:13px;color:' + _aiValColor(c.peg, 'pe') + '">' + _aiFmt(c.peg, 'x') + '</div>',

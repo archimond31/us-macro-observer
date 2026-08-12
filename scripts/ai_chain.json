@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-08 种子版（六层：应用/模型/基础设施/网络连接/芯片/能源；含美股/A股/韩股；market 标注市场、ccy 标注币种、市值统一 USD $B；策展财务/研报为估计值须随财报刷新；新增 cycle 资本开支周期叙事层，其中 capex 为公开指引估计值，非精确财报）",
-  "disclaimer": "股价、日/周/月/半年动量由 Yahoo Finance 自动拉取；估值(P/E、PEG)、营收增速、毛利率、FCF 利润率、ROE、AI 卡位、研报共识为分析师策展种子值(标记 est=true)，需随财报/研报更新。本板块不构成投资建议。",
+  "asOf": "2026-08-12 (CRWV Q2 2026 财报更新; A 股 ¥B/韩股 ₩万亿 单位修正)",
+  "disclaimer": "股价/动量由 Yahoo 自动拉取; 估值/盈利/AI 卡位等为分析师策展种子值(标记 est=true), 需随财报更新. 市值单位按市场: 美股 $B、A股 ¥B(人民币)、韩股 ₩万亿. CRWV 财报已更新到 Q2 2026 (2026-08-11 盘后发布).",
   "layers": [
     {
       "id": "app",
@@ -467,39 +467,39 @@
           "ticker": "CRWV",
           "key": "crwv",
           "name": "CoreWeave",
-          "est": true,
+          "est": false,
           "techRoute": "GPU 专用云",
           "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
-          "marketCap": 90,
+          "marketCap": 480,
           "pe": 0,
-          "fwdPe": 35,
-          "peg": 1.5,
-          "revGrowth": 110,
+          "fwdPe": 32,
+          "peg": null,
+          "revGrowth": 112,
           "grossMargin": 60,
-          "fcfMargin": 5,
-          "roe": 25,
-          "aiExposure": 95,
+          "fcfMargin": 8,
+          "roe": -20,
+          "aiExposure": 98,
           "research": {
-            "consensus": "分歧大",
-            "ratingScore": 3.4,
-            "reports": 22,
-            "summary": "Q1 2026 营收 $2.08B +112%、积压 ~$99.4B、GAAP 净亏 $740M、adj EBITDA $1.157B(毛利率56%)；Q2 指引 $2.45-2.6B、FY26 $12-13B。纯算力租赁高 beta。",
+            "consensus": "分化",
+            "ratingScore": 3.6,
+            "reports": 28,
+            "summary": "Q2 2026 营收 $2.58B(+112% YoY, 预期 $2.56B); 净亏 $626M(EPS -1.14, 预期 -1.41); adj EBITDA $1.51B(预期 $1.43B); 订单积压 $1040B(+246% YoY); Q3 指引 $3.4-3.6B(同比 +158%); FY26 指引上调至 $12.4-13.2B. 资本开支上调至 $35-39B, 债务 $35B. 盘后 +14%.",
             "sources": [
               {
-                "title": "CoreWeave Investor",
-                "url": "https://www.coreweave.com/"
+                "title": "CoreWeave IR",
+                "url": "https://investors.coreweave.com/"
               }
             ]
           },
-          "notes": "高 beta 纯算力标的，增速惊人但客户集中(微软/OpenAI)与债务是风险。",
-          "curatedDate": "2026-08",
-          "epsRevision": 12,
-          "ratingTrend": 0.4,
-          "ratingDispersion": 30,
-          "peHist5y": 49,
-          "aiRevPct": 65,
-          "aiRevGrowth": 45,
-          "pricingPower": 55
+          "notes": "AI 算力 \"晴雨表\": 订单积压破千亿, 但高杠杆(债$35B)+ 客户集中(Microsoft/OpenAI) + 利息费激增(本季$640M) 是核心风险; Jefferies 认为重大盈利拐点在 2026 Q4.",
+          "curatedDate": "2026-08-12",
+          "epsRevision": 18,
+          "ratingTrend": 0.6,
+          "ratingDispersion": 45,
+          "peHist5y": null,
+          "aiRevPct": 100,
+          "aiRevGrowth": 120,
+          "pricingPower": 70
         },
         {
           "ticker": "VRT",
@@ -666,7 +666,7 @@
           "ccy": "CNY",
           "techRoute": "AI 服务器 PCB",
           "productDir": "高速 PCB、交换机板、AI 服务器主板",
-          "marketCap": 313,
+          "marketCap": 48,
           "pe": 28,
           "fwdPe": 23,
           "peg": 1.4,
