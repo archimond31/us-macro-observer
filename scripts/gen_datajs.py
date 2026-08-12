@@ -2596,7 +2596,51 @@ _prepend_section_alerts()
 # ====== 交易机会雷达 (Trade Opportunity Radar) ======
 # 目标: 把宏观观测转化为可交易信号——扫描 5 类预期差 (政策路径/数据surprise/regime-价格背离/分位极端/传导断裂),
 # 再由规则引擎输出全品类资产映射候选。纯规则, 数据全部来自上面各板块已计算的 regime/评分。
+# v4 方法论升级: 双层信息隔离 (Tier A 价格隐含 vs Tier B 基本面判断) + 独立性审计 + 决策漏斗 + 证伪监控
 print('[gen_datajs] generating tradeRadar section...', file=sys.stderr, flush=True)
+
+# ---- Tier A 辅助: 滚动相关 / 实现波动 ----
+def _aligned_series(m1, m2):
+    common = sorted(set(m1) & set(m2))
+    return [m1[d] for d in common], [m2[d] for d in common]
+
+def _rolling_corr(key_a, mode_a, key_b, mode_b, win=60):
+    """两序列的滚动相关 (win 日)。mode: 'ret'=日度收益 (价格序列), 'chg'=日度变化 (水平型序列)"""
+    ma = daily_ret_map(key_a, win) if mode_a == 'ret' else _chg_map(key_a, win)
+    mb = daily_ret_map(key_b, win) if mode_b == 'ret' else _chg_map(key_b, win)
+    x, y = _aligned_series(ma, mb)
+    if len(x) < 20:
+        return None
+    return corr_pair(x, y)
+
+def _realized_vol(key, win=10):
+    """SPX 等价格序列的近期实现波动 (年化%), 用于与 VIX 隐含波动对比。"""
+    rets = list(daily_ret_map(key, win).values())
+    if len(rets) < 5:
+        return None
+    m = sum(rets) / len(rets)
+    sd = (sum((r - m) ** 2 for r in rets) / len(rets)) ** 0.5
+    return round(sd * (252 ** 0.5) * 100, 1)
+
+def _build_price_implied():
+    """Tier A 价格隐含信号: 市场用真金白银表达的观点 (独立于基本面判断)。"""
+    out = {}
+    # ① 金-实际利率 60 日滚动相关: 负=经典锚定; 接近0/转正=脱钩 (黄金定价模式)
+    out['goldRealCorr'] = _rolling_corr('gold', 'ret', 'tips10', 'chg', 60)
+    # ② 股-债 60 日滚动相关: 负=增长驱动/避险模式(股涨债跌); 正=贴现率冲击(股债同跌)
+    out['stockBondCorr'] = _rolling_corr('spx', 'ret', 'tlt', 'ret', 60)
+    # ③ 金-美元 60 日滚动相关: 负=传统负相关; 脱钩=相关转正/接近0
+    out['goldUsdCorr'] = _rolling_corr('gold', 'ret', 'dxy', 'ret', 60)
+    # ④ 隐含-实现波动差: VIX (隐含, 年化) vs SPX 10 日实现波动 (年化); 正大=波动率溢价高估
+    _rv = _realized_vol('spx', 10)
+    out['realizedVol'] = _rv
+    if _rv is not None and vix is not None:
+        out['vixImplRealGap'] = round(vix - _rv, 1)
+    else:
+        out['vixImplRealGap'] = None
+    # ⑤ 10Y-2Y 斜率 (曲线形态, 价格结构)
+    out['curveSlope'] = spread_10_2
+    return out
 
 def _build_catalyst_calendar(gaps):
     """催化剂日历: 未来关键数据/FOMC → 收敛或扩大哪个预期差。
@@ -2702,23 +2746,32 @@ def _build_trade_radar():
             _gold_cb_score = _dr.get('score', 0)
     _gold_ret90 = _gold_regime.get('goldReturn')
     _eSig = _econ_regime.get('signal')
+    # Tier A 价格隐含信号 (gaps/trades 生成前计算, 供 A−B 跨层对比)
+    _price_implied = _build_price_implied()
     _eS2 = _econ_regime.get('scores', {})
     _spx_m = tfm('spx').get('m') or 0
     _corecpi_m = tfm('core_cpi').get('m') or 0
 
-    def _gap(gtype, title, detail, direction, confidence, category, gid=None):
+    def _gap(gtype, title, detail, direction, confidence, category, gid=None, source='cross'):
+        """source: 'cross'=价格隐含 vs 基本面判断 (真预期差, Tier A−B);
+                   'price'=价格内部对比 (Tier A−A, 如波动率错价);
+                   'view'=基本面内部 (Tier B−B, 应避免——同源自我强化)"""
         gaps.append({'id': gid or ('gap_%d' % len(gaps)), 'type': gtype, 'title': title, 'detail': detail,
-                     'direction': direction, 'confidence': confidence, 'category': category})
+                     'direction': direction, 'confidence': confidence, 'category': category, 'source': source})
 
-    def _trade(asset, side, thesis, trigger, confidence, asym=None, falsify=None, ev_for=None, ev_against=None):
+    def _trade(asset, side, thesis, trigger, confidence, asym=None, falsify=None, ev_for=None, ev_against=None,
+               driver='', falsify_rules=None):
         """交易候选 = 一个可下注的假设。
-        asym: {'score': 1-5, 'note'} 非对称性 (塔勒布凸性: 5=下行有底上行无顶的凸性机会, 1=负凸性/卖出保险)
-        falsify: [证伪条件] 触发即假设错误 → 退出 (逻辑止损, 非价格止损)
-        ev_for/ev_against: 证据平衡, 辅助交易员形成主观概率"""
+        asym: {'score': 1-5, 'note'} 非对称性 (塔勒布凸性)
+        falsify: [证伪条件文本] → 展示
+        falsify_rules: [{'id','cond','threshold','dir','desc'}] → 每日自动证伪监控
+        driver: 驱动主题标签 (独立性审计用: 同 driver = 同一笔赌注)"""
         trades.append({'asset': asset, 'side': side, 'thesis': thesis,
                        'trigger': trigger, 'confidence': confidence,
+                       'driver': driver,
                        'asymmetry': asym or {'score': 3, 'note': ''},
                        'falsify': falsify or [],
+                       'falsifyRules': falsify_rules or [],
                        'evidenceFor': ev_for or [],
                        'evidenceAgainst': ev_against or []})
 
@@ -2744,15 +2797,17 @@ def _build_trade_radar():
              'CPI/PCE 连续低于预期(降温), 加息尾部定价将被压缩, 利好长久期债券。',
              'long_bond', 'mid', '通胀', gid='infl_surprise')
 
-    # ---- ③ regime-价格背离: 结构性信号 vs 价格走势 ----
-    if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 < -3:
+    # ---- ③ regime-价格背离: Tier A(价格结构) vs Tier B(基本面) 跨层对比 ----
+    _grc = _price_implied.get('goldRealCorr')   # 金-实际利率 60 日相关 (A 层真实脱钩度)
+    if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 < -3 and (_grc is None or _grc > -0.25):
         _gap('divergence', '黄金与央行购金脱钩（买点候选）',
-             f'央行购金评分 {_gold_cb_score}/100 (WGC Q2 289吨), 但金价 90 日 {_gold_ret90:+.1f}%——结构性买盘与价格短期背离, 若实际利率不再上行, 修复空间大。',
+             f'央行购金评分 {_gold_cb_score}/100 (WGC Q2 289吨) 但金价 90 日 {_gold_ret90:+.1f}%; 金-实际利率 60 日相关 {_grc if _grc is not None else "—"} (弱锚定=真脱钩)——结构性买盘与价格短期背离, 修复空间大。',
              'long_gold', 'high', '黄金', gid='gold_delink')
-    if _vol_signal == 'risk-off' and _spx_m > 2:
-        _gap('divergence', '波动率压力 vs 股票上涨（波动率错价候选）',
-             f'VIX {_vix_v:.1f} 压力扩散, 但 SPX 月 {_spx_m:+.1f}%——若实现波动未跟上, 波动率溢价高估, 卖波动率赔率佳。',
-             'short_vol', 'mid', '波动率', gid='vol_mispricing')
+    _vix_gap = _price_implied.get('vixImplRealGap')   # 隐含-实现波动差 (A 层: >3 才叫错价)
+    if _vix_gap is not None and _vix_gap > 3 and _spx_m > 0:
+        _gap('divergence', '波动率错价（隐含 vs 实现）',
+             f'VIX {_vix_v:.1f} 高出 SPX 实现波动 {_vix_gap:+.1f}pt——波动率溢价真实高估 (A 层价格证据), 卖波动率赔率佳。',
+             'short_vol', 'mid', '波动率', gid='vol_mispricing', source='price')
     if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 > 0:
         _gap('divergence', '黄金与央行购金同向确认',
              f'央行购金 {_gold_cb_score}/100 + 金价 90 日 {_gold_ret90:+.1f}%, 脱钩后修复进行中——趋势多头延续概率高。',
@@ -2810,7 +2865,7 @@ def _build_trade_radar():
                falsify=['8 月非农 >180K (就业反弹)', '核心 CPI 环比 >0.3% (通胀粘性压过就业)'],
                ev_for=['市场定价 1 次加息 vs 非农 -23K', '经济 regime=滞胀', '初请已 199K 低位'],
                ev_against=['核心 PCE 3.3% 高企', 'FOMC 9 月可能维持鹰派'])
-    if _vol_signal == 'risk-off' and _vix_v < 30 and _spx_m > 0:
+    if _vix_gap is not None and _vix_gap > 3 and _spx_m > 0:
         _trade('VIX (期权)', '卖出看涨/宽跨', f'VIX {_vix_v:.1f} 高位但股票月 {_spx_m:+.1f}%——压力未传导, 波动率溢价高估。',
                'VIX 回落而实现波动未同步走高', 'mid',
                asym={'score': 1, 'note': '⚠ 负凸性 (卖出保险): 赚有限权利金, 尾部亏损无上限——塔勒布框架下应严格控制仓位或转用价差限制尾部'},
@@ -2832,6 +2887,74 @@ def _build_trade_radar():
                ev_for=[f'CCC 分位 {_cr_ccc_pct} (低评级极端承压)', 'HY OAS 已高位', '非农转负(信用滞后 5-10 日)'],
                ev_against=['HY 周变仅小幅走阔 (尚未确认)', '流动性仍宽松 (SOFR<IORB)', '违约率仍低']) 
 
+    # ===== v4: driver 标签 (独立性审计/决策漏斗用) + 结构化证伪规则 =====
+    _TRAITS = [
+        ('黄金 / 金矿股', 'stagflation',
+         [{'id': 'gold_floor', 'desc': '金价收盘跌破 3970 下方 3% (托底假设证伪)', 'key': 'gold', 'dir': 'below', 'val': 3850}]),
+        ('纳斯达克', 'stagflation',
+         [{'id': 'nfp_rebound', 'desc': '非农反弹 >180K (软着陆确认)', 'key': 'payems_mom', 'dir': 'above', 'val': 180},
+          {'id': 't10_fall', 'desc': '10Y 跌破 4.3% (利率转向)', 'key': 'dgs10', 'dir': 'below', 'val': 4.3}]),
+        ('逢低做多', 'gold_structure',
+         [{'id': 'cb_neg', 'desc': 'WGC 季度央行购金转负', 'key': 'cb_q', 'dir': 'neg', 'val': 0}]),
+        ('黄金', 'gold_structure',
+         [{'id': 'cb_neg2', 'desc': 'WGC 季度央行购金转负', 'key': 'cb_q', 'dir': 'neg', 'val': 0}]),
+        ('2Y 国债 / 曲线陡峭化', 'rate_easing',
+         [{'id': 'cpi_hot', 'desc': '核心 CPI 环比 >0.3% (通胀粘性压过就业)', 'key': 'core_cpi_mom', 'dir': 'above', 'val': 0.3}]),
+        ('2Y 国债', 'rate_easing',
+         [{'id': 'cpi_hot2', 'desc': '核心 CPI 环比 >0.3% (再燃)', 'key': 'core_cpi_mom', 'dir': 'above', 'val': 0.3},
+          {'id': 'nfp_strong', 'desc': '非农 >180K (就业未恶化)', 'key': 'payems_mom', 'dir': 'above', 'val': 180}]),
+        ('VIX', 'vol_overpriced',
+         [{'id': 'vix_spike', 'desc': 'VIX 收盘站上 25 (波动率跳升)', 'key': 'vix', 'dir': 'above', 'val': 25}]),
+        ('高收益债', 'credit_risk',
+         [{'id': 'hy_narrow', 'desc': 'HY OAS 回落创新低 (信用修复)', 'key': 'hy_w', 'dir': 'below', 'val': -10}]),
+    ]
+    for _t in trades:
+        for _kw, _drv, _fr in _TRAITS:
+            if _kw in _t['asset']:
+                _t['driver'] = _drv
+                _t['falsifyRules'] = _fr
+                break
+
+    # ===== v4: ② 证伪监控 (每日自动检查 falsifyRules) =====
+    _falsify_alerts = []
+    for _t in trades:
+        for _r in _t.get('falsifyRules', []):
+            _key, _dir, _val = _r.get('key'), _r.get('dir'), _r.get('val')
+            _v = None
+            if _key == 'gold': _v = val('gold')
+            elif _key == 'payems_mom': _v = payems_mom
+            elif _key == 'dgs10': _v = val('dgs10')
+            elif _key == 'vix': _v = vix
+            elif _key == 'core_cpi_mom':
+                _arr = [v for _, v in s('core_cpi') if v is not None]
+                _v = (_arr[-1] - _arr[-2]) if len(_arr) >= 2 else None
+            elif _key == 'hy_w': _v = (_cr_hy_w or 0)
+            elif _key == 'cb_q':
+                _v = None   # WGC 季度数据, 需策展人工确认
+            if _v is None:
+                continue
+            _hit = (_v > _val) if _dir == 'above' else ((_v < _val) if _dir == 'below' else (_v < 0))
+            if _hit:
+                _falsify_alerts.append({'trade': _t['asset'], 'rule': _r['id'], 'desc': _r['desc'],
+                                        'current': round(_v, 2) if isinstance(_v, float) else _v})
+
+    # ===== v4: ③ 独立性审计 (effective number of bets) =====
+    _drv_counts = {}
+    for _t in trades:
+        _d = _t.get('driver', '')
+        _drv_counts[_d] = _drv_counts.get(_d, 0) + 1
+    _n_bets = len(_drv_counts)
+    _redundant = [{'driver': k, 'count': v} for k, v in _drv_counts.items() if v > 1]
+
+    # ===== v4: ④ 决策漏斗 → 唯一主线 + 卫星 =====
+    def _trade_score(_t):
+        _conf = 3 if _t['confidence'] == 'high' else 2
+        _asym = _t.get('asymmetry', {}).get('score', 3)
+        return _conf * 2 + _asym
+    _sorted_trades = sorted(trades, key=_trade_score, reverse=True)
+    _the_one = _sorted_trades[0] if _sorted_trades else None
+    _satellites = [t for t in _sorted_trades[1:] if t.get('driver') != (_the_one or {}).get('driver')][:2]
+
     _n_gaps = len(gaps)
     _n_trades = len(trades)
     _summary = (f'扫描到 {_n_gaps} 个预期差 / {_n_trades} 个交易候选。'
@@ -2839,6 +2962,8 @@ def _build_trade_radar():
                 + ' 预期差是概率优势而非确定信号, 须等催化剂(trigger)确认后按风险评分定仓位。')
     _catalysts = _build_catalyst_calendar(gaps)
     _ai_val = _build_ai_valuation_gap()
+    _gap_sources = {'cross': sum(1 for g in gaps if g.get('source') == 'cross'),
+                    'price': sum(1 for g in gaps if g.get('source') == 'price')}
     return {
         'asOf': GEN_DATE,
         'summary': _summary,
@@ -2846,8 +2971,17 @@ def _build_trade_radar():
         'trades': trades,
         'catalystCalendar': _catalysts,
         'aiValuation': _ai_val,
-        'counts': {'gaps': _n_gaps, 'trades': _n_trades, 'catalysts': len(_catalysts)},
-        'method': '纯规则引擎: 政策路径差 / 数据surprise累积 / regime-价格背离 / 分位极端 / 传导断裂 → 全品类映射。催化剂日历关联数据发布与预期差; AI 估值预期差扫描板块高低估。不构成投资建议。',
+        'priceImplied': _price_implied,
+        'independence': {'effectiveBets': _n_bets, 'redundant': _redundant,
+                         'note': ('共 %d 个候选, 但只有 %d 个独立赌注' % (len(trades), _n_bets)
+                                  + (('—— "%s" 含 %d 个候选, 你在重复下注同一件事' % (_redundant[0]['driver'], _redundant[0]['count'])) if _redundant else ''))},
+        'theOne': (_the_one if _the_one else None),
+        'satellites': _satellites,
+        'falsifyAlerts': _falsify_alerts,
+        'gapSources': _gap_sources,
+        'counts': {'gaps': _n_gaps, 'trades': _n_trades, 'catalysts': len(_catalysts),
+                   'bets': _n_bets, 'alerts': len(_falsify_alerts)},
+        'method': 'v4 双层信息架构: Tier A(价格隐含: 滚动相关/隐含-实现波动/曲线) vs Tier B(基本面判断)。预期差只允许跨层对比 (source=cross); 独立性审计(effective bets) + 决策漏斗(The One) + 证伪监控(falsify alerts)。不构成投资建议。',
     }
 
 DATA['tradeRadar'] = _build_trade_radar()

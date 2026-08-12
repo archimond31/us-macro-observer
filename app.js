@@ -2624,10 +2624,72 @@ function renderTradeRadar(c) {
   let h = '';
 
   h += '<div style="margin:6px 0 18px;padding:16px 20px;border-radius:12px;background:#f7f8fa;border:1px solid #d3d1c7;">'
-    + '<div style="font-size:13px;font-weight:500;color:#2c2c2a;margin-bottom:6px;">扫描结果 · ' + (d.counts ? (d.counts.gaps + ' 个预期差 / ' + d.counts.trades + ' 个交易候选') : '') + '</div>'
+    + '<div style="font-size:13px;font-weight:500;color:#2c2c2a;margin-bottom:6px;">扫描结果 · ' + (d.counts ? (d.counts.gaps + ' 个预期差 / ' + d.counts.trades + ' 个候选 / ' + d.counts.bets + ' 个独立赌注') : '') + '</div>'
     + '<div style="font-size:12px;color:#5f5e5a;line-height:1.7;">' + (d.summary || '') + '</div>'
     + '<div style="font-size:11px;color:#9ca3af;margin-top:8px;">' + (d.method || '') + '</div>'
     + '</div>';
+
+  // ===== 唯一主线 (The One) — 决策漏斗输出 =====
+  const theOne = d.theOne;
+  if (theOne) {
+    const tSideCls = theOne.side.indexOf('做空') >= 0 || theOne.side.indexOf('回避') >= 0 || theOne.side.indexOf('卖出') >= 0 ? '#a32d2d' : '#0f6e56';
+    const tAsym = theOne.asymmetry || { score: 3 };
+    h += '<div style="margin:0 0 14px;padding:16px 20px;border-radius:12px;background:#15131f;color:#fff;border:1px solid #3a2f6b;">'
+      + '<div style="font-size:11px;color:#b9a8ff;letter-spacing:.5px;margin-bottom:6px;">唯一主线 · THE ONE (决策漏斗收敛) · 驱动主题: ' + (theOne.driver || '—') + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">'
+      + '<span style="font-size:16px;font-weight:600;">' + theOne.asset + '</span>'
+      + '<span style="padding:2px 12px;border-radius:14px;font-size:12px;font-weight:600;background:' + tSideCls + '33;color:#fff;">' + theOne.side + '</span>'
+      + '<span style="font-size:11px;color:#cfc7e6;">非对称性 ' + tAsym.score + '/5</span>'
+      + '<span style="font-size:11px;color:#cfc7e6;">' + (theOne.confidence === 'high' ? '高置信' : '中置信') + '</span>'
+      + '</div>'
+      + '<div style="font-size:12px;line-height:1.7;color:#cfc7e6;">' + theOne.thesis + '</div>'
+      + '<div style="font-size:11px;color:#9ca3af;margin-top:8px;">入场催化剂: ' + theOne.trigger + '</div>'
+      + '</div>';
+    const sats = d.satellites || [];
+    if (sats.length) {
+      h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">'
+        + sats.map(function (s) {
+            const sc = s.side.indexOf('做空') >= 0 ? '#a32d2d' : '#0f6e56';
+            return '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 14px;font-size:12px;">卫星: <b style="color:#1a1d29;">' + s.asset + '</b> <span style="color:' + sc + ';">' + s.side + '</span> <span style="color:#9ca3af;">(' + (s.driver || '—') + ')</span></div>';
+          }).join('')
+        + '</div>';
+    }
+  }
+
+  // ===== 证伪警报 =====
+  const falerts = d.falsifyAlerts || [];
+  if (falerts.length) {
+    h += '<div style="margin:0 0 14px;padding:12px 16px;border-radius:10px;background:#fcebeb;border:1px solid #e24b4a;">'
+      + '<div style="font-size:12px;font-weight:600;color:#a32d2d;margin-bottom:6px;">⚠ ' + falerts.length + ' 条证伪警报 — 假设已被数据证伪, 建议平仓</div>'
+      + falerts.map(function (a) {
+          return '<div style="font-size:12px;color:#791f1f;line-height:1.6;">· ' + a.trade + ': ' + a.desc + ' (当前 ' + a.current + ')</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  // ===== 独立性审计 =====
+  const ind = d.independence;
+  if (ind) {
+    const indCls = ind.effectiveBets < (d.trades || []).length ? '#a32d2d' : '#0f6e56';
+    h += '<div style="margin:0 0 14px;padding:10px 16px;border-radius:10px;background:' + (ind.effectiveBets < (d.trades || []).length ? '#fcebeb' : '#e6f6ee') + ';border:1px solid ' + indCls + ';">'
+      + '<div style="font-size:12px;font-weight:600;color:' + indCls + ';">独立性审计: ' + (d.counts ? d.counts.bets : '') + ' 个独立赌注 — ' + ind.note + '</div>'
+      + '</div>';
+  }
+
+  // ===== Tier A 价格隐含信号 =====
+  const pi = d.priceImplied;
+  if (pi) {
+    const corrFmt = function (v) { return v == null ? '—' : v.toFixed(2); };
+    h += '<div style="margin:0 0 14px;padding:12px 16px;border-radius:10px;background:#e6f1fb;border:1px solid #185fa5;">'
+      + '<div style="font-size:12px;font-weight:600;color:#0c447c;margin-bottom:6px;">Tier A · 价格隐含信号（市场真金白银的表达，与基本面判断隔离）</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+      + '<span class="pi-chip" style="background:#fff;border:1px solid #b5d4f4;border-radius:14px;padding:3px 10px;font-size:11px;color:#0c447c;">金-实际利率 60日相关 ' + corrFmt(pi.goldRealCorr) + (pi.goldRealCorr != null && pi.goldRealCorr > -0.25 ? ' (脱钩)' : ' (锚定)') + '</span>'
+      + '<span class="pi-chip" style="background:#fff;border:1px solid #b5d4f4;border-radius:14px;padding:3px 10px;font-size:11px;color:#0c447c;">股-债 60日相关 ' + corrFmt(pi.stockBondCorr) + (pi.stockBondCorr != null && pi.stockBondCorr > 0 ? ' (贴现率冲击)' : ' (增长/避险)') + '</span>'
+      + '<span class="pi-chip" style="background:#fff;border:1px solid #b5d4f4;border-radius:14px;padding:3px 10px;font-size:11px;color:#0c447c;">金-美元相关 ' + corrFmt(pi.goldUsdCorr) + '</span>'
+      + '<span class="pi-chip" style="background:#fff;border:1px solid #b5d4f4;border-radius:14px;padding:3px 10px;font-size:11px;color:#0c447c;">隐含-实现波动差 ' + (pi.vixImplRealGap == null ? '—' : pi.vixImplRealGap.toFixed(1) + 'pt') + (pi.vixImplRealGap != null && pi.vixImplRealGap > 3 ? ' (错价)' : ' (定价合理)') + '</span>'
+      + '<span class="pi-chip" style="background:#fff;border:1px solid #b5d4f4;border-radius:14px;padding:3px 10px;font-size:11px;color:#0c447c;">曲线斜率 ' + pi.curveSlope + 'bp</span>'
+      + '</div></div>';
+  }
 
   // 预期差扫描器
   h += sectionH('预期差扫描器', '市场定价 − 基本面/模型判断 → 概率优势的来源');
