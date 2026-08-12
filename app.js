@@ -2653,26 +2653,47 @@ function renderTradeRadar(c) {
     });
   }
 
-  // 全品类映射表
-  h += sectionH('全品类交易映射', '由各板块 regime/评分规则引擎输出 · 须等触发器确认 · 不构成投资建议');
+  // 全品类交易映射 (假设卡片: 方向 + 非对称性 + 证据平衡 + 证伪退出)
+  h += sectionH('全品类交易映射', '每个候选 = 一个可下注的假设: 主观概率(证据平衡) + 非对称性 + 证伪退出 · 不构成投资建议');
   const trades = d.trades || [];
   if (!trades.length) {
     h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">当前无规则触发的交易候选。</div>';
   } else {
-    h += '<div class="table-wrap"><table class="data-table"><thead><tr><th>资产</th><th>方向</th><th>逻辑（数据驱动）</th><th>触发确认条件</th><th>置信度</th></tr></thead><tbody>';
     trades.forEach(function (t) {
       const sideCls = t.side.indexOf('做空') >= 0 || t.side.indexOf('回避') >= 0 || t.side.indexOf('卖出') >= 0 ? '#a32d2d' : '#0f6e56';
-      const confTxt = t.confidence === 'high' ? '高' : (t.confidence === 'mid' ? '中' : '低');
+      const confTxt = t.confidence === 'high' ? '高置信' : (t.confidence === 'mid' ? '中置信' : '低置信');
       const confBg = t.confidence === 'high' ? '#fde2e2' : (t.confidence === 'mid' ? '#fdf3e2' : '#e6f6ee');
-      h += '<tr>'
-        + '<td style="font-weight:600;color:#1a1d29;">' + t.asset + '</td>'
-        + '<td style="color:' + sideCls + ';font-weight:600;">' + t.side + '</td>'
-        + '<td style="font-size:12px;line-height:1.6;color:#374151;">' + t.thesis + '</td>'
-        + '<td style="font-size:12px;color:#854f0b;line-height:1.6;">' + t.trigger + '</td>'
-        + '<td><span style="display:inline-block;padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + (t.confidence === 'high' ? '#c0392b' : '#b45309') + ';">' + confTxt + '</span></td>'
-        + '</tr>';
+      const confFg = t.confidence === 'high' ? '#c0392b' : (t.confidence === 'mid' ? '#b45309' : '#1d9e75');
+      const asym = t.asymmetry || { score: 3, note: '' };
+      const asymCls = asym.score >= 4 ? '#0f6e56' : (asym.score === 3 ? '#854f0b' : '#a32d2d');
+      const asymBg = asym.score >= 4 ? '#e1f5ee' : (asym.score === 3 ? '#faeeda' : '#fcebeb');
+      const asymLabel = asym.score >= 4 ? '凸性机会' : (asym.score === 3 ? '中性' : '⚠ 负凸性');
+      const falsify = t.falsify || [];
+      const evFor = t.evidenceFor || [];
+      const evAg = t.evidenceAgainst || [];
+      h += '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + sideCls + ';border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
+        + '<span style="font-size:14px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + sideCls + '22;color:' + sideCls + ';">' + t.side + '</span>'
+        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + asymBg + ';color:' + asymCls + ';">非对称性 ' + asym.score + '/5 · ' + asymLabel + '</span>'
+        + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>'
+        + '</div>'
+        + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + t.thesis + '</div>'
+        + (asym.note ? '<div style="font-size:11px;color:' + asymCls + ';line-height:1.6;margin-bottom:8px;">非对称性解读: ' + asym.note + '</div>' : '')
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">'
+        + '<div style="background:#e6f6ee;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#0f6e56;margin-bottom:4px;">支持证据（下注依据）</div>'
+        + (evFor.map(function (e) { return '<div style="font-size:11px;color:#0f6e56;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#0f6e56;">—</div>')
+        + '</div>'
+        + '<div style="background:#fcebeb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">反对证据（证伪风险）</div>'
+        + (evAg.map(function (e) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
+        + '</div></div>'
+        + '<div style="background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;padding:8px 10px;margin-bottom:8px;">'
+        + '<div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">证伪退出（触发即假设错误 → 平仓）</div>'
+        + (falsify.map(function (f) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + f + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
+        + '</div>'
+        + '<div style="font-size:11px;color:#854f0b;">入场催化剂: ' + t.trigger + '</div>'
+        + '</div>';
     });
-    h += '</tbody></table></div>';
   }
   h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">数据截至 ' + (d.asOf || '') + ' · 预期差是概率优势而非确定信号: 单次数据是噪音, 连续同向 surprise 才是系统性定价错误; 分歧大时等催化剂, 赔率好时再下注。</div>';
 
@@ -2718,16 +2739,18 @@ function renderTradeRadar(c) {
   }
 
   // ===== 交易日志 (localStorage) =====
-  h += sectionH('交易日志与复盘', '记录你的入场 → 对照系统提示是否兑现 (本地存储, 不清除浏览器不丢失)');
+  h += sectionH('交易日志与复盘', '记录假设 → 主观概率 → 证伪 → 复盘 (本地存储)');
   h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
     + '<input id="tlAsset" placeholder="资产 (如 黄金/2Y/纳指)" style="flex:1;min-width:120px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
     + '<input id="tlSide" placeholder="方向 (多/空)" style="flex:0 0 70px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
     + '<input id="tlPrice" placeholder="入场价" style="flex:0 0 90px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
-    + '<input id="tlNote" placeholder="基于哪个预期差/信号" style="flex:1;min-width:140px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<input id="tlProb" placeholder="主观概率%" style="flex:0 0 90px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
+    + '<input id="tlNote" placeholder="假设/依据 (哪个预期差)" style="flex:1;min-width:150px;padding:7px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:12px;">'
     + '<button onclick="_tlAdd()" style="padding:7px 14px;background:#4361ee;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">记录</button>'
     + '<button onclick="_tlClear()" style="padding:7px 14px;background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;font-size:12px;cursor:pointer;">清空</button>'
     + '</div>'
+    + '<div style="font-size:11px;color:#9ca3af;margin-top:6px;">记录时写下假设与主观概率；行情发展后点击 <b>✓证伪</b> 或 <b>✓兑现</b> 复盘——兑现率是检验你宏观判断能力的最好标尺。</div>'
     + '<div id="tlList" style="margin-top:10px;"></div>'
     + '</div>';
 
@@ -2735,7 +2758,7 @@ function renderTradeRadar(c) {
   _tlRender();
 }
 
-// 交易日志: localStorage 存储
+// 交易日志: localStorage 存储 (假设 + 主观概率 + 证伪/兑现标记)
 function _tlGet() {
   try { return JSON.parse(localStorage.getItem('umo_trade_log') || '[]'); } catch (e) { return []; }
 }
@@ -2744,14 +2767,17 @@ function _tlSave(list) {
 }
 function _tlAdd() {
   const a = document.getElementById('tlAsset'), s = document.getElementById('tlSide'),
-        p = document.getElementById('tlPrice'), n = document.getElementById('tlNote');
+        p = document.getElementById('tlPrice'), pr = document.getElementById('tlProb'),
+        n = document.getElementById('tlNote');
   const asset = (a && a.value || '').trim(), side = (s && s.value || '').trim(),
-        price = (p && p.value || '').trim(), note = (n && n.value || '').trim();
+        price = (p && p.value || '').trim(), prob = (pr && pr.value || '').trim(),
+        note = (n && n.value || '').trim();
   if (!asset) return;
   const list = _tlGet();
-  list.push({ asset: asset, side: side, price: price, note: note, date: new Date().toISOString().slice(0, 10) });
+  list.push({ asset: asset, side: side, price: price, prob: prob, note: note,
+              date: new Date().toISOString().slice(0, 10), verdict: null });
   _tlSave(list);
-  if (a) a.value = ''; if (s) s.value = ''; if (p) p.value = ''; if (n) n.value = '';
+  if (a) a.value = ''; if (s) s.value = ''; if (p) p.value = ''; if (pr) pr.value = ''; if (n) n.value = '';
   _tlRender();
 }
 function _tlClear() {
@@ -2759,27 +2785,45 @@ function _tlClear() {
   _tlSave([]);
   _tlRender();
 }
+function _tlVerdict(idx, v) {
+  const list = _tlGet();
+  if (!list[idx]) return;
+  list[idx].verdict = v;
+  _tlSave(list);
+  _tlRender();
+}
 function _tlRender() {
   const el = document.getElementById('tlList');
   if (!el) return;
   const list = _tlGet();
   if (!list.length) {
-    el.innerHTML = '<div style="font-size:12px;color:#9ca3af;">暂无记录。用上方表单记录一笔交易, 之后每次打开交易雷达都能复盘"系统提示 vs 实际结果"。</div>';
+    el.innerHTML = '<div style="font-size:12px;color:#9ca3af;">暂无记录。记录一笔"假设 + 主观概率", 之后用 ✓兑现 / ✗证伪 复盘, 积累你的宏观判断胜率。</div>';
     return;
   }
-  el.innerHTML = list.slice().reverse().map(function (t, i) {
-    const idx = list.length - 1 - i;
-    const sideCls = t.side.indexOf('空') >= 0 ? '#a32d2d' : '#0f6e56';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;background:#fafafa;border-radius:8px;margin-bottom:6px;border-left:3px solid ' + sideCls + ';">'
-      + '<div><span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
-      + (t.side ? ' <span style="font-size:11px;font-weight:600;color:' + sideCls + ';">' + t.side + '</span>' : '')
-      + (t.price ? ' <span style="font-size:11px;color:#6b7280;">入场 ' + t.price + '</span>' : '')
-      + (t.note ? ' <span style="font-size:11px;color:#854f0b;">' + t.note + '</span>' : '')
-      + '</div>'
-      + '<div style="font-size:11px;color:#9ca3af;white-space:nowrap;">' + t.date
-      + ' <button onclick="_tlDel(' + idx + ')" style="border:none;background:none;color:#a32d2d;cursor:pointer;font-size:11px;">✕</button></div>'
-      + '</div>';
-  }).join('');
+  const wins = list.filter(function (t) { return t.verdict === 'hit'; }).length;
+  const fails = list.filter(function (t) { return t.verdict === 'miss'; }).length;
+  const judged = wins + fails;
+  const rateTxt = judged ? ('  ·  兑现 ' + wins + '/' + judged + ' (' + Math.round(wins / judged * 100) + '%)') : '';
+  el.innerHTML = '<div style="font-size:11px;color:#6b7280;margin-bottom:8px;">共 ' + list.length + ' 笔' + rateTxt + '</div>'
+    + list.map(function (t, i) {
+      const sideCls = t.side.indexOf('空') >= 0 ? '#a32d2d' : '#0f6e56';
+      const vCls = t.verdict === 'hit' ? '#0f6e56' : (t.verdict === 'miss' ? '#a32d2d' : '#6b7280');
+      const vTxt = t.verdict === 'hit' ? '✓ 兑现' : (t.verdict === 'miss' ? '✗ 证伪' : '待定');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;background:#fafafa;border-radius:8px;margin-bottom:6px;border-left:3px solid ' + sideCls + ';">'
+        + '<div style="flex:1;"><span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+        + (t.side ? ' <span style="font-size:11px;font-weight:600;color:' + sideCls + ';">' + t.side + '</span>' : '')
+        + (t.price ? ' <span style="font-size:11px;color:#6b7280;">入场 ' + t.price + '</span>' : '')
+        + (t.prob ? ' <span style="font-size:11px;color:#185fa5;">P=' + t.prob + '%</span>' : '')
+        + (t.note ? ' <span style="font-size:11px;color:#854f0b;">' + t.note + '</span>' : '')
+        + '</div>'
+        + '<div style="white-space:nowrap;display:flex;align-items:center;gap:6px;">'
+        + '<span style="font-size:11px;font-weight:600;color:' + vCls + ';">' + vTxt + '</span>'
+        + (t.verdict === null ? '<button onclick="_tlVerdict(' + i + ',\'hit\')" style="border:none;background:#e6f6ee;color:#0f6e56;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;">兑现</button>'
+           + '<button onclick="_tlVerdict(' + i + ',\'miss\')" style="border:none;background:#fcebeb;color:#a32d2d;border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;">证伪</button>' : '')
+        + '<span style="font-size:11px;color:#9ca3af;">' + t.date + '</span>'
+        + '<button onclick="_tlDel(' + i + ')" style="border:none;background:none;color:#a32d2d;cursor:pointer;font-size:11px;">✕</button>'
+        + '</div></div>';
+    }).join('');
 }
 function _tlDel(idx) {
   const list = _tlGet();

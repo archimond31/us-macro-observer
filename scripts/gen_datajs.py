@@ -2710,9 +2710,17 @@ def _build_trade_radar():
         gaps.append({'id': gid or ('gap_%d' % len(gaps)), 'type': gtype, 'title': title, 'detail': detail,
                      'direction': direction, 'confidence': confidence, 'category': category})
 
-    def _trade(asset, side, thesis, trigger, confidence):
+    def _trade(asset, side, thesis, trigger, confidence, asym=None, falsify=None, ev_for=None, ev_against=None):
+        """交易候选 = 一个可下注的假设。
+        asym: {'score': 1-5, 'note'} 非对称性 (塔勒布凸性: 5=下行有底上行无顶的凸性机会, 1=负凸性/卖出保险)
+        falsify: [证伪条件] 触发即假设错误 → 退出 (逻辑止损, 非价格止损)
+        ev_for/ev_against: 证据平衡, 辅助交易员形成主观概率"""
         trades.append({'asset': asset, 'side': side, 'thesis': thesis,
-                       'trigger': trigger, 'confidence': confidence})
+                       'trigger': trigger, 'confidence': confidence,
+                       'asymmetry': asym or {'score': 3, 'note': ''},
+                       'falsify': falsify or [],
+                       'evidenceFor': ev_for or [],
+                       'evidenceAgainst': ev_against or []})
 
     # ---- ① 政策路径差: 市场隐含路径 vs 经济 regime 推断 ----
     if _eSig == 'stagflation' and (_fed_hikes or 0) >= 1:
@@ -2767,29 +2775,62 @@ def _build_trade_radar():
              'short_hy', 'mid', '信用', gid='credit_lag')
 
     # ================= 全品类交易映射 (规则引擎) =================
+    # 每个候选 = 一个假设: 方向 + 主观概率依据(证据平衡) + 非对称性 + 证伪退出
     if _eSig == 'stagflation':
         _trade('黄金 / 金矿股', '做多', '滞胀组合: 增长弱 + 通胀高, 股债双杀下黄金是唯一同时抗通胀与避险的资产; 央行购金提供结构性托底。',
-               '核心 CPI 环比二次抬头 或 10Y 破位后金价抗跌', 'high')
+               '核心 CPI 环比二次抬头 或 10Y 破位后金价抗跌', 'high',
+               asym={'score': 5, 'note': '凸性机会: 下行有央行购金托底(有限), 上行在滞胀/美元走弱下无顶(无限)——塔勒布式非对称'},
+               falsify=['央行购金季度转负 (WGC 数据)', '金价收盘跌破 6 月低点 3970 下方 3%', '核心 CPI 环比转负 + 通缩确认'],
+               ev_for=['央行购金评分 100/100 (WGC Q2 289吨)', '经济 regime=滞胀组合', '金价已从低点反弹 9%'],
+               ev_against=['10Y 实际利率历史高分位', '美元指数仍强势', '黄金 90 日动量仍为负'])
         _trade('纳斯达克 / 长久期成长', '减仓/做空', '滞胀压制盈利预期 + 贴现率高位, 高估值成长股最脆弱 (AI 链条高 beta 放大)。',
-               '非农再负 或 核心 PCE 环比 >0.25%', 'high')
+               '非农再负 或 核心 PCE 环比 >0.25%', 'high',
+               asym={'score': 3, 'note': '中性: 下行有盈利下修+贴现率(有限空间), 上行有 AI 盈利兑现(CoreWeave 订单$1040B)可能打脸——非凸'},
+               falsify=['非农反弹 >180K 且核心 PCE 环比 <0.2% (软着陆确认)', '10Y 跌破 4.3% (利率转向)'],
+               ev_for=['非农 -23K 转负', '10Y 分位 100 贴现率高位', '经济 regime=滞胀'],
+               ev_against=['CoreWeave Q2 +112%/订单$1040B (AI 盈利兑现)', 'SPX 60 日趋势仍向上', 'HY 未走阔(信用未恶化)'])
     if _gold_cb_score >= 75:
         _trade('黄金', '逢低做多', f'央行购金结构性托底 (WGC Q2 289吨, 评分 {_gold_cb_score}/100), 回调即配置, 与短期价格脱钩。',
-               '10Y 破 4.75 后金价不创新低 (央行买盘承接)', 'high')
+               '10Y 破 4.75 后金价不创新低 (央行买盘承接)', 'high',
+               asym={'score': 5, 'note': '凸性: 央行买盘构成价格地板, 而美元信用/财政赤字担忧提供上行弹性'},
+               falsify=['WGC 季度央行净购金转负', '金价跌破 6 月低点并持续 2 周 (托底假设证伪)'],
+               ev_for=[f'央行购金评分 {_gold_cb_score}/100', '中国央行 21 连增 (7 月 +19.9吨)', '黄金占央行储备 27% 超美债'],
+               ev_against=['10Y 实际利率高位', '金价短期动量偏弱'])
     if _r_10y_pct is not None and _r_10y_pct > 85 and _corecpi_m < 0:
         _trade('2Y 国债', '做多', '10Y 极端分位 + 核心通胀环比回落 (2.6%), 短端利率下行空间打开。',
-               '8 月核心 CPI 环比 <0.2% 确认', 'mid')
+               '8 月核心 CPI 环比 <0.2% 确认', 'mid',
+               asym={'score': 4, 'note': '偏凸: 分位极值 + 就业拐点, 下行受央行政策底线约束; 上行空间在降息重定价'},
+               falsify=['核心 CPI 环比 >0.3% (通胀再燃)', '非农 >180K (就业未恶化)'],
+               ev_for=['10Y 分位 100 (统计均值回归)', '核心 CPI 2.6% 环比回落', '非农 -23K 转负'],
+               ev_against=['核心 PCE 3.3% 粘性', '美联储鹰派 (higher for longer)'])
     if (_fed_hikes or 0) >= 1 and (payems_mom is not None and payems_mom < 0):
         _trade('2Y 国债 / 曲线陡峭化', '做多', '市场定价加息 vs 就业已转负——政策路径将被迫重定价, 短端利率向下修正。',
-               '初请 4 周均上穿 280K', 'mid')
+               '初请 4 周均上穿 280K', 'mid',
+               asym={'score': 4, 'note': '偏凸: 就业拐点确认后市场从加息切向宽松的路径切换空间大, 下行是时间成本'},
+               falsify=['8 月非农 >180K (就业反弹)', '核心 CPI 环比 >0.3% (通胀粘性压过就业)'],
+               ev_for=['市场定价 1 次加息 vs 非农 -23K', '经济 regime=滞胀', '初请已 199K 低位'],
+               ev_against=['核心 PCE 3.3% 高企', 'FOMC 9 月可能维持鹰派'])
     if _vol_signal == 'risk-off' and _vix_v < 30 and _spx_m > 0:
         _trade('VIX (期权)', '卖出看涨/宽跨', f'VIX {_vix_v:.1f} 高位但股票月 {_spx_m:+.1f}%——压力未传导, 波动率溢价高估。',
-               'VIX 回落而实现波动未同步走高', 'mid')
+               'VIX 回落而实现波动未同步走高', 'mid',
+               asym={'score': 1, 'note': '⚠ 负凸性 (卖出保险): 赚有限权利金, 尾部亏损无上限——塔勒布框架下应严格控制仓位或转用价差限制尾部'},
+               falsify=['VIX 收盘站上 25', 'SPX 单日跌幅 >3% (波动率跳升)'],
+               ev_for=['VIX 高位但股票上涨(未传导)', '期限结构接近 Contango'],
+               ev_against=['地缘事件 (霍尔木兹/美伊) 随时引爆', '波动率目标基金阈值 20 近在咫尺'])
     if _liq_signal == 'risk-off':
         _trade('美元指数', '做多', '融资紧张 (SOFR>IORB) 环境美元走强, 压制新兴市场与高 beta 资产。',
-               'SOFR-IORB 持续转正 3 日', 'mid')
+               'SOFR-IORB 持续转正 3 日', 'mid',
+               asym={'score': 2, 'note': '偏负: 美元上行空间受美联储转向压制, 且央行购金/去美元化长期侵蚀'},
+               falsify=['美联储明确转鸽 (降息定价 ≥2 次)', 'RRP 余额回升'],
+               ev_for=['SOFR>IORB 融资紧张', 'QT 直击准备金'],
+               ev_against=['央行购金/去美元化长期趋势', '美国财政赤字担忧'])
     if _cr_signal == 'risk-off':
         _trade('高收益债', '回避/做空', '信用分层确认 (HY/CCC 分位高位), HY 存在补跌风险。',
-               'HY OAS 周走阔 >10bp', 'mid')
+               'HY OAS 周走阔 >10bp', 'mid',
+               asym={'score': 3, 'note': '中性偏负: 做空信用赚取利差走阔, 但央行/流动性兜底(如有)会压缩空间; 更适合做多保护(CDS)而非裸空'},
+               falsify=['HY OAS 回落并创近期新低 (信用修复)', '美联储明确转鸽 (流动性兜底)'],
+               ev_for=[f'CCC 分位 {_cr_ccc_pct} (低评级极端承压)', 'HY OAS 已高位', '非农转负(信用滞后 5-10 日)'],
+               ev_against=['HY 周变仅小幅走阔 (尚未确认)', '流动性仍宽松 (SOFR<IORB)', '违约率仍低']) 
 
     _n_gaps = len(gaps)
     _n_trades = len(trades)
