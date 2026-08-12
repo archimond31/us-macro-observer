@@ -2528,7 +2528,9 @@ function renderMacroSignal(c) {
     return '<div style="background:' + (active ? '#fff' : '#fafafa') + ';border:1px solid ' + (active ? '#4361ee' : '#e5e7eb') + ';border-radius:10px;padding:14px;' + (active ? 'box-shadow:0 2px 10px rgba(67,97,238,.15)' : '') + '">'
       + '<div style="font-size:14px;font-weight:600;color:' + (active ? '#4361ee' : '#1a1d29') + ';margin-bottom:4px;">' + s.label + (s.tail ? ' ⚠️' : '') + '</div>'
       + '<div style="font-size:12px;color:#6b7280;margin-bottom:8px;line-height:1.6;">' + (s.desc || '') + '</div>'
-      + '<div>' + trigHtml + '</div></div>';
+      + '<div>' + trigHtml + '</div>'
+      + (s.next ? '<div style="font-size:11px;color:#7f77dd;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;line-height:1.6;"><b style="color:#5b4fd1;">演化方向 →</b> ' + s.next + '</div>' : '')
+      + '</div>';
   }).join('');
   h += '<div class="metric-grid" style="margin-bottom:24px;">' + scHtml + '</div>';
 

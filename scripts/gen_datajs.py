@@ -3081,6 +3081,15 @@ def _ms_status(a):
     if t == 'trend_down':
         last = vals[-1]; mean = sum(vals) / len(vals)
         return ('on' if last < mean else 'off'), round(last, 2), '当前 %.2f vs 均值 %.2f' % (last, mean)
+    if t == 'mom_negative':
+        # 序列相邻期水平差 (非农月增), 最新一期 < 0 = 转负
+        chg = []
+        for i in range(1, len(vals)):
+            chg.append(vals[i] - vals[i - 1])
+        if len(chg) < 1:
+            return 'unknown', None, '样本不足'
+        last = chg[-1]
+        return ('on' if last < 0 else 'off'), round(last, 0), '最新月增 %+.0fK' % last
     if t == 'mom_accel':
         chg = []
         for i in range(1, len(vals)):
