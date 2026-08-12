@@ -110,18 +110,31 @@ function regimeBanner(r, extraClass) {
   '</div>';
 }
 
-// 关键信号列表
+// 关键信号列表 (alert: 重大变化/转向警示, 高亮显示)
 function signalList(signals) {
   let html = '<div class="signal-list">';
   signals.forEach(s => {
+    const isAlert = !!s.alert;
     const badgeLabel = s.direction === 'bearish' ? '利空' : s.direction === 'bullish' ? '利多' : '中性';
-    html += '<div class="signal-item">' +
-      '<span class="signal-badge ' + s.direction + '">' + badgeLabel + '</span>' +
-      '<div class="signal-body">' +
-        '<div class="signal-title">' + s.title + '</div>' +
-        '<div class="signal-meaning">' + s.meaning + '</div>' +
-      '</div>' +
-    '</div>';
+    if (isAlert) {
+      // 转向警示信号: 红色高亮 + ⚠ 图标
+      const lv2 = s.alertLevel >= 2;
+      html += '<div class="signal-item signal-alert' + (lv2 ? ' signal-alert-lv2' : '') + '">' +
+        '<span class="signal-badge alert">' + (lv2 ? '⚠⚠ 强警示' : '⚠ 转向警示') + '</span>' +
+        '<div class="signal-body">' +
+          '<div class="signal-title">' + s.title + '</div>' +
+          '<div class="signal-meaning">' + s.meaning + '</div>' +
+        '</div>' +
+      '</div>';
+    } else {
+      html += '<div class="signal-item">' +
+        '<span class="signal-badge ' + s.direction + '">' + badgeLabel + '</span>' +
+        '<div class="signal-body">' +
+          '<div class="signal-title">' + s.title + '</div>' +
+          '<div class="signal-meaning">' + s.meaning + '</div>' +
+        '</div>' +
+      '</div>';
+    }
   });
   return html + '</div>';
 }

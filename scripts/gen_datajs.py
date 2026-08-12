@@ -2503,6 +2503,91 @@ DATA['riskScore'] = {
 
 print('[gen_datajs] riskScore section OK', file=sys.stderr, flush=True)
 
+# ====== 板块关键信号 · 转向警示注入 (2026-08-12) ======
+# 目标: 关键信号不只做状态描述, 而是捕捉"重大变化/转向"——阈值突破、方向反转、极端分位、
+# 意外数据等, 前置为 ⚠ 警示信号, 起到预警作用。
+def _sig_alert(title, meaning, direction, level=1):
+    """构造转向警示信号 (level 1=警示 2=强警示)"""
+    return {'title': title, 'meaning': meaning, 'direction': direction,
+            'alert': True, 'alertText': meaning, 'alertLevel': level}
+
+def _prepend_section_alerts():
+    A = {'rates': [], 'fed': [], 'liquidity': [], 'credit': [], 'volatility': [],
+         'economy': [], 'recession': []}
+    def _rev(h6, m):
+        """由降转升 (半年下行, 最近上行)"""
+        return h6 is not None and m is not None and h6 < 0 and m > 0
+    def _rev_dn(h6, m):
+        """由升转降 (半年上行, 最近下行)"""
+        return h6 is not None and m is not None and h6 > 0 and m < 0
+
+    # ---- 利率: 长端趋势反转 / 极端分位 / 曲线形态切换 ----
+    _t10_w = tfm('dgs10').get('w') or 0
+    _t10_h6 = tfm('dgs10').get('h6') or 0
+    _t10_m = tfm('dgs10').get('m') or 0
+    if _rev(_t10_h6, _t10_m):
+        A['rates'].append(_sig_alert('⚠ 长端利率转向上行', f'10Y 半年 {_t10_h6*100:+.0f}bp 下行后月内转升 ({_t10_m*100:+.0f}bp), 利率趋势反转', 'bearish', 2))
+    elif _rev_dn(_t10_h6, _t10_m):
+        A['rates'].append(_sig_alert('⚠ 长端利率转向下行', f'10Y 半年 {_t10_h6*100:+.0f}bp 上行后月内转降 ({_t10_m*100:+.0f}bp), 利率趋势反转', 'bullish', 2))
+    if _r_10y_pct is not None and _r_10y_pct > 85 and _t10_w > 0:
+        A['rates'].append(_sig_alert('⚠ 10Y 极端高分位', f'10Y 历史分位 {_r_10y_pct}%, 周 {_t10_w*100:+.0f}bp 仍在上行, 长端估值压力极值', 'bearish', 2))
+    if _r_tips_m > 0.1:
+        A['rates'].append(_sig_alert('⚠ 实际利率回升', f'10Y TIPS 月内 +{_r_tips_m*100:.0f}bp, 实际折现率上行压制估值', 'bearish', 1))
+
+    # ---- 美联储: 政策路径转向 / QT 加速 ----
+    if _fed_cuts >= 1 or _fed_hikes >= 1:
+        A['fed'].append(_sig_alert('⚠ 市场定价政策转向', f'短端曲线隐含未来12个月 {_fed_cuts} 次降息 / {_fed_hikes} 次加息, 政策路径重新定价', 'bearish' if _fed_hikes >= _fed_cuts else 'bullish', 1))
+    _wl_w = tfm('walcl').get('w') or 0
+    if _wl_w < -20:
+        A['fed'].append(_sig_alert('⚠ QT 加速', f'WALCL 周 {comma(abs(_wl_w)/1000,1)}$B 缩减, 缩表速度加快', 'bearish', 1))
+
+    # ---- 流动性: 净流动性转向 / 融资紧张 ----
+    _nl_h6 = tfm('netliq').get('h6') if tfm('netliq').get('h6') is not None else None
+    _nl_m2 = _nl_m
+    if _rev_dn(_nl_h6, _nl_m2):
+        A['liquidity'].append(_sig_alert('⚠ 净流动性转向收缩', '半年扩张后月内转降, 流动性环境拐点', 'bearish', 2))
+    if _sofr_gap > 0.001:
+        A['liquidity'].append(_sig_alert('⚠ 融资市场紧张', f'SOFR 高于 IORB {( _sofr_gap*10000):.0f}bp, 资金价格上行', 'bearish', 1))
+
+    # ---- 信用: 利差快速走阔 / 低评级极端 ----
+    if _cr_hy_w > 10:
+        A['credit'].append(_sig_alert('⚠ HY 利差快速走阔', f'HY OAS 周 {_cr_hy_w:+.0f}bp, 信用风险定价加速', 'bearish', 2))
+    if _cr_ccc_pct is not None and _cr_ccc_pct > 85:
+        A['credit'].append(_sig_alert('⚠ CCC 极端高分位', f'CCC 利差历史分位 {_cr_ccc_pct}%, 低评级承压极值', 'bearish', 2))
+
+    # ---- 波动率: VIX 突破 / 期限结构倒挂 / 压力扩散 ----
+    if _vix_v >= 20 and (_vix_v < 25):
+        A['volatility'].append(_sig_alert('⚠ VIX 站上 20', f'VIX {_vix_v:.1f}, 波动率目标基金被动减仓触发, 抛压自我强化', 'bearish', 2))
+    if _ts_back:
+        A['volatility'].append(_sig_alert('⚠ VIX 期限结构倒挂', '近月 VIX 高于远月 (backwardation), 短期恐慌定价', 'bearish', 1))
+    if _n_stress >= 2:
+        A['volatility'].append(_sig_alert(f'⚠ 多资产进入压力区', f'{",".join(stress_assets)} 均超压力阈值, 波动率压力扩散', 'bearish', 2))
+
+    # ---- 经济: 失业率/通胀转向 / Sahm 触发 ----
+    _ur_h6 = unrate_tf.get('h6')
+    _ur_m = unrate_tf.get('m')
+    if _rev(_ur_h6, _ur_m):
+        A['economy'].append(_sig_alert('⚠ 失业率转向回升', f'半年 {_ur_h6:+.1f}pt 下行后月内转升 ({_ur_m:+.1f}pt), 就业拐点', 'bearish', 2))
+    _cpi_h6 = cpi_d6 if 'cpi_d6' in dir() else None
+    if _rev(_cpi_h6, cpi_d1):
+        A['economy'].append(_sig_alert('⚠ 通胀转向回升', f'CPI 半年下行后月环比转升 ({cpi_d1:+.1f}pt), 通胀拐点', 'bearish', 2))
+    if _sahm.get('triggered'):
+        A['economy'].append(_sig_alert('⚠ Sahm 规则触发', f'Sahm Rule = {_sahm["value"]}, 历史上 100% 对应衰退', 'bearish', 2))
+    if payems_mom is not None and payems_mom < 0:
+        A['economy'].append(_sig_alert('⚠ 非农转负', f'非农月增 {payems_mom:+.0f}K, 就业收缩信号', 'bearish', 1))
+
+    # ---- 衰退: 触发信号数 ----
+    if _triggered_count >= 2:
+        A['recession'].append(_sig_alert(f'⚠ 衰退信号 {_triggered_count} 项触发', f'{_triggered_count} 项独立信号已触发 (+{_warning_count} 项预警), 衰退概率模型当前 {f1(_recession_p)}%', 'bearish', 2))
+    elif _warning_count >= 3:
+        A['recession'].append(_sig_alert(f'⚠ 衰退预警 {_warning_count} 项', f'{_warning_count} 项信号进入预警区, 距离触发仅一步', 'bearish', 1))
+
+    for _sec, _alerts in A.items():
+        if DATA.get(_sec) and DATA[_sec].get('keySignals') and _alerts:
+            DATA[_sec]['keySignals'] = _alerts + DATA[_sec]['keySignals']
+
+_prepend_section_alerts()
+
 # ====== AI 产业链 (Jensen 黄仁勋五层蛋糕) ======
 print('[gen_datajs] generating aiChain section...', file=sys.stderr, flush=True)
 

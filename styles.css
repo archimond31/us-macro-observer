@@ -371,6 +371,25 @@ body {
 .signal-title { font-size: 13px; font-weight: 600; }
 .signal-meaning { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.6; }
 
+/* 转向警示信号: 重大变化/转向时高亮 */
+.signal-item.signal-alert {
+  border-color: #e63946; background: linear-gradient(90deg, rgba(230,57,70,0.06), transparent 60%);
+}
+.signal-item.signal-alert-lv2 {
+  border-color: #c0392b; background: rgba(230,57,70,0.10);
+  box-shadow: 0 0 0 1px rgba(230,57,70,0.25);
+}
+.signal-item.signal-alert .signal-title { color: #c0392b; }
+.signal-badge.alert {
+  background: #e63946; color: #fff; font-weight: 600;
+  animation: signal-pulse 2s ease-in-out infinite;
+}
+.signal-badge.alert + .signal-body .signal-meaning { color: #8a4a4a; }
+@keyframes signal-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* --- 指标卡 v3（含分位条+含义） --- */
 .metric-card-v3 {
   background: var(--bg-card); border: 1px solid var(--border-card);
