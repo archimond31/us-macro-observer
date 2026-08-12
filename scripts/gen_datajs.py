@@ -1175,9 +1175,9 @@ DATA['assets'] = {
             if (spx_tlt_corr is not None and spx_wti_corr is not None)
             else ' · 部分资产源缺失(长债/原油相关性暂不计算)')},
     'analystView': {
-        'risk-off': f'跨资产同步承压: 纳斯达克 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 同跌, 实际利率上行组合特征明显。黄金 ({ret(asset_changes("gold")["w"])}) 横盘说明实际利率上行对冲了避险需求。VIX ({f2(v_vix)}) 与信用利差是后续观察锚, 二者若突破阈值则风险从估值压缩升级为流动性事件。',
-        'risk-on': f'风险偏好修复: 纳斯达克 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 走势分化, 实际利率压力缓解。黄金 ({ret(asset_changes("gold")["w"])}) 反映避险需求变化。当前非系统性危机, 关注 VIX ({f2(v_vix)}) 是否突破 20。',
-        'mixed': f'利率驱动的条件性重定价: 纳斯达克 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 同步承压, 但实际利率上行尚未引发系统性风险。黄金 ({ret(asset_changes("gold")["w"])}) 横盘说明实际利率上行对冲了避险需求。只要 VIX ({f2(v_vix)}) 未突破 20、信用利差未走阔, 这仍是估值压缩而非流动性事件。',
+        'risk-off': f'跨资产同步承压: 纳指 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 同跌——股票与债券相关性趋近 +1 是贴现率冲击的典型特征 (分母端收缩, 而非盈利/避险逻辑)。黄金 ({ret(asset_changes("gold")["w"])}) 表现决定性质: 若金跌, 实际利率上行是主导 (真金白银验证); 若金横盘/涨, 说明有避险或央行购金托底对冲。VIX ({f2(v_vix)}) 与 HY 利差是"估值压缩 → 流动性事件"的升级观察锚: 前者破 20、后者走阔 10bp+ 则从分子/分母定价切换为风险溢价急升。',
+        'risk-on': f'风险偏好修复: 纳指 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 分化 (股涨债跌) 是"增长盖过贴现率"的信号——盈利预期上修驱动, 权益风险溢价收窄。黄金 ({ret(asset_changes("gold")["w"])}) 走弱属正常 (实际利率/机会成本抬升), 央行购金 (WGC Q2 289 吨) 提供底部支撑。当前更接近结构性行情而非全面牛市: 广度 (加密背离/小盘落后) 是健康度检验——若 AI 链条一枝独秀而广谱落后, 警惕局部过热后的均值回归。',
+        'mixed': f'条件性重定价: 纳指 ({ret(asset_changes("ndx")["w"])}) 与长债 (TLT {ret(asset_changes("tlt")["w"])}) 同步承压, 但实际利率上行尚未引发系统性风险——属于分母端(贴现率)驱动的估值压缩, 而非风险溢价(分母+分子)同时恶化。判别标准: ① VIX 是否破 20 (波动率目标基金强制减仓阈值); ② HY OAS 是否走阔 10bp+; ③ 黄金是否跟跌 (实际利率 vs 避险)。三者未触发前维持"高利率环境下的结构分化"判断: 规避高久期成长, 偏好短久期价值与实物资产。',
     }[_a_signal],
     'whatToWatch': [
         {'trigger':'<span class="watch-threshold">10Y 突破 4.85%</span>','implication':'触及年内高点, 系统性 CTA 抛售债券, 利率上行自我强化','status':f'距离 {max(0,4.85-v_dgs10):.2f}bp'},
@@ -1372,9 +1372,9 @@ DATA['rates'] = {
         {'maturity':'30年','rate':f2(v_30y)+'%','change':rate_chg_bp(_30y_key),'realRate':f2(val('tips30'))+'%','breakeven':f2(val('bei30') if val('bei30') else (v_30y-val('tips30')))+'%','source':('Yahoo ^TYX' if _30y_key=='tyx' else 'FRED DGS30')},
     ],
     'analystView': {
-        'risk-off': f'利率上行由长端主导: 实际利率 ({f2(v_tips)}%) 与通胀预期 ({f2(v_bei)}%) 共同贡献, 曲线熊市陡峭化 (10Y-2Y {spread_10_2:+.0f}bp)。对资产定价: 实际利率高位环境下标普合理市盈率承压; 若油价冲击迫使市场取消降息定价, 2Y 补涨触发熊平, 将对股市估值最不利。',
-        'risk-on': f'曲线牛平/正常化 (10Y-2Y {spread_10_2:+.0f}bp), 短端下行反映降息预期升温。实际利率 ({f2(v_tips)}%) 与通胀预期 ({f2(v_bei)}%) 的边际变化决定再通胀叙事是否成立。关注 2Y 是否随油价冲击反弹而重新定价。',
-        'mixed': f'利率结构由实际利率 ({f2(v_tips)}%) 与通胀预期 ({f2(v_bei)}%) 共同决定, 曲线平稳 (10Y-2Y {spread_10_2:+.0f}bp)。关键观察: 2Y 是否随油价冲击重新定价——若取消降息预期, 曲线熊平将对股市估值最不利。',
+        'risk-off': f'利率环境偏紧: 10Y {f2(v_10y)}% (近1年分位 {_r_10y_pct}), 曲线熊陡 {spread_10_2:+.0f}bp——长端上行快于短端, 通常对应增长/供给驱动而非纯货币紧缩。资产定价视角: 实际利率 ({f2(v_tips)}%) 是成长股估值的核心折现率, 通胀预期 ({f2(v_bei)}%) 决定名义端; 当前实际利率高位 + 分位极值, 长久期成长资产 (纳指/半导体/未盈利科技) 的估值压缩风险最高, 而短久期价值/金融板块相对受益于陡峭曲线。风险事件: 若 2Y 补涨 (曲线熊平) 说明紧缩向短端传导, 对全市场估值最不利。',
+        'risk-on': f'利率环境友好: 曲线 {spread_10_2:+.0f}bp (牛平/正常化), 短端下行隐含降息定价。资产定价视角: 实际利率 ({f2(v_tips)}%) 回落 = 折现率下行, 直接利好长久期资产 (成长股/长久期债券); 通胀预期 ({f2(v_bei)}%) 温和 = 名义利率受控, 权益风险溢价得以维持。这是典型的"分母端"行情——估值扩张而非盈利驱动, 需警惕利率反弹即估值回落的反身性。',
+        'mixed': f'利率结构由实际利率 ({f2(v_tips)}%) 与通胀预期 ({f2(v_bei)}%) 共同决定, 曲线 {spread_10_2:+.0f}bp。资产定价视角: 当前处于"增长驱动陡峭化"阶段——长端上行但短端平稳, 历史上股债可共存 (盈利盖过折现率); 关键分水岭是 2Y 是否重新定价: 若 2Y 补涨 (熊平) 意味着紧缩向短端传导, 权益估值与信用利差将同时承压, 此时防御 (现金/短债/黄金) 相对占优。',
     }[_rates_signal],
     'whatToWatch': [
         {'trigger':'<span class="watch-threshold">10Y 突破 4.85%</span>','implication':'触及年内高点, 系统性 CTA 抛售债券','status':f'距离 {max(0,4.85-v_10y):.2f}bp'},
@@ -1487,9 +1487,9 @@ DATA['fed'] = {
         ],
         'ratePath':{'nextMeeting':_NEXT_FOMC or '2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
     'analystView': {
-        'risk-on': f'市场定价宽松预期: 2Y 利率已低于联邦基金上限, 隐含降息路径。油价冲击是核心扰动——沃什在 {curve_date(0)[:7]} 发布会上如何定性油价 ("暂时性"=恢复降息定价, "持续风险"=压缩降息空间) 将决定路径。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折: 此后 QT 每缩 1 美元直击准备金。',
-        'risk-off': f'市场定价收紧预期: 2Y 利率已高于联邦基金上限, 降息空间被压缩。油价冲击是关键变量——沃什在 {curve_date(0)[:7]} 发布会上对油价的定性 ("暂时性" vs "持续风险") 将决定预期走向。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折。',
-        'mixed': f'美联储处于政策拉锯: 2Y 利率贴近联邦基金区间, 市场未形成单边降息或加息定价。油价冲击改变平衡——沃什在 {curve_date(0)[:7]} 发布会上对油价的定性 ("暂时性"=恢复降息定价, "持续风险"=压缩降息空间) 是近期主线。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折。',
+        'risk-on': f'市场定价宽松路径: 短端曲线隐含未来12个月约 {_fed_cuts} 次降息 (2Y {f2(_y2_f)}% vs 政策利率 {f2(_ff)}%)。政策传导链: 降息预期 → 短端下行 → 实际利率回落 → 权益估值扩张 + 长久期债券资本利得。但 {_fomc_md if _fomc_md else "下次会议"} 是重新定价窗口——若联储鹰派表态(尤其对油价)或核心通胀环比二次抬头, 宽松定价将被压缩; RRP 耗尽 (${f2(v_rrp2)}B) 意味着 QT 后续直击准备金, 是流动性端结构性约束。',
+        'risk-off': f'市场定价收紧路径: 短端曲线隐含约 {_fed_hikes} 次加息 (2Y {f2(_y2_f)}% > 政策利率 {f2(_ff)}%)。政策传导链: 加息预期 → 短端上行 → 贴现率抬升 → 权益估值压缩 (对高久期成长/未盈利资产最重) + 信用利差走阔风险。{_fomc_md if _fomc_md else "下次会议"} 是关键窗口; 若核心 PCE 3.3% 的粘性促使联储上调点阵图, 收紧预期强化。RRP 耗尽后 QT 直击准备金, 流动性约束叠加政策收紧 = 最不利组合。',
+        'mixed': f'美联储处于政策拉锯: 短端曲线未形成单边定价 ({_fed_cuts} 次降息 / {_fed_hikes} 次加息)。政策传导链看两点: ① 核心 PCE 3.3% + 超级核心 3.8% 的通胀粘性决定"更高更久"基线; ② {_fomc_md if _fomc_md else "下次会议"} 对油价的定性决定边际方向。资产配置含义: 政策不明朗期, 权益与长债的久期风险同向, 降低组合 beta + 维持现金/短债缓冲是合理选择; 一旦路径明朗, 再沿方向加仓。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折, 后续 QT 每缩一美元直击准备金。',
     }[_fed_signal],
     'whatToWatch': [
         {'trigger':(f'<span class="watch-threshold">{_fomc_md}</span> FOMC会议' if _fomc_md else '下次 FOMC 会议'),
@@ -2410,7 +2410,12 @@ DATA['recession'] = {
     'signals': _recession_signals,
     'score': _recession_score, 'level': _recession_level,
     'cyclePosition': '扩张后期' if _recession_score >= 40 else ('放缓期' if _recession_score >= 20 else '扩张期'),
-    'analystView': '衰退风险仪表盘通过6项独立信号交叉验证衰退概率。当前阶段: ' + ('利率曲线未倒挂+就业健康=扩张期, 关注初请失业金和Sahm Rule的边际变化。' if _recession_score < 20 else ('部分先行指标预警但核心就业未触发=放缓期, 需警惕信用市场与劳动力市场联动恶化。' if _recession_score < 40 else f'{_triggered_count}项触发({_warning_count}项预警), 衰退概率上升。关键看失业率与信用利差是否同时恶化。')),
+    'analystView': ('衰退仪表盘 6 项独立信号交叉验证, 综合评分 ' + f'{_recession_score}/100 ({_recession_level})。当前: '
+        + f'触发 {_triggered_count} 项 / 预警 {_warning_count} 项 (10Y-2Y {_spread_10_2_val:+.0f}bp, Sahm {_sahm["value"]}, 初请4周均 {_claims_4wk/1000:.0f}K, NYFed 衰退概率 {f1(_recession_p)}%)。'
+        + '分析框架: ① 利率信号 (10Y-2Y / 3M-10Y) 是领先约 12 个月的"收益率曲线"指标, 当前未倒挂 = 扩张延续; '
+        + '② 就业即时指标 (Sahm / 初请 / 失业率) 是"确认器"——Sahm 未触发、初请 199K 低位 = 就业未恶化; '
+        + '③ 前瞻指标 (NYFed 概率 / 金融压力) 提供边际方向。当前组合属"增长放缓但不衰退"的扩张后期: 非农 -23K 转负是边际警示, 但须失业率月变持续 >0.1pt + 初请上穿 325K 才确认拐点。'
+        + '资产含义: 此阶段权益通常仍可持有但降低 beta, 利率下行初期利于长久期债券, 黄金在央行购金托底 + 实际利率见顶假设下具配置价值; 若触发信号 ≥3 项, 应转向防御 (现金/短债/高质量)。'),
     'whatToWatch': [
         {'trigger':'Sahm Rule 触发 <span class="watch-threshold">>0.5</span>','implication':'历史上100%对应衰退, 美联储将快速转向','status': f'当前 {_sahm["value"]}' if _sahm['value'] else '—'},
         {'trigger':'3M-10Y 利差再次 <span class="watch-threshold">转负</span>','implication':'Fed研究的最可靠衰退先行指标','status': f'当前 {_t10y3m_val:+.0f}bp' if _t10y3m_val else '—'},
@@ -3028,7 +3033,10 @@ DATA['crypto'] = {
         + (f' (ETH/BTC {_v_ethbtc:.4f})' if _v_ethbtc else '')
         + f'。ETF 方面: BTC ETF {"持续净流入(机构配置)" if (_v_etf_btc and _v_etf_btc > 0) else "出现净流出(警惕)"}'
         + (f' · ETH ETF {"净流入" if (_v_etf_eth and _v_etf_eth > 0) else "净流出"}' if _v_etf_eth is not None else '')
-        + '。关键观察: 加密市场与纳斯达克的 correlation 在流动性收紧时趋向+1（risk-off 一锅端），在流动性宽松时脱钩（alpha 行情）。',
+        + '。分析框架: 加密兼具"数字黄金"(稀缺性/去中心化, 对实际利率与美元敏感)与"风险资产"(高 beta, 对流动性与风险偏好敏感)双重属性——'
+        + '实际利率高位时作为风险资产被压缩、央行购金周期中作为黄金替代获支撑。'
+        + '与纳指的相关性在流动性收紧时趋向 +1(risk-off 一锅端), 宽松时脱钩(alpha 行情); '
+        + '当前若 BTC 显著落后 SPX, 属涨势广度背离(资金集中于 AI/mega-cap), 而非领先看空——交叉验证股票广度而非单边做空信号。',
     'whatToWatch': [
         {'trigger': f'BTC 突破 <span class="watch-threshold">$100K</span>', 'implication': '新一轮零售 FOMO + 机构 FOMO 共振起点', 'status': f'距离 {max(0,100000-(_v_btc or 0)):,.0f}' if _v_btc else '—'},
         {'trigger': f'ETH/BTC 跌破 <span class="watch-threshold">0.040</span>', 'implication': 'BTC dominance 极致, Altcoin 全面承压', 'status': f'当前 {_v_ethbtc:.4f}' if _v_ethbtc else '—'},
