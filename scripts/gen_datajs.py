@@ -1206,9 +1206,35 @@ def rate_metric(label, key, tag, extra_meaning=''):
     }
 v_2y=val('dgs2'); v_10y=val('dgs10'); v_30y=val(_30y_key); v_tips=val('tips10'); v_bei=val('bei10')
 spread_10_2 = round((v_10y - v_2y)*100, 1)  # bp
-# 利率 regime: 由曲线形态+方向动态判定 (替代预置)
-_rates_signal = 'risk-off' if spread_10_2 > 0 else ('risk-on' if spread_10_2 < 0 else 'mixed')
-_rates_label = '熊陡/曲线陡峭化' if spread_10_2 > 0 else ('牛平/曲线正常化' if spread_10_2 < 0 else '曲线平稳')
+# 利率 regime (2026-08-12 优化): 曲线形态 + 10Y 绝对水平分位 + 长端变化方向 + 实际利率趋势
+_r_10y_pct = pct('dgs10')
+_r_10y_m = tfm('dgs10').get('m') or 0       # 10Y 月变化 (%)
+_r_tips_m = tfm('tips10').get('m') or 0     # 实际利率月变化 (%)
+_r_bei_m = tfm('bei10').get('m') or 0       # 通胀预期月变化 (%)
+_r_30y_m = tfm(_30y_key).get('m') or 0
+if spread_10_2 < 0:
+    _r_shape = 'inverted'
+elif spread_10_2 <= 25:
+    _r_shape = 'flat'
+else:
+    _r_shape = 'normal'
+_r_dir = 'up' if _r_10y_m > 0.15 else ('down' if _r_10y_m < -0.15 else 'flat')
+if _r_shape == 'inverted':
+    _rates_signal = 'risk-off'
+    _rates_label = f'曲线倒挂 {spread_10_2:.0f}bp · 衰退预警'
+elif _r_shape == 'normal' and _r_dir == 'up':
+    # 熊陡: 长端利率上行。若 10Y 已处于高分位 → 估值压力大
+    _rates_signal = 'risk-off' if (_r_10y_pct is not None and _r_10y_pct > 75) else 'mixed'
+    _rates_label = f'熊陡 {spread_10_2:.0f}bp · 长端抛售' if _rates_signal == 'risk-off' else f'熊陡 {spread_10_2:.0f}bp · 利率上行'
+elif _r_shape == 'normal' and _r_dir == 'down':
+    _rates_signal = 'risk-on'
+    _rates_label = f'收益率下行 · 曲线{spread_10_2:.0f}bp'
+elif _r_shape == 'flat':
+    _rates_signal = 'mixed'
+    _rates_label = f'曲线走平 {spread_10_2:.0f}bp · 政策转折临近'
+else:
+    _rates_signal = 'mixed'
+    _rates_label = f'曲线 {spread_10_2:.0f}bp · 方向不明'
 
 # 实际利率关键信号：以半年趋势为主，避免单周回落掩盖高位压制
 _tips_w = tfm('tips10').get('w') or 0
@@ -1364,12 +1390,25 @@ DATA['rates'] = {
 # ====== 美联储 ======
 v_walcl = val('walcl'); v_rrp2 = val('rrp'); v_tga2 = val('tga'); v_res = val('resbal')
 v_netliq = val('netliq')
-# Fed regime: 由市场隐含路径(短端曲线)动态判定
+# Fed regime (2026-08-12 优化): 市场隐含路径(12个月降/加息次数) + 实际利率 + QT 缩表
+# _impl_cuts12/_impl_hikes12 由短端曲线 (3M/6M/1Y/2Y) 反推, 见利率板块
 _ff = val('ffr_up'); _y2_f = val('dgs2')
+_fed_cuts = _impl_cuts12 or 0
+_fed_hikes = _impl_hikes12 or 0
+_fed_tips_m = tfm('tips10').get('m') or 0
+_fed_walcl_w = tfm('walcl').get('w') or 0   # 缩表周变化 ($B)
 _fed_signal = 'mixed'
 if _ff is not None and _y2_f is not None:
-    _fed_signal = 'risk-on' if _y2_f < _ff - 0.25 else ('risk-off' if _y2_f > _ff + 0.25 else 'mixed')
-_fed_label = '宽松预期主导' if _fed_signal=='risk-on' else ('收紧预期' if _fed_signal=='risk-off' else '观望/鹰鸽分化')
+    if _fed_cuts >= 2:
+        _fed_signal = 'risk-on'                                   # 市场定价 2 次+降息 = 宽松预期
+    elif _fed_hikes >= 2:
+        _fed_signal = 'risk-off'                                  # 定价 2 次+加息 = 收紧预期
+    elif _fed_cuts == 1:
+        _fed_signal = 'risk-on' if _fed_tips_m < 0 else 'mixed'   # 1 次降息 + 实际利率回落 → 偏宽松
+    elif _fed_hikes == 1:
+        _fed_signal = 'mixed'                                     # 1 次加息预期 → 观望
+_fed_label = f'宽松预期 ({_fed_cuts} 次降息定价)' if _fed_signal == 'risk-on' else (
+             f'收紧预期 ({_fed_hikes} 次加息定价)' if _fed_signal == 'risk-off' else '观望/鹰鸽分化')
 DATA['fed'] = {
     'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':_confidence(_fed_signal, _ff is not None, _y2_f is not None, v_walcl is not None, v_rrp2 is not None),
         'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将更直接影响准备金。'},
@@ -1476,10 +1515,27 @@ DATA['fed'] = {
 
 # ====== 流动性 ======
 v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (val('sofr')-val('iorb'))
-# 流动性 regime: 由净流动性趋势 + SOFR-IORB 动态判定
-_nl_m = tfm('netliq')['m']
-_liq_signal = 'risk-off' if (_nl_m is not None and _nl_m < 0 and (v_sofr_iorb or 0) > 0.0001) else ('risk-on' if (v_sofr_iorb or 0) < -0.0001 else 'mixed')
-_liq_label = '缓冲耗尽, 流动性收缩' if _liq_signal=='risk-off' else ('融资充裕' if _liq_signal=='risk-on' else '缓冲耗尽, 资金价格仍平静')
+# 流动性 regime (2026-08-12 优化): 净流动性水平+趋势 + SOFR-IORB + RRP 缓冲
+_nl_m = tfm('netliq')['m']            # 净流动性月变
+_nl_v = v_nl                          # 净流动性水平 ($B)
+_rrp_w = tfm('rrp').get('w') or 0     # RRP 周变 ($B)
+_sofr_gap = (v_sofr_iorb or 0)        # SOFR - IORB (bp 转 小数, >0 融资紧张)
+_liq_score = 0
+if _nl_m is not None:
+    _liq_score += 1 if _nl_m > 0 else -1
+if _nl_v is not None:
+    _liq_score += 1 if _nl_v > 3000000 else 0   # 净流动性 > $3T 算宽松
+if _sofr_gap > 0.0001:
+    _liq_score -= 1
+elif _sofr_gap < -0.0001:
+    _liq_score += 1
+if _rrp_w > 0:
+    _liq_score += 1
+elif _rrp_w < 0:
+    _liq_score -= 0
+_liq_signal = 'risk-on' if _liq_score >= 2 else ('risk-off' if _liq_score <= -2 else 'mixed')
+_liq_label = ('流动性充裕 (净流动性回升, 资金价格宽松)' if _liq_signal == 'risk-on' else
+              ('流动性收缩 (净流动性下降 / 融资紧张)' if _liq_signal == 'risk-off' else '流动性中性 (缓冲偏薄但资金价格平静)'))
 
 # LPI (流动性压力指数): 数据驱动合成, 替代硬编码 3.8
 # 三子维度各 0-10 分 (越高=压力越大), 权重 45%/35%/20% (与 UI 展示一致)
@@ -2071,10 +2127,12 @@ DATA['economy']['laborTriangleChart'] = _build_labor_triangle()
 print('[gen_datajs] generating credit section...', file=sys.stderr, flush=True)
 ccc=val('ccc'); hyv=val('hy'); igv=val('ig'); bbb=val('bbb'); bb=val('bb'); b=val('b'); aaa=val('aaa'); aa=val('aa'); av=val('a')
 
-# 信用 regime: 由 HY 利差分位 + CCC 分位 + NFCI 符号动态判定
+# 信用 regime (2026-08-12 优化): HY 利差分位 + CCC 分层 + NFCI + 利差变化方向
 # HY 整体窄通常代表风险偏好, 但如果 CCC 已同时处于历史高位,
 # 说明信用市场内部分层, 应判为 risk-off/信用分层而非风险偏好。
 _cr_hy_pct = pct('hy'); _cr_ccc_pct = pct('ccc'); _cr_nfci = val('nfci')
+_cr_hy_w = tfm('hy').get('w') or 0     # HY OAS 周变
+_cr_ig_w = tfm('ig').get('w') or 0     # IG OAS 周变
 _cr_signal = 'mixed'
 if _cr_hy_pct is not None and _cr_hy_pct > 70: _cr_signal = 'risk-off'
 elif _cr_nfci is not None and _cr_nfci > 0: _cr_signal = 'risk-off'
@@ -2083,6 +2141,11 @@ elif _cr_hy_pct is not None and _cr_hy_pct < 30:
         _cr_signal = 'risk-off'
     else:
         _cr_signal = 'risk-on'
+# 方向修正: 利差快速走阔 (周变 > 10bp) 即使分位不高也提示风险
+if _cr_signal == 'mixed' and (_cr_hy_w > 10 or _cr_ig_w > 5):
+    _cr_signal = 'risk-off'
+elif _cr_signal == 'risk-on' and _cr_hy_w > 8:
+    _cr_signal = 'mixed'   # 利差低位但开始走阔 → 降级
 _cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '利差平静但内部分化')
 
 DATA['credit'] = {
@@ -2222,11 +2285,24 @@ ca_rows = [(lb, val(k), pct(k), n, st) for lb, k, n, st in _ca_defs if val(k) is
 ovx_vix_gap = round(ovx - vix, 1) if (ovx is not None and vix is not None) else None
 stress_assets = [lb for lb, v, p, n, st in ca_rows if v >= st]
 
-# 波动率 regime: 由压力区资产数量 + VIX 水平动态判定 (替代预设 'mixed')
+# 波动率 regime (2026-08-12 优化): 压力区资产数量 + VIX 水平 + VIX 期限结构 + 变化方向
 _n_stress = len(stress_assets)
 _vix_v = vix or 0
-_vol_signal = 'risk-off' if (_n_stress >= 2 or _vix_v >= 25) else ('risk-on' if (_n_stress == 0 and _vix_v < 15) else 'mixed')
-_vol_label = '波动率分化/压力扩散' if _vol_signal=='risk-off' else ('波动率平静' if _vol_signal=='risk-on' else '波动率分化')
+_vix_w = tfm('vix').get('w') or 0     # VIX 周变
+# VIX 期限结构: 近月>远月 (backwardation) = 压力
+_ts_back = (vix is not None and vix3m is not None and vix > vix3m)
+_vol_score = 0
+if _n_stress >= 2: _vol_score -= 2
+elif _n_stress == 1: _vol_score -= 1
+if _vix_v >= 25: _vol_score -= 2
+elif _vix_v >= 18: _vol_score -= 1
+elif _vix_v < 15: _vol_score += 1
+if _ts_back: _vol_score -= 1
+if _vix_w > 3: _vol_score -= 1
+elif _vix_w < -3: _vol_score += 1
+_vol_signal = 'risk-off' if _vol_score <= -2 else ('risk-on' if _vol_score >= 2 else 'mixed')
+_vol_label = ('波动率压力扩散 (VIX 高位 / 期限结构倒挂)' if _vol_signal == 'risk-off' else
+              ('波动率平静 (VIX 低位 + 期限结构正常)' if _vol_signal == 'risk-on' else '波动率分化'))
 DATA['volatility'] = {
     'regime': {'label':_vol_label,'signal':_vol_signal,'confidence':_confidence(_vol_signal, vix is not None, vix3m is not None, len(ca_rows) >= 3),
         'description':f'当前处于压力区的资产: {(",".join(stress_assets) if stress_assets else "无")}。VIX {f2(vix)}' + (f', OVX {f2(ovx)}' if ovx else '') + (f', MOVE {f2(move)}' if move else '') + '。波动率分化形态反映压力是否从单一资产外溢。'},
