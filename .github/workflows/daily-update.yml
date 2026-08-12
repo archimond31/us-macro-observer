@@ -1,6 +1,6 @@
 # ============================================================
 # 每日数据自动更新 workflow
-# 每天 UTC 01:00 (北京 09:00 / 美东 20:00) 运行:
+# 每天 UTC 00:00 (北京 08:00 / 美东 19:00 冬令时·20:00 夏令时) 运行:
 #   美股收盘 + FRED 日度数据发布完成后拉取, 保证数据完整
 # 流水线: build_data.py (取数) → gen_datajs.py (生成 data.js)
 #         → render_smoke.cjs (无头渲染冒烟测试, 失败则中止)
@@ -10,7 +10,7 @@ name: Daily Macro Data Update
 
 on:
   schedule:
-    - cron: '0 1 * * *'   # UTC 01:00 = 北京 09:00
+    - cron: '0 0 * * *'   # UTC 00:00 = 北京 08:00
   workflow_dispatch:      # 允许手动触发
   push:
     paths:                # 仅源码/配置变更触发重算, 避免 bot 提交 data.js 时自循环
