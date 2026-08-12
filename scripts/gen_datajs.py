@@ -2593,6 +2593,127 @@ def _prepend_section_alerts():
 
 _prepend_section_alerts()
 
+# ====== 交易机会雷达 (Trade Opportunity Radar) ======
+# 目标: 把宏观观测转化为可交易信号——扫描 5 类预期差 (政策路径/数据surprise/regime-价格背离/分位极端/传导断裂),
+# 再由规则引擎输出全品类资产映射候选。纯规则, 数据全部来自上面各板块已计算的 regime/评分。
+print('[gen_datajs] generating tradeRadar section...', file=sys.stderr, flush=True)
+
+def _build_trade_radar():
+    gaps = []
+    trades = []
+    _gold_regime = (DATA.get('assets', {}).get('goldNarrativeChart', {}).get('regime') or {})
+    _gold_cb_score = 0
+    for _dr in _gold_regime.get('drivers', []):
+        if _dr.get('key') == 'cb':
+            _gold_cb_score = _dr.get('score', 0)
+    _gold_ret90 = _gold_regime.get('goldReturn')
+    _eSig = _econ_regime.get('signal')
+    _eS2 = _econ_regime.get('scores', {})
+    _spx_m = tfm('spx').get('m') or 0
+    _corecpi_m = tfm('core_cpi').get('m') or 0
+
+    def _gap(gtype, title, detail, direction, confidence, category):
+        gaps.append({'type': gtype, 'title': title, 'detail': detail,
+                     'direction': direction, 'confidence': confidence, 'category': category})
+
+    def _trade(asset, side, thesis, trigger, confidence):
+        trades.append({'asset': asset, 'side': side, 'thesis': thesis,
+                       'trigger': trigger, 'confidence': confidence})
+
+    # ---- ① 政策路径差: 市场隐含路径 vs 经济 regime 推断 ----
+    if _eSig == 'stagflation' and (_fed_hikes or 0) >= 1:
+        _gap('policy', '政策路径差：滞胀组合下市场仍定价加息',
+             f'经济 regime=滞胀 (劳动 {_eS2.get("labor")} / 通胀 {_eS2.get("inflation")} / 增长 {_eS2.get("growth")}), 但短端曲线隐含 {_fed_hikes} 次加息——非农已转负, 市场对政策转向反应滞后。',
+             'long_2y', 'high', '政策')
+    elif _eSig in ('reflation', 'risk-on') and (_fed_cuts or 0) >= 2:
+        _gap('policy', '政策路径差：市场过度定价宽松',
+             f'经济 regime={_eSig} 但隐含 {_fed_cuts} 次降息——再通胀/金发姑娘组合下宽松定价过头, 若通胀粘性确认将反向修正。',
+             'short_2y', 'mid', '政策')
+
+    # ---- ② 数据 surprise 累积 (最近 5 条发布) ----
+    _miss_jobs = sum(1 for r in _ER_RELEASES[:5] if r.get('tag') in ('NFP', 'UNRATE', 'LPR') and r.get('verdict') == 'miss')
+    _beat_infl = sum(1 for r in _ER_RELEASES[:5] if r.get('tag') in ('CPI', 'Core', 'PCE', 'SuperCore') and r.get('verdict') == 'beat')
+    if _miss_jobs >= 2:
+        _gap('surprise', f'就业数据连续 {_miss_jobs} 期低于预期',
+             '非农/失业率/参与率连续 miss, 市场对就业拐点定价不足, 衰退式降息预期将升温——利好短端利率。',
+             'long_2y', 'high', '就业')
+    if _beat_infl >= 2:
+        _gap('surprise', f'通胀数据连续 {_beat_infl} 期低于预期',
+             'CPI/PCE 连续低于预期(降温), 加息尾部定价将被压缩, 利好长久期债券。',
+             'long_bond', 'mid', '通胀')
+
+    # ---- ③ regime-价格背离: 结构性信号 vs 价格走势 ----
+    if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 < -3:
+        _gap('divergence', '黄金与央行购金脱钩（买点候选）',
+             f'央行购金评分 {_gold_cb_score}/100 (WGC Q2 289吨), 但金价 90 日 {_gold_ret90:+.1f}%——结构性买盘与价格短期背离, 若实际利率不再上行, 修复空间大。',
+             'long_gold', 'high', '黄金')
+    if _vol_signal == 'risk-off' and _spx_m > 2:
+        _gap('divergence', '波动率压力 vs 股票上涨（波动率错价候选）',
+             f'VIX {_vix_v:.1f} 压力扩散, 但 SPX 月 {_spx_m:+.1f}%——若实现波动未跟上, 波动率溢价高估, 卖波动率赔率佳。',
+             'short_vol', 'mid', '波动率')
+    if _gold_cb_score >= 75 and _gold_ret90 is not None and _gold_ret90 > 0:
+        _gap('divergence', '黄金与央行购金同向确认',
+             f'央行购金 {_gold_cb_score}/100 + 金价 90 日 {_gold_ret90:+.1f}%, 脱钩后修复进行中——趋势多头延续概率高。',
+             'long_gold', 'mid', '黄金')
+
+    # ---- ④ 分位极端: 统计回归 vs 趋势延续 ----
+    if _r_10y_pct is not None and _r_10y_pct > 90:
+        _gap('percentile', f'10Y 处于历史极端分位 ({_r_10y_pct}/100)',
+             '利率分位极值, 统计上未来 6-12 个月均值回归概率上升; 但趋势未确认反转前不逆势, 适合等反向信号或期权表达。',
+             'long_2y', 'mid', '利率')
+    if _cr_ccc_pct is not None and _cr_ccc_pct > 80:
+        _gap('percentile', f'CCC 分位 {_cr_ccc_pct}（低评级极端承压）',
+             '高收益最弱环节已在极值——若 HY 整体未走阔则分层修复, 若信用事件出现则补跌, 双向机会均需确认。',
+             'neutral', 'mid', '信用')
+
+    # ---- ⑤ 传导断裂: 某因子被市场忽略 ----
+    if (payems_mom is not None and payems_mom < 0) and (_cr_hy_w or 0) < 3:
+        _gap('transmission', '就业转负但信用利差未走阔（传导滞后）',
+             f'非农 {payems_mom:+.0f}K 但 HY OAS 周仅 {_cr_hy_w:+.1f}bp——信用市场通常滞后 5-10 交易日反应, 若就业拐点确认则 HY 存在补跌风险。',
+             'short_hy', 'mid', '信用')
+
+    # ================= 全品类交易映射 (规则引擎) =================
+    if _eSig == 'stagflation':
+        _trade('黄金 / 金矿股', '做多', '滞胀组合: 增长弱 + 通胀高, 股债双杀下黄金是唯一同时抗通胀与避险的资产; 央行购金提供结构性托底。',
+               '核心 CPI 环比二次抬头 或 10Y 破位后金价抗跌', 'high')
+        _trade('纳斯达克 / 长久期成长', '减仓/做空', '滞胀压制盈利预期 + 贴现率高位, 高估值成长股最脆弱 (AI 链条高 beta 放大)。',
+               '非农再负 或 核心 PCE 环比 >0.25%', 'high')
+    if _gold_cb_score >= 75:
+        _trade('黄金', '逢低做多', f'央行购金结构性托底 (WGC Q2 289吨, 评分 {_gold_cb_score}/100), 回调即配置, 与短期价格脱钩。',
+               '10Y 破 4.75 后金价不创新低 (央行买盘承接)', 'high')
+    if _r_10y_pct is not None and _r_10y_pct > 85 and _corecpi_m < 0:
+        _trade('2Y 国债', '做多', '10Y 极端分位 + 核心通胀环比回落 (2.6%), 短端利率下行空间打开。',
+               '8 月核心 CPI 环比 <0.2% 确认', 'mid')
+    if (_fed_hikes or 0) >= 1 and (payems_mom is not None and payems_mom < 0):
+        _trade('2Y 国债 / 曲线陡峭化', '做多', '市场定价加息 vs 就业已转负——政策路径将被迫重定价, 短端利率向下修正。',
+               '初请 4 周均上穿 280K', 'mid')
+    if _vol_signal == 'risk-off' and _vix_v < 30 and _spx_m > 0:
+        _trade('VIX (期权)', '卖出看涨/宽跨', f'VIX {_vix_v:.1f} 高位但股票月 {_spx_m:+.1f}%——压力未传导, 波动率溢价高估。',
+               'VIX 回落而实现波动未同步走高', 'mid')
+    if _liq_signal == 'risk-off':
+        _trade('美元指数', '做多', '融资紧张 (SOFR>IORB) 环境美元走强, 压制新兴市场与高 beta 资产。',
+               'SOFR-IORB 持续转正 3 日', 'mid')
+    if _cr_signal == 'risk-off':
+        _trade('高收益债', '回避/做空', '信用分层确认 (HY/CCC 分位高位), HY 存在补跌风险。',
+               'HY OAS 周走阔 >10bp', 'mid')
+
+    _n_gaps = len(gaps)
+    _n_trades = len(trades)
+    _summary = (f'扫描到 {_n_gaps} 个预期差 / {_n_trades} 个交易候选。'
+                + ('主要矛盾集中在: ' + '、'.join(sorted(set(g['category'] for g in gaps))) if gaps else '当前无显著预期差, 处于低矛盾状态。')
+                + ' 预期差是概率优势而非确定信号, 须等催化剂(trigger)确认后按风险评分定仓位。')
+    return {
+        'asOf': GEN_DATE,
+        'summary': _summary,
+        'expectationGaps': gaps,
+        'trades': trades,
+        'counts': {'gaps': _n_gaps, 'trades': _n_trades},
+        'method': '纯规则引擎: 政策路径差 / 数据surprise累积 / regime-价格背离 / 分位极端 / 传导断裂 → 全品类映射。不构成投资建议。',
+    }
+
+DATA['tradeRadar'] = _build_trade_radar()
+print('[gen_datajs] tradeRadar section OK (gaps=%d, trades=%d)' % (DATA['tradeRadar']['counts']['gaps'], DATA['tradeRadar']['counts']['trades']), file=sys.stderr, flush=True)
+
 # ====== AI 产业链 (Jensen 黄仁勋五层蛋糕) ======
 print('[gen_datajs] generating aiChain section...', file=sys.stderr, flush=True)
 

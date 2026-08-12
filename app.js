@@ -30,6 +30,7 @@ const SECTION_CONFIG = {
   crypto:     { title: '加密货币',   subtitle: 'Crypto · BTC/ETH/ETF/比率' },
   ai:         { title: 'AI产业链',   subtitle: 'AI Chain · 五层蛋糕价值挖掘' },
   signal:     { title: '矛盾信号',   subtitle: 'Signal · 主导矛盾/领先确认/交叉验证' },
+  tradeRadar: { title: '交易雷达',   subtitle: 'Radar · 预期差扫描 + 全品类映射' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
   risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
@@ -82,7 +83,7 @@ function switchSection(section) {
     liquidity: renderLiquidity, economy: renderEconomy,
     credit: renderCredit, volatility: renderVolatility,
     crypto: renderCrypto, recession: renderRecession, risk: renderRisk,
-    ai: renderAiChain, signal: renderMacroSignal
+    ai: renderAiChain, signal: renderMacroSignal, tradeRadar: renderTradeRadar
   };
   renderers[section](content);
 }
@@ -2601,6 +2602,80 @@ function _aiFlowColor(score) {
   if (score >= 55) return '#f59e0b';
   if (score >= 40) return '#4361ee';
   return '#2a9d8f';
+}
+
+// ===== 交易机会雷达: 预期差扫描 + 全品类映射 =====
+function renderTradeRadar(c) {
+  const d = DATA.tradeRadar;
+  if (!d) { c.innerHTML = '<div class="loading">交易雷达数据加载中...</div>'; return; }
+  const GAP_TYPE = {
+    policy:      { label: '政策路径差',   color: '#185fa5', bg: '#e6f1fb' },
+    surprise:    { label: '数据预期差',   color: '#0f6e56', bg: '#e1f5ee' },
+    divergence:  { label: '价格背离',     color: '#854f0b', bg: '#faeeda' },
+    percentile:  { label: '分位极端',     color: '#a32d2d', bg: '#fcebeb' },
+    transmission:{ label: '传导断裂',     color: '#993c1d', bg: '#faece7' }
+  };
+  const DIR = {
+    long_gold: { t: '利多黄金', c: '#0f6e56' }, long_2y: { t: '利多短端利率', c: '#0f6e56' },
+    short_2y:  { t: '利空短端', c: '#a32d2d' }, long_bond: { t: '利多长债', c: '#0f6e56' },
+    short_vol: { t: '利空波动率', c: '#185fa5' }, short_hy: { t: '利空信用', c: '#a32d2d' },
+    neutral:   { t: '双向待确认', c: '#5f5e5a' }
+  };
+  let h = '';
+
+  h += '<div style="margin:6px 0 18px;padding:16px 20px;border-radius:12px;background:#f7f8fa;border:1px solid #d3d1c7;">'
+    + '<div style="font-size:13px;font-weight:500;color:#2c2c2a;margin-bottom:6px;">扫描结果 · ' + (d.counts ? (d.counts.gaps + ' 个预期差 / ' + d.counts.trades + ' 个交易候选') : '') + '</div>'
+    + '<div style="font-size:12px;color:#5f5e5a;line-height:1.7;">' + (d.summary || '') + '</div>'
+    + '<div style="font-size:11px;color:#9ca3af;margin-top:8px;">' + (d.method || '') + '</div>'
+    + '</div>';
+
+  // 预期差扫描器
+  h += sectionH('预期差扫描器', '市场定价 − 基本面/模型判断 → 概率优势的来源');
+  const gaps = d.expectationGaps || [];
+  if (!gaps.length) {
+    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">当前未扫描到显著预期差——市场定价与基本面大体一致, 低矛盾状态, 等待新的数据/事件打破平衡。</div>';
+  } else {
+    gaps.forEach(function (g) {
+      const t = GAP_TYPE[g.type] || GAP_TYPE.transmission;
+      const dr = DIR[g.direction] || DIR.neutral;
+      const confBg = g.confidence === 'high' ? '#fde2e2' : (g.confidence === 'mid' ? '#fdf3e2' : '#e6f6ee');
+      const confFg = g.confidence === 'high' ? '#c0392b' : (g.confidence === 'mid' ? '#b45309' : '#1d9e75');
+      h += '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + t.color + ';border-radius:10px;padding:12px 16px;margin-bottom:10px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+        + '<span style="display:inline-block;padding:2px 9px;border-radius:14px;font-size:11px;font-weight:600;background:' + t.bg + ';color:' + t.color + ';">' + t.label + '</span>'
+        + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + g.title + '</span>'
+        + '<span style="display:inline-block;padding:2px 9px;border-radius:14px;font-size:11px;font-weight:600;background:' + dr.c + '22;color:' + dr.c + ';">' + dr.t + '</span>'
+        + '<span style="display:inline-block;padding:2px 9px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + (g.confidence === 'high' ? '高置信' : g.confidence === 'mid' ? '中置信' : '低置信') + '</span>'
+        + '<span style="font-size:11px;color:#9ca3af;">[' + g.category + ']</span>'
+        + '</div>'
+        + '<div style="font-size:12px;color:#6b7280;line-height:1.7;margin-top:6px;">' + g.detail + '</div>'
+        + '</div>';
+    });
+  }
+
+  // 全品类映射表
+  h += sectionH('全品类交易映射', '由各板块 regime/评分规则引擎输出 · 须等触发器确认 · 不构成投资建议');
+  const trades = d.trades || [];
+  if (!trades.length) {
+    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">当前无规则触发的交易候选。</div>';
+  } else {
+    h += '<div class="table-wrap"><table class="data-table"><thead><tr><th>资产</th><th>方向</th><th>逻辑（数据驱动）</th><th>触发确认条件</th><th>置信度</th></tr></thead><tbody>';
+    trades.forEach(function (t) {
+      const sideCls = t.side.indexOf('做空') >= 0 || t.side.indexOf('回避') >= 0 || t.side.indexOf('卖出') >= 0 ? '#a32d2d' : '#0f6e56';
+      const confTxt = t.confidence === 'high' ? '高' : (t.confidence === 'mid' ? '中' : '低');
+      const confBg = t.confidence === 'high' ? '#fde2e2' : (t.confidence === 'mid' ? '#fdf3e2' : '#e6f6ee');
+      h += '<tr>'
+        + '<td style="font-weight:600;color:#1a1d29;">' + t.asset + '</td>'
+        + '<td style="color:' + sideCls + ';font-weight:600;">' + t.side + '</td>'
+        + '<td style="font-size:12px;line-height:1.6;color:#374151;">' + t.thesis + '</td>'
+        + '<td style="font-size:12px;color:#854f0b;line-height:1.6;">' + t.trigger + '</td>'
+        + '<td><span style="display:inline-block;padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + (t.confidence === 'high' ? '#c0392b' : '#b45309') + ';">' + confTxt + '</span></td>'
+        + '</tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '<div style="font-size:11px;color:#9ca3af;line-height:1.6;margin-top:8px;">数据截至 ' + (d.asOf || '') + ' · 预期差是概率优势而非确定信号: 单次数据是噪音, 连续同向 surprise 才是系统性定价错误; 分歧大时等催化剂, 赔率好时再下注。</div>';
+  c.innerHTML = h;
 }
 function _renderAiFlow(d) {
   var fd = d.flowData || {};
