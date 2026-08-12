@@ -2242,10 +2242,14 @@ function _aiFmt(x, suffix, ccy) {
   if (suffix === '%') return Number(x).toFixed(x >= 10 || x <= -10 ? 0 : 1) + '%';
   if (suffix === 'x') return Number(x).toFixed(x >= 10 ? 1 : 1) + 'x';
   if (suffix === 'B') {
-    // marketCap 数值统一存 USD $B; 按 ccy 换算显示对应本地货币
+    // marketCap 按市场币种存储: 美股 USD $B / A股 ¥亿(人民币, 腾讯自选股实时) / 韩股 KRW 万亿
     var sym = _aiCcySym(ccy);
-    if (ccy === 'CNY') return sym + Math.round(Number(x) * 7.15) + 'B';        // ¥XXXXB
-    if (ccy === 'KRW') return sym + (Number(x) * 1350 / 10000).toFixed(1) + '万亿'; // ₩XX.X 万亿
+    if (ccy === 'CNY') {
+      var v = Number(x);
+      if (v >= 10000) return '¥' + (v / 10000).toFixed(2) + '万亿';
+      return '¥' + Math.round(v) + '亿';
+    }
+    if (ccy === 'KRW') return sym + Number(x).toFixed(1) + '万亿';
     return sym + Number(x).toFixed(1) + 'B';
   }
   return String(x);
