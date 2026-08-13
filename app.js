@@ -1824,17 +1824,23 @@ function renderEconomy(c) {
 function renderInflationBreakdown(items) {
   let html = '<div>';
   if (!items || !items.length) return '<div style="padding:12px;color:' + COLORS.text + ';font-size:12px">分项数据暂缺</div>';
+  // 颜色按同比绝对水平 (直观反映通胀压力): 高>4%红 / 中2-4%橙 / 低0-2%绿 / 通缩蓝
+  // 箭头+文字按边际方向 (同比 vs 上月 yoy): ↑加速/→持平/↓回落
+  const levelColor = { high: '#c1121f', mid: '#e85d04', low: '#2a9d8f', flat: '#5b8def' };
+  const trendColor = { up: '#c1121f', down: '#2a9d8f', flat: '#6b7280' };
+  const trendLabel = t => t === 'up' ? '↑ 加速' : t === 'down' ? '↓ 回落' : '→ 持平';
   items.forEach(it => {
     const pct = Math.min(Math.abs(parseFloat(it.yoy)) / 6 * 100, 100);  // 条形=|同比|占6%比例
-    const color = it.trend === 'up' ? '#e63946' : it.trend === 'down' ? '#2a9d8f' : '#6b7280';
-    const trendLabel = it.trend === 'up' ? '↑ 加速' : it.trend === 'down' ? '↓ 回落' : '→ 持平';
+    const level = it.level || 'low';
+    const cLevel = levelColor[level] || levelColor.low;
+    const cTrend = trendColor[it.trend] || trendColor.flat;
     html += '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f0f0">' +
       '<div style="min-width:150px"><div style="font-size:13px;font-weight:500">' + it.component + '</div>' +
       '<div style="font-size:11px;color:' + COLORS.neutral + '">' + it.note + '</div></div>' +
-      '<div style="min-width:56px;text-align:right;font-size:13px;font-weight:600">' + it.yoy + '</div>' +
-      '<div style="min-width:64px;text-align:right;font-size:11px;color:' + color + '">' + trendLabel + '</div>' +
+      '<div style="min-width:56px;text-align:right;font-size:13px;font-weight:600;color:' + cLevel + '">' + it.yoy + '</div>' +
+      '<div style="min-width:64px;text-align:right;font-size:11px;color:' + cTrend + '">' + trendLabel(it.trend) + '</div>' +
       '<div style="min-width:60px;text-align:right;font-size:12px;color:' + COLORS.text + '" title="同比的上月变化">' + it.contribution + '</div>' +
-      '<div style="flex:1;height:6px;background:#eef0f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px"></div></div></div>';
+      '<div style="flex:1;height:6px;background:#eef0f4;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + cLevel + ';border-radius:3px"></div></div></div>';
   });
   return html + '</div>';
 }

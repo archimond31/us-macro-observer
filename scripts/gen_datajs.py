@@ -1732,7 +1732,12 @@ def comp_row(key, name, note):
     cur = ys[-1][1]; prev = ys[-2][1] if len(ys) > 1 else None
     d1 = round(cur - prev, 2) if prev is not None else None
     trend = 'up' if (d1 is not None and d1 > 0.05) else ('down' if (d1 is not None and d1 < -0.05) else 'flat')
-    return {'component': name, 'yoy': f'{cur:+.1f}%', 'contribution': pctpt(d1), 'trend': trend, 'note': note}
+    # 水平等级: 颜色按同比绝对水平(直观反映通胀压力), 趋势独立用箭头+文字
+    if cur >= 4:    level = 'high'    # >4% 高通胀
+    elif cur >= 2:  level = 'mid'     # 2-4% 中度
+    elif cur > 0:   level = 'low'     # 0-2% 低位
+    else:           level = 'flat'    # 负值/通缩
+    return {'component': name, 'yoy': f'{cur:+.1f}%', 'contribution': pctpt(d1), 'trend': trend, 'level': level, 'note': note}
 infl_rows = [r for r in [
     comp_row('cpi_energy', '能源', 'WTI 传导主渠道, 弹性最大'),
     comp_row('cpi_food', '食品', '家庭通胀感知核心'),
@@ -1892,7 +1897,7 @@ DATA['economy'] = {
         'empNote': f'失业率 {f2(unrate)}% · 劳动参与率 {f2(val("participation"))}% (非农变化见上方指标卡/对比面板)',
         'pmiNote': f'制造业PMI {f2(val("mfg_pmi"))} / 服务业PMI {f2(val("svc_pmi"))} · 荣枯线50: 上=扩张 下=收缩',
         'trendNote': f'CPI同比半年Δ{pctpt(cpi_d6)} · 非农6个月累计{(f"{nfp_h6:+.0f}K" if nfp_h6 is not None else "—")} · 失业率半年Δ{pctpt(unrate_tf["h6"])}',
-        'breakdownSub': '分项真实同比 · 红=加速 绿=回落 · 最右列为上月Δ',
+        'breakdownSub': '分项真实同比 · 颜色=通胀水平(红>4% 橙2-4% 绿<2%) · 箭头=边际方向(↑加速/↓回落) · 最右列为上月Δ',
     },
     'analystView': '占位(regime 计算后按 signal 覆盖)',
     'whatToWatch': [
