@@ -639,6 +639,8 @@ FRED_IDS = {
     'CBBTCUSD': 'btc', 'CBETHUSD': 'eth',
     # 经济
     'UNRATE': 'unrate', 'PAYEMS': 'payems', 'CPIAUCSL': 'cpi', 'CPILFESL': 'core_cpi',
+    # CPI 未季调 (NSA) 序列: BLS 官方公布同比口径用未季调指数, 与 SA 口径差 ~0.1pp
+    'CPIAUCNS': 'cpi_nsa', 'CPILFENS': 'core_cpi_nsa',
     'PCEPILFE': 'core_pce', 'PCEPI': 'pce', 'GDP': 'gdp', 'GDPC1': 'gdp_real',
     'WEI': 'wei',
     'PCEC96': 'pce_real', 'RSAFS': 'retail',
@@ -673,7 +675,7 @@ FRED_IDS = {
 }
 # 低频序列需要更长窗口: 季度序列 1500d (~16个季度, 支持同比); 月度序列 760d (~25个月)
 QUARTERLY = {'gdp', 'gdp_real', 'deficit_gdp', 'default_rate'}
-MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'core_pce', 'pce', 'pce_real', 'retail',
+MONTHLY = {'unrate', 'payems', 'cpi', 'core_cpi', 'cpi_nsa', 'core_cpi_nsa', 'core_pce', 'pce', 'pce_real', 'retail',
            'umich', 'durables', 'cpi_energy', 'cpi_food', 'cpi_shelter', 'cpi_core_svcs', 'cpi_core_goods',
            'jolts', 'quits_rate', 'wage_yoy', 'participation', 'cont_claims',
            'sahm_real', 'recession_prob', 'stlfsi', 'indpro',

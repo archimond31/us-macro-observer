@@ -724,7 +724,7 @@ def _build_labor_triangle():
     wage_m = {}
     for d, v in wage_yoy_series_raw:
         if v is not None: wage_m.setdefault(d[:7], v)
-    cpi_arr = [(d, v) for d, v in s('cpi') if v is not None]
+    cpi_arr = [(d, v) for d, v in s('cpi_nsa') if v is not None]  # 工资-通胀差: 同比用 NSA 官方口径
     cpi_yoy_by_month = {}
     for i in range(12, len(cpi_arr)):
         prev = cpi_arr[i - 12][1]
@@ -1658,15 +1658,15 @@ DATA['liquidity'] = {
     },
 }
 
-# 经济数据
-cpi_yoy = yoy('cpi'); core_cpi_yoy = yoy('core_cpi'); pce_yoy = yoy('pce'); core_pce_yoy = yoy('core_pce')
+# 经济数据 (同比用 NSA 未季调口径, 与 BLS 官方公布一致; SA 序列仅用于环比/分位)
+cpi_yoy = yoy('cpi_nsa'); core_cpi_yoy = yoy('core_cpi_nsa'); pce_yoy = yoy('pce'); core_pce_yoy = yoy('core_pce')
 gdp_val = val('gdp'); gdp_yoy = yoy('gdp')
 unrate = val('unrate'); payems = val('payems'); payems_mom = mom_level('payems')
 retail = val('retail'); umich = val('umich')
 
-# —— 真实同比序列 (760d 月度 / 1500d 季度窗口保证基期存在) ——
-cpi_ys  = yoy_series('cpi', 10)
-core_ys = yoy_series('core_cpi', 10)
+# —— 真实同比序列 (760d 月度 / 1500d 季度窗口保证基期存在; 同比用 NSA 官方口径) ——
+cpi_ys  = yoy_series('cpi_nsa', 10)
+core_ys = yoy_series('core_cpi_nsa', 10)
 pce_ys  = yoy_series('core_pce', 10)
 gdp_ys  = yoy_series('gdp', 6)
 gdpr_ys = yoy_series('gdp_real', 6)
@@ -1803,9 +1803,9 @@ def _build_labor_panel():
 
 DATA['economy'] = {
     'regime': {'label':_e_label,'signal':_e_signal,'confidence':_confidence(_e_signal, gdp_qoq is not None, unrate_tf.get('m') is not None, cpi_yoy is not None),
-        'description':f'就业消费 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 与通胀 (CPI 同比 {f2(cpi_yoy)}%) 组合决定经济所处阶段。'},
+        'description':f'就业消费 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 与通胀 (CPI 同比 {f1(cpi_yoy)}%) 组合决定经济所处阶段。'},
     'keySignals': [
-        {'title':f'CPI 同比 {f2(cpi_yoy)}% ({("回升" if (cpi_d1 or 0)>0 else ("回落" if (cpi_d1 or 0)<0 else "持平"))})',
+        {'title':f'CPI 同比 {f1(cpi_yoy)}% ({("回升" if (cpi_d1 or 0)>0 else ("回落" if (cpi_d1 or 0)<0 else "持平"))})',
          'meaning':(
              '能源推升整体通胀, 方向与美联储目标背离。'
              if (cpi_d1 or 0) > 0
@@ -1832,8 +1832,8 @@ DATA['economy'] = {
     ],
     'metrics': [
         {'label':'GDP 环比年化 (实际)','value':(f2(gdp_qoq)+'%' if gdp_qoq is not None else '—'),'change':pctpt(gdp_qoq_d1),'dir':dir_of(gdp_qoq_d1),'tag':'GDP','percentile':pct('gdp_real'),'signal':('bullish' if (gdp_qoq or 0) >= 2 else ('mixed' if (gdp_qoq or 0) > 0 else 'bearish')),'meaning':f'季度环比年化, 新闻口径; 数据截至 {_gdp_vintage}' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else '') + (f' · GDPNow本季预估 {f2(val("gdpnow"))}%' if val('gdpnow') is not None else ''),'changes':{'d':'—','w':'—','m':'—','h6':pctpt(gdp_qoq_d2)},'sparkline':[v for _, v in gdp_qoq_ys]},
-        {'label':'CPI 同比','value':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'change':pctpt(cpi_d1),'dir':dir_of(cpi_d1),'tag':'CPI','percentile':pct('cpi'),'signal':_msig(dir_of(cpi_d1), False),'meaning':'月度频率: 月格=上月Δ, 半年格=6月Δ','changes':{'d':'—','w':'—','m':pctpt(cpi_d1),'h6':pctpt(cpi_d6)},'sparkline':[v for _, v in cpi_ys]},
-        {'label':'核心 CPI 同比','value':(f2(core_cpi_yoy)+'%' if core_cpi_yoy else '—'),'change':pctpt(core_d1),'dir':dir_of(core_d1),'tag':'Core','percentile':pct('core_cpi'),'signal':_msig(dir_of(core_d1), False),'meaning':'服务粘性对冲商品通缩','changes':{'d':'—','w':'—','m':pctpt(core_d1),'h6':pctpt(core_d6)},'sparkline':[v for _, v in core_ys]},
+        {'label':'CPI 同比','value':(f1(cpi_yoy)+'%' if cpi_yoy else '—'),'change':pctpt(cpi_d1),'dir':dir_of(cpi_d1),'tag':'CPI','percentile':pct('cpi'),'signal':_msig(dir_of(cpi_d1), False),'meaning':'月度频率: 月格=上月Δ, 半年格=6月Δ','changes':{'d':'—','w':'—','m':pctpt(cpi_d1),'h6':pctpt(cpi_d6)},'sparkline':[v for _, v in cpi_ys]},
+        {'label':'核心 CPI 同比','value':(f1(core_cpi_yoy)+'%' if core_cpi_yoy else '—'),'change':pctpt(core_d1),'dir':dir_of(core_d1),'tag':'Core','percentile':pct('core_cpi'),'signal':_msig(dir_of(core_d1), False),'meaning':'服务粘性对冲商品通缩','changes':{'d':'—','w':'—','m':pctpt(core_d1),'h6':pctpt(core_d6)},'sparkline':[v for _, v in core_ys]},
         {'label':'核心 PCE 同比','value':(f2(core_pce_yoy)+'%' if core_pce_yoy else '—'),'change':pctpt(pce_d1),'dir':dir_of(pce_d1),'tag':'PCE','percentile':pct('core_pce'),'signal':_msig(dir_of(pce_d1), False),'meaning':'美联储首选, 距目标仍有路程 (滞后1月)','changes':{'d':'—','w':'—','m':pctpt(pce_d1),'h6':pctpt(pce_d6)},'sparkline':[v for _, v in pce_ys]},
         {'label':'失业率','value':f2(unrate)+'%','change':pctpt(unrate_tf['m']),'dir':dir_of(unrate_tf['m']),'tag':'UNRATE','percentile':pct('unrate'),'signal':_msig(dir_of(unrate_tf['m']), False),'meaning':'从低点爬升, Sahm规则未触发','changes':{'d':'—','w':'—','m':pctpt(unrate_tf['m']),'h6':pctpt(unrate_tf['h6'])},'sparkline':series30('unrate')},
         {'label':'劳动参与率','value':(f'{val("participation"):.1f}%' if val('participation') is not None else '—'),'change':pctpt(raw_calc_diff('participation',1)),'dir':dir_of(raw_calc_diff('participation',1)),'tag':'LPR','percentile':pct('participation'),'signal':_msig(dir_of(raw_calc_diff('participation',1)), True),'meaning':'劳动力供给池; 持续下滑(五年低位)使失业率读数失真, 参与率降→失业率降≠就业改善','changes':{'d':'—','w':'—','m':pctpt(raw_calc_diff('participation',1)),'h6':pctpt(raw_calc_diff('participation',6))},'sparkline':series30('participation')},
@@ -1847,7 +1847,7 @@ DATA['economy'] = {
         {'label':'费城联储制造业指数','value':(f2(val('philly')) if val('philly') is not None else '—'),'change':pctpt(tfm('philly')['m']),'dir':dir_of(tfm('philly')['m']),'tag':'Philly','percentile':pct('philly'),'signal':('bullish' if (val('philly') or 0) >= 0 else 'bearish'),'meaning':'扩散指数 >0扩张; 与 Empire 互补的软数据','changes':{'d':'—','w':pctpt(tfm('philly')['w']),'m':pctpt(tfm('philly')['m']),'h6':pctpt(tfm('philly')['h6'])},'sparkline':series30('philly')},
     ],
     'trendData': [
-        {'name':'CPI 同比','tag':'CPI','unit':'pt','current':(f2(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
+        {'name':'CPI 同比','tag':'CPI','unit':'pt','current':(f1(cpi_yoy)+'%' if cpi_yoy else '—'),'changes':{'d':None,'w':None,'m':cpi_d1,'h6':cpi_d6},'meaning':'月格=同比的上月Δ, 半年格=6个月Δ'},
         {'name':'核心 PCE 同比','tag':'PCE','unit':'pt','current':(f2(core_pce_yoy)+'%' if core_pce_yoy else '—'),'changes':{'d':None,'w':None,'m':pce_d1,'h6':pce_d6},'meaning':'美联储首选指标的方向'},
         {'name':'失业率','tag':'UNRATE','unit':'pt','current':f2(unrate)+'%','changes':{'d':None,'w':None,'m':unrate_tf['m'],'h6':unrate_tf['h6']},'meaning':'月格=上月Δ, 半年格=6月Δ'},
         {'name':'非农就业(月增)','tag':'NFP','unit':'K','current':(f'{payems_mom:+.0f}K' if payems_mom is not None else '—'),'changes':{'d':None,'w':None,'m':(round(payems_mom,0) if payems_mom is not None else None),'h6':(round(nfp_h6,0) if nfp_h6 is not None else None)},'meaning':'半年格=6个月累计新增'},
@@ -1877,7 +1877,7 @@ DATA['economy'] = {
         'annualized6m': infl_annualized('core_cpi', 6),
         'supercore': raw_calc_pct('cpi_core_svcs', 12),  # 超级核心(核心服务除住房)
         'wage_inflation_gap': wage_inflation_gap(),
-        'analystNote': f'核心CPI 3月年化 {infl_annualized("core_cpi", 3):.1f}% (" 高于" if infl_annualized("core_cpi", 3) and infl_annualized("core_cpi", 3) > raw_calc_pct("core_cpi",12) else " 收敛于")同比的 {raw_calc_pct("core_cpi",12):.1f}%) — 3月年化是美联储内部最看重的口径。' if infl_annualized('core_cpi', 3) and raw_calc_pct('core_cpi', 12) else '数据暂缺',
+        'analystNote': f'核心CPI 3月年化 {infl_annualized("core_cpi", 3):.1f}% (" 高于" if infl_annualized("core_cpi", 3) and infl_annualized("core_cpi", 3) > raw_calc_pct("core_cpi_nsa",12) else " 收敛于")同比的 {raw_calc_pct("core_cpi_nsa",12):.1f}%) — 3月年化是美联储内部最看重的口径。' if infl_annualized('core_cpi', 3) and raw_calc_pct('core_cpi_nsa', 12) else '数据暂缺',
     },
     'consumptionTable': [
         {'indicator':'零售销售 (名义)','value':(f'${comma(retail/1000,1)}B' if retail else '—'),'prev':(ret(retail_mom[-1][1])+' 环比' if retail_mom else '—'),'trend':trend_of(retail_mom[-1][1] if retail_mom else None),'note':'消费第一高频指标'},
@@ -1887,7 +1887,7 @@ DATA['economy'] = {
         {'indicator':'初请失业金 (周)','value':(comma(val('claims')/1000,0)+'K' if val('claims') else '—'),'prev':(f'{claims_w/1000:+.0f}K 周Δ' if claims_w is not None else '—'),'trend':trend_of(-(claims_w or 0)),'note':'升=就业走弱 (收入-消费链领先)'},
     ],
     'chartNotes': {
-        'inflNote': f'CPI {f2(cpi_yoy)}% (月Δ{pctpt(cpi_d1)}) / 核心CPI {f2(core_cpi_yoy)}% / 核心PCE {f2(core_pce_yoy)}% (滞后1月) · 真实同比序列',
+        'inflNote': f'CPI {f1(cpi_yoy)}% (月Δ{pctpt(cpi_d1)}) / 核心CPI {f1(core_cpi_yoy)}% / 核心PCE {f2(core_pce_yoy)}% (滞后1月) · 真实同比序列',
         'gdpNote': f'实际环比年化 {f2(gdp_qoq)}% ({_gdp_vintage}, BEA最新) · 名义同比 {f2(gdp_yoy)}% · 实际同比 {f2(gdpr_yoy)}%' + (f' · 实时动能 WEI {f2(val("wei"))}%' if val('wei') is not None else '') + (f' · GDPNow本季预估 {f2(val("gdpnow"))}%' if val('gdpnow') is not None else ''),
         'empNote': f'失业率 {f2(unrate)}% · 劳动参与率 {f2(val("participation"))}% (非农变化见上方指标卡/对比面板)',
         'pmiNote': f'制造业PMI {f2(val("mfg_pmi"))} / 服务业PMI {f2(val("svc_pmi"))} · 荣枯线50: 上=扩张 下=收缩',
@@ -2096,12 +2096,12 @@ DATA['economy']['regime'] = _econ_regime
 
 # 按实际 signal 选择分析师解读文案 (覆盖占位)
 _ANALYST_VIEWS = {
-    'risk-on': f'数据偏暖: 增长 (GDP 同比 {f2(gdp_yoy)}%) 稳健、就业 (失业率 {f2(unrate)}%) 健康、通胀 (CPI 同比 {f2(cpi_yoy)}%) 受控。对美联储, 降息窗口相对从容; 变量仍是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、降息顺理成章, 站稳高位则"higher for longer"构成上行风险。',
-    'risk-off': f'数据转弱: 增长 (GDP 同比 {f2(gdp_yoy)}%) 放缓、就业 (失业率 {f2(unrate)}%) 走高、通胀 (CPI 同比 {f2(cpi_yoy)}%) 回升。对美联储, 滞胀式组合压缩政策空间; 变量是油价: WTI 站稳高位则"higher for longer", 构成主要下行风险场景。',
-    'mixed': f'数据分化: 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 一强一弱、通胀 (CPI 同比 {f2(cpi_yoy)}%) 能源推升核心横盘。对美联储无压倒性论据, 政策取决于边际变化; 变量是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、9月降息顺理成章, 站稳高位则"higher for longer"是下行风险场景。',
-    'stagflation': f'滞胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 乏力 + 通胀 (CPI 同比 {f2(cpi_yoy)}%, 核心 {f2(core_cpi_yoy)}%) 高企 + 就业边际转弱 (失业率 {f2(unrate)}%)。美联储最被动的场景——加息压通胀伤增长、降息稳增长助通胀; 政策空间极小, 股债双杀风险高, 黄金/能源相对占优。',
-    'reflation': f'再通胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 回升 + 通胀 (CPI 同比 {f2(cpi_yoy)}%) 重新上行, 就业 (失业率 {f2(unrate)}%) 仍有韧性。名义增长上行利好商品/顺周期/价值股; 对美联储意味着"higher for longer", 长端利率与收益率曲线陡峭化是主要交易。',
-    'disinflation': f'通胀回落组合: 通胀 (CPI 同比 {f2(cpi_yoy)}%, 核心 {f2(core_cpi_yoy)}%) 趋势下行, 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 尚稳。美联储最可能"维持观望→转鸽", 利好长久期债券与成长股; 风险是若就业失速则切向衰退交易。',
+    'risk-on': f'数据偏暖: 增长 (GDP 同比 {f2(gdp_yoy)}%) 稳健、就业 (失业率 {f2(unrate)}%) 健康、通胀 (CPI 同比 {f1(cpi_yoy)}%) 受控。对美联储, 降息窗口相对从容; 变量仍是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、降息顺理成章, 站稳高位则"higher for longer"构成上行风险。',
+    'risk-off': f'数据转弱: 增长 (GDP 同比 {f2(gdp_yoy)}%) 放缓、就业 (失业率 {f2(unrate)}%) 走高、通胀 (CPI 同比 {f1(cpi_yoy)}%) 回升。对美联储, 滞胀式组合压缩政策空间; 变量是油价: WTI 站稳高位则"higher for longer", 构成主要下行风险场景。',
+    'mixed': f'数据分化: 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 一强一弱、通胀 (CPI 同比 {f1(cpi_yoy)}%) 能源推升核心横盘。对美联储无压倒性论据, 政策取决于边际变化; 变量是油价: WTI 回落则 Q4 通胀回 2.5% 轨道、9月降息顺理成章, 站稳高位则"higher for longer"是下行风险场景。',
+    'stagflation': f'滞胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 乏力 + 通胀 (CPI 同比 {f1(cpi_yoy)}%, 核心 {f1(core_cpi_yoy)}%) 高企 + 就业边际转弱 (失业率 {f2(unrate)}%)。美联储最被动的场景——加息压通胀伤增长、降息稳增长助通胀; 政策空间极小, 股债双杀风险高, 黄金/能源相对占优。',
+    'reflation': f'再通胀组合: 增长 (GDP 同比 {f2(gdp_yoy)}%) 回升 + 通胀 (CPI 同比 {f1(cpi_yoy)}%) 重新上行, 就业 (失业率 {f2(unrate)}%) 仍有韧性。名义增长上行利好商品/顺周期/价值股; 对美联储意味着"higher for longer", 长端利率与收益率曲线陡峭化是主要交易。',
+    'disinflation': f'通胀回落组合: 通胀 (CPI 同比 {f1(cpi_yoy)}%, 核心 {f1(core_cpi_yoy)}%) 趋势下行, 增长 (GDP 同比 {f2(gdp_yoy)}%) 与就业 (失业率 {f2(unrate)}%) 尚稳。美联储最可能"维持观望→转鸽", 利好长久期债券与成长股; 风险是若就业失速则切向衰退交易。',
 }
 DATA['economy']['analystView'] = _ANALYST_VIEWS.get(_e_signal, _ANALYST_VIEWS['mixed'])
 
