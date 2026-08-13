@@ -1952,6 +1952,8 @@ if _ER:
         _item['surprise'] = _surp
         if _surp is None:
             _item['surpriseStr'] = '—'
+        elif _verdict == 'inline':
+            _item['surpriseStr'] = '符合预期'
         elif _unit == 'K':
             _item['surpriseStr'] = ('低于预期 ' if _surp < 0 else '高于预期 ') + ('%.0f' % abs(_surp)) + 'K'
         else:

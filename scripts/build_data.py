@@ -1038,4 +1038,106 @@ def write_events():
     print('事件数据已存 events.json')
 
 write_events()
+
+# ============ 市场预期 (consensus) 自动抓取 ============
+# Trading Economics 各指标页的 Calendar 表含 Actual/Previous/Consensus/TEForecast 四列,
+# 覆盖 CPI/核心CPI/失业率/非农/GDP 等关键发布。抓取后合并进 economic_releases.json
+# (公布值/前值/市场预期全部自动刷新, 避免手工策展滞后导致判断错误)。
+# 抓取失败时保留原文件(手工策展值), 不阻断主流程。
+_TE_CONSENSUS_PAGES = [
+    # (slug, tag, indicator名, unit, 数值是否% )
+    ('inflation-cpi',          'CPI',       'CPI 同比',        '%',  True),
+    ('core-inflation-rate',    'Core',      '核心CPI 同比',    '%',  True),
+    ('unemployment-rate',      'UNRATE',    '失业率',          '%',  True),
+    ('non-farm-payrolls',      'NFP',       '非农就业 (月增)', 'K',  False),
+    ('gdp-growth',             'GDP',       'GDP 环比年化 (实际)', '%', True),
+    ('core-pce-price-index',   'PCE',       '核心PCE 同比',    '%',  True),
+]
+
+def _te_consensus_rows(slug):
+    """抓取 TE 指标页 Calendar 表 → [(date, event, ref, actual, prev, consensus, tef), ...]
+    返回空列表 = 抓取失败或页面无日历表 (如 PCE 页只有 Related 表)。"""
+    try:
+        html = http_get(f'https://tradingeconomics.com/united-states/{slug}', timeout=15, use_ua=True)
+    except Exception as e:
+        print(f'  [TE-consensus] {slug} 抓取失败: {e}')
+        return []
+    tables = re.findall(r'<table[^>]*>(.*?)</table>', html, re.S)
+    if not tables:
+        return []
+    rows = []
+    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', tables[0], re.S):
+        cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', tr, re.S)
+        vals = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', c)).strip() for c in cells]
+        if len(vals) >= 8 and vals[0] and vals[0][:4].isdigit():
+            rows.append(tuple(vals))
+    return rows
+
+def _te_parse_num(s):
+    if not s or s in ('-', '—', ''):
+        return None
+    s = s.replace(',', '').replace('%', '').replace('K', '').strip()
+    try:
+        return float(s)
+    except Exception:
+        return None
+
+def update_market_consensus():
+    """抓取 TE 最新 consensus → 合并更新 economic_releases.json。
+    返回更新条数。失败返回 -1 (保留原文件)。"""
+    path = SCRIPT_DIR / 'economic_releases.json'
+    old = {}
+    try:
+        old = json.load(open(path, encoding='utf-8'))
+    except Exception:
+        old = {'asOf': None, 'source': '', 'releases': []}
+    old_releases = {r.get('tag'): r for r in old.get('releases', [])}
+    updated = 0
+    for slug, tag, name, unit, is_pct in _TE_CONSENSUS_PAGES:
+        rows = _te_consensus_rows(slug)
+        if not rows:
+            print(f'  [TE-consensus] {tag} ({slug}) 无日历表/抓取失败 → 保留原值')
+            continue
+        # 找到"最新已发布"行: TE 日历按日期升序, 取日期最大且 actual 非空的行
+        target = None
+        for r in rows:
+            if r[4] and (target is None or r[0] > target[0]):   # actual 非空且日期更新
+                target = r
+        if target is None and rows:
+            target = rows[-1]      # 无已发布行 → 取最后一行 (TEForecast 作 consensus 兜底)
+        if not target:
+            continue
+        # TE 日历数据行 8 列: [date, time, event, ref, actual, previous, consensus, tef]
+        date, ev, ref, act, prev, con, tef = (target[0], target[2], target[3],
+                                              target[4], target[5], target[6], target[7])
+        # 数值化
+        act_n, con_n, prev_n = (_te_parse_num(x) for x in (act, con, prev))
+        tef_n = _te_parse_num(tef)
+        if con_n is None and tef_n is not None:   # consensus 缺失时用 TEForecast 兜底
+            con_n = tef_n
+        rec = dict(old_releases.get(tag, {}))
+        rec.update({
+            'indicator': name, 'tag': tag,
+            'periodLabel': ref, 'releaseDate': date,
+            'unit': unit, 'actual': act_n, 'consensus': con_n, 'previous': prev_n,
+            'source': 'te_auto' + (' (TEForecast兜底)' if (con is None or not con) and tef_n is not None else ''),
+        })
+        # 保留手工字段: higherIsBetter / previousLabel / tolerance
+        old_releases[tag] = rec
+        updated += 1
+        print(f'  [TE-consensus] {tag:8s} {ref:10s} actual={act_n} consensus={con_n} prev={prev_n} ← TE')
+    # 非 TE 覆盖指标 (SuperCore 等) 保留原样
+    merged = list(old_releases.values())
+    merged.sort(key=lambda x: x.get('releaseDate', ''), reverse=True)
+    out = {
+        'asOf': datetime.now().strftime('%Y-%m-%d'),
+        'source': 'Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)',
+        'releases': merged,
+    }
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    print(f'[TE-consensus] economic_releases.json 更新 {updated} 条 (共 {len(merged)} 条)')
+    return updated
+
+update_market_consensus()
 print('完成。下一步: 用 computed.json 重建 data.js')
