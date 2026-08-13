@@ -1257,9 +1257,27 @@ else:
     _tips_direction = 'mixed'
 _tips_signal = {'title': f'10Y 实际利率 {f2(v_tips)}% (分位 {_tips_pct})', 'meaning': _tips_meaning, 'direction': _tips_direction}
 
-# Phase3: 鹰鸽指数 + 利率路径数据化 (提前计算, 供 DATA['fed'] 引用)
+# Phase3: 利率路径多维度算法的"基础变量" (1260行: 不依赖 _econ_regime)
+# 详细算法 (含 regime 修正/正态分布概率) 移至 2169行 _econ_regime 定义之后
+import math as _math
 _v_2y_week = (tfm('dgs2')['w'] or 0) * 100  # bp
 _v_2y_month = (tfm('dgs2')['m'] or 0) * 100
+
+# ① 隐含路径: 1Y 利率相对政策上限的差 → 下次会议(未来~1月)隐含变动次数
+_impl_cuts_1m = 0.0
+_y2_arr = s('dgs2')
+_v_2y_vol = 0.18  # 默认 18bp
+if _y2_arr and len(_y2_arr) >= 6:
+    _recent = [_y2_arr[-i][1] for i in range(1, 7)]
+    _diffs = [_recent[i] - _recent[i+1] for i in range(len(_recent)-1)]
+    if _diffs:
+        _mean_d = sum(_diffs)/len(_diffs)
+        _v_2y_vol = max(0.08, (sum((d-_mean_d)**2 for d in _diffs)/len(_diffs)) ** 0.5 * 100)
+_ff_up_v = val('ffr_up'); _y1_v = val('dgs1')
+if _ff_up_v is not None and _y1_v is not None:
+    _gap_bp = (_ff_up_v - _y1_v) * 100
+    _impl_cuts_1m = _gap_bp / 25.0
+
 _hawk_score_data = round(5 + _v_2y_month * 0.2, 1)
 _hawk_score_data = max(0, min(10, _hawk_score_data))
 _hawk_label_data = '偏鹰' if _hawk_score_data > 6 else ('偏鸽' if _hawk_score_data < 4 else '中性')
@@ -1485,7 +1503,9 @@ DATA['fed'] = {
             {'name':'Daly','role':'旧金山','score':5,'stance':'neutral'},
             {'name':'Goolsbee','role':'芝加哥','score':3,'stance':'dovish'},
         ],
-        'ratePath':{'nextMeeting':_NEXT_FOMC or '2026-07-29','holdProb':_hold_prob,'cut25bpProb':_cut_prob,'cut50bpProb':5,'hikeProb':_hike_prob,'note':f'基于2Y利率月变化({_v_2y_month:+.0f}bp)动态推算 · {"利率下行=降息概率上升" if _v_2y_month < 0 else "利率上行=降息概率下降"}'}},
+        # 'ratePath' 在 _econ_regime 定义后填充 (2169行后)
+        'ratePath': {'nextMeeting': _NEXT_FOMC or '2026-07-29', 'pending': True},
+    },
     'analystView': {
         'risk-on': f'市场定价宽松路径: 短端曲线隐含未来12个月约 {_fed_cuts} 次降息 (2Y {f2(_y2_f)}% vs 政策利率 {f2(_ff)}%)。政策传导链: 降息预期 → 短端下行 → 实际利率回落 → 权益估值扩张 + 长久期债券资本利得。但 {_fomc_md if _fomc_md else "下次会议"} 是重新定价窗口——若联储鹰派表态(尤其对油价)或核心通胀环比二次抬头, 宽松定价将被压缩; RRP 耗尽 (${f2(v_rrp2)}B) 意味着 QT 后续直击准备金, 是流动性端结构性约束。',
         'risk-off': f'市场定价收紧路径: 短端曲线隐含约 {_fed_hikes} 次加息 (2Y {f2(_y2_f)}% > 政策利率 {f2(_ff)}%)。政策传导链: 加息预期 → 短端上行 → 贴现率抬升 → 权益估值压缩 (对高久期成长/未盈利资产最重) + 信用利差走阔风险。{_fomc_md if _fomc_md else "下次会议"} 是关键窗口; 若核心 PCE 3.3% 的粘性促使联储上调点阵图, 收紧预期强化。RRP 耗尽后 QT 直击准备金, 流动性约束叠加政策收紧 = 最不利组合。',
@@ -2100,6 +2120,53 @@ _econ_regime = _build_econ_regime()
 _e_signal = _econ_regime['signal']
 _e_label = _econ_regime['label']
 DATA['economy']['regime'] = _econ_regime
+
+# ====== 利率路径多维度算法 (2026-08-13 优化) ======
+# 融合 ①隐含路径(1Y-FF, 单次会议) ②短端波动(2Y周std) ③经济regime ④鹰鸽积分 → 完整 5 段概率
+_e_sig_path = _econ_regime.get('signal', 'mixed')
+if _e_sig_path == 'stagflation':   _regime_bias_path = +0.6
+elif _e_sig_path == 'reflation':   _regime_bias_path = +0.3
+elif _e_sig_path == 'risk-off':    _regime_bias_path = +0.2
+elif _e_sig_path == 'disinflation': _regime_bias_path = -0.6
+elif _e_sig_path == 'risk-on':     _regime_bias_path = -0.3
+else:                              _regime_bias_path = 0.0
+_hawk_bias_path = (_hawk_score_data - 5) * 0.06
+# mean: 单次会议隐含变动 (单位: 次25bp), 正=降息, 负=加息; 1Y 含12月预期 → /12 单次会议
+_mean_cuts = ((_impl_cuts_1m or 0) / 12.0) - _regime_bias_path - _hawk_bias_path
+_std_cuts = max(0.4, (_v_2y_vol or 12) / 25.0)
+
+def _norm_cdf_path(x, mu=0, sigma=1):
+    return 0.5 * (1 + _math.erf((x - mu) / (sigma * _math.sqrt(2))))
+def _seg_path(mu, sigma, lo, hi):
+    return max(0, _norm_cdf_path(hi, mu, sigma) - _norm_cdf_path(lo, mu, sigma))
+
+# 概率段: 正 mean → 降息; 负 mean → 加息; 5 段按 ±1.5/±0.5 划分
+# cut50  = P(0.5 < N < 1.5)   强烈降息
+# cut25  = P(0   < N < 0.5)   中等降息
+# hold   = P(-0.5≤ N ≤ 0.5)   维持 ±0.5 步 (≈12bp 范围内)
+# hike25 = P(-1.5 < N < -0.5)  中等加息
+# hike50 = P(N ≤ -1.5)        强烈加息
+_hold_p  = round(_seg_path(_mean_cuts, _std_cuts, -0.5, 0.5) * 100, 1)
+_cut25_p = round(_seg_path(_mean_cuts, _std_cuts,  0,   0.5) * 100, 1)
+_cut50_p = round(_seg_path(_mean_cuts, _std_cuts,  0.5, 1.5) * 100, 1)
+_h25_p   = round(_seg_path(_mean_cuts, _std_cuts, -1.5, -0.5) * 100, 1)
+_h50_p   = round(max(0, 100 - _hold_p - _cut25_p - _cut50_p - _h25_p), 1)  # 兜底
+_total_p = _hold_p + _cut25_p + _cut50_p + _h25_p + _h50_p
+if _total_p and abs(_total_p - 100) > 0.05:
+    _adj = 100 / _total_p
+    _hold_p, _cut25_p, _cut50_p, _h25_p, _h50_p = [round(p*_adj, 1) for p in (_hold_p, _cut25_p, _cut50_p, _h25_p, _h50_p)]
+
+DATA['fed']['hawkishDovish']['ratePath'] = {
+    'nextMeeting':  _NEXT_FOMC or '2026-07-29',
+    'cut50bpProb':  _cut50_p,
+    'cut25bpProb':  _cut25_p,
+    'holdProb':     _hold_p,
+    'hike25bpProb': _h25_p,
+    'hike50bpProb': _h50_p,
+    'meanCuts': round(_mean_cuts, 2),
+    'stdCuts':   round(_std_cuts, 2),
+    'note': f'多维度正态分布: 1Y 隐含路径 {round(_impl_cuts_1m or 0,2)} 次/12月 → 下次会议 {round(_mean_cuts,2)} 次 · 短端波动 2Y 周std {_v_2y_vol:.0f}bp · 经济regime {_e_sig_path} (偏置 {_regime_bias_path:+.1f}) · 鹰鸽积分 {round(_hawk_score_data,1)} ({_hawk_label_data})'
+}
 
 # 按实际 signal 选择分析师解读文案 (覆盖占位)
 _ANALYST_VIEWS = {

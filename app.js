@@ -1365,18 +1365,21 @@ function renderSpeeches(sp) {
 }
 
 function renderRatePath(rp) {
-  let html = '<div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px">下次会议: ' + rp.nextMeeting + '</span></div>';
+  let html = '<div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px">下次会议: ' + rp.nextMeeting + '</span>' +
+    '<span style="font-size:11px;color:#6b7280">隐含均值 ' + (rp.meanCuts>0?'+':'') + rp.meanCuts + ' 次25bp · 不确定 ' + rp.stdCuts + '</span></div>';
   const probs = [
-    { label: '维持不变', val: rp.holdProb, color: '#6b7280' },
-    { label: '降息25bp', val: rp.cut25bpProb, color: '#2a9d8f' },
-    { label: '降息50bp', val: rp.cut50bpProb, color: '#4361ee' }
+    { label: '降息50bp', val: rp.cut50bpProb,  color: '#4361ee' },
+    { label: '降息25bp', val: rp.cut25bpProb,  color: '#2a9d8f' },
+    { label: '维持不变', val: rp.holdProb,     color: '#6b7280' },
+    { label: '加息25bp', val: rp.hike25bpProb, color: '#e85d04' },
+    { label: '加息50bp', val: rp.hike50bpProb, color: '#c1121f' }
   ];
-  html += '<div style="display:flex;gap:12px">';
+  html += '<div style="display:flex;gap:8px">';
   probs.forEach(p => {
     html += '<div style="flex:1;text-align:center">' +
-      '<div style="height:8px;background:#eef0f4;border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + p.val + '%;background:' + p.color + ';border-radius:4px"></div></div>' +
-      '<div style="font-size:11px;color:' + COLORS.text + '">' + p.label + '</div>' +
-      '<div style="font-size:16px;font-weight:600;color:' + p.color + '">' + p.val + '%</div></div>';
+      '<div style="height:8px;background:#eef0f4;border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + Math.max(0, p.val) + '%;background:' + p.color + ';border-radius:4px"></div></div>' +
+      '<div style="font-size:10px;color:' + COLORS.text + '">' + p.label + '</div>' +
+      '<div style="font-size:15px;font-weight:600;color:' + p.color + '">' + (p.val != null ? p.val : 0) + '%</div></div>';
   });
   return html + '</div></div>';
 }
