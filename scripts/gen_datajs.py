@@ -3474,6 +3474,112 @@ def _etf_flow_data():
 
 _etf_data = _etf_flow_data()
 
+# ===== 加密扩展数据: 链上/稳定币/情绪 (crypto_meta.json, build_data.py 抓取) =====
+_CMETA = {}
+try:
+    _CMETA = json.load(open(SCRIPT_DIR / 'crypto_meta.json', encoding='utf-8'))
+    print('[gen_datajs] loaded crypto_meta.json', file=sys.stderr, flush=True)
+except Exception:
+    _CMETA = {}
+    print('[gen_datajs] crypto_meta.json 缺失, 链上/稳定币/情绪面板留空', file=sys.stderr, flush=True)
+
+# 链上序列: active_addresses / transactions / trade_volume / btc_market_cap / mempool
+def _onchain_series(key, n=30):
+    arr = (_CMETA.get('onchain') or {}).get(key) or []
+    if not arr:
+        return []
+    return arr[-n:]
+
+def _onchain_change(key):
+    """链上序列最近 1 期变化% (活跃度趋势)"""
+    arr = _onchain_series(key, 3)
+    if len(arr) < 2 or not arr[-2][1]:
+        return None
+    return round((arr[-1][1] / arr[-2][1] - 1) * 100, 1)
+
+_oc_active = _onchain_series('active_addresses')
+_oc_txn = _onchain_series('transactions')
+_oc_vol = _onchain_series('trade_volume')
+_oc_mcap = _onchain_series('btc_market_cap')
+_oc_mempool = _onchain_series('mempool')
+_c_stable = _CMETA.get('stablecoins') or {}
+_c_sent = _CMETA.get('sentiment') or {}
+_c_fng = (_c_sent.get('fng') or {}).get('value')
+_c_fng_label = (_c_sent.get('fng') or {}).get('label', '—')
+_c_funding = _c_sent.get('funding')     # % (正=多头付费=杠杆偏热)
+
+# ===== 加密流动性表现 (稳定币蓄水池 + 杠杆情绪) =====
+_c_liq_score = 50
+_c_liq_pts = []
+if _c_stable.get('total_b'):
+    _c_liq_pts.append(f'稳定币总市值 ${_c_stable["total_b"]:.0f}B (USDT {_c_stable.get("usdt_b","—")} + USDC {_c_stable.get("usdc_b","—")})')
+    if _c_stable['total_b'] > 250: _c_liq_score += 15; _c_liq_pts.append('>250B 充裕的场外购买力蓄水池')
+    elif _c_stable['total_b'] < 180: _c_liq_score -= 10; _c_liq_pts.append('<180B 蓄水池偏薄')
+if _c_funding is not None:
+    _c_liq_pts.append(f'永续资金费率 {_c_funding:+.3f}%')
+    if _c_funding > 0.03: _c_liq_score -= 10; _c_liq_pts.append('资金费率>0.03% 多头杠杆过热(潜在踩踏)')
+    elif _c_funding < -0.03: _c_liq_score += 5; _c_liq_pts.append('负费率=空头拥挤(反弹燃料)')
+if _c_fng is not None:
+    _c_liq_pts.append(f'恐慌贪婪指数 {_c_fng} ({_c_fng_label})')
+    if _c_fng <= 30: _c_liq_score -= 8; _c_liq_pts.append('恐慌区=流动性收缩/抛压主导')
+    elif _c_fng >= 75: _c_liq_score -= 6; _c_liq_pts.append('贪婪区=追涨盘主导(反向风险)')
+    else: _c_liq_score += 8; _c_liq_pts.append('中性区间=健康')
+_c_liq_state = '充裕' if _c_liq_score >= 60 else ('收缩' if _c_liq_score <= 40 else '中性')
+_c_liq_label = f'流动性{_c_liq_state} (评分 {_c_liq_score})'
+
+# ===== 主导叙事判定 (4 类: 数字黄金 / 风险资产beta / ETF机构化 / 链上基本面) =====
+_c_narr = []
+if _v_ethbtc is not None:
+    if _v_ethbtc < 0.038: _c_narr.append('避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)')
+    elif _v_ethbtc > 0.05: _c_narr.append('风险偏好主导: ETH/BTC 走强(Altcoin/风险资产叙事)')
+if _v_etf_btc is not None:
+    if _v_etf_btc > 0 and _etf_data.get('btc_cumsum', 0) > 0:
+        _c_narr.append(f'机构化配置: BTC ETF 净流入(30日累计 ${_etf_data.get("btc_cumsum"):+.0f}M)')
+    elif _v_etf_btc < 0:
+        _c_narr.append('机构获利了结: BTC ETF 净流出')
+if _c_stable.get('total_b') and _c_stable['total_b'] > 250:
+    _c_narr.append('流动性蓄水池充沛: 稳定币 >250B 待入场资金')
+if _oc_txn:
+    _c_txn_chg = _onchain_change('transactions')
+    if _c_txn_chg is not None and _c_txn_chg > 5:
+        _c_narr.append(f'链上活跃升温: 日交易数 {_oc_txn[-1][1]:,.0f} (+{_c_txn_chg:.0f}%)')
+    elif _c_txn_chg is not None and _c_txn_chg < -5:
+        _c_narr.append(f'链上活跃降温: 日交易数 {_oc_txn[-1][1]:,.0f} ({_c_txn_chg:+.0f}%)')
+_c_narrative = ('；'.join(_c_narr)) if _c_narr else '数据不足, 无法判定主导叙事'
+_c_narrative_main = _c_narr[0] if _c_narr else '叙事待观察'
+
+# ===== 定价矛盾 (价格 vs 链上/资金面的背离) =====
+_c_contra = []
+if _oc_txn and _v_btc is not None:
+    _c_txn_chg = _onchain_change('transactions')
+    _c_btc_d = _btc_ch.get('d')
+    if _c_txn_chg is not None and _c_btc_d is not None:
+        if _c_btc_d > 2 and _c_txn_chg < -5:
+            _c_contra.append({'type': 'price_vs_onchain', 'title': '价格涨但链上活跃度降',
+                              'detail': f'BTC 日 {_c_btc_d:+.1f}% 但链上交易数 {_c_txn_chg:+.0f}%——价格与基本面背离, 上涨缺乏链上支撑(投机驱动)。'})
+        elif _c_btc_d < -2 and _c_txn_chg > 5:
+            _c_contra.append({'type': 'price_vs_onchain', 'title': '价格跌但链上活跃度升',
+                              'detail': f'BTC 日 {_c_btc_d:+.1f}% 但链上交易数 {_c_txn_chg:+.0f}%——抛售伴随活跃度上升, 可能是底部换手/吸筹。'})
+if _v_etf_btc is not None and _v_btc is not None:
+    _c_btc_d = _btc_ch.get('d')
+    if _c_btc_d is not None and _c_btc_d < -1 and _v_etf_btc > 0:
+        _c_contra.append({'type': 'etf_vs_price', 'title': 'ETF 净流入但 BTC 下跌',
+                          'detail': f'BTC ETF 今日 +${_v_etf_btc:.0f}M 但价格 {_c_btc_d:+.1f}%——机构在买、价格在跌: 散户/杠杆盘抛售 vs 机构承接。'})
+if _c_funding is not None and _v_btc is not None:
+    _c_btc_m = _btc_ch.get('m')
+    if _c_btc_m is not None and _c_btc_m < 0 and _c_funding > 0.03:
+        _c_contra.append({'type': 'funding_vs_price', 'title': '价格跌但多头杠杆仍拥挤',
+                          'detail': f'BTC 月 {_c_btc_m:+.1f}% 但资金费率 {_c_funding:+.3f}% 仍为正——多头未投降, 潜在踩踏风险。'})
+    elif _c_btc_m is not None and _c_btc_m > 0 and _c_funding < -0.03:
+        _c_contra.append({'type': 'funding_vs_price', 'title': '价格涨但空头拥挤',
+                          'detail': f'BTC 月 {_c_btc_m:+.1f}% 但资金费率 {_c_funding:+.3f}% 为负——空头被挤压, 反弹燃料仍在。'})
+if _c_fng is not None and _v_btc is not None:
+    _c_btc_m = _btc_ch.get('m')
+    if _c_btc_m is not None and _c_btc_m > 5 and _c_fng < 35:
+        _c_contra.append({'type': 'sentiment_vs_price', 'title': '价格涨但情绪仍恐慌',
+                          'detail': f'BTC 月 {_c_btc_m:+.1f}% 但恐慌贪婪指数仅 {_c_fng} ({_c_fng_label})——情绪滞后于价格, 上涨未获情绪确认。'})
+_c_contra = _c_contra[:4]
+
 # 加密 regime: 由 BTC 周变动 + ETF 流量 + ETH/BTC 动态合成 (替代预设 'mixed')
 _c_score = 0
 _c_btc_w = _btc_ch.get('w')
@@ -3539,6 +3645,29 @@ DATA['crypto'] = {
     'ethBtcChart': _ethbtc_chart(),
     # ETF 流量数据
     'etfFlows': _etf_data,
+    # ===== 2026-08-14 新增: 流动性 / 主导叙事 / 定价矛盾 / 链上 =====
+    'liquidity': {
+        'label': _c_liq_label, 'score': _c_liq_score, 'state': _c_liq_state,
+        'points': _c_liq_pts,
+        'stablecoins': _c_stable,
+        'fundingRate': _c_funding,
+        'fng': _c_fng, 'fngLabel': _c_fng_label,
+    },
+    'narrative': {'main': _c_narrative_main, 'full': _c_narrative, 'parts': _c_narr},
+    'contradictions': _c_contra,
+    'onChain': {
+        'labels': [d for d, _ in _oc_txn],
+        'series': {
+            '日交易数': [v for _, v in _oc_txn],
+            '活跃地址': [v for _, v in _oc_active],
+        },
+        'txnLatest': (_oc_txn[-1][1] if _oc_txn else None),
+        'txnChg': _onchain_change('transactions'),
+        'activeLatest': (_oc_active[-1][1] if _oc_active else None),
+        'activeChg': _onchain_change('active_addresses'),
+        'volLatest': (_oc_vol[-1][1] if _oc_vol else None),
+        'mcapLatest': (_oc_mcap[-1][1] if _oc_mcap else None),
+    },
     'trendData': [
         {'name':'Bitcoin','unit':'%','current':('$'+comma(_v_btc,0) if _v_btc else '—'),
          'changes':{k:(round(_btc_ch[k],2) if _btc_ch.get(k) is not None else None) for k in ('d','w','m','h6')},

@@ -1021,6 +1021,57 @@ function renderCrypto(c) {
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
+
+  // ===== 流动性表现 =====
+  if (d.liquidity) {
+    const liq = d.liquidity;
+    const liqCls = liq.state === '充裕' ? '#0f6e56' : (liq.state === '收缩' ? '#a32d2d' : '#854f0b');
+    const liqBg = liq.state === '充裕' ? '#e6f6ee' : (liq.state === '收缩' ? '#fcebeb' : '#faeeda');
+    html += sectionH('流动性表现', '稳定币蓄水池 + 杠杆情绪 + 市场情绪 —— 加密的"水位"');
+    html += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">'
+      + '<span style="padding:3px 12px;border-radius:14px;font-size:12px;font-weight:600;background:' + liqBg + ';color:' + liqCls + ';">' + (liq.label || '流动性中性') + '</span>'
+      + (liq.stablecoins && liq.stablecoins.total_b != null ? '<span style="font-size:12px;color:#374151;">稳定币总市值 <b style="color:#0f6e56;">$' + liq.stablecoins.total_b + 'B</b></span>' : '')
+      + (liq.fundingRate != null ? '<span style="font-size:12px;color:#374151;">资金费率 <b style="color:' + (liq.fundingRate > 0.03 ? '#a32d2d' : '#0f6e56') + ';">' + (liq.fundingRate > 0 ? '+' : '') + liq.fundingRate.toFixed(3) + '%</b></span>' : '')
+      + (liq.fng != null ? '<span style="font-size:12px;color:#374151;">恐慌贪婪 <b style="color:' + (liq.fng <= 30 ? '#a32d2d' : (liq.fng >= 75 ? '#e85d04' : '#0f6e56')) + ';">' + liq.fng + ' (' + (liq.fngLabel || '') + ')</b></span>' : '')
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      + (liq.points || []).map(function (p) { return '<span style="font-size:11px;color:#5f5e5a;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;">' + p + '</span>'; }).join('')
+      + '</div></div>';
+  }
+
+  // ===== 主导叙事 + 定价矛盾 =====
+  if (d.narrative || d.contradictions) {
+    html += sectionH('主导叙事与定价矛盾', '当前市场在交易什么故事 · 价格 vs 基本面的背离');
+    html += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+      + '<div style="font-size:13px;font-weight:600;color:#1a1d29;margin-bottom:4px;">📖 主导叙事</div>'
+      + '<div style="font-size:12px;color:#374151;line-height:1.7;">' + (d.narrative ? d.narrative.full : '数据不足') + '</div>';
+    if (d.contradictions && d.contradictions.length) {
+      html += '<div style="margin-top:10px;font-size:13px;font-weight:600;color:#a32d2d;margin-bottom:4px;">⚠ 定价矛盾 (' + d.contradictions.length + ')</div>'
+        + d.contradictions.map(function (x) {
+            return '<div style="font-size:12px;color:#791f1f;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;padding:8px 10px;margin-bottom:6px;line-height:1.6;">'
+              + '<b>' + x.title + '</b> · ' + x.detail + '</div>';
+          }).join('');
+    } else {
+      html += '<div style="margin-top:8px;font-size:12px;color:#0f6e56;">✓ 当前价格与链上/资金面无显著背离</div>';
+    }
+    html += '</div>';
+  }
+
+  // ===== 链上数据 =====
+  if (d.onChain && d.onChain.labels && d.onChain.labels.length > 1) {
+    const oc = d.onChain;
+    html += sectionH('链上数据', '真实网络活动 — 价格之外的"实体"验证');
+    html += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'
+      + (oc.txnLatest != null ? '<span style="font-size:12px;color:#374151;">日交易数 <b>' + Number(oc.txnLatest).toLocaleString() + '</b> <span style="color:' + (oc.txnChg > 0 ? '#0f6e56' : '#a32d2d') + ';">(' + (oc.txnChg > 0 ? '+' : '') + oc.txnChg + '%)</span></span>' : '')
+      + (oc.activeLatest != null ? '<span style="font-size:12px;color:#374151;">活跃地址 <b>' + Number(oc.activeLatest).toLocaleString() + '</b></span>' : '')
+      + (oc.volLatest != null ? '<span style="font-size:12px;color:#374151;">链上交易量 <b>$' + (Number(oc.volLatest) / 1e9).toFixed(2) + 'B</b></span>' : '')
+      + '</div>'
+      + chartCard('链上活跃度 (日交易数 vs 活跃地址)', '真实网络使用强度 · 与价格背离=警示', 'onChainChart', 'short')
+      + '</div>';
+  }
+
   html += '<div class="chart-row two-col">' +
     chartCard('BTC vs ETH 走势对比', '累计涨跌(起点=0%) · 相对强弱', 'btcEth', 'tall') +
     chartCard('ETH/BTC 比率', 'Altcoin 季节性核心指标 · >0.05 ETH强势', 'ethBtc', 'tall') +
@@ -1105,6 +1156,32 @@ function renderCrypto(c) {
             grid: { color: COLORS.grid, drawBorder: false },
             ticks: { color: COLORS.text, font: { size: 10 }, callback: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(0) + 'M'; } }
           }
+        }
+      }
+    });
+  }
+  if (d.onChain && d.onChain.labels && d.onChain.labels.length > 1) {
+    const oc2 = d.onChain;
+    charts.onChainChart = new Chart(document.getElementById('onChainChart'), {
+      type: 'line',
+      data: {
+        labels: oc2.labels,
+        datasets: [
+          { label: '日交易数', data: oc2.series['日交易数'], borderColor: '#f7931a', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y' },
+          { label: '活跃地址', data: oc2.series['活跃地址'], borderColor: '#627eea', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12 } },
+          tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + Number(ctx.parsed.y).toLocaleString(); } } }
+        },
+        scales: {
+          x: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 10, callback: fmtDate } },
+          y: { grid: { color: COLORS.grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, callback: function(v) { return Number(v).toLocaleString(); } } },
+          y1: { position: 'right', grid: { drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, callback: function(v) { return Number(v).toLocaleString(); } } }
         }
       }
     });

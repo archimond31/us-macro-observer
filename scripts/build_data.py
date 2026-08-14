@@ -1039,6 +1039,99 @@ def write_events():
 
 write_events()
 
+# ============ 加密链上数据 + 流动性 + 情绪 (2026-08-14 新增) ============
+# 目标: 加密板块补充 ①链上活跃度 ②稳定币流动性蓄水池 ③市场情绪/杠杆 ④主导叙事判定原料
+# 数据源: Blockchain.com API (链上) + CoinGecko (稳定币) + alternative.me (恐慌贪婪) + Binance (资金费率)
+# 全部失败时静默跳过 (保留 None), 不阻断主流程。
+
+def _crypto_json(url):
+    """抓 JSON, 失败返回 None"""
+    try:
+        txt = http_get(url, timeout=15, use_ua=True)
+        return json.loads(txt)
+    except Exception:
+        return None
+
+def fetch_crypto_onchain():
+    """链上数据 (Blockchain.com API): 活跃地址/交易数/交易量/BTC市值/mempool。"""
+    out = {'active_addresses': None, 'transactions': None, 'trade_volume': None,
+           'btc_market_cap': None, 'mempool': None}
+    eps = {
+        'active_addresses': 'active-addresses?timespan=30days&format=json',
+        'transactions': 'n-transactions?timespan=30days&format=json',
+        'trade_volume': 'trade-volume?timespan=30days&format=json',
+        'btc_market_cap': 'market-cap?timespan=30days&format=json',
+        'mempool': 'mempool-size?timespan=30days&format=json',
+    }
+    for key, ep in eps.items():
+        try:
+            d = _crypto_json(f'https://api.blockchain.info/charts/{ep}')
+            if d and d.get('values'):
+                # values: [{'x': unix_ts, 'y': val}] → [(date, val)]
+                vals = []
+                for p in d['values']:
+                    ts = p.get('x'); v = p.get('y')
+                    if ts is None or v is None: continue
+                    dt = datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+                    vals.append([dt, round(float(v), 4)])
+                if vals:
+                    out[key] = vals
+        except Exception as e:
+            print(f'  [crypto] {key} 抓取失败: {e}')
+    print(f'  [crypto] 链上: 活跃地址{len(out["active_addresses"] or [])}点 / 交易数{len(out["transactions"] or [])}点 / 交易量{len(out["trade_volume"] or [])}点 / 市值{len(out["btc_market_cap"] or [])}点')
+    return out
+
+def fetch_crypto_stablecoins():
+    """稳定币市值 (CoinGecko): USDT + USDC = 加密市场流动性蓄水池。返回 {'usdt_b': x, 'usdc_b': y, 'total_b': x+y}"""
+    try:
+        d = _crypto_json('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=tether,usd-coin&order=market_cap_desc')
+        if not isinstance(d, list) or not d:
+            return None
+        caps = {c.get('symbol', '').lower(): c.get('market_cap') for c in d if c.get('market_cap')}
+        usdt = caps.get('usdt'); usdc = caps.get('usdc')
+        if usdt is None and usdc is None:
+            return None
+        total = (usdt or 0) + (usdc or 0)
+        return {'usdt_b': round((usdt or 0) / 1e9, 1), 'usdc_b': round((usdc or 0) / 1e9, 1), 'total_b': round(total / 1e9, 1)}
+    except Exception as e:
+        print(f'  [crypto] 稳定币抓取失败: {e}')
+        return None
+
+def fetch_crypto_sentiment():
+    """市场情绪: 恐慌贪婪指数 (alternative.me, 0-100) + BTC 资金费率 (Binance, 杠杆情绪)。"""
+    out = {'fng': None, 'funding': None}
+    try:
+        d = _crypto_json('https://api.alternative.me/fng/?limit=2')
+        if d and d.get('data'):
+            v = d['data'][0]
+            out['fng'] = {'value': int(v.get('value', 50)), 'label': v.get('value_classification', 'Neutral')}
+    except Exception as e:
+        print(f'  [crypto] 恐慌贪婪抓取失败: {e}')
+    try:
+        d = _crypto_json('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT')
+        if d and d.get('lastFundingRate') is not None:
+            out['funding'] = round(float(d['lastFundingRate']) * 100, 3)   # % (正=多头付费, 杠杆过热)
+    except Exception as e:
+        print(f'  [crypto] 资金费率抓取失败: {e}')
+    return out
+
+_crypto_onchain = fetch_crypto_onchain()
+_crypto_stable = fetch_crypto_stablecoins()
+_crypto_sent = fetch_crypto_sentiment()
+if _crypto_onchain or _crypto_stable or _crypto_sent:
+    try:
+        with open(SCRIPT_DIR / 'crypto_meta.json', 'w', encoding='utf-8') as f:
+            json.dump({'fetched_at': datetime.now().strftime('%Y-%m-%d'),
+                       'onchain': _crypto_onchain, 'stablecoins': _crypto_stable,
+                       'sentiment': _crypto_sent}, f, ensure_ascii=False, indent=2)
+        print('[crypto] crypto_meta.json 已存 (链上/稳定币/情绪)')
+    except Exception as e:
+        print(f'  [crypto] crypto_meta.json 写入失败: {e}')
+else:
+    print('[crypto] 链上数据全部抓取失败, 跳过 crypto_meta.json')
+
+print('完成。下一步: 用 computed.json 重建 data.js')
+
 # ============ 市场预期 (consensus) 自动抓取 ============
 # Trading Economics 各指标页的 Calendar 表含 Actual/Previous/Consensus/TEForecast 四列,
 # 覆盖 CPI/核心CPI/失业率/非农/GDP 等关键发布。抓取后合并进 economic_releases.json
