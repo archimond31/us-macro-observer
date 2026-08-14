@@ -2834,15 +2834,20 @@ def _build_trade_radar():
                      'direction': direction, 'confidence': confidence, 'category': category, 'source': source})
 
     def _trade(asset, side, thesis, trigger, confidence, asym=None, falsify=None, ev_for=None, ev_against=None,
-               driver='', falsify_rules=None):
+               driver='', falsify_rules=None, exposures=None, bet=None):
         """交易候选 = 一个可下注的假设。
         asym: {'score': 1-5, 'note'} 非对称性 (塔勒布凸性)
         falsify: [证伪条件文本] → 展示
         falsify_rules: [{'id','cond','threshold','dir','desc'}] → 每日自动证伪监控
-        driver: 驱动主题标签 (独立性审计用: 同 driver = 同一笔赌注)"""
+        driver: 驱动主题标签 (独立性审计用: 同 driver = 同一笔赌注)
+        exposures: {因子: -2~+2} 这笔交易底层在赌什么宏观状态 (正=看多该因子)
+                   rate(利率下行) infl(通胀回升) growth(增长强劲) liq(流动性宽松) haven(避险) credit(信用改善)
+        bet: 底层赌注一句话 (交易员视角: 这笔交易本质在赌什么)"""
         trades.append({'asset': asset, 'side': side, 'thesis': thesis,
                        'trigger': trigger, 'confidence': confidence,
                        'driver': driver,
+                       'exposures': exposures or {},
+                       'bet': bet or '',
                        'asymmetry': asym or {'score': 3, 'note': ''},
                        'falsify': falsify or [],
                        'falsifyRules': falsify_rules or [],
@@ -2911,55 +2916,71 @@ def _build_trade_radar():
                asym={'score': 5, 'note': '凸性机会: 下行有央行购金托底(有限), 上行在滞胀/美元走弱下无顶(无限)——塔勒布式非对称'},
                falsify=['央行购金季度转负 (WGC 数据)', '金价收盘跌破 6 月低点 3970 下方 3%', '核心 CPI 环比转负 + 通缩确认'],
                ev_for=['央行购金评分 100/100 (WGC Q2 289吨)', '经济 regime=滞胀组合', '金价已从低点反弹 9%'],
-               ev_against=['10Y 实际利率历史高分位', '美元指数仍强势', '黄金 90 日动量仍为负'])
+               ev_against=['10Y 实际利率历史高分位', '美元指数仍强势', '黄金 90 日动量仍为负'],
+               exposures={'infl': +2, 'haven': +2, 'rate': +1, 'growth': -1},
+               bet='滞胀+避险对冲: 增长弱+通胀高时, 黄金是唯一同时抗通胀与避险的资产; 央行购金=结构性价格地板')
         _trade('纳斯达克 / 长久期成长', '减仓/做空', '滞胀压制盈利预期 + 贴现率高位, 高估值成长股最脆弱 (AI 链条高 beta 放大)。',
                '非农再负 或 核心 PCE 环比 >0.25%', 'high',
                asym={'score': 3, 'note': '中性: 下行有盈利下修+贴现率(有限空间), 上行有 AI 盈利兑现(CoreWeave 订单$1040B)可能打脸——非凸'},
                falsify=['非农反弹 >180K 且核心 PCE 环比 <0.2% (软着陆确认)', '10Y 跌破 4.3% (利率转向)'],
                ev_for=['非农 -23K 转负', '10Y 分位 100 贴现率高位', '经济 regime=滞胀'],
-               ev_against=['CoreWeave Q2 +112%/订单$1040B (AI 盈利兑现)', 'SPX 60 日趋势仍向上', 'HY 未走阔(信用未恶化)'])
+               ev_against=['CoreWeave Q2 +112%/订单$1040B (AI 盈利兑现)', 'SPX 60 日趋势仍向上', 'HY 未走阔(信用未恶化)'],
+               exposures={'growth': -2, 'rate': -1, 'haven': +1},
+               bet='增长与贴现率双杀成长股: 赌“滞胀→盈利下修+折现率抬升”, 高久期估值最脆弱; 若 AI 盈利兑现则证伪')
     if _gold_cb_score >= 75:
         _trade('黄金', '逢低做多', f'央行购金结构性托底 (WGC Q2 289吨, 评分 {_gold_cb_score}/100), 回调即配置, 与短期价格脱钩。',
                '10Y 破 4.75 后金价不创新低 (央行买盘承接)', 'high',
                asym={'score': 5, 'note': '凸性: 央行买盘构成价格地板, 而美元信用/财政赤字担忧提供上行弹性'},
                falsify=['WGC 季度央行净购金转负', '金价跌破 6 月低点并持续 2 周 (托底假设证伪)'],
                ev_for=[f'央行购金评分 {_gold_cb_score}/100', '中国央行 21 连增 (7 月 +19.9吨)', '黄金占央行储备 27% 超美债'],
-               ev_against=['10Y 实际利率高位', '金价短期动量偏弱'])
+               ev_against=['10Y 实际利率高位', '金价短期动量偏弱'],
+               exposures={'haven': +2, 'infl': +1, 'rate': +1},
+               bet='结构性购金托底: 赌央行去美元化买盘提供价格地板, 实际利率不进一步上行则修复空间大')
     if _r_10y_pct is not None and _r_10y_pct > 85 and _corecpi_m < 0:
         _trade('2Y 国债', '做多', '10Y 极端分位 + 核心通胀环比回落 (2.6%), 短端利率下行空间打开。',
                '8 月核心 CPI 环比 <0.2% 确认', 'mid',
                asym={'score': 4, 'note': '偏凸: 分位极值 + 就业拐点, 下行受央行政策底线约束; 上行空间在降息重定价'},
                falsify=['核心 CPI 环比 >0.3% (通胀再燃)', '非农 >180K (就业未恶化)'],
                ev_for=['10Y 分位 100 (统计均值回归)', '核心 CPI 2.6% 环比回落', '非农 -23K 转负'],
-               ev_against=['核心 PCE 3.3% 粘性', '美联储鹰派 (higher for longer)'])
+               ev_against=['核心 PCE 3.3% 粘性', '美联储鹰派 (higher for longer)'],
+               exposures={'rate': +2, 'infl': -1},
+               bet='降息重定价: 赌就业拐点→市场从“更高更久”切向宽松, 短端利率下行')
     if (_fed_hikes or 0) >= 1 and (payems_mom is not None and payems_mom < 0):
         _trade('2Y 国债 / 曲线陡峭化', '做多', '市场定价加息 vs 就业已转负——政策路径将被迫重定价, 短端利率向下修正。',
                '初请 4 周均上穿 280K', 'mid',
                asym={'score': 4, 'note': '偏凸: 就业拐点确认后市场从加息切向宽松的路径切换空间大, 下行是时间成本'},
                falsify=['8 月非农 >180K (就业反弹)', '核心 CPI 环比 >0.3% (通胀粘性压过就业)'],
                ev_for=['市场定价 1 次加息 vs 非农 -23K', '经济 regime=滞胀', '初请已 199K 低位'],
-               ev_against=['核心 PCE 3.3% 高企', 'FOMC 9 月可能维持鹰派'])
+               ev_against=['核心 PCE 3.3% 高企', 'FOMC 9 月可能维持鹰派'],
+               exposures={'rate': +2},
+               bet='政策路径切换: 赌市场被迫从加息定价翻向宽松(就业恶化), 短端+曲线陡峭化')
     if _vix_gap is not None and _vix_gap > 3 and _spx_m > 0:
         _trade('VIX (期权)', '卖出看涨/宽跨', f'VIX {_vix_v:.1f} 高位但股票月 {_spx_m:+.1f}%——压力未传导, 波动率溢价高估。',
                'VIX 回落而实现波动未同步走高', 'mid',
                asym={'score': 1, 'note': '⚠ 负凸性 (卖出保险): 赚有限权利金, 尾部亏损无上限——塔勒布框架下应严格控制仓位或转用价差限制尾部'},
                falsify=['VIX 收盘站上 25', 'SPX 单日跌幅 >3% (波动率跳升)'],
                ev_for=['VIX 高位但股票上涨(未传导)', '期限结构接近 Contango'],
-               ev_against=['地缘事件 (霍尔木兹/美伊) 随时引爆', '波动率目标基金阈值 20 近在咫尺'])
+               ev_against=['地缘事件 (霍尔木兹/美伊) 随时引爆', '波动率目标基金阈值 20 近在咫尺'],
+               exposures={'haven': -2, 'growth': +1},
+               bet='波动率溢价回归: 赌“高 VIX 但实现波动低→溢价被高估”收敛, 本质是卖尾部风险保险')
     if _liq_signal == 'risk-off':
         _trade('美元指数', '做多', '融资紧张 (SOFR>IORB) 环境美元走强, 压制新兴市场与高 beta 资产。',
                'SOFR-IORB 持续转正 3 日', 'mid',
                asym={'score': 2, 'note': '偏负: 美元上行空间受美联储转向压制, 且央行购金/去美元化长期侵蚀'},
                falsify=['美联储明确转鸽 (降息定价 ≥2 次)', 'RRP 余额回升'],
                ev_for=['SOFR>IORB 融资紧张', 'QT 直击准备金'],
-               ev_against=['央行购金/去美元化长期趋势', '美国财政赤字担忧'])
+               ev_against=['央行购金/去美元化长期趋势', '美国财政赤字担忧'],
+               exposures={'liq': -2, 'haven': +1},
+               bet='融资紧张美元荒: 赌流动性收紧→美元稀缺走强, 压制高 beta; 美联储转向则证伪')
     if _cr_signal == 'risk-off':
         _trade('高收益债', '回避/做空', '信用分层确认 (HY/CCC 分位高位), HY 存在补跌风险。',
                'HY OAS 周走阔 >10bp', 'mid',
                asym={'score': 3, 'note': '中性偏负: 做空信用赚取利差走阔, 但央行/流动性兜底(如有)会压缩空间; 更适合做多保护(CDS)而非裸空'},
                falsify=['HY OAS 回落并创近期新低 (信用修复)', '美联储明确转鸽 (流动性兜底)'],
                ev_for=[f'CCC 分位 {_cr_ccc_pct} (低评级极端承压)', 'HY OAS 已高位', '非农转负(信用滞后 5-10 日)'],
-               ev_against=['HY 周变仅小幅走阔 (尚未确认)', '流动性仍宽松 (SOFR<IORB)', '违约率仍低']) 
+               ev_against=['HY 周变仅小幅走阔 (尚未确认)', '流动性仍宽松 (SOFR<IORB)', '违约率仍低'],
+               exposures={'credit': -2, 'liq': -1, 'growth': -1},
+               bet='信用周期恶化: 赌就业拐点→违约率上行传导至 HY 利差走阔; 流动性兜底则证伪')
 
     # ===== v4: driver 标签 (独立性审计/决策漏斗用) + 结构化证伪规则 =====
     _TRAITS = [
@@ -3020,6 +3041,42 @@ def _build_trade_radar():
     _n_bets = len(_drv_counts)
     _redundant = [{'driver': k, 'count': v} for k, v in _drv_counts.items() if v > 1]
 
+    # ===== v4: ③b 底层赌注聚合 (因子暴露 × 组合级重复检测) =====
+    # 6 维宏观因子: rate(利率下行+) infl(通胀回升+) growth(增长强劲+) liq(流动性宽松+) haven(避险+) credit(信用改善+)
+    _FACTOR_LABEL = {'rate': '赌利率下行', 'infl': '赌通胀回升', 'growth': '赌增长强劲',
+                     'liq': '赌流动性宽松', 'haven': '赌避险升温', 'credit': '赌信用改善'}
+    _portfolio = {}
+    for _t in trades:
+        for _f, _w in (_t.get('exposures') or {}).items():
+            _portfolio[_f] = _portfolio.get(_f, 0) + _w
+    # 组合净暴露: 取 |sum| 最大的因子 (正=整体在赌该因子, 负=反赌)
+    _net_exposure = sorted(_portfolio.items(), key=lambda kv: abs(kv[1]), reverse=True) if _portfolio else []
+    # 重复表达检测: 两两候选的暴露向量方向一致(同号因子) → 同一笔赌注的重复表达
+    # 判定: 同向因子 ≥1 且合计权重 ≥3 (如 黄金rate+1 与 2Y rate+2 = 3) → 高度重叠
+    _dup_pairs = []
+    _trades_list = trades
+    for _i in range(len(_trades_list)):
+        for _j in range(_i + 1, len(_trades_list)):
+            _a, _b = _trades_list[_i], _trades_list[_j]
+            _ea, _eb = _a.get('exposures') or {}, _b.get('exposures') or {}
+            _same = [f for f in set(_ea) & set(_eb) if _ea[f] * _eb[f] > 0]   # 同方向暴露因子
+            _weight = sum(abs(_ea[f]) + abs(_eb[f]) for f in _same)
+            if len(_same) >= 1 and _weight >= 3:   # 强同向暴露 → 同一赌注
+                _dup_pairs.append({'a': _a['asset'], 'b': _b['asset'],
+                                   'factors': _same, 'weight': _weight,
+                                   'hint': '同一底层赌注的重复表达——共用因子: ' + ', '.join(_FACTOR_LABEL.get(f, f) for f in _same)})
+    _dup_pairs.sort(key=lambda x: -x['weight'])
+    _independence = {
+        'effectiveBets': _n_bets,
+        'redundant': _redundant,
+        'dupPairs': _dup_pairs[:4],
+        'portfolioExposure': [{'factor': f, 'label': _FACTOR_LABEL.get(f, f), 'net': w} for f, w in _net_exposure[:4]],
+        'note': ('共 %d 个候选, 但只有 %d 个独立赌注' % (len(trades), _n_bets)
+                 + (('—— "%s" 含 %d 个候选, 你在重复下注同一件事' % (_redundant[0]['driver'], _redundant[0]['count'])) if _redundant else '')),
+    }
+    if _dup_pairs:
+        _independence['note'] += '；跨候选重叠: ' + '、'.join(d['a'] + '↔' + d['b'] for d in _dup_pairs[:2]) + ' 是同一笔赌注'
+
     # ===== v4: ④ 决策漏斗 → 唯一主线 + 卫星 =====
     def _trade_score(_t):
         _conf = 3 if _t['confidence'] == 'high' else 2
@@ -3046,9 +3103,7 @@ def _build_trade_radar():
         'catalystCalendar': _catalysts,
         'aiValuation': _ai_val,
         'priceImplied': _price_implied,
-        'independence': {'effectiveBets': _n_bets, 'redundant': _redundant,
-                         'note': ('共 %d 个候选, 但只有 %d 个独立赌注' % (len(trades), _n_bets)
-                                  + (('—— "%s" 含 %d 个候选, 你在重复下注同一件事' % (_redundant[0]['driver'], _redundant[0]['count'])) if _redundant else ''))},
+        'independence': _independence,
         'theOne': (_the_one if _the_one else None),
         'satellites': _satellites,
         'falsifyAlerts': _falsify_alerts,

@@ -2676,13 +2676,40 @@ function renderTradeRadar(c) {
       + '</div>';
   }
 
-  // ===== 独立性审计 =====
+  // ===== 独立性审计 + 组合赌注 =====
   const ind = d.independence;
   if (ind) {
     const indCls = ind.effectiveBets < (d.trades || []).length ? '#a32d2d' : '#0f6e56';
-    h += '<div style="margin:0 0 14px;padding:10px 16px;border-radius:10px;background:' + (ind.effectiveBets < (d.trades || []).length ? '#fcebeb' : '#e6f6ee') + ';border:1px solid ' + indCls + ';">'
-      + '<div style="font-size:12px;font-weight:600;color:' + indCls + ';">独立性审计: ' + (d.counts ? d.counts.bets : '') + ' 个独立赌注 — ' + ind.note + '</div>'
-      + '</div>';
+    let indHtml = '<div style="margin:0 0 14px;padding:10px 16px;border-radius:10px;background:' + (ind.effectiveBets < (d.trades || []).length ? '#fcebeb' : '#e6f6ee') + ';border:1px solid ' + indCls + ';">'
+      + '<div style="font-size:12px;font-weight:600;color:' + indCls + ';">独立性审计: ' + (d.counts ? d.counts.bets : '') + ' 个独立赌注 — ' + ind.note + '</div>';
+    // 组合净暴露 (你整体在赌什么)
+    const pe = ind.portfolioExposure || [];
+    if (pe.length) {
+      indHtml += '<div style="margin-top:8px;font-size:11px;font-weight:600;color:#5f5e5a;">你整个组合底层在赌: </div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;">'
+        + pe.map(function (p) {
+            const isNeg = p.net < 0;
+            const w = Math.min(Math.abs(p.net) / 4 * 100, 100);
+            const col = isNeg ? '#a32d2d' : '#0f6e56';
+            const dirTxt = isNeg ? '反向' : '';
+            return '<div style="flex:1;min-width:120px;text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px 4px;">'
+              + '<div style="font-size:11px;color:#374151;">' + p.label + (dirTxt ? ' <span style="color:' + col + '">' + dirTxt + '</span>' : '') + '</div>'
+              + '<div style="height:5px;background:#eef0f4;border-radius:3px;margin:4px 0;overflow:hidden;"><div style="height:100%;width:' + w + '%;background:' + col + ';border-radius:3px;"></div></div>'
+              + '<div style="font-size:12px;font-weight:600;color:' + col + ';">' + (p.net > 0 ? '+' : '') + p.net + '</div></div>';
+          }).join('')
+        + '</div>';
+    }
+    // 跨候选重复表达警告
+    const dup = ind.dupPairs || [];
+    if (dup.length) {
+      indHtml += '<div style="margin-top:8px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;padding:7px 10px;">'
+        + dup.map(function (x) {
+            return '<div style="font-size:11px;color:#a32d2d;line-height:1.6;">⚠ ' + x.a + ' ↔ ' + x.b + '：' + x.hint + '</div>';
+          }).join('')
+        + '</div>';
+    }
+    indHtml += '</div>';
+    h += indHtml;
   }
 
   // ===== Tier A 价格隐含信号 =====
@@ -2749,6 +2776,7 @@ function renderTradeRadar(c) {
         + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>';
       // 展开详情
       const bodyHtml = '<div style="padding:10px 4px 2px;">'
+        + (t.bet ? '<div style="font-size:12px;font-weight:600;color:#15131f;background:#f1eefc;border-left:3px solid #534ab7;border-radius:6px;padding:7px 10px;margin-bottom:8px;line-height:1.6;">底层赌注: ' + t.bet + '</div>' : '')
         + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + t.thesis + '</div>'
         + (asym.note ? '<div style="font-size:11px;color:' + asymCls + ';line-height:1.6;margin-bottom:8px;">非对称性解读: ' + asym.note + '</div>' : '')
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">'
