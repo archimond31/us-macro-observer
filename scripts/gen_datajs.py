@@ -2806,9 +2806,90 @@ def _build_ai_valuation_gap():
                f'营收增速中位 {stats["medianGrowth"]}%。'
                + (f'高估候选 {len(over)} 家 / 低估候选 {len(under)} 家。' if over or under else '估值与增速基本匹配, 无明显分层。')
                + ' PEG>2.5 或"高 PE+低增速"为高估; PEG<1.2 且增速>30% 为低估。估值预期差须与产业链景气度交叉验证。')
+
+    # ===== AI 交易机会"交易化表达" (2026-08-14) =====
+    # 每笔 AI 机会 = 一个可下注的假设卡片: 底层赌注/验证点/证伪条件/因子暴露
+    # 核心: AI 链条交易的底层赌注是"AI Capex 超级周期延续 vs 估值泡沫修正"的预期差,
+    #       而非单纯的"PE 便宜/贵"。与宏观候选共用 6 维因子暴露 → 参与组合净暴露与独立性审计。
+    ai_trades = []
+
+    def _ai_trade(name, side, bet, verify, falsify, conf, asym_score, asym_note,
+                  ev_for, ev_against, exposures, driver, asset_label=None):
+        ai_trades.append({
+            'asset': asset_label or name, 'side': side, 'thesis': bet,
+            'bet': bet, 'verify': verify, 'falsify': falsify,
+            'trigger': verify, 'confidence': conf,
+            'asymmetry': {'score': asym_score, 'note': asym_note},
+            'evidenceFor': ev_for, 'evidenceAgainst': ev_against,
+            'exposures': exposures, 'driver': driver,
+            'falsifyRules': [], 'source': 'ai_chain',
+        })
+
+    # ---- 低估候选 → 多头机会 (赌 Capex 周期延续) ----
+    _und_names = {u['name'] for u in under[:6]}
+    _und_layers = {u['layer'] for u in under[:6]}
+    # 产业链核心多头 (芯片/基础设施/网络 低估龙头)
+    _chip_und = [u for u in under if u['layer'] in ('芯片层', '基础设施层', '网络连接层')][:3]
+    if _chip_und:
+        _names = '、'.join(u['name'] for u in _chip_und)
+        _pegs = '、'.join((str(u['peg']) if u['peg'] else '—') for u in _chip_und)
+        _ai_trade(
+            'AI 算力核心供应商 (芯片/基础设施)', '做多',
+            f'赌 AI Capex 超级周期延续: 四大云厂 FY26 资本开支仍在扩张, 芯片/基础设施层低估龙头 ({_names}, PEG {_pegs}) 的营收增速将覆盖当前估值——买的是"算力需求持续上修"而非便宜。',
+            '验证点: ①NVDA Q2 财报指引 (8月下旬) ②云厂下季度 capex 指引 ③TSM 月营收/CoWoS 产能利用率',
+            '证伪: ①云厂下调 capex 指引 ②NVDA 指引 miss ③订单积压增速放缓 ④AI 应用变现不及预期(资本开支转向)',
+            'high', 4, '偏凸: 上行有 Capex 上修 + 订单超预期(空间大), 下行有 AI 资本开支周期见顶(估值+盈利双杀)——但周期未见顶前下行有限',
+            [f'PEG {_pegs} 增速覆盖估值', 'TSM/NVDA 订单积压创新高', '云厂 capex 仍在上修'],
+            ['AI 估值整体偏高 (板块 FwdPE 32x)', '若利率上行压制长久期成长估值', 'CoreWeave 高杠杆放大周期风险'],
+            {'growth': +2, 'rate': -1}, 'ai_capex_supercycle', 'AI 算力核心 (芯片/基础设施)')
+    # 网络/光模块层
+    _net_und = [u for u in under if u['layer'] == '网络连接层'][:2]
+    if _net_und:
+        _n = '、'.join(u['name'] for u in _net_und)
+        _ai_trade(
+            'AI 光模块/网络 (数据中心互联)', '做多',
+            f'赌数据中心互联需求超线性增长: 800G/1.6T 光模块迭代 + 集群规模扩张, 网络层低估龙头 ({_n}) 受益于"算力集群越大、互联占比越高"。',
+            '验证点: ①光模块龙头月度出货/订单 ②云厂数据中心集群扩容公告 ③1.6T 渗透率',
+            '证伪: ①光模块价格战/毛利率下滑 ②集群建设放缓 ③技术路线切换(硅光/CPO 替代)',
+            'mid', 3, '中性: 高增速 + 高景气, 但技术迭代快(CPO 威胁)与非对称性有限',
+            ['800G→1.6T 迭代周期', '集群互联占比提升', '光模块龙头估值低于芯片层'],
+            ['CPO/硅光技术替代风险', '云厂 capex 若收缩首先砍网络', '板块波动率大'],
+            {'growth': +2, 'rate': -1}, 'ai_networking', f'AI 光模块/网络 ({_n})')
+
+    # ---- 高估候选 → 回避/做空机会 (赌估值修正) ----
+    _over_top = over[:2]
+    if _over_top:
+        _names = '、'.join(u['name'] for u in _over_top)
+        _pegs = '、'.join(str(u['peg']) for u in _over_top if u['peg'])
+        _ai_trade(
+            'AI 高估值标的 (回避/做空)', '回避/做空',
+            f'赌估值泡沫修正: {_names} (PEG {_pegs}) 隐含的增速预期已远超基本面能兑现的速度——买的是"预期差回归", 当盈利兑现速度跟不上估值时估值压缩。',
+            '验证点: ①财报营收增速是否环比回落 ②EPS 上修是否停止 ③板块轮动(资金流向低估值)',
+            '证伪: ①增速继续超预期(盈利消化估值) ②AI 需求进一步加速 ③重大产品突破(新叙事)',
+            'mid', 3, '中性偏负: 做空高估值 AI 赚估值压缩, 但 AI 高景气下"贵而继续涨"是常态(动量风险大)——更适合对冲而非裸空',
+            [f'PEG {_pegs} 显著高于板块中位 {stats["medianPeg"]}', '估值分位极端', '若增速放缓则戴维斯双杀'],
+            ['AI 景气度仍高 (订单$1040B)', '高估值可能被新叙事消化', '做空成本高(借券费率)'],
+            {'growth': -1, 'infl': +1, 'rate': +1}, 'ai_valuation_bubble', 'AI 高估值标的 (回避)')
+
+    # HBM 存储 (周期+AI 双击)
+    _hbm = [u for u in under if u['name'] in ('SK海力士', '美光', '三星电子')][:2]
+    if _hbm:
+        _n = '、'.join(u['name'] for u in _hbm)
+        _g = '、'.join(str(u['revGrowth']) for u in _hbm if u['revGrowth'])
+        _ai_trade(
+            'HBM/存储 (AI 周期双击)', '做多',
+            f'赌 HBM 供不应求 + 存储涨价周期: {_n} (营收增速 {_g}%) 同时受益 AI 内存带宽需求与存储周期反转, PEG<1.2 提供安全边际。',
+            '验证点: ①HBM 订单/价格 (SK海力士 季度财报) ②DRAM/NAND 合约价 ③云厂 HBM 采购',
+            '证伪: ①存储价格见顶回落 ②HBM 供应过剩(三星/美光扩产) ③周期下行',
+            'mid', 4, '偏凸: 周期底部 + AI 需求双击, 上行空间大; 下行有周期底+低 PEG 缓冲',
+            ['HBM 供不应求', '存储周期上行', 'PEG<1.2 安全边际'],
+            ['存储周期波动大', '供应过剩风险', 'AI 需求不及预期'],
+            {'growth': +2, 'infl': +1}, 'ai_memory_cycle', f'HBM/存储 ({_n})')
+
     return {'summary': summary, 'stats': stats,
             'overvalued': [{k: r[k] for k in ('name', 'ticker', 'layer', 'peg', 'fwdPe', 'revGrowth')} for r in over[:6]],
-            'undervalued': [{k: r[k] for k in ('name', 'ticker', 'layer', 'peg', 'fwdPe', 'revGrowth')} for r in under[:6]]}
+            'undervalued': [{k: r[k] for k in ('name', 'ticker', 'layer', 'peg', 'fwdPe', 'revGrowth')} for r in under[:6]],
+            'trades': ai_trades}
 
 def _build_trade_radar():
     gaps = []
@@ -3010,6 +3091,8 @@ def _build_trade_radar():
                 _t['falsifyRules'] = _fr
                 break
 
+    _ai_val = _build_ai_valuation_gap()
+
     # ===== v4: ② 证伪监控 (每日自动检查 falsifyRules) =====
     _falsify_alerts = []
     for _t in trades:
@@ -3032,6 +3115,19 @@ def _build_trade_radar():
             if _hit:
                 _falsify_alerts.append({'trade': _t['asset'], 'rule': _r['id'], 'desc': _r['desc'],
                                         'current': round(_v, 2) if isinstance(_v, float) else _v})
+
+    # ===== v4: ②b AI 链条交易机会合并 (在独立性审计/组合暴露之前) =====
+    _ai_trades_merged = 0
+    if _ai_val.get('trades'):
+        for _at in _ai_val['trades']:
+            if any(_t['asset'] == _at['asset'] for _t in trades):
+                continue
+            _at['falsifyRules'] = [{'id': 'ai_' + str(_ai_trades_merged), 'desc': _at.get('falsify', '')[:60],
+                                    'key': 'none', 'dir': 'neg', 'val': 0}]
+            trades.append(_at)
+            _ai_trades_merged += 1
+    if _ai_trades_merged:
+        print(f'  [tradeRadar] 合并 AI 链条交易机会 {_ai_trades_merged} 个 → 总候选 {len(trades)} 个', file=sys.stderr, flush=True)
 
     # ===== v4: ③ 独立性审计 (effective number of bets) =====
     _drv_counts = {}
@@ -3092,7 +3188,6 @@ def _build_trade_radar():
                 + ('主要矛盾集中在: ' + '、'.join(sorted(set(g['category'] for g in gaps))) if gaps else '当前无显著预期差, 处于低矛盾状态。')
                 + ' 预期差是概率优势而非确定信号, 须等催化剂(trigger)确认后按风险评分定仓位。')
     _catalysts = _build_catalyst_calendar(gaps)
-    _ai_val = _build_ai_valuation_gap()
     _gap_sources = {'cross': sum(1 for g in gaps if g.get('source') == 'cross'),
                     'price': sum(1 for g in gaps if g.get('source') == 'price')}
     return {

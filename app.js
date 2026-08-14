@@ -2916,6 +2916,33 @@ function renderTradeRadar(c) {
     h += valCard('⚠ 高估候选', av.overvalued, '#a32d2d', true);
     h += valCard('✓ 低估候选', av.undervalued, '#0f6e56', false);
     h += '</div>';
+
+    // ===== AI 交易机会"假设卡片" (交易化表达) =====
+    const aiT = (av.trades || []).filter(function (t) { return t.source === 'ai_chain'; });
+    if (aiT.length) {
+      h += sectionH('AI 链条交易机会（可下注的假设）', '每笔机会 = 赌什么 → 验证什么 → 证伪条件 · 已纳入组合净暴露与独立性审计');
+      aiT.forEach(function (t) {
+        const tSideCls = t.side.indexOf('做空') >= 0 || t.side.indexOf('回避') >= 0 ? '#a32d2d' : '#0f6e56';
+        const aScore = (t.asymmetry || {}).score || 3;
+        const aCls = aScore >= 4 ? '#0f6e56' : (aScore === 3 ? '#854f0b' : '#a32d2d');
+        h += '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + tSideCls + ';border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
+          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
+          + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+          + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + tSideCls + '22;color:' + tSideCls + ';">' + t.side + '</span>'
+          + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:#f1eefc;color:#534ab7;">非对称 ' + aScore + '/5</span>'
+          + '<span style="font-size:11px;color:#9ca3af;">驱动: ' + (t.driver || '—') + '</span>'
+          + '</div>'
+          + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + (t.bet || t.thesis || '') + '</div>'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+          + '<div style="background:#e6f1fb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#185fa5;margin-bottom:4px;">🔎 需要验证什么</div>'
+          + '<div style="font-size:11px;color:#0c447c;line-height:1.6;">' + (t.verify || t.trigger || '—') + '</div></div>'
+          + '<div style="background:#fcebeb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">✗ 什么情况被证伪</div>'
+          + '<div style="font-size:11px;color:#791f1f;line-height:1.6;">' + (t.falsify || '—') + '</div></div>'
+          + '</div>'
+          + '<div style="font-size:11px;color:' + aCls + ';margin-top:8px;line-height:1.6;">非对称性解读: ' + ((t.asymmetry || {}).note || '') + '</div>'
+          + '</div>';
+      });
+    }
   }
 
   // ===== 交易日志 (localStorage) =====
