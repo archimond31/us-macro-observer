@@ -2843,7 +2843,8 @@ function renderTradeRadar(c) {
       const asymCls = asym.score >= 4 ? '#0f6e56' : (asym.score === 3 ? '#854f0b' : '#a32d2d');
       const asymBg = asym.score >= 4 ? '#e1f5ee' : (asym.score === 3 ? '#faeeda' : '#fcebeb');
       const asymLabel = asym.score >= 4 ? '凸性' : (asym.score === 3 ? '中性' : '⚠负凸');
-      const falsify = t.falsify || [];
+      const falsifyRaw = t.falsify;
+      const falsify = Array.isArray(falsifyRaw) ? falsifyRaw : (falsifyRaw ? [falsifyRaw] : []);
       const evFor = t.evidenceFor || [];
       const evAg = t.evidenceAgainst || [];
       // 摘要行 (默认显示)
