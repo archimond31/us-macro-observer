@@ -1233,6 +1233,13 @@ function renderRates(c) {
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
+
+  // ===== 利率 → 资产传导机制 =====
+  if (d.transmissionMap) {
+    html += sectionH('利率 → 资产传导机制', '收益率曲线 (水平/斜率/实际利率) → 折现率/曲线/实际利率三通道 → 各类资产 (速查)');
+    html += _renderTransmissionMap(d.transmissionMap);
+  }
+
   html += metricCardsV3(d.metrics);
   html += '<div class="chart-row two-col">' +
     chartCard('国债收益率曲线', '今日 vs 1月前 vs 1年前 · 熊陡=长端领涨', 'yc', 'tall') +
@@ -2172,6 +2179,13 @@ function renderVolatility(c) {
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
+
+  // ===== 波动率 → 资产传导机制 =====
+  if (d.transmissionMap) {
+    html += sectionH('波动率 → 资产传导机制', '波动率水平/期限结构/跨资产压力 → 去杠杆/对冲/风险偏好三通道 → 各类资产 (速查)');
+    html += _renderTransmissionMap(d.transmissionMap);
+  }
+
   html += metricCardsV3(d.metrics);
   const vn = d.chartNotes || {};
   html += '<div class="chart-row two-col">' +

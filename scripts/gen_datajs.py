@@ -1383,6 +1383,80 @@ DATA['rates'] = {
     'spreadData': {'labels': _dates_for('dgs10'), 'series': {
         '10Y-2Y利差': [round((a-b),2) for a,b in zip(series90('dgs10'), series90('dgs2'))],
         '通胀预期(Breakeven)': series90('bei10')}},
+
+    # ===== 利率 → 资产传导机制 (2026-08-17) =====
+    'transmissionMap': {
+        'hub': '收益率曲线 (水平 + 斜率 + 实际利率) — 全市场折现率与金融条件的定价锚',
+        'channels': [
+            {'key': 'discount', 'label': '通道A · 折现率', 'color': '#a32d2d',
+             'desc': '利率水平 → 贴现率 → 全资产估值 (长久期最敏感)'},
+            {'key': 'curve', 'label': '通道B · 曲线斜率', 'color': '#185FA5',
+             'desc': '10Y-2Y 利差 → 增长/衰退预期 + 银行净息差'},
+            {'key': 'real', 'label': '通道C · 实际利率', 'color': '#0F6E56',
+             'desc': 'TIPS 实际利率 → 黄金/成长股的核心锚'},
+        ],
+        'indicators': [
+            {
+                'tag': '2Y', 'name': '2Y 国债 (政策预期)', 'freq': '日度',
+                'channel': 'discount', 'primary': '短端利率路径',
+                'impact': [
+                    {'asset': '短债', 'dir': 'up', 'when': '上行', 'why': '加息/不降息定价'},
+                    {'asset': '银行股', 'dir': 'up', 'when': '上行', 'why': '净息差改善'},
+                    {'asset': '成长股', 'dir': 'down', 'when': '上行', 'why': '折现率↑'},
+                    {'asset': '美元', 'dir': 'up', 'when': '上行', 'why': '利差优势'},
+                ],
+                'longTerm': '2Y 是政策路径的镜像: 上行=紧缩预期(利空长久期/利多价值), 下行=宽松预期(利多成长/黄金)',
+                'current': f'2Y {f2(v_2y)}%' + (f' (月Δ{tfm("dgs2")["m"]*100:+.0f}bp)' if tfm("dgs2")["m"] is not None else ''),
+            },
+            {
+                'tag': '10Y', 'name': '10Y 国债 (长端锚)', 'freq': '日度',
+                'channel': 'discount', 'primary': '名义增长+供给',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '上行', 'why': '折现率↑+增长溢价↓'},
+                    {'asset': '长债', 'dir': 'down', 'when': '上行', 'why': '价格反向'},
+                    {'asset': '房地产', 'dir': 'down', 'when': '上行', 'why': '按揭成本↑'},
+                    {'asset': '黄金', 'dir': 'down', 'when': '上行', 'why': '机会成本↑ (无息资产)'},
+                ],
+                'longTerm': '10Y 高位 (分位极值) 是成长股估值的最大逆风; 破关键位 (4.5/5.0%) 触发衍生品止损与目标波动率基金调仓',
+                'current': f'10Y {f2(v_10y)}% (分位 {_r_10y_pct})',
+            },
+            {
+                'tag': 'Spread', 'name': '10Y-2Y 利差 (曲线斜率)', 'freq': '日度',
+                'channel': 'curve', 'primary': '增长/衰退预期',
+                'impact': [
+                    {'asset': '银行股', 'dir': 'up', 'when': '陡峭化', 'why': '净息差↑'},
+                    {'asset': '小盘股', 'dir': 'up', 'when': '陡峭化', 'why': '增长预期↑'},
+                    {'asset': '高收益债', 'dir': 'down', 'when': '倒挂', 'why': '衰退→违约风险'},
+                    {'asset': '股市', 'dir': 'down', 'when': '倒挂', 'why': '衰退预警 (12-18月前瞻)'},
+                ],
+                'longTerm': '利差倒挂 = 经典衰退先行指标 (领先后续 12-18 月); 由倒挂转陡峭 = 衰退交易启动/经济确认走弱',
+                'current': f'10Y-2Y {spread_10_2:+.0f}bp ({_rates_label.split("·")[0] if "·" in _rates_label else _rates_label})',
+            },
+            {
+                'tag': 'TIPS', 'name': '实际利率 (TIPS 10Y)', 'freq': '日度',
+                'channel': 'real', 'primary': '黄金/成长锚',
+                'impact': [
+                    {'asset': '黄金', 'dir': 'down', 'when': '上行', 'why': '持有机会成本↑ (核心负相关)'},
+                    {'asset': '成长股', 'dir': 'down', 'when': '上行', 'why': '真实折现率↑'},
+                    {'asset': '美元', 'dir': 'up', 'when': '上行', 'why': '实际回报吸引力'},
+                ],
+                'longTerm': '实际利率是黄金与长久期成长股的第一定价因子 (2022 年双杀主因); 实际利率高位=黄金的逆风, 但央行购金可部分脱钩',
+                'current': f'TIPS 10Y {f2(v_tips)}%',
+            },
+            {
+                'tag': 'BEI', 'name': '通胀预期 (Breakeven)', 'freq': '日度',
+                'channel': 'real', 'primary': '通胀锚定',
+                'impact': [
+                    {'asset': 'TIPS', 'dir': 'up', 'when': '上行', 'why': '通胀保护需求↑'},
+                    {'asset': '商品', 'dir': 'up', 'when': '上行', 'why': '通胀对冲'},
+                    {'asset': '长债', 'dir': 'down', 'when': '上行', 'why': '通胀溢价↑'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '上行', 'why': '通胀避险'},
+                ],
+                'longTerm': 'BEI 上行 = 通胀预期脱锚风险 (Fed 被迫更鹰); 回落 = 宽松空间打开; 与油价联动最紧',
+                'current': f'BEI 10Y {f2(v_bei)}%',
+            },
+        ],
+    },
     'detailedTable': [
         {'maturity':'2年','rate':f2(v_2y)+'%','change':rate_chg_bp('dgs2'),'realRate':f2(val('tips2') if val('tips2') else (val('tips10')-0.5))+'%','breakeven':f2(val('bei2') if val('bei2') else (v_2y-(val('tips10')-0.5)))+'%','source':'DGS2'},
         {'maturity':'5年','rate':f2(val('dgs5'))+'%','change':rate_chg_bp('dgs5'),'realRate':f2(val('tips5'))+'%','breakeven':f2(val('bei5') if val('bei5') else (val('dgs5')-val('tips5')))+'%','source':'DGS5'},
@@ -2704,6 +2778,75 @@ DATA['volatility'] = {
             ({'indicator':'GVZ 黄金','value':f2(gvz),'current':('偏高' if gvz>=25 else ('中性' if gvz>=15 else '低位')),'range':'<15 低 / 15-25 中 / 25+ 高','note':'避险需求'} if gvz is not None else None),
             ({'indicator':'SKEW','value':f1(skew),'current':('极高' if skew>=150 else ('偏高' if skew>=130 else '正常')),'range':'<130 低 / 130-150 中 / 150+ 高','note':'尾部保护定价'} if skew is not None else None),
         ] if r],
+    # ===== 波动率 → 资产传导机制 (2026-08-17) =====
+    'transmissionMap': {
+        'hub': '波动率水平 + 期限结构 + 跨资产压力区 — 市场恐慌与流动性状况的温度计',
+        'channels': [
+            {'key': 'delever', 'label': '通道A · 去杠杆', 'color': '#a32d2d',
+             'desc': 'VIX 飙升 → 目标波动率基金/风控砍仓 → 抛售加剧'},
+            {'key': 'hedge', 'label': '通道B · 对冲需求', 'color': '#185FA5',
+             'desc': 'VIX 高 → 看跌保护成本↑ → 保险资金流向'},
+            {'key': 'regime', 'label': '通道C · 风险偏好', 'color': '#0F6E56',
+             'desc': '波动率持续高位 → 风险偏好收缩 → 资金回流避险'},
+        ],
+        'indicators': [
+            {
+                'tag': 'VIX', 'name': 'VIX (股票波动率)', 'freq': '实时',
+                'channel': 'delever', 'primary': '系统性风险确认',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '>20', 'why': '目标波动率基金触发砍仓'},
+                    {'asset': '高 beta', 'dir': 'down', 'when': '>20', 'why': '最先被抛售'},
+                    {'asset': '国债', 'dir': 'up', 'when': '飙升', 'why': '避险资金流入'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '飙升', 'why': '避险+波动率溢价'},
+                ],
+                'longTerm': 'VIX 站上 20 = 系统性风险确认 (目标波动率基金阈值); >30 = 危机模式 (2018/2020 式流动性事件)',
+                'current': f'VIX {f2(vix) if vix is not None else "—"}' + (f' ({("压力区" if vix>=25 else ("警戒" if vix>=20 else "中性"))})' if vix is not None else ''),
+            },
+            {
+                'tag': 'Term', 'name': '期限结构 (9D/1M/3M)', 'freq': '实时',
+                'channel': 'hedge', 'primary': '近端恐慌',
+                'impact': [
+                    {'asset': '近月期权', 'dir': 'up', 'when': '倒挂', 'why': '近端恐慌定价'},
+                    {'asset': '股市', 'dir': 'down', 'when': '倒挂', 'why': '短期抛压集中'},
+                    {'asset': 'VIX期货', 'dir': 'up', 'when': '倒挂', 'why': '远月贴水=危机预期'},
+                ],
+                'longTerm': 'Contango (远月>近月) = 平静; 倒挂 (近月>远月) = 极端压力 (2020.3 曾现), 往往接近局部底部',
+                'current': f'{ts_state} ({", ".join(f"{lb} {v:.1f}" for lb, v in ts_points)})',
+            },
+            {
+                'tag': 'VVIX', 'name': 'VVIX (波动率的波动率)', 'freq': '实时',
+                'channel': 'hedge', 'primary': '对冲恐慌',
+                'impact': [
+                    {'asset': 'VIX期权', 'dir': 'up', 'when': '>110', 'why': '对冲VIX需求↑'},
+                    {'asset': '波动率策略', 'dir': 'down', 'when': '>110', 'why': '卖波动策略亏损↑'},
+                ],
+                'longTerm': 'VVIX 高 = 市场对"波动率本身"的恐慌 (极端事件预期); 常用于判断 VIX 是否见顶',
+                'current': f'VVIX {f2(vvix) if vvix is not None else "—"}' + (f' ({("偏高" if vvix>=110 else "中性")})' if vvix is not None else ''),
+            },
+            {
+                'tag': 'MOVE', 'name': 'MOVE (债券波动率)', 'freq': '实时',
+                'channel': 'regime', 'primary': '利率波动',
+                'impact': [
+                    {'asset': '长债', 'dir': 'down', 'when': '>120', 'why': '利率路径不确定→久期风险溢价↑'},
+                    {'asset': '抵押贷款', 'dir': 'down', 'when': '>120', 'why': '凸性对冲抛售'},
+                    {'asset': '银行', 'dir': 'down', 'when': '>120', 'why': '利率风险头寸波动↑'},
+                ],
+                'longTerm': 'MOVE 高 = 债券市场流动性承压 (美债拍卖需求/做市商库存); 常与 VIX 背离 (股债波动率分化)',
+                'current': f'MOVE {f2(move) if move is not None else "—"}' + (f' ({("压力区" if move>=120 else "中性")})' if move is not None else ''),
+            },
+            {
+                'tag': 'OVX', 'name': 'OVX (原油波动率)', 'freq': '实时',
+                'channel': 'regime', 'primary': '供应冲击',
+                'impact': [
+                    {'asset': '油价', 'dir': 'down', 'when': '>50', 'why': '高波动→投机资金撤离'},
+                    {'asset': '能源股', 'dir': 'down', 'when': '>50', 'why': '盈利不确定性↑'},
+                    {'asset': '通胀预期', 'dir': 'up', 'when': '>50', 'why': '供应中断担忧'},
+                ],
+                'longTerm': 'OVX 高 = 地缘/供应冲击定价 (霍尔木兹/美伊); OVX-VIX 剪刀差是通胀预期传导的先行指标',
+                'current': f'OVX {f2(ovx) if ovx is not None else "—"}' + (f' ({("压力区" if ovx>=50 else "中性")})' if ovx is not None else '') + (f' · OVX-VIX {ovx_vix_gap}pt' if ovx_vix_gap is not None else ''),
+            },
+        ],
+    },
     'analystView': {
         'risk-off': f'系统性风险信号浮现: 压力集中在 {(",".join(stress_assets) if stress_assets else "无")}, VIX {f2(vix)}' + (f' 已突破20确认线' if vix and vix>=20 else (f' 距20确认线 {20-vix:.1f}pt' if vix else '')) + f'; 期限结构 {ts_state}——近月高于远月是即时风险定价。' + (f'SKEW {f1(skew)} 显示机构尾部保护需求真实存在。' if skew else '') + '若剪刀差收敛以 VIX 补涨完成, 买入 VIX 看涨价差是对冲选项。',
         'risk-on': f'波动率平静: 无资产进入压力区 (VIX {f2(vix)})' + (f', 距20确认线 {20-vix:.1f}pt' if vix else '') + f'; 期限结构 {ts_state}。' + (f'SKEW {f1(skew)} 中性, 尾部保护需求低。' if skew else '') + '系统性风险未定价, 风险资产 beta 可适度承担。',
