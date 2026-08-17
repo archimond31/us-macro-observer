@@ -1052,6 +1052,7 @@ _CFTC_TARGETS = [
     ('EURO FX',                 '欧元',              '美元(投机净持仓)'),
     ('NASDAQ-100',              'Nasdaq 100',        '科技股(投机净持仓)'),
 ]
+_CFTC_NOTES = {label: note for _, label, note in _CFTC_TARGETS}
 
 def _num_or_none(s):
     s = (s or '').strip()
@@ -1108,7 +1109,7 @@ def fetch_cftc_positions():
             'oi': round(oi, 0) if oi else None,
             'chg_net': round(chg_net, 0) if chg_net is not None else None,
             'date': r[2] if len(r) > 2 else '',
-            'note': dict(_CFTC_TARGETS)[label],
+            'note': _CFTC_NOTES[label],
         }
         print(f'  [cftc] {label}: 净持仓 {net:+,.0f} (OI {oi:,.0f}, 周变化 {chg_net:+,.0f})')
     return out
