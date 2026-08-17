@@ -1039,6 +1039,129 @@ def write_events():
 
 write_events()
 
+# ============ 市场定位数据 (P0-P1: 谁在动 / 定价到什么程度) ============
+# 目标: 回答"为什么动 + 谁在动"——CFTC 持仓(谁)、期限溢价 ACM(10Y拆解)、SLOOS(信贷领先)、
+#       NFCI 分项(压力定位)、家庭净资产/银行信贷(实体传导)
+# 数据源: CFTC 官网周报 + FRED (THREEFYTP10/DRTSCILM/NFCI分项/TNWBSHNO/TOTLL)
+# 失败静默跳过, 不阻断主流程。输出 positioning.json
+
+_CFTC_TARGETS = [
+    ('E-MINI S&P 500',          'E-mini S&P 500',    '股市(投机净持仓)'),
+    ('UST 10Y NOTE',            '10Y 美债期货',      '长端利率(投机净持仓)'),
+    ('UST 2Y NOTE',             '2Y 美债期货',       '短端利率(投机净持仓)'),
+    ('EURO FX',                 '欧元',              '美元(投机净持仓)'),
+    ('NASDAQ-100',              'Nasdaq 100',        '科技股(投机净持仓)'),
+]
+
+def _num_or_none(s):
+    s = (s or '').strip()
+    if not s or s == '.':
+        return None
+    try:
+        return float(s.replace(',', ''))
+    except Exception:
+        return None
+
+def fetch_cftc_positions():
+    """CFTC 持仓周报 (FinFutWk.txt, legacy 期货口径)。
+    返回 {合约: {'net': 非商业净持仓, 'nc_long':, 'nc_short':, 'oi':, 'date':, 'chg_net': 周变化}}
+    legacy 列: [7]OI [8]非商业多头 [9]非商业空头 [10]非商业套利 [11]商业多头 [12]商业空头
+              [13]总多头 [14]总空头 ... [24]非商业多头变化 [25]非商业空头变化"""
+    out = {}
+    try:
+        txt = http_get('https://www.cftc.gov/dea/newcot/FinFutWk.txt', timeout=30, use_ua=True)
+    except Exception as e:
+        print(f'  [cftc] 抓取失败: {e}')
+        return out
+    import csv as _csv, io as _io
+    try:
+        rows = list(_csv.reader(_io.StringIO(txt)))
+    except Exception as e:
+        print(f'  [cftc] 解析失败: {e}')
+        return out
+    # 每个目标取 OI 最大的主合约行 (排除 Micro 迷你/交叉盘)
+    _best = {}
+    for r in rows:
+        if not r or len(r) < 26:
+            continue
+        mkt = (r[0] or '').upper()
+        if 'MICRO' in mkt or '/' in mkt:      # 排除迷你/交叉盘 (只保留主合约)
+            continue
+        for kw, label, note in _CFTC_TARGETS:
+            if kw in mkt:
+                oi = _num_or_none(r[7]) or 0
+                if label not in _best or oi > _best[label][0]:
+                    _best[label] = (oi, r)
+                break
+    for label, (oi, r) in _best.items():
+        nc_l = _num_or_none(r[8]); nc_s = _num_or_none(r[9])
+        if nc_l is None or nc_s is None:
+            continue
+        net = nc_l - nc_s
+        chg_net = None
+        dl = _num_or_none(r[24]) if len(r) > 24 else None
+        ds = _num_or_none(r[25]) if len(r) > 25 else None
+        if dl is not None and ds is not None:
+            chg_net = dl - ds
+        out[label] = {
+            'net': round(net, 0), 'nc_long': round(nc_l, 0), 'nc_short': round(nc_s, 0),
+            'oi': round(oi, 0) if oi else None,
+            'chg_net': round(chg_net, 0) if chg_net is not None else None,
+            'date': r[2] if len(r) > 2 else '',
+            'note': dict(_CFTC_TARGETS)[label],
+        }
+        print(f'  [cftc] {label}: 净持仓 {net:+,.0f} (OI {oi:,.0f}, 周变化 {chg_net:+,.0f})')
+    return out
+
+def _fred_last(sid):
+    """取 FRED 序列最新值, 返回 (date, value) 或 (None, None)"""
+    try:
+        txt = http_get(f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}', timeout=20, use_ua=False)
+        lines = [l for l in txt.strip().splitlines() if l and ',' in l and not l.startswith('observation')]
+        if not lines:
+            return None, None
+        d, v = lines[-1].split(',')[:2]
+        try:
+            return d, float(v)
+        except Exception:
+            return None, None
+    except Exception as e:
+        print(f'  [fred:{sid}] 抓取失败: {e}')
+        return None, None
+
+def fetch_positioning():
+    """汇总 P0-P1 数据 → positioning.json"""
+    data = {
+        'fetched_at': datetime.now().strftime('%Y-%m-%d'),
+        'cftc': fetch_cftc_positions(),
+    }
+    d, v = _fred_last('THREEFYTP10')
+    data['termPremium'] = {'date': d, 'value': v, 'note': '10Y 期限溢价 (ACM 模型), 拆解 10Y = 预期短端路径 + 期限溢价'}
+    d, v = _fred_last('DRTSCILM')
+    data['sloos'] = {'date': d, 'value': v, 'note': 'SLOOS 收紧工商业贷款标准净占比 (正=收紧, 领先信用周期 2-4 季)'}
+    data['nfciParts'] = {}
+    for sid, key, label in [
+        ('NFCILEVERAGE', 'leverage', '杠杆'),
+        ('NFCIRISK', 'risk', '风险市场'),
+        ('NFCICREDIT', 'credit', '信贷'),
+        ('NFCINONFINLEVERAGE', 'nonfinlev', '非金融杠杆'),
+    ]:
+        d, v = _fred_last(sid)
+        data['nfciParts'][key] = {'date': d, 'value': v, 'label': label}
+    d, v = _fred_last('TNWBSHNO')
+    data['householdNetWorth'] = {'date': d, 'value': (round(v / 1e6, 2) if v else None), 'unit': '$T', 'note': '美国家庭净资产 (→万亿美元), 消费与风险偏好锚'}
+    d, v = _fred_last('TOTLL')
+    data['bankCredit'] = {'date': d, 'value': (round(v / 1000, 2) if v else None), 'unit': '$T', 'note': '美国银行信贷总量 (→万亿美元), 信用创造水位'}
+    try:
+        with open(SCRIPT_DIR / 'positioning.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f'[positioning] positioning.json 已存 (CFTC {len(data["cftc"])} 合约 + 期限溢价/SLOOS/NFCI分项/净资产/信贷)')
+    except Exception as e:
+        print(f'  [positioning] 写入失败: {e}')
+    return data
+
+fetch_positioning()
+
 # ============ 加密链上数据 + 流动性 + 情绪 (2026-08-14 新增) ============
 # 目标: 加密板块补充 ①链上活跃度 ②稳定币流动性蓄水池 ③市场情绪/杠杆 ④主导叙事判定原料
 # 数据源: Blockchain.com API (链上) + CoinGecko (稳定币) + alternative.me (恐慌贪婪) + Binance (资金费率)

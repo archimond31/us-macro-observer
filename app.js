@@ -31,6 +31,7 @@ const SECTION_CONFIG = {
   ai:         { title: 'AI产业链',   subtitle: 'AI Chain · 五层蛋糕价值挖掘' },
   signal:     { title: '矛盾信号',   subtitle: 'Signal · 主导矛盾/领先确认/交叉验证' },
   tradeRadar: { title: '交易雷达',   subtitle: 'Radar · 预期差扫描 + 全品类映射' },
+  positioning: { title: '市场定位',   subtitle: 'Positioning · 谁在动/定价到什么程度' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
   risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
 };
@@ -83,7 +84,8 @@ function switchSection(section) {
     liquidity: renderLiquidity, economy: renderEconomy,
     credit: renderCredit, volatility: renderVolatility,
     crypto: renderCrypto, recession: renderRecession, risk: renderRisk,
-    ai: renderAiChain, signal: renderMacroSignal, tradeRadar: renderTradeRadar
+    ai: renderAiChain, signal: renderMacroSignal, tradeRadar: renderTradeRadar,
+    positioning: renderPositioning
   };
   renderers[section](content);
 }
@@ -2857,6 +2859,103 @@ function _aiFlowColor(score) {
   if (score >= 55) return '#f59e0b';
   if (score >= 40) return '#4361ee';
   return '#2a9d8f';
+}
+
+// ===== 市场定位: 谁在动 / 定价到什么程度 (P0-P1) =====
+// CFTC 投机净持仓(谁) + 期限溢价 ACM(10Y拆解) + SLOOS(信贷领先) + NFCI分项(压力定位) + 实体锚
+function renderPositioning(c) {
+  const d = DATA.marketPositioning;
+  if (!d) { c.innerHTML = '<div class="loading">市场定位数据加载中...</div>'; return; }
+  let h = '';
+  h += '<div style="margin:6px 0 18px;padding:14px 18px;border-radius:12px;background:#f7f8fa;border:1px solid #d3d1c7;">'
+    + '<div style="font-size:13px;font-weight:500;color:#2c2c2a;margin-bottom:6px;">市场定位 · 回答"为什么动 + 谁在动"</div>'
+    + '<div style="font-size:12px;color:#5f5e5a;line-height:1.7;">' + (d.analystView || '数据暂缺') + '</div>'
+    + '</div>';
+
+  // ===== 1. CFTC 持仓: 谁在动 =====
+  h += sectionH('CFTC 投机净持仓（谁在动）', '非商业(投机)净持仓 · 极端单边 = 拥挤交易, 反转风险上升 · 周更新');
+  const cf = d.cftc || [];
+  if (!cf.length) {
+    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">CFTC 数据暂缺 (每周五更新)</div>';
+  } else {
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">';
+    cf.forEach(function (r) {
+      const long = r.dir === 'long';
+      const col = long ? '#0f6e56' : '#a32d2d';
+      const bg = long ? '#e6f6ee' : '#fcebeb';
+      const crowded = r.crowding > 25;
+      h += '<div style="background:' + bg + ';border:1px solid ' + col + ';border-radius:10px;padding:10px 12px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+        + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + r.asset + '</span>'
+        + (crowded ? '<span style="padding:2px 8px;border-radius:10px;background:#fff;color:#a32d2d;font-size:10px;font-weight:600;border:1px solid #f09595;">拥挤 ' + r.crowding + '%</span>' : '')
+        + '</div>'
+        + '<div style="font-size:11px;color:#6b7280;margin:2px 0 6px;">' + (r.note || '') + ' · ' + (r.date || '') + '</div>'
+        + '<div style="font-size:18px;font-weight:600;color:' + col + ';">' + (r.net > 0 ? '+' : '') + Number(r.net).toLocaleString() + ' 手</div>'
+        + '<div style="font-size:11px;color:#5f5e5a;margin-top:4px;">' + (long ? '净多头' : '净空头')
+        + (r.chg != null ? ' · 周变化 ' + (r.chg > 0 ? '+' : '') + Number(r.chg).toLocaleString() : '') + '</div>'
+        + '<div style="height:5px;background:rgba(0,0,0,0.08);border-radius:3px;margin-top:6px;overflow:hidden;">'
+        + '<div style="height:100%;width:' + Math.min(Math.abs(r.crowding) * 2, 100) + '%;background:' + col + ';border-radius:3px;"></div></div>'
+        + '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">单边度 ' + r.crowding + '% (OI)</div>'
+        + '</div>';
+    });
+    h += '</div>';
+    if (d.cftcCrowded && d.cftcCrowded.length) {
+      h += '<div style="margin-top:10px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + d.cftcCrowded.join('；') + '</div>';
+    }
+  }
+
+  // ===== 2. 期限溢价: 10Y 拆解 =====
+  h += sectionH('期限溢价分解（为什么动）', '10Y 收益率 = 预期短端路径 + 期限溢价 · ACM 模型 · 判断"政策预期 vs 供给/财政"驱动');
+  if (d.termPremium && d.termPremium.value != null) {
+    const tp = d.termPremium;
+    const tpCol = tp.signal === 'bearish' ? '#a32d2d' : (tp.signal === 'bullish' ? '#0f6e56' : '#854f0b');
+    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'
+      + '<div style="flex:1;min-width:140px;text-align:center;background:#f7f8fa;border-radius:10px;padding:10px;">'
+      + '<div style="font-size:11px;color:#6b7280;">10Y 名义</div><div style="font-size:20px;font-weight:600;">' + (DATA.rates && DATA.rates.metrics ? '' : '') + '</div></div>'
+      + '</div>'
+      + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-top:8px;"><b style="color:' + tpCol + ';">' + tp.text + '</b></div>'
+      + (tp.expPath != null ? '<div style="font-size:12px;color:#5f5e5a;margin-top:6px;">隐含预期路径 ≈ ' + tp.expPath.toFixed(2) + '% (10Y − 期限溢价) · ' + tp.note + '</div>' : '')
+      + '</div>';
+  }
+
+  // ===== 3. SLOOS + NFCI 分项 =====
+  h += sectionH('信贷领先指标（定价到什么程度）', 'SLOOS 银行信贷意愿 + NFCI 分项 — 压力藏在哪');
+  h += '<div class="chart-row two-col">'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">'
+    + '<div style="font-size:13px;font-weight:600;color:#1a1d29;margin-bottom:4px;">SLOOS 银行信贷意愿</div>'
+    + (d.sloos && d.sloos.value != null
+        ? '<div style="font-size:12px;color:' + (d.sloos.signal === 'bearish' ? '#a32d2d' : (d.sloos.signal === 'bullish' ? '#0f6e56' : '#854f0b')) + ';line-height:1.7;">' + d.sloos.text + '</div>'
+          + '<div style="font-size:11px;color:#9ca3af;margin-top:4px;">' + (d.sloos.date || '') + '</div>'
+        : '<div style="font-size:12px;color:#6b7280;">数据暂缺 (季度发布)</div>')
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">'
+    + '<div style="font-size:13px;font-weight:600;color:#1a1d29;margin-bottom:4px;">NFCI 分项（压力定位）</div>'
+    + (d.nfciParts && d.nfciParts.length
+        ? d.nfciParts.map(function (r) {
+            const col = r.signal === 'bearish' ? '#a32d2d' : (r.signal === 'bullish' ? '#0f6e56' : '#854f0b');
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px;">'
+              + '<span style="color:#374151;">' + r.key + '</span>'
+              + '<span style="font-weight:600;color:' + col + ';">' + (r.value > 0 ? '+' : '') + r.value + ' <span style="font-weight:400;color:#6b7280;">' + r.meaning + '</span></span></div>';
+          }).join('')
+        : '<div style="font-size:12px;color:#6b7280;">数据暂缺</div>')
+    + '</div></div>';
+
+  // ===== 4. 实体锚 =====
+  h += sectionH('实体端锚', '家庭净资产 + 银行信贷 — 消费与信用创造的底层水位');
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;">'
+    + '<div style="font-size:11px;color:#6b7280;">家庭净资产 (财富效应 → 消费)</div>'
+    + '<div style="font-size:20px;font-weight:600;color:#1a1d29;">$' + (d.householdNetWorth ? d.householdNetWorth.value : '—') + 'T</div>'
+    + '<div style="font-size:11px;color:#9ca3af;">' + (d.householdNetWorth ? d.householdNetWorth.date : '') + '</div></div>'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;">'
+    + '<div style="font-size:11px;color:#6b7280;">银行信贷总量 (信用创造)</div>'
+    + '<div style="font-size:20px;font-weight:600;color:#1a1d29;">$' + (d.bankCredit ? d.bankCredit.value : '—') + 'T</div>'
+    + '<div style="font-size:11px;color:#9ca3af;">' + (d.bankCredit ? d.bankCredit.date : '') + '</div></div>'
+    + '</div>';
+
+  h += watchList(d.whatToWatch);
+  c.innerHTML = h;
 }
 
 // ===== 交易机会雷达: 预期差扫描 + 全品类映射 =====

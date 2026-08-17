@@ -4437,6 +4437,101 @@ DATA['macroSignal'] = {
 }
 print('[gen_datajs] macroSignal section OK (dominant source=%s, archetype=%s)' % (_MS_SOURCE, (_MS_BEST['id'] if _MS_BEST else 'curated')), file=sys.stderr, flush=True)
 
+# ==================== 市场定位 (谁在动 / 定价到什么程度) ====================
+# P0-P1: CFTC 投机净持仓(谁) + 期限溢价 ACM(10Y拆解) + SLOOS(信贷领先) + NFCI分项(压力定位)
+#      + 家庭净资产/银行信贷(实体传导)。数据来自 positioning.json (build_data.py 抓取)
+print('[gen_datajs] generating marketPositioning section...', file=sys.stderr, flush=True)
+
+_MPOS = {}
+try:
+    _MPOS = json.load(open(SCRIPT_DIR / 'positioning.json', encoding='utf-8'))
+    print('[gen_datajs] loaded positioning.json', file=sys.stderr, flush=True)
+except Exception:
+    print('[gen_datajs] positioning.json 缺失, 市场定位面板留空', file=sys.stderr, flush=True)
+
+# ---- CFTC 持仓: 判断"谁在动 + 定价到什么程度" ----
+_cftc_rows = []
+_cftc_crowded = []
+for _label, _c in (_MPOS.get('cftc') or {}).items():
+    _net = _c.get('net'); _chg = _c.get('chg_net')
+    if _net is None:
+        continue
+    _dir = 'long' if _net > 0 else 'short'
+    _crowd = abs(_net) / max(_c.get('oi') or 1, 1)  # 净持仓占 OI 比例 = 拥挤度
+    _row = {
+        'asset': _label, 'note': _c.get('note', ''),
+        'net': round(_net, 0), 'oi': _c.get('oi'),
+        'chg': round(_chg, 0) if _chg is not None else None,
+        'dir': _dir, 'date': _c.get('date', ''),
+        'crowding': round(_crowd * 100, 1),   # 净持仓/OI % = 单边拥挤度
+    }
+    _cftc_rows.append(_row)
+    if _crowd > 0.25:
+        _cftc_crowded.append(f'{_label} 净持仓占 OI {_crowd*100:.0f}% (极端单边)')
+
+# ---- 期限溢价 ACM: 拆解 10Y = 预期短端路径 + 期限溢价 ----
+_TP = _MPOS.get('termPremium') or {}
+_tp_val = _TP.get('value')
+_10y_v_now = v_10y
+_tp_text = ''
+_tp_signal = 'neutral'
+if _tp_val is not None and _10y_v_now is not None:
+    _exp_path = round(_10y_v_now - _tp_val, 2)   # 隐含预期路径 ≈ 10Y - 期限溢价
+    if _tp_val > 0.5: _tp_signal = 'bearish'; _tp_text = f'期限溢价 {_tp_val:.2f}% 偏高: 长端上行由供给/财政/久期风险驱动 (非纯政策预期)'
+    elif _tp_val < 0: _tp_signal = 'bullish'; _tp_text = f'期限溢价 {_tp_val:.2f}% 为负: 市场押注未来降息 + 宽松'
+    else: _tp_text = f'期限溢价 {_tp_val:.2f}% 中性: 10Y 主要由政策路径预期驱动'
+else:
+    _exp_path = None
+
+# ---- SLOOS: 银行信贷意愿 (领先信用周期) ----
+_SL = _MPOS.get('sloos') or {}
+_sloos_val = _SL.get('value')
+_sloos_signal = 'neutral'; _sloos_text = 'SLOOS 数据缺失'
+if _sloos_val is not None:
+    if _sloos_val > 10: _sloos_signal = 'bearish'; _sloos_text = f'SLOOS 收紧净占比 {_sloos_val:.0f}%: 银行大幅收紧信贷 → 领先信用收缩 2-4 季度'
+    elif _sloos_val > 0: _sloos_signal = 'mixed'; _sloos_text = f'SLOOS {_sloos_val:.0f}%: 边际收紧, 信贷周期转向观察期'
+    else: _sloos_signal = 'bullish'; _sloos_text = f'SLOOS 净占比 {_sloos_val:.0f}%: 银行放宽信贷, 信用扩张周期延续'
+
+# ---- NFCI 分项: 压力定位 ----
+_nfci_parts = _MPOS.get('nfciParts') or {}
+_nfci_rows = []
+for _k, _c in _nfci_parts.items():
+    _v = _c.get('value')
+    if _v is None: continue
+    _s = 'bearish' if _v > 0.2 else ('mixed' if _v > 0 else 'bullish')
+    _nfci_rows.append({'key': _c.get('label', _k), 'value': round(_v, 3), 'signal': _s,
+                       'meaning': ('收紧/承压' if _v > 0.2 else ('边际收紧' if _v > 0 else '宽松'))})
+
+# ---- 家庭净资产 / 银行信贷 ----
+_HNW = _MPOS.get('householdNetWorth') or {}
+_BC = _MPOS.get('bankCredit') or {}
+
+DATA['marketPositioning'] = {
+    'asOf': _MPOS.get('fetched_at'),
+    'cftc': _cftc_rows,
+    'cftcCrowded': _cftc_crowded,
+    'termPremium': {'value': _tp_val, 'expPath': _exp_path, 'note': _TP.get('note', ''),
+                    'signal': _tp_signal, 'text': _tp_text, 'date': _TP.get('date')},
+    'sloos': {'value': _sloos_val, 'signal': _sloos_signal, 'text': _sloos_text, 'date': _SL.get('date')},
+    'nfciParts': _nfci_rows,
+    'householdNetWorth': _HNW,
+    'bankCredit': _BC,
+    'whatToWatch': [
+        {'trigger': 'CFTC 净持仓占比 >30%', 'implication': '极端单边 = 拥挤交易, 反转风险上升', 'status': ('触发: ' + '、'.join(_cftc_crowded)) if _cftc_crowded else '无'},
+        {'trigger': '期限溢价突破 <span class="watch-threshold">1.0%</span>', 'implication': '财政/供给驱动长端, "higher for longer"强化', 'status': f'当前 {_tp_val:.2f}%' if _tp_val is not None else '—'},
+        {'trigger': 'SLOOS 收紧 >20%', 'implication': '信贷收缩确认, 衰退概率显著上升', 'status': f'当前 {_sloos_val:.0f}%' if _sloos_val is not None else '—'},
+    ],
+    'analystView': (
+        ('持仓面: ' + ('、'.join(f'{r["asset"]} 投机净{"多" if r["dir"]=="long" else "空"} {r["net"]:+,.0f} 手' for r in _cftc_rows[:4]) if _cftc_rows else 'CFTC 数据暂缺') + '。')
+        + ('拥挤警示: ' + '；'.join(_cftc_crowded) + '。' if _cftc_crowded else '')
+        + (_tp_text + '。' if _tp_text else '')
+        + (_sloos_text + '。' if _sloos_text else '')
+        + ('家庭净资产 $%sT / 银行信贷 $%sT 提供实体端锚。' % (_HNW.get('value'), _BC.get('value')) if _HNW.get('value') else '')
+    ),
+}
+
+print('[gen_datajs] marketPositioning section OK', file=sys.stderr, flush=True)
+
 # ---------- 写出 data.js ----------
 HEADER = """/* ============================================================
  * data.js — US Macro Observer (官方真实数据自动生成)
