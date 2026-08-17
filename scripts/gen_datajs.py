@@ -1919,6 +1919,86 @@ DATA['economy'] = {
         'trendNote': f'CPI同比半年Δ{pctpt(cpi_d6)} · 非农6个月累计{(f"{nfp_h6:+.0f}K" if nfp_h6 is not None else "—")} · 失业率半年Δ{pctpt(unrate_tf["h6"])}',
         'breakdownSub': '分项真实同比 · 颜色=通胀水平(红>4% 橙2-4% 绿<2%) · 箭头=边际方向(↑加速/↓回落) · 最右列为上月Δ',
     },
+
+    # ===== 经济数据 → 资产传导机制 (2026-08-17) =====
+    # 每类数据: 公布的偏离方向 → 三条传导通道 → 各类资产长/短期影响
+    # 前端渲染为"数据卡"列表, 便于数据发布后快速查对市场影响
+    'transmissionMap': {
+        'hub': '市场对美联储利率路径的预期 (降息/维持/加息定价)',
+        'channels': [
+            {'key': 'discount', 'label': '通道A · 折现率', 'color': '#a32d2d',
+             'desc': '利率预期 → 贴现率 → 估值分母 (影响所有资产, 尤重长久期/成长)'},
+            {'key': 'earnings', 'label': '通道B · 盈利', 'color': '#185FA5',
+             'desc': '增长预期 → EPS → 顺周期资产 (股市/商品/高收益债)'},
+            {'key': 'haven', 'label': '通道C · 避险', 'color': '#0F6E56',
+             'desc': '数据意外 → 风险偏好 → 风险/避险资产切换'},
+        ],
+        'indicators': [
+            {
+                'tag': 'CPI', 'name': 'CPI / 核心 CPI', 'freq': '月度',
+                'channel': 'discount', 'primary': '通胀路径',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '高于预期', 'why': '加息定价→折现率↑'},
+                    {'asset': '长债', 'dir': 'down', 'when': '高于预期', 'why': '利率预期↑→收益率↑'},
+                    {'asset': '美元', 'dir': 'up', 'when': '高于预期', 'why': '利差走阔→美元强'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '低于预期', 'why': '实际利率↓→无息资产受益'},
+                    {'asset': '加密', 'dir': 'up', 'when': '低于预期', 'why': '折现率↓+流动性预期↑'},
+                ],
+                'longTerm': '连续高于预期 → 加息周期延长/重启, 成长股估值系统性压缩, 黄金实际利率锚失效风险; 连续低于预期 → 降息周期打开, 利长久期债与高估值成长',
+                'current': '7月 CPI 3.4% / 核心 2.5% (均符合预期)',
+            },
+            {
+                'tag': 'NFP', 'name': '非农就业', 'freq': '月度',
+                'channel': 'earnings', 'primary': '就业拐点',
+                'impact': [
+                    {'asset': '长债', 'dir': 'up', 'when': '低于预期', 'why': '衰退担忧→降息定价'},
+                    {'asset': '短债', 'dir': 'up', 'when': '低于预期', 'why': '政策宽松预期↑'},
+                    {'asset': '美元', 'dir': 'down', 'when': '低于预期', 'why': '降息预期→利差收窄'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '低于预期', 'why': '避险+实际利率↓'},
+                    {'asset': '股市', 'dir': 'down', 'when': '大幅低于预期', 'why': '盈利下修主导(超衰退阈值时)'},
+                ],
+                'longTerm': '连续 miss → 衰退交易主导 (股债双杀→避险独强); 连续 beat → 软着陆定价 (股涨债跌, 美元强)',
+                'current': '7月 -23K (大幅低于预期 +80K, miss 103K)',
+            },
+            {
+                'tag': 'GDP', 'name': 'GDP / 增长类', 'freq': '季度',
+                'channel': 'earnings', 'primary': '盈利周期',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '低于预期', 'why': 'EPS 下修'},
+                    {'asset': '长债', 'dir': 'up', 'when': '低于预期', 'why': '增长弱→利率预期↓'},
+                    {'asset': '商品', 'dir': 'down', 'when': '低于预期', 'why': '需求预期↓'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '低于预期', 'why': '避险+宽松预期'},
+                    {'asset': '美元', 'dir': 'down', 'when': '低于预期', 'why': '增长差→货币弱'},
+                ],
+                'longTerm': '连续 miss → 衰退确认 (利好债/黄金, 利空股/商品); 连续 beat → 金发姑娘 (股债双牛)',
+                'current': 'Q2 实际 1.5% (低于预期 2.1%, miss 0.6pt)',
+            },
+            {
+                'tag': 'PCE', 'name': '核心 PCE / 超级核心', 'freq': '月度',
+                'channel': 'discount', 'primary': 'Fed 最关注通胀',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '高于预期', 'why': '加息尾部风险'},
+                    {'asset': '长债', 'dir': 'down', 'when': '高于预期', 'why': '利率路径上修'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '低于预期', 'why': '实际利率↓'},
+                    {'asset': '加密', 'dir': 'up', 'when': '低于预期', 'why': '风险偏好修复'},
+                ],
+                'longTerm': '超级核心(除住房服务)是 Fed 内部最关注口径, 其粘性决定"higher for longer"时长',
+                'current': '6月 核心 PCE 3.3% / 超级核心 3.8% (均符合预期)',
+            },
+            {
+                'tag': 'UNRATE', 'name': '失业率 / 初请', 'freq': '月度/周度',
+                'channel': 'haven', 'primary': '衰退触发器',
+                'impact': [
+                    {'asset': '长债', 'dir': 'up', 'when': '高于预期', 'why': '衰退→久期受益'},
+                    {'asset': '股市', 'dir': 'down', 'when': '高于预期', 'why': '衰退担忧'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '高于预期', 'why': '避险'},
+                    {'asset': '美元', 'dir': 'down', 'when': '高于预期', 'why': '宽松预期'},
+                ],
+                'longTerm': '触发 Sahm 规则 (3个月均升0.5pt) → 衰退交易全面启动; 初请4周均>280K 是先行确认',
+                'current': '7月 4.1% (好于预期 4.2%) · 初请 199K 低位',
+            },
+        ],
+    },
     'analystView': '占位(regime 计算后按 signal 覆盖)',
     'whatToWatch': [
         {'trigger':'<span class="watch-threshold">下月 CPI 报告</span>','implication':'将完整体现油价冲击, 核心环比>0.3%冲击降息定价','status':'关键事件'},

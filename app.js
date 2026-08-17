@@ -1704,6 +1704,55 @@ function renderConfirmConds(conds) {
 }
 
 /* ================= 5. 经济数据 ================= */
+// 经济数据 → 资产传导机制面板
+// 数据发布后: ①看它如何改变利率路径预期 ②沿三条通道 (折现率/盈利/避险) 判断各资产方向
+function _renderTransmissionMap(tm) {
+  if (!tm || !tm.indicators || !tm.indicators.length) return '';
+  let h = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;margin-bottom:14px;">';
+  // 顶部: 传导中枢说明
+  h += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'
+    + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">传导中枢: </span>'
+    + '<span style="padding:3px 10px;border-radius:14px;background:#eeedfe;color:#3c3489;font-size:12px;font-weight:500;">' + (tm.hub || '利率路径预期') + '</span>'
+    + '</div>';
+  // 三条通道图例
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+    + (tm.channels || []).map(function (ch) {
+        return '<div style="flex:1;min-width:190px;padding:7px 10px;background:' + ch.color + '11;border:1px solid ' + ch.color + ';border-radius:8px;">'
+          + '<div style="font-size:12px;font-weight:600;color:' + ch.color + ';">' + ch.label + '</div>'
+          + '<div style="font-size:10px;color:#5f5e5a;line-height:1.5;margin-top:2px;">' + ch.desc + '</div></div>';
+      }).join('')
+    + '</div>';
+  // 各数据卡
+  tm.indicators.forEach(function (ind) {
+    const ch = (tm.channels || []).find(function (x) { return x.key === ind.channel; });
+    const chColor = ch ? ch.color : '#5f5e5a';
+    h += '<div style="border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;overflow:hidden;">'
+      + '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f7f8fa;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;">'
+      + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + ind.name + '</span>'
+      + '<span style="font-size:10px;color:#888780;">' + (ind.freq || '') + '</span>'
+      + '<span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:' + chColor + '22;color:' + chColor + ';">' + (ind.primary || ind.channel) + '</span>'
+      + '<span style="margin-left:auto;font-size:11px;color:#854f0b;">' + (ind.current || '') + '</span>'
+      + '</div>'
+      + '<div style="padding:8px 12px;">'
+      // 各资产影响 chips
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'
+      + (ind.impact || []).map(function (im) {
+          const up = im.dir === 'up';
+          const col = up ? '#0f6e56' : '#a32d2d';
+          const bg = up ? '#e6f6ee' : '#fcebeb';
+          return '<div style="padding:4px 8px;background:' + bg + ';border-radius:6px;font-size:11px;color:' + col + ';border:1px solid ' + col + '33;">'
+            + '<b>' + im.asset + '</b> ' + (up ? '↑' : '↓') + ' <span style="color:#5f5e5a;">' + im.when + '</span>'
+            + '<div style="font-size:10px;color:#5f5e5a;margin-top:1px;">' + im.why + '</div></div>';
+        }).join('')
+      + '</div>'
+      + '<div style="font-size:11px;color:#5f5e5a;background:#f7f8fa;border-radius:6px;padding:6px 10px;line-height:1.6;">'
+      + '<b style="color:#2c2c2a;">长期含义:</b> ' + (ind.longTerm || '—') + '</div>'
+      + '</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
 function renderEconomy(c) {
   const d = DATA.economy;
   let html = '';
@@ -1733,6 +1782,13 @@ function renderEconomy(c) {
   }
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
+
+  // ===== 经济数据 → 资产传导机制 =====
+  if (d.transmissionMap) {
+    html += sectionH('经济数据 → 资产传导机制', '数据发布 → 改变利率路径预期 → 三条通道 → 各类资产长短影响 (速查)');
+    html += _renderTransmissionMap(d.transmissionMap);
+  }
+
   html += metricCardsV3(d.metrics);
   html += renderReleaseCompare(d.releases, d.releasesMeta);
   const cn = d.chartNotes || {};
