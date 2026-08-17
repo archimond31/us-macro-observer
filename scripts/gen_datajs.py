@@ -1506,6 +1506,79 @@ DATA['fed'] = {
         # 'ratePath' 在 _econ_regime 定义后填充 (2169行后)
         'ratePath': {'nextMeeting': _NEXT_FOMC or '2026-07-29', 'pending': True},
     },
+
+    # ===== 美联储政策 → 资产传导机制 (2026-08-17) =====
+    'transmissionMap': {
+        'hub': '政策利率路径 (降息/维持/加息) + 资产负债表操作 (QT) — 改变全市场折现率与流动性',
+        'channels': [
+            {'key': 'discount', 'label': '通道A · 利率路径', 'color': '#a32d2d',
+             'desc': '政策预期 → 短端利率 → 折现率 → 全资产估值'},
+            {'key': 'liquidity', 'label': '通道B · 资产负债表', 'color': '#185FA5',
+             'desc': 'QT/扩表 → 准备金/流动性 → 风险资产水位'},
+            {'key': 'guidance', 'label': '通道C · 前瞻指引', 'color': '#0F6E56',
+             'desc': '官员表态/点阵图 → 预期差 → 波动率'},
+        ],
+        'indicators': [
+            {
+                'tag': 'RatePath', 'name': '政策利率路径', 'freq': 'FOMC 8次/年',
+                'channel': 'discount', 'primary': '折现率中枢',
+                'impact': [
+                    {'asset': '短债', 'dir': 'up', 'when': '降息', 'why': '政策利率↓直接传导'},
+                    {'asset': '股市', 'dir': 'up', 'when': '降息', 'why': '折现率↓→估值扩张'},
+                    {'asset': '美元', 'dir': 'down', 'when': '降息', 'why': '利差收窄'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '降息', 'why': '实际利率↓'},
+                    {'asset': '加密', 'dir': 'up', 'when': '降息', 'why': '流动性预期↑'},
+                ],
+                'longTerm': '降息周期 = 股债双牛(温和衰退除外); 加息周期 = 成长/长久期承压, 价值/现金占优; 当前市场定价维持 {_hold_prob:.0f}% / 加息 {_hike_prob:.0f}% / 降息 {_cut_prob:.0f}%',
+                'current': f'下次会议 {_NEXT_FOMC or "9/15"} · 维持 {_hold_prob:.0f}% / 加息 {_hike_prob:.0f}% / 降息 {_cut_prob:.0f}%' if _hold_prob else '数据暂缺',
+            },
+            {
+                'tag': 'QT', 'name': '缩表 QT', 'freq': '周度',
+                'channel': 'liquidity', 'primary': '流动性抽水',
+                'impact': [
+                    {'asset': '准备金', 'dir': 'down', 'when': '继续', 'why': '每缩一美元直击准备金 (RRP 耗尽后)'},
+                    {'asset': '长债', 'dir': 'down', 'when': '继续', 'why': '供给↑+久期溢价↑'},
+                    {'asset': '银行股', 'dir': 'down', 'when': '加速', 'why': '准备金稀缺→融资成本↑'},
+                    {'asset': '风险资产', 'dir': 'down', 'when': '加速', 'why': '流动性收缩逆风'},
+                ],
+                'longTerm': 'QT 终点 = 准备金接近稀缺区(3万亿) 或 RRP 耗尽后融资压力出现; 停止 QT 是流动性拐点的关键信号',
+                'current': 'WALCL ' + (f'${comma(v_walcl/1000000,1)}T' if v_walcl else '—') + ' · 周' + (wk('walcl') if 'wk' in dir() else ''),
+            },
+            {
+                'tag': 'RRP', 'name': 'RRP 缓冲', 'freq': '日度',
+                'channel': 'liquidity', 'primary': 'QT 缓冲垫',
+                'impact': [
+                    {'asset': '准备金', 'dir': 'down', 'when': '耗尽', 'why': '货币基金资金回流美联储停止→QT 直接冲击准备金'},
+                    {'asset': '回购', 'dir': 'up', 'when': '耗尽', 'why': '资金争夺风险↑'},
+                ],
+                'longTerm': 'RRP 耗尽是结构性转折: 此后 QT 每缩 1 美元 = 准备金 -1 美元 (此前由 RRP 吸收), 融资市场敏感度倍增',
+                'current': '$' + (f'{v_rrp2:.0f}B' if v_rrp2 is not None else '—') + ' (已耗尽)',
+            },
+            {
+                'tag': 'Guidance', 'name': '前瞻指引/官员表态', 'freq': '持续',
+                'channel': 'guidance', 'primary': '预期管理',
+                'impact': [
+                    {'asset': '2Y 国债', 'dir': 'down', 'when': '鸽派', 'why': '降息定价↑'},
+                    {'asset': '股市', 'dir': 'up', 'when': '鸽派', 'why': '宽松确认'},
+                    {'asset': '波动率', 'dir': 'down', 'when': '清晰', 'why': '不确定性下降'},
+                    {'asset': '美元', 'dir': 'down', 'when': '鸽派', 'why': '利差收窄'},
+                ],
+                'longTerm': '点阵图与发布会是季度级路径重定价窗口; 鹰鸽分化公开化 = 政策不确定性上升 = 波动率溢价抬升',
+                'current': 'FOMC 9/15 · 沃什(主席)表态为核心变量',
+            },
+            {
+                'tag': 'FFR', 'name': '联邦基金利率', 'freq': '会议',
+                'channel': 'discount', 'primary': '政策现状',
+                'impact': [
+                    {'asset': '现金/短债', 'dir': 'up', 'when': '高位', 'why': '无风险收益有吸引力'},
+                    {'asset': '高估值成长', 'dir': 'down', 'when': '高位', 'why': '折现率高企'},
+                    {'asset': '银行净息差', 'dir': 'up', 'when': '高位', 'why': '贷款利率跟随'},
+                ],
+                'longTerm': '利率绝对水平决定"现金为王的吸引力" (5%+ 时资金存现金/短债); 是长期风险资产性价比的锚',
+                'current': f'{f2(val("ffr_lo"))}%-{f2(val("ffr_up"))}%' if val('ffr_up') else '—',
+            },
+        ],
+    },
     'analystView': {
         'risk-on': f'市场定价宽松路径: 短端曲线隐含未来12个月约 {_fed_cuts} 次降息 (2Y {f2(_y2_f)}% vs 政策利率 {f2(_ff)}%)。政策传导链: 降息预期 → 短端下行 → 实际利率回落 → 权益估值扩张 + 长久期债券资本利得。但 {_fomc_md if _fomc_md else "下次会议"} 是重新定价窗口——若联储鹰派表态(尤其对油价)或核心通胀环比二次抬头, 宽松定价将被压缩; RRP 耗尽 (${f2(v_rrp2)}B) 意味着 QT 后续直击准备金, 是流动性端结构性约束。',
         'risk-off': f'市场定价收紧路径: 短端曲线隐含约 {_fed_hikes} 次加息 (2Y {f2(_y2_f)}% > 政策利率 {f2(_ff)}%)。政策传导链: 加息预期 → 短端上行 → 贴现率抬升 → 权益估值压缩 (对高久期成长/未盈利资产最重) + 信用利差走阔风险。{_fomc_md if _fomc_md else "下次会议"} 是关键窗口; 若核心 PCE 3.3% 的粘性促使联储上调点阵图, 收紧预期强化。RRP 耗尽后 QT 直击准备金, 流动性约束叠加政策收紧 = 最不利组合。',
@@ -1645,6 +1718,77 @@ DATA['liquidity'] = {
         {'name':'银行准备金','unit':'$B','current':f'${comma(v_res/1000000,2)}T','changes':{k:(round(tfm("resbal")[k]/1000,1) if tfm("resbal")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'近月回升但半年仍低, 3万亿关键'},
         {'name':'SOFR-IORB','unit':'bp','current':bp(v_sofr_iorb*100),'changes':{k:(round((tfm("sofr")[k]-tfm("iorb")[k])*100,1) if (tfm("sofr")[k] is not None and tfm("iorb")[k] is not None) else None) for k in ('d','w','m','h6')},'meaning':'缓慢向零靠拢, 充裕度边际减弱'},
     ],
+
+    # ===== 流动性 → 资产传导机制 (2026-08-17) =====
+    'transmissionMap': {
+        'hub': '银行体系准备金水平 (充裕度) — 决定融资市场是否出现真实资金争夺',
+        'channels': [
+            {'key': 'funding', 'label': '通道A · 融资', 'color': '#a32d2d',
+             'desc': '准备金稀缺 → 回购/拆借利率跳升 → 资金成本传导'},
+            {'key': 'leverage', 'label': '通道B · 杠杆', 'color': '#185FA5',
+             'desc': '流动性收缩 → 对冲基金/做市商去杠杆 → 抛售高流动性资产'},
+            {'key': 'haven', 'label': '通道C · 避险', 'color': '#0F6E56',
+             'desc': '流动性事件 → 风险偏好骤降 → 涌向美元/国债'},
+        ],
+        'indicators': [
+            {
+                'tag': 'RRP', 'name': 'RRP 余额', 'freq': '日度',
+                'channel': 'funding', 'primary': '缓冲垫',
+                'impact': [
+                    {'asset': '短债', 'dir': 'up', 'when': '耗尽', 'why': 'QT 每缩一美元直击准备金'},
+                    {'asset': '银行股', 'dir': 'down', 'when': '耗尽', 'why': '准备金稀缺→融资成本↑'},
+                    {'asset': '美元', 'dir': 'up', 'when': '耗尽', 'why': '流动性紧→美元稀缺'},
+                    {'asset': '高 beta', 'dir': 'down', 'when': '耗尽', 'why': '去杠杆抛售'},
+                ],
+                'longTerm': 'RRP 归零后 QT 与 TGA 每变化一美元都直接冲击准备金 → 准备金充裕度是未来 6-12 个月融资市场的核心变量',
+                'current': '仅 $' + (f'{v_rrpn:.0f}B' if v_rrpn is not None else '—') + ', 缓冲实质耗尽',
+            },
+            {
+                'tag': 'TGA', 'name': 'TGA 财政部现金', 'freq': '日度',
+                'channel': 'funding', 'primary': '抽水/注水',
+                'impact': [
+                    {'asset': '回购利率', 'dir': 'up', 'when': '上升', 'why': '现金回笼→银行体系流动性↓'},
+                    {'asset': '短债', 'dir': 'up', 'when': '上升', 'why': '发债供给↑+流动性↓'},
+                    {'asset': '风险资产', 'dir': 'down', 'when': '上升', 'why': '流动性收缩传导'},
+                ],
+                'longTerm': 'TGA 高企+发债高峰 = 从市场抽水; 发债淡季/支出高峰 = 回注流动性。季度末/税期是季节性收紧窗口',
+                'current': '$' + (f'{v_tgan:.0f}B' if v_tgan else '—') + ' (高位)',
+            },
+            {
+                'tag': 'SOFR', 'name': 'SOFR-IORB 利差', 'freq': '日度',
+                'channel': 'funding', 'primary': '融资压力确认',
+                'impact': [
+                    {'asset': '美元', 'dir': 'up', 'when': '转正', 'why': '资金争夺→美元稀缺'},
+                    {'asset': '股市', 'dir': 'down', 'when': '转正', 'why': '流动性事件前兆 (2019/2019式)'},
+                    {'asset': '新兴市场', 'dir': 'down', 'when': '转正', 'why': '美元强+资金回流'},
+                ],
+                'longTerm': '持续转正 (多日>1bp) = 真实资金争夺, 历史上是流动性事件的先行确认 (2019.9 回购风暴、2020.3 流动性危机均如此)',
+                'current': (bp(v_sofr_iorb*100) if v_sofr_iorb is not None else '—') + ' (负值=充裕)',
+            },
+            {
+                'tag': 'NetLiq', 'name': '净流动性', 'freq': '周度',
+                'channel': 'leverage', 'primary': '风险资产水位',
+                'impact': [
+                    {'asset': '股市', 'dir': 'up', 'when': '回升', 'why': '流动性宽松→风险偏好↑'},
+                    {'asset': '加密', 'dir': 'up', 'when': '回升', 'why': '最敏感的高 beta 流动性资产'},
+                    {'asset': '黄金', 'dir': 'up', 'when': '回升', 'why': '实际利率↓+流动性↑'},
+                    {'asset': '美元', 'dir': 'down', 'when': '回升', 'why': '流动性宽松→美元走弱'},
+                ],
+                'longTerm': '净流动性 (WALCL−RRP−TGA) 是风险资产最重要的流动性水位计; 转正回升=顺风, 加速收缩=逆风 (2022-2023 美股下跌主因)',
+                'current': '$' + (f'{v_nl/1000:.2f}T' if v_nl else '—') + (' (月' + (f'{tfm("netliq")["m"]:+.0f}B' if tfm("netliq")["m"] is not None else '') + ')' if v_nl else ''),
+            },
+            {
+                'tag': 'Res', 'name': '银行准备金', 'freq': '周度',
+                'channel': 'funding', 'primary': '充裕度底线',
+                'impact': [
+                    {'asset': '回购', 'dir': 'up', 'when': '低于3万亿', 'why': '充裕度下沿→利率波动↑'},
+                    {'asset': '货币基金', 'dir': 'up', 'when': '低于3万亿', 'why': '收益率吸引力↑'},
+                ],
+                'longTerm': '准备金 <3万亿 → 进入稀缺区 (Fed 会启动 QE/放缓 QT 干预); 是 QT 终点的前瞻指标',
+                'current': '$' + (f'{v_res/1000000:.2f}T' if v_res else '—'),
+            },
+        ],
+    },
     'formula': {'totalAssets':round(v_walcl/1e6,2),'rrp':round(v_rrpn/1000,4),'tga':round(v_tgan/1000,4) if v_tgan else 0,'netLiquidity':round(v_nl/1000,2) if v_nl else 0,
         'components':[
             {'name':'美联储总资产','value':round(v_walcl/1e6,2),'unit':'T$','sign':'+','color':'#4361ee','note':'Fed H.4.1 周度 · QT中'},
@@ -2247,6 +2391,16 @@ DATA['fed']['hawkishDovish']['ratePath'] = {
     'stdCuts':   round(_std_cuts, 2),
     'note': f'多维度正态分布: 1Y 隐含路径 {round(_impl_cuts_1m or 0,2)} 次/12月 → 下次会议 {round(_mean_cuts,2)} 次 · 短端波动 2Y 周std {_v_2y_vol:.0f}bp · 经济regime {_e_sig_path} (偏置 {_regime_bias_path:+.1f}) · 鹰鸽积分 {round(_hawk_score_data,1)} ({_hawk_label_data})'
 }
+# 同步: transmissionMap 中的 RatePath current 用真实 5 段概率
+try:
+    _rp_tm = DATA['fed'].get('transmissionMap', {}).get('indicators', [])
+    for _ind in _rp_tm:
+        if _ind.get('tag') == 'RatePath':
+            _ind['current'] = (f'下次会议 {_NEXT_FOMC or "9/15"} · 维持 {_hold_p:.0f}% / 加息 {_h25_p+_h50_p:.0f}% / 降息 {_cut25_p+_cut50_p:.0f}%')
+            _ind['longTerm'] = ('降息周期 = 股债双牛(温和衰退除外); 加息周期 = 成长/长久期承压, 价值/现金占优; 当前市场定价维持 '
+                                f'{_hold_p:.0f}% / 加息 {_h25_p+_h50_p:.0f}% / 降息 {_cut25_p+_cut50_p:.0f}%')
+except Exception:
+    pass
 
 # 按实际 signal 选择分析师解读文案 (覆盖占位)
 _ANALYST_VIEWS = {

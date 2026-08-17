@@ -1376,6 +1376,12 @@ function renderFed(c) {
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
+
+  // ===== 美联储 → 资产传导机制 =====
+  if (d.transmissionMap) {
+    html += sectionH('美联储政策 → 资产传导机制', '政策利率路径 + QT → 折现率/流动性/前瞻指引三通道 → 各类资产 (速查)');
+    html += _renderTransmissionMap(d.transmissionMap);
+  }
   html += metricCardsV3(d.metrics);
   html += '<div class="chart-row two-col">' +
     chartCard('美联储资产负债表', '总资产/国债/MBS(万亿美元) · QT持续推进', 'fedBs', 'tall') +
@@ -1583,6 +1589,13 @@ function renderLiquidity(c) {
   html += regimeBanner(d.regime);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
+
+  // ===== 流动性 → 资产传导机制 =====
+  if (d.transmissionMap) {
+    html += sectionH('流动性 → 资产传导机制', '准备金充裕度 → 融资/杠杆/避险三通道 → 各类资产 (速查)');
+    html += _renderTransmissionMap(d.transmissionMap);
+  }
+
   html += sectionCard('净流动性公式', 'RRP耗尽后，QT与TGA的每一美元都直击准备金', renderNetLiqFormula(d.formula));
   html += '<div style="height:16px"></div>';
   html += metricCardsV3(d.metrics);
