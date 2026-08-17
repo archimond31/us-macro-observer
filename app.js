@@ -2954,6 +2954,12 @@ function renderPositioning(c) {
     + '<div style="font-size:11px;color:#9ca3af;">' + (d.bankCredit ? d.bankCredit.date : '') + '</div></div>'
     + '</div>';
 
+  // ===== 传导机制 =====
+  if (d.transmissionMap) {
+    h += sectionH('市场定位 → 资产传导机制', '谁在动 × 为什么动 × 到哪一步 × 压力点 → 各类资产 (速查)');
+    h += _renderTransmissionMap(d.transmissionMap);
+  }
+
   h += watchList(d.whatToWatch);
   c.innerHTML = h;
 }
@@ -3116,7 +3122,8 @@ function renderTradeRadar(c) {
       const evFor = t.evidenceFor || [];
       const evAg = t.evidenceAgainst || [];
       // 摘要行 (默认显示)
-      const summaryHtml = '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
+      const srcTag = t.source === 'cftc_positioning' ? '<span style="margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#eeedfe;color:#3c3489;">CFTC 定位</span>' : (t.source === 'ai_chain' ? '<span style="margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#fbeaf0;color:#993556;">AI 链条</span>' : '');
+      const summaryHtml = '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>' + srcTag
         + '<span style="margin-left:8px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + sideCls + '22;color:' + sideCls + ';">' + t.side + '</span>'
         + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + asymBg + ';color:' + asymCls + ';">非对称 ' + asym.score + '/5 ' + asymLabel + '</span>'
         + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>';

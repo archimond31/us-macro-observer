@@ -4528,7 +4528,122 @@ DATA['marketPositioning'] = {
         + (_sloos_text + '。' if _sloos_text else '')
         + ('家庭净资产 $%sT / 银行信贷 $%sT 提供实体端锚。' % (_HNW.get('value'), _BC.get('value')) if _HNW.get('value') else '')
     ),
+
+    # ===== 市场定位 → 资产传导机制 (2026-08-17) =====
+    'transmissionMap': {
+        'hub': '市场定位: 谁在动 (CFTC) × 为什么动 (期限溢价) × 到哪一步 (SLOOS) × 压力点 (NFCI)',
+        'channels': [
+            {'key': 'crowding', 'label': '通道A · 拥挤度', 'color': '#a32d2d',
+             'desc': '净持仓极端 → 平仓踩踏/回补 → 价格反转'},
+            {'key': 'premium', 'label': '通道B · 期限溢价', 'color': '#185FA5',
+             'desc': '长端拆解 → 供给 vs 政策驱动 → 传导有效性'},
+            {'key': 'credit', 'label': '通道C · 信贷周期', 'color': '#0F6E56',
+             'desc': 'SLOOS/NFCI → 领先信用收缩 → 盈利下修'},
+        ],
+        'indicators': [
+            {
+                'tag': 'CFTC', 'name': 'CFTC 拥挤度', 'freq': '周',
+                'channel': 'crowding', 'primary': '谁在动',
+                'impact': [
+                    {'asset': '标的期货', 'dir': 'up', 'when': '空头拥挤>30% + 转正', 'why': '空头回补 → 价格急涨 (轧空)'},
+                    {'asset': '标的期货', 'dir': 'down', 'when': '多头拥挤>30% + 转负', 'why': '多头获利了结 → 踩踏'},
+                    {'asset': '波动率', 'dir': 'up', 'when': '拥挤+反向变化', 'why': '回补引发跳跃, IV 抬升'},
+                ],
+                'longTerm': '拥挤度是反转信号的燃料: 极端单边 + 反向周变化 = 高赔率反转候选; 单边持续 = 趋势延续',
+                'current': 'E-mini 空头拥挤 37% / 10Y 8.7% / 欧元 26%',
+            },
+            {
+                'tag': 'TP', 'name': '期限溢价 ACM', 'freq': '日',
+                'channel': 'premium', 'primary': '长端驱动',
+                'impact': [
+                    {'asset': '长债', 'dir': 'down', 'when': '溢价>0.5%', 'why': '供给/财政主导, 政策宽松难压长端'},
+                    {'asset': '曲线交易', 'dir': 'up', 'when': '溢价>0.5%', 'why': '陡峭化交易赔率佳 (政策+溢价双升)'},
+                    {'asset': '股票', 'dir': 'down', 'when': '溢价持续升', 'why': '久期风险溢价→估值分母↑'},
+                ],
+                'longTerm': '溢价高 = 财政供给主导 (结构性); 溢价低/负 = 政策预期主导 (可被降息修复)。判断长债多头/空头的赔率',
+                'current': '0.83% (偏高, 供给驱动) · 隐含预期路径 3.80%',
+            },
+            {
+                'tag': 'SLOOS', 'name': 'SLOOS 信贷意愿', 'freq': '季',
+                'channel': 'credit', 'primary': '信贷领先器',
+                'impact': [
+                    {'asset': '股市', 'dir': 'down', 'when': '收紧>10%', 'why': '融资难→投资↓→盈利下修'},
+                    {'asset': '高收益债', 'dir': 'down', 'when': '收紧>10%', 'why': '再融资困难→违约率↑'},
+                    {'asset': '银行股', 'dir': 'down', 'when': '收紧>10%', 'why': '信贷需求↓+不良↑'},
+                ],
+                'longTerm': 'SLOOS 领先信用周期 2-4 季度, 是最早的衰退确认器之一; 收紧>20% 是衰退高概率区间',
+                'current': '0% (放宽, 信贷扩张延续)',
+            },
+            {
+                'tag': 'NFCI', 'name': 'NFCI 分项', 'freq': '周',
+                'channel': 'credit', 'primary': '压力定位',
+                'impact': [
+                    {'asset': '高 beta', 'dir': 'down', 'when': '杠杆>0.2', 'why': '去杠杆抛售'},
+                    {'asset': '风险偏好', 'dir': 'down', 'when': '风险市场转正', 'why': '系统性压力确认'},
+                ],
+                'longTerm': '杠杆分项是唯一"结构性"指标: 收紧=基金去杠杆, 常领先风险资产调整 2-4 周',
+                'current': '杠杆 +0.04 边际收紧 / 风险市场 -0.62 宽松 / 信贷 -0.06 宽松',
+            },
+        ],
+    },
 }
+
+# ===== CFTC 拥挤度反转信号 → 交易雷达候选 (2026-08-17) =====
+# 规则: 空头拥挤>30% + 周变化转正 → 空头回补候选 (做多);
+#       多头拥挤>30% + 周变化转负 → 获利了结候选 (做空/回避)
+_cftc_trades = []
+for _r in _cftc_rows:
+    _crowd = _r.get('crowding') or 0
+    _chg = _r.get('chg')
+    _net = _r.get('net') or 0
+    if _chg is None:
+        continue
+    if _crowd > 30 and _net < 0 and _chg > 0:
+        _cftc_trades.append({
+            'asset': f'{_r["asset"]} (CFTC 空头回补)', 'side': '做多',
+            'thesis': f'投机净空 {abs(_net):,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 且周变化 {_chg:+,.0f} 转正——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。',
+            'bet': f'赌拥挤空头回补: CFTC 净空极端 ({_crowd:.0f}%) 后周变化转正, 平仓力量推动价格向上修复',
+            'verify': '①下周 CFTC 净空继续收窄 ②标的反弹伴随持仓下降(确认回补) ③无新增宏观利空',
+            'falsify': '①CFTC 净空重新扩大 ②跌破回补起点(空头卷土重来) ③黑天鹅打断回补',
+            'trigger': '周变化连续 2 周为正 + 单边度仍 >25%',
+            'confidence': 'mid',
+            'asymmetry': {'score': 3, 'note': '中性: 回补上行空间取决于拥挤度, 但若空头加码则反向',
+                          'falsify': ['CFTC 净空重新扩大', '价格跌破回补起点']},
+            'evidenceFor': [f'净空 {abs(_net):,.0f} 手 ({_crowd:.0f}% 单边)', f'周变化 {_chg:+,.0f} 转正'],
+            'evidenceAgainst': ['拥挤可维持 (趋势延续)', '回补可能已部分发生'],
+            'exposures': {'growth': +1, 'haven': -1},
+            'driver': 'cftc_short_squeeze', 'source': 'cftc_positioning',
+            'falsifyRules': [], 'symbol': 'cftc',
+        })
+    elif _crowd > 30 and _net > 0 and _chg < 0:
+        _cftc_trades.append({
+            'asset': f'{_r["asset"]} (CFTC 多头了结)', 'side': '回避/做空',
+            'thesis': f'投机净多 {_net:,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 但周变化 {_chg:+,.0f} 转负——多头开始离场, 拥挤的多头平仓是下跌燃料。',
+            'bet': f'赌拥挤多头了结: CFTC 净多极端 ({_crowd:.0f}%) 后周变化转负, 获利盘离场压价格',
+            'verify': '①下周 CFTC 净多继续收窄 ②标的回落伴随持仓下降',
+            'falsify': '①CFTC 净多重新扩大 ②突破前高(新资金进场)',
+            'trigger': '周变化连续 2 周为负 + 单边度仍 >25%',
+            'confidence': 'mid',
+            'asymmetry': {'score': 2, 'note': '中性偏负: 做空拥挤多头有踏空风险'},
+            'evidenceFor': [f'净多 {_net:,.0f} 手 ({_crowd:.0f}% 单边)', f'周变化 {_chg:+,.0f} 转负'],
+            'evidenceAgainst': ['拥挤多头可继续加码', '动量趋势可能延续'],
+            'exposures': {'growth': -1, 'haven': +1},
+            'driver': 'cftc_long_unwind', 'source': 'cftc_positioning',
+            'falsifyRules': [], 'symbol': 'cftc',
+        })
+# 合并进交易雷达 (在 tradeRadar 生成后)
+if _cftc_trades:
+    _tr_trades = DATA.get('tradeRadar', {}).get('trades', [])
+    _existing = {t.get('asset') for t in _tr_trades}
+    for _ct in _cftc_trades:
+        if _ct['asset'] not in _existing:
+            _tr_trades.append(_ct)
+    DATA['tradeRadar']['trades'] = _tr_trades
+    # 更新 counts
+    if 'counts' in DATA['tradeRadar']:
+        DATA['tradeRadar']['counts']['trades'] = len(_tr_trades)
+        DATA['tradeRadar']['counts']['bets'] = DATA['tradeRadar']['counts'].get('bets', 0) + len(_cftc_trades)
+    print(f'[marketPositioning] CFTC 拥挤反转信号 → 交易雷达 +{len(_cftc_trades)} 候选', file=sys.stderr, flush=True)
 
 print('[gen_datajs] marketPositioning section OK', file=sys.stderr, flush=True)
 
