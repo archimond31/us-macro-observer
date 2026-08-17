@@ -2295,6 +2295,74 @@ DATA['credit'] = {
         'ladderNote': f'CCC {f2(ccc)}% vs 历史中位 12.0% —— 最弱环节离中位最近, 分层已在发生',
         'trendNote': f'HY 月Δ{bp(tfm("hy")["m"]*100 if tfm("hy")["m"] is not None else None)} vs CCC 月Δ{bp(tfm("ccc")["m"]*100 if tfm("ccc")["m"] is not None else None)} —— 内部背离是关键信号',
     },
+
+    # ===== 风险传导图 (利差走阔 → 实体/股市/避险) =====
+    # 结构化数据, 前端渲染为 SVG 流程图 (点击节点高亮链路)
+    'transmission': {
+        'trigger': {
+            'label': '利差快速走阔', 'threshold': '周走阔 >10bp = 系统预警',
+            'icon': '⚡', 'color': '#a32d2d',
+        },
+        'chains': [
+            {
+                'id': 'financing', 'num': '①',
+                'link': '企业融资成本↑', 'icon': '💰',
+                'detail': '再融资困难, 利息覆盖率下降',
+                'endpoint': '违约率↑', 'epColor': '#a32d2d', 'epNote': '尾部风险实化',
+                'asset': '高收益债 / 个股', 'dir': 'down',
+            },
+            {
+                'id': 'credit_creation', 'num': '②',
+                'link': '银行收紧信贷', 'icon': '🏦',
+                'detail': '信用创造收缩, 资产负债表受损',
+                'endpoint': '实体经济降温', 'epColor': '#854f0b', 'epNote': 'GDP下修, 失业率↑',
+                'asset': '小盘股 / 银行', 'dir': 'down',
+            },
+            {
+                'id': 'deleverage', 'num': '③',
+                'link': '对冲/信用基金去杠杆', 'icon': '📉',
+                'detail': '强制减仓, 抛售高流动性资产',
+                'endpoint': '流动性收紧', 'epColor': '#854f0b', 'epNote': '风险资产抛售蔓延',
+                'asset': '高 beta 资产 / 股票', 'dir': 'down',
+            },
+            {
+                'id': 'flight', 'num': '④',
+                'link': '资金涌向避险资产', 'icon': '🛡',
+                'detail': '从风险资产流向国债/黄金/美元',
+                'endpoint': '避险资产走强', 'epColor': '#0f6e56', 'epNote': '正凸性: 利率下行+避险溢价',
+                'asset': '美债 / 黄金 / 美元', 'dir': 'up',
+            },
+        ],
+    },
+
+    # ===== 各等级利差对风险传导的重要性矩阵 =====
+    # 4 个重要性维度 × 7 个评级, 评分 0-5 (5=最重要)
+    'importance': {
+        'dimensions': [
+            {'key': 'leading', 'label': '领先性',
+             'desc': '率先发出系统风险信号', 'icon': '⏱'},
+            {'key': 'systemic', 'label': '系统性',
+             'desc': '走阔=全局风险偏好恶化', 'icon': '🌐'},
+            {'key': 'tailRisk', 'label': '尾部风险',
+             'desc': '定价违约/重组最敏感', 'icon': '⚠'},
+            {'key': 'cycle', 'label': '周期信号',
+             'desc': '反映盈利/衰退周期', 'icon': '🔄'},
+        ],
+        # 重要性评分 (5=极高, 0=无意义), 实际数据驱动
+        'ratings': ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC'],
+        'scores': {
+            'AAA': {'leading': 1, 'systemic': 1, 'tailRisk': 1, 'cycle': 1, 'note': '无定价意义, 接近无风险利率'},
+            'AA':  {'leading': 1, 'systemic': 2, 'tailRisk': 1, 'cycle': 1, 'note': '系统性风险先行指标'},
+            'A':   {'leading': 2, 'systemic': 3, 'tailRisk': 1, 'cycle': 2, 'note': '主流投资级, 周期性敏感'},
+            'BBB': {'leading': 3, 'systemic': 4, 'tailRisk': 2, 'cycle': 3, 'note': '堕落天使前沿, 系统性最强信号'},
+            'BB':  {'leading': 3, 'systemic': 3, 'tailRisk': 3, 'cycle': 4, 'note': 'HY最高档, 周期信号最清晰'},
+            'B':   {'leading': 4, 'systemic': 3, 'tailRisk': 4, 'cycle': 4, 'note': '中位HY, 周期+尾部'},
+            'CCC': {'leading': 5, 'systemic': 3, 'tailRisk': 5, 'cycle': 4, 'note': '尾部最敏感, 周期顶部信号'},
+        },
+        'currentOAS': {  # 用于前端在热力图上叠加当前 OAS
+            'AAA': aaa, 'AA': aa, 'A': av, 'BBB': bbb, 'BB': bb, 'B': b, 'CCC': ccc,
+        },
+    },
 }
 
 print('[gen_datajs] credit section OK', file=sys.stderr, flush=True)

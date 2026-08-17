@@ -1963,6 +1963,85 @@ function renderReleaseCompare(releases, meta) {
 }
 
 /* ================= 6. 信用市场 ================= */
+function _renderCreditTransmission(tx, imp) {
+  // 上半: 风险传导链 (左中右三列布局: 触发 → 中间 4 链路 → 终点 + 受益资产)
+  // 颜色: 终点 red(下行/违约) vs green(上行/避险); 中间链 amber
+  let h = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px 20px;margin-bottom:14px;">';
+  // 触发节点 + 4 条链路 (并排) + 终点 (4 列网格)
+  h += '<div style="display:grid;grid-template-columns:0.7fr 1.4fr 1fr 1.2fr;gap:10px;align-items:center;">';
+  // 1. 触发节点
+  h += '<div style="text-align:center;padding:12px 8px;background:#fcebeb;border:1px solid #f09595;border-radius:10px;">'
+    + '<div style="font-size:18px;">⚡</div>'
+    + '<div style="font-size:13px;font-weight:600;color:#791f1f;margin-top:2px;">' + tx.trigger.label + '</div>'
+    + '<div style="font-size:11px;color:#a32d2d;margin-top:2px;">' + tx.trigger.threshold + '</div>'
+    + '</div>';
+  // 2. 中间 4 链路 (2x2)
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+  tx.chains.forEach(function (c) {
+    h += '<div style="padding:7px 8px;background:#faeeda;border:1px solid #ef9f27;border-radius:8px;font-size:11px;color:#633806;line-height:1.5;">'
+      + '<div style="font-weight:600;color:#854f0b;">' + c.num + ' ' + c.link + '</div>'
+      + '<div style="color:#a32d2d;font-size:10px;margin-top:1px;">' + c.detail + '</div></div>';
+  });
+  h += '</div>';
+  // 3+4. 终点 + 受益资产 (4 列, 与链路 1:1)
+  h += '<div></div>';  // 占位 - 我们直接接 4 终点
+  h += '</div>';
+  // 第二行: 终点 + 资产 (4 列对齐链路)
+  h += '<div style="display:grid;grid-template-columns:0.7fr 1fr 1fr 1fr;gap:10px;align-items:start;margin-top:6px;">';
+  h += '<div style="font-size:11px;color:#9ca3af;text-align:center;">触发</div>';
+  tx.chains.forEach(function (c) {
+    const dirIcon = c.dir === 'up' ? '↗' : '↘';
+    const dirColor = c.dir === 'up' ? '#0f6e56' : '#a32d2d';
+    h += '<div style="padding:8px;background:' +c.epColor +'11;border:1px solid ' + c.epColor + ';border-radius:8px;">'
+      + '<div style="font-size:11px;font-weight:600;color:' + c.epColor + ';">' + dirIcon + ' ' + c.endpoint + '</div>'
+      + '<div style="font-size:10px;color:#5f5e5a;margin-top:2px;line-height:1.5;">' + c.epNote + '</div>'
+      + '<div style="margin-top:4px;padding:3px 6px;background:#f7f8fa;border-radius:4px;font-size:10px;color:' + dirColor + ';font-weight:600;">'
+      + '→ ' + c.asset + '</div>'
+      + '</div>';
+  });
+  h += '</div>';
+  h += '</div>';
+
+  // 下半: 各等级 × 重要性维度 热力图
+  h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;">';
+  h += '<div style="font-size:13px;font-weight:600;color:#1a1d29;margin-bottom:8px;">各等级 × 重要性维度 (评分 0-5, 越高=该等级对风险信号越敏感)</div>';
+  // 表头: 评级 + 4 维度
+  h += '<div style="display:grid;grid-template-columns:80px repeat(4,1fr);gap:4px;align-items:center;">';
+  h += '<div style="font-size:11px;font-weight:600;color:#5f5e5a;">评级</div>';
+  imp.dimensions.forEach(function (d) {
+    h += '<div style="text-align:center;font-size:11px;font-weight:600;color:#5f5e5a;line-height:1.3;padding:4px;">'
+      + '<div style="font-size:14px;">' + d.icon + '</div>' + d.label + '<div style="font-size:10px;color:#9ca3af;font-weight:400;">' + d.desc + '</div></div>';
+  });
+  h += '</div>';
+  // 行: 评级 × 维度分数 + 当前 OAS 注释
+  imp.ratings.forEach(function (r) {
+    const sc = imp.scores[r];
+    const oas = imp.currentOAS ? imp.currentOAS[r] : null;
+    const oasStr = oas != null ? oas.toFixed(2) + '%' : '—';
+    h += '<div style="display:grid;grid-template-columns:80px repeat(4,1fr);gap:4px;align-items:center;margin-top:4px;">';
+    h += '<div style="font-size:13px;font-weight:600;color:#1a1d29;padding:6px 4px;">' + r + '</div>';
+    imp.dimensions.forEach(function (d) {
+      const v = sc[d.key];
+      const bg = v >= 4 ? '#fce8e8' : (v >= 3 ? '#fbe7d6' : (v >= 2 ? '#fef0db' : '#f1efe8'));
+      const fg = v >= 4 ? '#a32d2d' : (v >= 3 ? '#854f0b' : (v >= 2 ? '#a37105' : '#888780'));
+      const w = 0.4 + (v || 0) * 0.12;   // 透明度 0.4-1.0
+      h += '<div style="text-align:center;padding:8px 4px;background:' + bg + ';color:' + fg + ';border-radius:6px;font-size:12px;font-weight:600;opacity:' + w + ';">' + (v || 0) + '</div>';
+    });
+    h += '</div>';
+  });
+  h += '</div>';
+
+  // 评级注释 (合并到表格下方)
+  h += '<div style="margin-top:14px;padding-top:10px;border-top:0.5px solid #e5e7eb;">';
+  h += '<div style="font-size:11px;font-weight:600;color:#5f5e5a;margin-bottom:4px;">各评级观察要点:</div>';
+  imp.ratings.forEach(function (r) {
+    h += '<div style="font-size:11px;color:#374151;line-height:1.7;padding:2px 0;"><span style="font-weight:600;color:#185FA5;">' + r + '</span> · ' + imp.scores[r].note + '</div>';
+  });
+  h += '</div>';
+
+  h += '</div>';
+  return h;
+}
 function renderCredit(c) {
   const d = DATA.credit;
   let html = '';
@@ -1974,6 +2053,13 @@ function renderCredit(c) {
     chartCard('各评级利差走势', 'CCC已率先走阔——信用分层的早期信号', 'creditChart', 'tall') +
     chartCard('利差阶梯：当前 vs 历史中位', (d.chartNotes || {}).ladderNote || 'vs中位为负=利差窄于历史中枢', 'ladderChart', 'tall') +
   '</div>';
+
+  // ===== 风险传导链 (SVG流程图 + 等级重要性热力图) =====
+  if (d.transmission && d.importance) {
+    html += sectionH('风险传导链与各等级重要性', '利差快速走阔 → 4 条传导路径; 各等级对风险信号的敏感度');
+    html += _renderCreditTransmission(d.transmission, d.importance);
+  }
+
   html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || 'HY vs CCC 内部背离是关键信号');
   html += trendTable(d.trendData);
   html += analystBox(d.analystView);
