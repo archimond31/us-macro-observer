@@ -2910,13 +2910,25 @@ function renderPositioning(c) {
   if (d.termPremium && d.termPremium.value != null) {
     const tp = d.termPremium;
     const tpCol = tp.signal === 'bearish' ? '#a32d2d' : (tp.signal === 'bullish' ? '#0f6e56' : '#854f0b');
+    const _10y = (tp.expPath != null) ? (tp.expPath + tp.value) : null;
+    const _pathPct = _10y ? (tp.expPath / _10y * 100) : 0;
+    const _tpPct = _10y ? (tp.value / _10y * 100) : 0;
     h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">'
-      + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'
-      + '<div style="flex:1;min-width:140px;text-align:center;background:#f7f8fa;border-radius:10px;padding:10px;">'
-      + '<div style="font-size:11px;color:#6b7280;">10Y 名义</div><div style="font-size:20px;font-weight:600;">' + (DATA.rates && DATA.rates.metrics ? '' : '') + '</div></div>'
+      + '<div style="margin-bottom:10px;">'
+      + '<div style="display:flex;height:30px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:600;color:#fff;">'
+      + '<div style="width:' + _pathPct.toFixed(1) + '%;background:#185FA5;display:flex;align-items:center;justify-content:center;">预期路径 ' + (tp.expPath != null ? tp.expPath.toFixed(2) : '—') + '%</div>'
+      + '<div style="width:' + _tpPct.toFixed(1) + '%;background:#a32d2d;display:flex;align-items:center;justify-content:center;">期限溢价 ' + tp.value.toFixed(2) + '%</div>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-top:4px;">'
+      + '<span>10Y 名义 ' + (_10y != null ? _10y.toFixed(2) : '—') + '%</span>'
+      + '<span>来源: FRED THREEFYTP10 (ACM 模型)</span>'
+      + '</div></div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:4px;">'
+      + '<div style="background:#f7f8fa;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:3px;">① 溢价怎么来</div><div style="font-size:11px;color:#374151;line-height:1.6;">ACM 模型把 10Y 拆成「未来短端利率预期」+「持有长债的额外补偿」。这 ' + tp.value.toFixed(2) + '% 是超出政策预期的那部分补偿。</div></div>'
+      + '<div style="background:#fdf5f4;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:3px;">② 为什么偏高</div><div style="font-size:11px;color:#374151;line-height:1.6;">平台判据 &gt;0.5% 即偏高(偏空信号)。长端上行由<b>供给/财政/久期风险</b>驱动, 而非单纯降息预期, 美联储也压不住长端。</div></div>'
+      + '<div style="background:#fff8ec;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#854f0b;margin-bottom:3px;">③ 留意什么</div><div style="font-size:11px;color:#374151;line-height:1.6;">危险阈值 <b>1.0%</b>(财政驱动强化); 数据截至 ' + (tp.date || '—') + ' 有滞后; 需与 CFTC 持仓、30Y-10Y 利差交叉验证才可靠。</div></div>'
       + '</div>'
       + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-top:8px;"><b style="color:' + tpCol + ';">' + tp.text + '</b></div>'
-      + (tp.expPath != null ? '<div style="font-size:12px;color:#5f5e5a;margin-top:6px;">隐含预期路径 ≈ ' + tp.expPath.toFixed(2) + '% (10Y − 期限溢价) · ' + tp.note + '</div>' : '')
       + '</div>';
   }
 
