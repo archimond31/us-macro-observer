@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-08-18 00:39
+ * 生成时间: 2026-08-18 01:34
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-08-18 00:39 (官方数据, 自动更新)",
+    "lastUpdated": "2026-08-18 01:34 (官方数据, 自动更新)",
     "dataAsOf": "2026-08-17",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,14 +17,14 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 4.68% 处于近一年 97 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.12% (分位 95), 而 HY 整体 2.67%。油价 (WTI 84.90) 与波动率 (VIX 15.19) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 4.68% 处于近一年 97 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.12% (分位 95), 而 HY 整体 2.67%。油价 (WTI 84.91) 与波动率 (VIX 15.19) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "regime": {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 4.68% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 84.90 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 4.68% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 84.91 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -33,17 +33,17 @@ const DATA = {
         "direction": "bullish"
       },
       {
-        "title": "WTI 原油周涨 +3.37%",
+        "title": "WTI 原油周涨 +3.38%",
         "meaning": "油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。",
         "direction": "bearish"
       },
       {
-        "title": "布伦特原油周涨 +3.83%",
+        "title": "布伦特原油周涨 +3.86%",
         "meaning": "布伦特对地缘与海运风险更敏感, 其溢价反映全球供需而非仅美国库存。",
         "direction": "bearish"
       },
       {
-        "title": "黄金 +2.85% 上涨",
+        "title": "黄金 +2.71% 上涨",
         "meaning": "黄金上涨通常反映避险需求或滞胀担忧升温, 与风险资产呈替代关系, 对风险偏好构成压力。",
         "direction": "bearish"
       }
@@ -291,18 +291,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,486.00",
-        "change": "+2.41%",
+        "value": "$4,479.80",
+        "change": "+2.27%",
         "dir": "up",
         "tag": "GC=F",
-        "percentile": 62,
+        "percentile": 61,
         "signal": "up",
-        "meaning": "当前位于近一年 62 分位",
+        "meaning": "当前位于近一年 61 分位",
         "changes": {
-          "d": "+2.41%",
-          "w": "+2.85%",
-          "m": "+11.80%",
-          "h6": "-10.67%"
+          "d": "+2.27%",
+          "w": "+2.71%",
+          "m": "+11.64%",
+          "h6": "-10.80%"
         },
         "sparkline": [
           4145.2998,
@@ -334,23 +334,23 @@ const DATA = {
           4408.8999,
           4363.6001,
           4380.3999,
-          4486.0
+          4479.7998
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$84.90",
-        "change": "+3.03%",
+        "value": "$84.91",
+        "change": "+3.05%",
         "dir": "up",
         "tag": "CL=F",
-        "percentile": 72,
+        "percentile": 73,
         "signal": "up",
-        "meaning": "当前位于近一年 72 分位",
+        "meaning": "当前位于近一年 73 分位",
         "changes": {
-          "d": "+3.03%",
-          "w": "+3.37%",
-          "m": "+2.92%",
-          "h6": "+35.00%"
+          "d": "+3.05%",
+          "w": "+3.38%",
+          "m": "+2.93%",
+          "h6": "+35.01%"
         },
         "sparkline": [
           70.44,
@@ -382,23 +382,23 @@ const DATA = {
           83.27,
           81.25,
           82.4,
-          84.9
+          84.91
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$91.08",
-        "change": "+2.89%",
+        "value": "$91.11",
+        "change": "+2.93%",
         "dir": "up",
         "tag": "BZ=F",
         "percentile": 73,
         "signal": "up",
         "meaning": "当前位于近一年 73 分位",
         "changes": {
-          "d": "+2.89%",
-          "w": "+3.83%",
-          "m": "+3.38%",
-          "h6": "+34.44%"
+          "d": "+2.93%",
+          "w": "+3.86%",
+          "m": "+3.42%",
+          "h6": "+34.48%"
         },
         "sparkline": [
           74.16,
@@ -430,23 +430,23 @@ const DATA = {
           88.98,
           87.07,
           88.52,
-          91.08
+          91.11
         ]
       },
       {
         "label": "铜",
-        "value": "6.62",
-        "change": "+0.24%",
-        "dir": "up",
+        "value": "6.59",
+        "change": "-0.16%",
+        "dir": "down",
         "tag": "HG=F",
-        "percentile": 98,
-        "signal": "up",
-        "meaning": "当前位于近一年 98 分位",
+        "percentile": 96,
+        "signal": "down",
+        "meaning": "当前位于近一年 96 分位",
         "changes": {
-          "d": "+0.24%",
-          "w": "+0.32%",
-          "m": "+6.36%",
-          "h6": "+14.21%"
+          "d": "-0.16%",
+          "w": "-0.08%",
+          "m": "+5.93%",
+          "h6": "+13.75%"
         },
         "sparkline": [
           6.1715,
@@ -478,22 +478,22 @@ const DATA = {
           6.597,
           6.5925,
           6.5995,
-          6.6155
+          6.589
         ]
       },
       {
         "label": "美元指数",
-        "value": "99.57",
-        "change": "-0.10%",
+        "value": "99.56",
+        "change": "-0.11%",
         "dir": "down",
         "tag": "DX-Y.NYB",
         "percentile": 69,
         "signal": "down",
         "meaning": "当前位于近一年 69 分位",
         "changes": {
-          "d": "-0.10%",
-          "w": "-0.24%",
-          "m": "-1.17%",
+          "d": "-0.11%",
+          "w": "-0.25%",
+          "m": "-1.18%",
           "h6": "+2.77%"
         },
         "sparkline": [
@@ -526,23 +526,23 @@ const DATA = {
           100.01,
           99.96,
           99.67,
-          99.568
+          99.559
         ]
       },
       {
         "label": "美元/日元",
-        "value": "159.47",
-        "change": "+0.15%",
+        "value": "159.44",
+        "change": "+0.14%",
         "dir": "up",
         "tag": "USDJPY=X",
         "percentile": 77,
         "signal": "up",
         "meaning": "当前位于近一年 77 分位",
         "changes": {
-          "d": "+0.15%",
-          "w": "+0.20%",
-          "m": "-1.87%",
-          "h6": "+3.32%"
+          "d": "+0.14%",
+          "w": "+0.18%",
+          "m": "-1.89%",
+          "h6": "+3.31%"
         },
         "sparkline": [
           162.363,
@@ -574,7 +574,7 @@ const DATA = {
           159.328,
           159.426,
           159.223,
-          159.467
+          159.441
         ]
       },
       {
@@ -882,59 +882,59 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,486.00",
+        "current": "$4,479.80",
         "changes": {
-          "d": 2.41,
-          "w": 2.85,
-          "m": 11.8,
-          "h6": -10.67
+          "d": 2.27,
+          "w": 2.71,
+          "m": 11.64,
+          "h6": -10.8
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$84.90",
+        "current": "$84.91",
         "changes": {
-          "d": 3.03,
-          "w": 3.37,
-          "m": 2.92,
-          "h6": 35.0
+          "d": 3.05,
+          "w": 3.38,
+          "m": 2.93,
+          "h6": 35.01
         },
         "meaning": "半年 +35% 的上升趋势中, 近月 +3% 仍在加速"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$91.08",
+        "current": "$91.11",
         "changes": {
-          "d": 2.89,
-          "w": 3.83,
-          "m": 3.38,
-          "h6": 34.44
+          "d": 2.93,
+          "w": 3.86,
+          "m": 3.42,
+          "h6": 34.48
         },
         "meaning": "半年 +34% 的上升趋势中, 近月 +3% 仍在加速"
       },
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.62",
+        "current": "6.59",
         "changes": {
-          "d": 0.24,
-          "w": 0.32,
-          "m": 6.36,
-          "h6": 14.21
+          "d": -0.16,
+          "w": -0.08,
+          "m": 5.93,
+          "h6": 13.75
         },
-        "meaning": "半年 +14% 的上升趋势中, 近月 +6% 仍在加速"
+        "meaning": "半年 +14% 但近周转弱——顶部预警"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "99.57",
+        "current": "99.56",
         "changes": {
-          "d": -0.1,
-          "w": -0.24,
-          "m": -1.17,
+          "d": -0.11,
+          "w": -0.25,
+          "m": -1.18,
           "h6": 2.77
         },
         "meaning": "半年 +3% 但近月 -1% 回调——趋势内修正"
@@ -942,12 +942,12 @@ const DATA = {
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "159.47",
+        "current": "159.44",
         "changes": {
-          "d": 0.15,
-          "w": 0.2,
-          "m": -1.87,
-          "h6": 3.32
+          "d": 0.14,
+          "w": 0.18,
+          "m": -1.89,
+          "h6": 3.31
         },
         "meaning": "半年 +3% 但近月转弱——底部可能形成"
       },
@@ -1051,43 +1051,43 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,486.00",
-        "change": "+2.41%",
+        "price": "$4,479.80",
+        "change": "+2.27%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$84.90",
-        "change": "+3.03%",
+        "price": "$84.91",
+        "change": "+3.05%",
         "dir": "up"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$91.08",
-        "change": "+2.89%",
+        "price": "$91.11",
+        "change": "+2.93%",
         "dir": "up"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.62",
-        "change": "+0.24%",
-        "dir": "up"
+        "price": "6.59",
+        "change": "-0.16%",
+        "dir": "down"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "99.57",
-        "change": "-0.10%",
+        "price": "99.56",
+        "change": "-0.11%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "159.47",
-        "change": "+0.15%",
+        "price": "159.44",
+        "change": "+0.14%",
         "dir": "up"
       },
       {
@@ -1254,7 +1254,7 @@ const DATA = {
           83.27,
           81.25,
           82.4,
-          84.9
+          84.91
         ],
         "Gold": [
           4145.2998,
@@ -1286,7 +1286,7 @@ const DATA = {
           4408.8999,
           4363.6001,
           4380.3999,
-          4486.0
+          4479.7998
         ],
         "Copper": [
           6.1715,
@@ -1318,7 +1318,7 @@ const DATA = {
           6.597,
           6.5925,
           6.5995,
-          6.6155
+          6.589
         ],
         "BTC": [
           64571.18,
@@ -7802,7 +7802,7 @@ const DATA = {
           32.16,
           30.8,
           31.31,
-          34.47
+          34.29
         ],
         "实际利率": [
           0.0,
@@ -8310,7 +8310,7 @@ const DATA = {
           2.21,
           2.16,
           1.86,
-          1.76
+          1.75
         ],
         "避险 VIX": [
           0.0,
@@ -8822,7 +8822,7 @@ const DATA = {
         ]
       },
       "current": {
-        "黄金": "$4,486",
+        "黄金": "$4,480",
         "实际利率": "2.41%",
         "美元指数": "99.6",
         "避险 VIX": "15.2",
@@ -9081,7 +9081,7 @@ const DATA = {
           "$4,409",
           "$4,364",
           "$4,380",
-          "$4,486"
+          "$4,480"
         ],
         "实际利率": [
           "1.95%",
@@ -10353,7 +10353,7 @@ const DATA = {
           4408.89990234375,
           4363.60009765625,
           4380.39990234375,
-          4486.0
+          4479.7998046875
         ],
         "实际利率": [
           1.95,
@@ -10861,7 +10861,7 @@ const DATA = {
           100.01000213623047,
           99.95999908447266,
           99.66999816894531,
-          99.56800079345703
+          99.55899810791016
         ],
         "避险 VIX": [
           15.09000015258789,
@@ -20942,7 +20942,7 @@ const DATA = {
       "asOf": "2026-08-18",
       "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)"
     },
-    "generatedAt": "2026-08-18 00:39",
+    "generatedAt": "2026-08-18 01:34",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -24073,23 +24073,23 @@ const DATA = {
       {
         "asset": "E-mini S&P 500 (CFTC 空头回补)",
         "side": "做多",
-        "thesis": "投机净空 779,632 手 (单边度 37% 拥挤) 且周变化 +23,439 转正——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。",
-        "bet": "赌拥挤空头回补: CFTC 净空极端 (37%) 后周变化转正, 平仓力量推动价格向上修复",
-        "verify": "①下周 CFTC 净空继续收窄 ②标的反弹伴随持仓下降(确认回补) ③无新增宏观利空",
-        "falsify": "①CFTC 净空重新扩大 ②跌破回补起点(空头卷土重来) ③黑天鹅打断回补",
-        "trigger": "周变化连续 2 周为正 + 单边度仍 >25%",
+        "thesis": "投机净空 779,632 手 (单边度 37% 拥挤) 且净空头周减 23,439 手——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。",
+        "bet": "赌拥挤空头回补: CFTC 净空极端 (37%) 后净空头开始下降, 平仓力量推动价格向上修复",
+        "verify": "①下周 CFTC 净空头继续收窄 ②标的反弹伴随持仓下降(确认回补) ③无新增宏观利空",
+        "falsify": "①CFTC 净空头重新扩大 ②跌破回补起点(空头卷土重来) ③黑天鹅打断回补",
+        "trigger": "净空头连续 2 周下降 + 单边度仍 >25%",
         "confidence": "mid",
         "asymmetry": {
           "score": 3,
           "note": "中性: 回补上行空间取决于拥挤度, 但若空头加码则反向",
           "falsify": [
-            "CFTC 净空重新扩大",
+            "CFTC 净空头重新扩大",
             "价格跌破回补起点"
           ]
         },
         "evidenceFor": [
           "净空 779,632 手 (37% 单边)",
-          "周变化 +23,439 转正"
+          "净空头周减 23,439 手"
         ],
         "evidenceAgainst": [
           "拥挤可维持 (趋势延续)",
@@ -24387,7 +24387,7 @@ const DATA = {
     "priceImplied": {
       "goldRealCorr": -0.11643792505741869,
       "stockBondCorr": 0.3495128175947164,
-      "goldUsdCorr": -0.47632688412977986,
+      "goldUsdCorr": -0.4774744500551591,
       "realizedVol": 10.3,
       "vixImplRealGap": 4.9,
       "curveSlope": 51.0
@@ -26508,15 +26508,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "HBM 存储 (全球领先)",
             "productDir": "HBM3E/4、DRAM、NAND",
-            "price": 1751000.0,
+            "price": 1764000.0,
             "ch": {
-              "d": 6.44,
-              "w": 23.31,
-              "m": -4.94,
-              "h6": 97.41
+              "d": 7.23,
+              "w": 24.23,
+              "m": -4.23,
+              "h6": 98.87
             },
             "scores": {
-              "momentum": 84.101,
+              "momentum": 85.54599999999999,
               "valuation": 60,
               "growth": 99,
               "quality": 67,
@@ -26574,22 +26574,22 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "TC Bonder (HBM 封装设备)",
             "productDir": "TC Bonder、HBM 封装键合设备",
-            "price": 240000.0,
+            "price": 240500.0,
             "ch": {
-              "d": 4.8,
-              "w": 16.79,
-              "m": -1.03,
-              "h6": 21.33
+              "d": 5.02,
+              "w": 17.03,
+              "m": -0.82,
+              "h6": 21.59
             },
             "scores": {
-              "momentum": 62.188,
+              "momentum": 62.550999999999995,
               "valuation": 42,
               "growth": 88,
               "quality": 63,
               "aiExposure": 72,
               "research": 74,
               "fundamental": 74,
-              "aiValue": 56,
+              "aiValue": 55,
               "lp_valuation": 38,
               "lp_fundamental": 54,
               "lp_momentum": 15,
@@ -26695,6 +26695,72 @@ const DATA = {
             "layerPct": 54
           },
           {
+            "ticker": "005930.KS",
+            "name": "三星电子",
+            "key": "ssamsung",
+            "market": "KR",
+            "ccy": "KRW",
+            "techRoute": "存储 (HBM) + 代工 + 移动",
+            "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
+            "price": 282500.0,
+            "ch": {
+              "d": 2.91,
+              "w": 22.83,
+              "m": 10.78,
+              "h6": 69.77
+            },
+            "scores": {
+              "momentum": 89.765,
+              "valuation": 51,
+              "growth": 94,
+              "quality": 36,
+              "aiExposure": 72,
+              "research": 75,
+              "fundamental": 66,
+              "aiValue": 50,
+              "lp_valuation": 69,
+              "lp_fundamental": 15,
+              "lp_momentum": 77,
+              "lp_aiValue": 46
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 380,
+            "pe": 12,
+            "fwdPe": 11,
+            "peg": 1.2,
+            "revGrowth": 130,
+            "grossMargin": 45,
+            "fcfMargin": 17,
+            "roe": 20,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.1,
+              "reports": 42,
+              "summary": "HBM4/4E 量产领先，存储超级周期创纪录；Q2 营收 +130%、OP 89.5T；代工/移动拖累。",
+              "sources": [
+                {
+                  "title": "Samsung IR",
+                  "url": "https://www.samsung.com/us/aboutsamsung/ir/"
+                }
+              ]
+            },
+            "notes": "HBM+存储超级周期创纪录(Q2 营收 +130%)；代工与移动拖累但整体低估。",
+            "est": true,
+            "epsRevision": 12,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 32,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 18,
+            "layerPct": 46
+          },
+          {
             "ticker": "AMD",
             "name": "AMD",
             "key": "amd",
@@ -26758,72 +26824,6 @@ const DATA = {
             "aiRevGrowth": 50,
             "pricingPower": 65,
             "peHist5y": 75,
-            "layerPct": 38
-          },
-          {
-            "ticker": "005930.KS",
-            "name": "三星电子",
-            "key": "ssamsung",
-            "market": "KR",
-            "ccy": "KRW",
-            "techRoute": "存储 (HBM) + 代工 + 移动",
-            "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-            "price": 284750.0,
-            "ch": {
-              "d": 3.73,
-              "w": 23.8,
-              "m": 11.67,
-              "h6": 71.12
-            },
-            "scores": {
-              "momentum": 91.359,
-              "valuation": 51,
-              "growth": 94,
-              "quality": 36,
-              "aiExposure": 72,
-              "research": 75,
-              "fundamental": 66,
-              "aiValue": 49,
-              "lp_valuation": 69,
-              "lp_fundamental": 15,
-              "lp_momentum": 77,
-              "lp_aiValue": 38
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 380,
-            "pe": 12,
-            "fwdPe": 11,
-            "peg": 1.2,
-            "revGrowth": 130,
-            "grossMargin": 45,
-            "fcfMargin": 17,
-            "roe": 20,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.1,
-              "reports": 42,
-              "summary": "HBM4/4E 量产领先，存储超级周期创纪录；Q2 营收 +130%、OP 89.5T；代工/移动拖累。",
-              "sources": [
-                {
-                  "title": "Samsung IR",
-                  "url": "https://www.samsung.com/us/aboutsamsung/ir/"
-                }
-              ]
-            },
-            "notes": "HBM+存储超级周期创纪录(Q2 营收 +130%)；代工与移动拖累但整体低估。",
-            "est": true,
-            "epsRevision": 12,
-            "ratingTrend": 0.4,
-            "ratingDispersion": 32,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 70,
-            "aiRevGrowth": 50,
-            "pricingPower": 65,
-            "peHist5y": 18,
             "layerPct": 38
           },
           {
@@ -27937,11 +27937,11 @@ const DATA = {
           "topMover": "MU",
           "topMoverMomentum": 100,
           "flowScore": 45,
-          "flowSharePct": 22.9,
+          "flowSharePct": 23.0,
           "avgMomentum": 76,
           "breadthPct": 71,
           "capWeightedMomentum": 66,
-          "momentumAccel": 2.66,
+          "momentumAccel": 2.68,
           "valuationHeat": 58
         },
         {
@@ -30144,7 +30144,7 @@ const DATA = {
       "stablecoins": {
         "usdt_b": 183.0,
         "usdc_b": 71.9,
-        "total_b": 254.8
+        "total_b": 254.9
       },
       "fundingRate": null,
       "fng": 41,
@@ -30561,6 +30561,7 @@ const DATA = {
         "net": -206036.0,
         "oi": 801884.0,
         "chg": -496.0,
+        "chgLabel": "净空头周增 496 手",
         "dir": "short",
         "date": "2026-08-11",
         "crowding": 25.7
@@ -30571,6 +30572,7 @@ const DATA = {
         "net": -779632.0,
         "oi": 2119506.0,
         "chg": 23439.0,
+        "chgLabel": "净空头周减 23,439 手",
         "dir": "short",
         "date": "2026-08-11",
         "crowding": 36.8
@@ -30581,6 +30583,7 @@ const DATA = {
         "net": 13479.0,
         "oi": 302340.0,
         "chg": -26261.0,
+        "chgLabel": "净多头周减 26,261 手",
         "dir": "long",
         "date": "2026-08-11",
         "crowding": 4.5
@@ -30591,6 +30594,7 @@ const DATA = {
         "net": -480452.0,
         "oi": 4377812.0,
         "chg": -39824.0,
+        "chgLabel": "净空头周增 39,824 手",
         "dir": "short",
         "date": "2026-08-11",
         "crowding": 11.0
@@ -30601,6 +30605,7 @@ const DATA = {
         "net": -474266.0,
         "oi": 5458890.0,
         "chg": 209008.0,
+        "chgLabel": "净空头周减 209,008 手",
         "dir": "short",
         "date": "2026-08-11",
         "crowding": 8.7
