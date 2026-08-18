@@ -4701,6 +4701,15 @@ for _k, _c in _nfci_parts.items():
 _HNW = _MPOS.get('householdNetWorth') or {}
 _BC = _MPOS.get('bankCredit') or {}
 
+# 格式化拥挤状态: 最多展示 3 项并用 <br> 换行, 超出则"等 N 项"
+def _fmt_crowded(items, prefix='触发: '):
+    if not items:
+        return '无'
+    if len(items) <= 3:
+        return prefix + '<br>'.join(items)
+    return prefix + '<br>'.join(items[:3]) + f'<br>等 {len(items) - 3} 项'
+_cftc_status = _fmt_crowded(_cftc_disagg_crowded, '触发: ') if _cftc_disagg_crowded else _fmt_crowded(_cftc_crowded, '触发(legacy): ')
+
 DATA['marketPositioning'] = {
     'asOf': _MPOS.get('fetched_at'),
     'cftc': _cftc_rows,
@@ -4716,7 +4725,7 @@ DATA['marketPositioning'] = {
     'householdNetWorth': _HNW,
     'bankCredit': _BC,
     'whatToWatch': [
-        {'trigger': 'CFTC 三类参与方净持仓占比 >30%', 'implication': '极端单边 = 拥挤交易, 反转风险上升', 'status': ('触发: ' + '、'.join(_cftc_disagg_crowded)) if _cftc_disagg_crowded else (('触发(legacy): ' + '、'.join(_cftc_crowded)) if _cftc_crowded else '无')},
+        {'trigger': 'CFTC 三类参与方净持仓占比 >30%', 'implication': '极端单边 = 拥挤交易, 反转风险上升', 'status': _cftc_status},
         {'trigger': '期限溢价突破 <span class="watch-threshold">1.0%</span>', 'implication': '财政/供给驱动长端, "higher for longer"强化', 'status': f'当前 {_tp_val:.2f}%' if _tp_val is not None else '—'},
         {'trigger': 'SLOOS 收紧 >20%', 'implication': '信贷收缩确认, 衰退概率显著上升', 'status': f'当前 {_sloos_val:.0f}%' if _sloos_val is not None else '—'},
     ],

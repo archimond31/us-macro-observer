@@ -439,21 +439,24 @@ body {
 /* --- 观察清单 --- */
 .watch-list { display: grid; gap: 8px; }
 .watch-item {
-  display: flex; align-items: center; gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1.4fr) minmax(120px, 220px);
+  gap: 12px; align-items: start;
   background: var(--bg-card); border: 1px solid var(--border-card);
   border-radius: var(--radius-md); padding: 12px 16px;
   font-size: 13px;
 }
-.watch-trigger { flex: 1; font-weight: 500; }
+.watch-trigger { font-weight: 500; word-break: break-word; }
 .watch-trigger .watch-threshold { color: var(--accent); font-weight: 600; font-family: monospace; }
 .watch-implication {
-  flex: 1.2; color: var(--text-secondary); font-size: 12px;
+  color: var(--text-secondary); font-size: 12px;
   border-left: 2px solid var(--border); padding-left: 12px;
+  word-break: break-word;
 }
 .watch-status {
-  flex: 0 0 auto; font-size: 11px; padding: 2px 8px;
+  font-size: 11px; padding: 2px 8px;
   border-radius: 10px; background: var(--bg-tag); color: var(--text-secondary);
-  font-family: monospace;
+  font-family: monospace; word-break: break-word; line-height: 1.5;
 }
 
 /* --- 全局宏观总览条 --- */
