@@ -15,6 +15,7 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 输出: ../data.js
 """
 import csv, io, json, os, sys, time, subprocess, re
+import urllib.parse
 from datetime import datetime, timedelta
 from html import unescape
 from pathlib import Path
@@ -1114,6 +1115,79 @@ def fetch_cftc_positions():
         print(f'  [cftc] {label}: 净持仓 {net:+,.0f} (OI {oi:,.0f}, 周变化 {chg_net:+,.0f})')
     return out
 
+# ---------- CFTC 离散 COT (Traders in Financial Futures, TFF) ----------
+# P1: 用 CFTC 官方 TFF 报告替换 legacy "投机 vs 套保" 二分法, 细化为
+#     Dealer/中介 · Asset Manager/真实资金 · Leveraged/杠杆 三分法。
+# 数据源: CFTC Public Reporting (SODA API, 数据集 gpe5-46if) — 字段名显式, 无需猜测列序。
+# 失败静默跳过, 不阻断主流程。
+_CFTC_DISAGG_TARGETS = [
+    ('E-MINI S&P 500',        'E-mini S&P 500', '股市(机构定位)'),
+    ('UST 10Y NOTE',          '10Y 美债期货',    '长端利率(机构定位)'),
+    ('UST 2Y NOTE',           '2Y 美债期货',     '短端利率(机构定位)'),
+    ('EURO FX',               '欧元',            '美元(机构定位)'),
+    ('NASDAQ-100 Consolidated','Nasdaq 100',     '科技股(机构定位)'),
+]
+# TFF 三类参与者的持仓/变化字段 (注意 CFTC API 字段后缀不统一: dealer 带 _all, assetMgr/lev 不带)
+_TFF_GROUPS = {
+    'dealer':    {'long':'dealer_positions_long_all', 'short':'dealer_positions_short_all', 'spread':'dealer_positions_spread_all',
+                  'cl':'change_in_dealer_long_all', 'cs':'change_in_dealer_short_all', 'csp':'change_in_dealer_spread_all'},
+    'assetMgr':  {'long':'asset_mgr_positions_long', 'short':'asset_mgr_positions_short', 'spread':'asset_mgr_positions_spread',
+                  'cl':'change_in_asset_mgr_long', 'cs':'change_in_asset_mgr_short', 'csp':'change_in_asset_mgr_spread'},
+    'leveraged': {'long':'lev_money_positions_long', 'short':'lev_money_positions_short', 'spread':'lev_money_positions_spread',
+                  'cl':'change_in_lev_money_long', 'cs':'change_in_lev_money_short', 'csp':'change_in_lev_money_spread'},
+}
+
+def fetch_cftc_disagg():
+    """CFTC TFF 离散持仓 (dealer/assetMgr/leveraged 三分法)。
+    返回 {合约label: {'date','oi','groups':{gk:{long,short,spread,net,chgNet,pctOi}},'mover','note'}}"""
+    out = {}
+    names = [t[0] for t in _CFTC_DISAGG_TARGETS]
+    where = "contract_market_name in ('" + "', '".join(names) + "')"
+    params = urllib.parse.urlencode({'$where': where, '$order': 'report_date_as_yyyy_mm_dd DESC', '$limit': '60'})
+    url = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json?' + params
+    try:
+        txt = http_get(url, timeout=40, use_ua=True)
+        rows = json.loads(txt)
+    except Exception as e:
+        print(f'  [cftc-disagg] 抓取失败: {e}'); return out
+    # 同一合约可能多条历史, 取最新 report_date
+    _best = {}
+    for r in rows:
+        nm = r.get('contract_market_name')
+        if nm not in names:
+            continue
+        dt = r.get('report_date_as_yyyy_mm_dd') or ''
+        if nm not in _best or dt > _best[nm][0]:
+            _best[nm] = (dt, r)
+    for _tgt_name, _label, _note in _CFTC_DISAGG_TARGETS:
+        if _tgt_name not in _best:
+            continue
+        _dt, _r = _best[_tgt_name]
+        _oi = _num_or_none(_r.get('open_interest_all'))
+        _date = (_dt or '')[:10]
+        _groups = {}
+        for _gk, _gf in _TFF_GROUPS.items():
+            _l = _num_or_none(_r.get(_gf['long'])); _s = _num_or_none(_r.get(_gf['short'])); _sp = _num_or_none(_r.get(_gf['spread']))
+            _cl = _num_or_none(_r.get(_gf['cl'])); _cs = _num_or_none(_r.get(_gf['cs']))
+            if _l is None or _s is None:
+                continue
+            _net = _l - _s
+            _chg = (_cl - _cs) if (_cl is not None and _cs is not None) else None
+            _pct = (abs(_net) / _oi * 100) if _oi else None
+            _groups[_gk] = {'long': round(_l, 0), 'short': round(_s, 0), 'spread': (round(_sp, 0) if _sp is not None else None),
+                            'net': round(_net, 0), 'chgNet': (round(_chg, 0) if _chg is not None else None),
+                            'pctOi': (round(_pct, 1) if _pct is not None else None)}
+        # 谁在动: 周变化绝对值最大者
+        _mover = None; _mover_abs = -1
+        for _gk, _gv in _groups.items():
+            if _gv.get('chgNet') is not None and abs(_gv['chgNet']) > _mover_abs:
+                _mover_abs = abs(_gv['chgNet']); _mover = _gk
+        out[_label] = {'date': _date, 'oi': (round(_oi, 0) if _oi else None), 'groups': _groups,
+                       'mover': _mover, 'note': _note}
+        print(f'  [cftc-disagg] {_label}: OI {_oi}, 三类 net='
+              + str({k: v['net'] for k, v in _groups.items()}) + f', mover={_mover}')
+    return out
+
 def _fred_last(sid):
     """取 FRED 序列最新值, 返回 (date, value) 或 (None, None)"""
     try:
@@ -1135,6 +1209,7 @@ def fetch_positioning():
     data = {
         'fetched_at': datetime.now().strftime('%Y-%m-%d'),
         'cftc': fetch_cftc_positions(),
+        'cftc_disagg': fetch_cftc_disagg(),
     }
     d, v = _fred_last('THREEFYTP10')
     data['termPremium'] = {'date': d, 'value': v, 'note': '10Y 期限溢价 (ACM 模型), 拆解 10Y = 预期短端路径 + 期限溢价'}
@@ -1156,7 +1231,7 @@ def fetch_positioning():
     try:
         with open(SCRIPT_DIR / 'positioning.json', 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f'[positioning] positioning.json 已存 (CFTC {len(data["cftc"])} 合约 + 期限溢价/SLOOS/NFCI分项/净资产/信贷)')
+        print(f'[positioning] positioning.json 已存 (CFTC legacy {len(data["cftc"])} 合约 + 离散 {len(data["cftc_disagg"])} 合约 + 期限溢价/SLOOS/NFCI分项/净资产/信贷)')
     except Exception as e:
         print(f'  [positioning] 写入失败: {e}')
     return data

@@ -60,6 +60,100 @@ except Exception:
     MS = {}
     print('[gen_datajs] macro_signal.json 缺失, 矛盾信号面板将留空', file=sys.stderr, flush=True)
 
+# =====================================================================
+# 集中阈值配置 (P2 — 阈值集中治理 / 消除硬编码叙事偏见)
+# 目的: 把所有"编码分析师判断"的阈值收口到此处, 单一来源便于审计。
+# 每个条目: value=阈值, unit=单位, meaning=含义与依据。
+# 凡涉及"因果归因"(非数据实证)的阈值, 标记 modelAssumption=True。
+# 注意: 纯方向/符号判断 (如 >0 的方向边界) 不属于阈值, 不在此列。
+# 访问: TV('key') 取数值; THRESHOLDS['key']['meaning'] 取含义(用于审计/前端标注)。
+# =====================================================================
+THRESHOLDS = {
+    # --- 衰退 / 就业先行指标 ---
+    'sahm_rule':           {'value': 0.5,     'unit': 'pt', 'meaning': 'Sahm Rule 触发线: 失业率3M均值−12M低点 >0.5pt = 历史100%对应衰退'},
+    'nyfed_recession_p':   {'value': 40,      'unit': '%',  'meaning': '纽约联储12月前瞻衰退概率 >40% 为预警'},
+    'initial_claims':      {'value': 325,     'unit': 'K',  'meaning': '初请失业金4周均值突破 325K 确认就业恶化'},
+    'stlfsi_stress':       {'value': 0,       'unit': 'z',  'meaning': '圣路易斯金融压力指数 >0 = 高于均值压力'},
+    # --- 利率 / 期限溢价 ---
+    'term_premium_high':   {'value': 0.5,     'unit': '%',  'meaning': '期限溢价 >0.5% 视为偏高(偏空); 归因"供给/财政/久期风险"为模型假设', 'modelAssumption': True},
+    'term_premium_danger': {'value': 1.0,     'unit': '%',  'meaning': '期限溢价 >1.0% 视为财政驱动强化(危险阈值)'},
+    # --- 信用 / 银行 ---
+    'sloos_tighten':       {'value': 10,      'unit': '%',  'meaning': 'SLOOS 收紧净占比 >10% = 银行大幅收紧 → 领先信用收缩2-4季'},
+    'sloos_marginal':      {'value': 0,       'unit': '%',  'meaning': 'SLOOS >0 = 边际收紧'},
+    'hy_oas_wide':         {'value': 4.5,     'unit': '%',  'meaning': 'HY OAS 明显走阔阈值'},
+    # --- 流动性 ---
+    'net_liq_easy':        {'value': 3000000, 'unit': '$M', 'meaning': '净流动性 >$3T 算宽松'},
+    'lpi_tight':           {'value': 6,       'unit': '分', 'meaning': '流动性压力指数 >=6 判偏紧'},
+    'lpi_neutral_tight':   {'value': 4,       'unit': '分', 'meaning': '流动性压力指数 >=4 判中性偏紧'},
+    # --- 波动率 / 金融压力 ---
+    'vix_confirm':         {'value': 20,      'unit': 'pt', 'meaning': 'VIX 站上20 = 系统性风险确认线(波动率目标基金阈值)'},
+    'vix_approach':        {'value': 15,      'unit': 'pt', 'meaning': 'VIX 接近触发区域'},
+    'nfci_stress':         {'value': 0.2,     'unit': 'z',  'meaning': 'NFCI 分项 >0.2 = 收紧/承压'},
+    # --- 风险评分 engine 边界 ---
+    'risk_high':           {'value': 60,      'unit': '分', 'meaning': '板块风险评分 >=60 = 高风险(bearish)'},
+    'risk_mid':            {'value': 30,      'unit': '分', 'meaning': '板块风险评分 >=30 = 中等(mixed)'},
+    'vol_risk_high':       {'value': 55,      'unit': '分', 'meaning': '波动率风险评分 >=55 = 高风险'},
+    'vol_risk_mid':        {'value': 28,      'unit': '分', 'meaning': '波动率风险评分 >=28 = 中等'},
+    'total_risk_high':     {'value': 65,      'unit': '分', 'meaning': '综合加权风险 >=65 = 高风险'},
+    'total_risk_mid':      {'value': 35,      'unit': '分', 'meaning': '综合加权风险 >=35 = 中等风险'},
+    'recession_high':      {'value': 60,      'unit': '分', 'meaning': '衰退综合评分 >=60 = 高风险'},
+    'recession_mid':       {'value': 30,      'unit': '分', 'meaning': '衰退综合评分 >=30 = 中风险'},
+    'recession_late':      {'value': 40,      'unit': '分', 'meaning': '衰退评分 >=40 = 扩张后期'},
+    'recession_slow':      {'value': 20,      'unit': '分', 'meaning': '衰退评分 >=20 = 放缓期'},
+    'recession_bear':      {'value': 50,      'unit': '分', 'meaning': '衰退 regime bearish 阈值'},
+    'recession_signal_mid':{'value': 25,      'unit': '分', 'meaning': '衰退 regime mixed 阈值'},
+    # --- CFTC 拥挤度 ---
+    'cftc_crowd_legacy':   {'value': 0.25,    'unit': 'frac','meaning': 'legacy CFTC 净持仓占OI >0.25(=25%) = 极端单边'},
+    'cftc_crowd':          {'value': 30,      'unit': '%',  'meaning': '离散 COT 任一参与方净持仓占OI >30% = 极端单边'},
+    'cftc_trade_crowd':    {'value': 30,      'unit': '%',  'meaning': '交易雷达: 拥挤度 >30% 触发反转候选'},
+    # --- 加密流动性 ---
+    'stablecoin_abundant': {'value': 250,     'unit': '$B', 'meaning': '稳定币总市值 >$250B = 场外购买力蓄水池充裕'},
+    'stablecoin_thin':     {'value': 180,     'unit': '$B', 'meaning': '稳定币总市值 <$180B = 蓄水池偏薄'},
+    'funding_overheat':    {'value': 0.03,    'unit': '%',  'meaning': '永续资金费率 >0.03% = 多头杠杆过热'},
+    # --- 黄金 央行购金 ---
+    'cb_purchase_active':  {'value': 200,     'unit': '吨', 'meaning': '季度央行净购金 >=200吨 = 托底仍在'},
+    'cb_purchase_hot':     {'value': 250,     'unit': '吨', 'meaning': '季度央行净购金 >=250吨 = 极活跃'},
+    # --- 加密流动性 / 情绪 ---
+    'crypto_fng_fear':     {'value': 30,      'unit': 'pt',   'meaning': '恐惧贪婪指数 <=30 = 恐慌区(流动性收缩/抛压主导)'},
+    'crypto_fng_greed':    {'value': 75,      'unit': 'pt',   'meaning': '恐惧贪婪指数 >=75 = 贪婪区(追涨盘主导, 反向风险)'},
+    'crypto_liq_ample':    {'value': 60,      'unit': '分',   'meaning': '加密流动性评分 >=60 = 充裕'},
+    'crypto_liq_tight':    {'value': 40,      'unit': '分',   'meaning': '加密流动性评分 <=40 = 收缩'},
+    'crypto_ethbtc_riskoff_narr': {'value': 0.038, 'unit': 'ratio', 'meaning': 'ETH/BTC <0.038 = 避险主导(数字黄金叙事)'},
+    'crypto_ethbtc_riskon_narr':  {'value': 0.05,  'unit': 'ratio', 'meaning': 'ETH/BTC >0.05 = 风险偏好主导(Altcoin叙事)'},
+    'crypto_ethbtc_score_low':    {'value': 0.04,  'unit': 'ratio', 'meaning': 'ETH/BTC <0.04 = 避险(评分项)'},
+    'crypto_ethbtc_score_high':   {'value': 0.045, 'unit': 'ratio', 'meaning': 'ETH/BTC >0.045 = 风险偏好(评分项)'},
+    # --- 通胀/增长 regime 分类矩阵 (多因子耦合阈值, 非标量触发, 直接读 THRESHOLDS['inflation_regime']) ---
+    'inflation_regime': {
+        'labor_stagflation_max': 38, 'infl_stagflation_min': 58,
+        'growth_slow_max': 42, 'labor_riskoff_max': 48,
+        'infl_reflation_min': 65, 'growth_reflation_min': 55,
+        'growth_goldilocks_min': 58, 'labor_goldilocks_min': 55, 'infl_goldilocks_max': 55,
+        'infl_disinflation_max': 45, 'growth_disinflation_min': 50,
+    },
+    # --- 波动率 cross-asset 中性/压力阈值 (norm, stress) ---
+    'vol_vix_norm':        {'value': 15,      'unit': 'pt', 'meaning': 'VIX 中性线'},
+    'vol_vix_stress':      {'value': 20,      'unit': 'pt', 'meaning': 'VIX 压力线'},
+    'vol_move_norm':       {'value': 90,      'unit': 'pt', 'meaning': 'MOVE 中性线'},
+    'vol_move_stress':     {'value': 120,     'unit': 'pt', 'meaning': 'MOVE 压力线'},
+    'vol_ovx_norm':        {'value': 35,      'unit': 'pt', 'meaning': 'OVX 中性线'},
+    'vol_ovx_stress':      {'value': 50,      'unit': 'pt', 'meaning': 'OVX 压力线'},
+    'vol_gvz_norm':        {'value': 15,      'unit': 'pt', 'meaning': 'GVZ 中性线'},
+    'vol_gvz_stress':      {'value': 25,      'unit': 'pt', 'meaning': 'GVZ 压力线'},
+    'vol_vvix_norm':       {'value': 95,      'unit': 'pt', 'meaning': 'VVIX 中性线'},
+    'vol_vvix_stress':     {'value': 120,     'unit': 'pt', 'meaning': 'VVIX 压力线'},
+    'vol_skew_norm':       {'value': 130,     'unit': 'pt', 'meaning': 'SKEW 中性线'},
+    'vol_skew_stress':     {'value': 150,     'unit': 'pt', 'meaning': 'SKEW 压力线'},
+    'vol_skew_bear':       {'value': 140,     'unit': 'pt', 'meaning': 'SKEW >=140 视为尾部保护需求偏贵(bearish)'},
+    'vol_ovx_vix_gap':     {'value': 8,       'unit': 'pt', 'meaning': 'OVX-VIX 剪刀差 >8pt = 油股波动率极端分化'},
+    'vol_score_high':      {'value': 25,      'unit': 'pt', 'meaning': 'VIX >=25 波动率评分高位'},
+    'vol_score_mid':       {'value': 18,      'unit': 'pt', 'meaning': 'VIX >=18 波动率评分中位'},
+    'vol_score_low':       {'value': 15,      'unit': 'pt', 'meaning': 'VIX <15 波动率评分低位'},
+}
+
+def TV(key):
+    """取阈值配置的数值 (value)。"""
+    return THRESHOLDS[key]['value']
+
 def _iso(d):  # '2026-07-28' → date
     return datetime.date.fromisoformat(d)
 
@@ -444,7 +538,7 @@ def sahm_rule():
     latest_3m = sum(vals[-3:]) / 3
     min_12m = min(vals[-12:])
     value = round(latest_3m - min_12m, 2)
-    return {'value': value, 'triggered': value > 0.5, 'threshold': 0.5}
+    return {'value': value, 'triggered': value > TV('sahm_rule'), 'threshold': TV('sahm_rule')}
 
 def infl_annualized(key, months=3):
     """核心CPI 3/6月年化环比"""
@@ -917,11 +1011,11 @@ def _gold_driver_model():
     cb_latest_t = WGC_CB_PURCHASES_TONNES[-1][1] if WGC_CB_PURCHASES_TONNES else 0
     cb_latest_q = WGC_CB_PURCHASES_TONNES[-1][0] if WGC_CB_PURCHASES_TONNES else ''
     cb_yoy = (cb_latest_t - WGC_CB_PURCHASES_TONNES[-5][1]) if len(WGC_CB_PURCHASES_TONNES) >= 5 else None
-    cb_active = (cb_latest_t >= 200) or (cb_yoy is not None and cb_yoy > 0)   # 季度净购金≥200吨 或 同比扩张 → 托底仍在
+    cb_active = (cb_latest_t >= TV('cb_purchase_active')) or (cb_yoy is not None and cb_yoy > 0)   # 季度净购金≥200吨 或 同比扩张 → 托底仍在
     cb_strength = 0
     if cb_active:
         cb_strength = 50
-    if cb_latest_t >= 250:
+    if cb_latest_t >= TV('cb_purchase_hot'):
         cb_strength += 25   # 极活跃(Q2'26 288.9 吨级别)
     if cb_yoy is not None and cb_yoy > 0:
         cb_strength += 25   # 同比扩张
@@ -1113,7 +1207,7 @@ for name, key, ticker, dec, money in ASSET_MAP:
 
 # 跨资产 regime: 由真实跨资产信号动态合成 (替代预设 'risk-off')
 _a_score = 0
-if (v_vix or 0) > 20: _a_score += 1          # VIX 高=避险
+if (v_vix or 0) > TV('vix_confirm'): _a_score += 1          # VIX 高=避险
 elif (v_vix or 0) < 15: _a_score -= 1          # VIX 低=风险偏好
 _a_spx_w = asset_changes('spx').get('w')
 if _a_spx_w is not None:
@@ -1691,7 +1785,7 @@ _liq_score = 0
 if _nl_m is not None:
     _liq_score += 1 if _nl_m > 0 else -1
 if _nl_v is not None:
-    _liq_score += 1 if _nl_v > 3000000 else 0   # 净流动性 > $3T 算宽松
+    _liq_score += 1 if _nl_v > TV('net_liq_easy') else 0   # 净流动性 > $3T 算宽松 (阈值 THRESHOLDS.net_liq_easy)
 if _sofr_gap > 0.0001:
     _liq_score -= 1
 elif _sofr_gap < -0.0001:
@@ -1722,7 +1816,7 @@ if v_hy is not None:
     _lpi_risk = max(_lpi_risk, min(9.0, (v_hy - 3) / 0.7))
 _lpi_risk = round(_lpi_risk, 1)
 _lpi_score_dyn = round(_lpi_buf * 0.45 + _lpi_fund * 0.35 + _lpi_risk * 0.20, 1)
-_lpi_level = '偏紧' if _lpi_score_dyn >= 6 else ('中性偏紧' if _lpi_score_dyn >= 4 else '中性宽松')
+_lpi_level = '偏紧' if _lpi_score_dyn >= TV('lpi_tight') else ('中性偏紧' if _lpi_score_dyn >= TV('lpi_neutral_tight') else '中性宽松')
 _nl_latest = val('netliq'); _nl_m_chg = tfm('netliq')['m']
 _lpi_trend = round((_nl_m_chg / _nl_latest) * 100, 1) if (_nl_latest and _nl_m_chg is not None) else 0.0
 _lpi_block = {
@@ -1740,12 +1834,12 @@ _lpi_block = {
          'status': '已触发' if (v_sofr_iorb or 0) > 0.0001 else '未触发', 'triggered': (v_sofr_iorb or 0) > 0.0001},
         {'name': 'SRF 出现数十亿级使用', 'current': '无数据', 'status': '未监测', 'triggered': False},
         {'name': 'HY OAS 明显走阔', 'current': f2(v_hy)+'%' if v_hy is not None else '—',
-         'status': '已触发' if (v_hy or 0) > 4.5 else '未触发', 'triggered': (v_hy or 0) > 4.5},
+         'status': '已触发' if (v_hy or 0) > TV('hy_oas_wide') else '未触发', 'triggered': (v_hy or 0) > TV('hy_oas_wide')},
         {'name': 'NFCI 转正', 'current': f2(val('nfci')) if val('nfci') is not None else '—',
          'status': '已触发' if (val('nfci') or 0) > 0 else '未触发', 'triggered': (val('nfci') or 0) > 0},
         {'name': 'VIX 升至 20 上方', 'current': f2(v_vix) if v_vix is not None else '—',
-         'status': '已触发' if (v_vix or 0) > 20 else ('接近触发' if (v_vix or 0) > 15 else '未触发'),
-         'triggered': (v_vix or 0) > 20},
+         'status': '已触发' if (v_vix or 0) > TV('vix_confirm') else ('接近触发' if (v_vix or 0) > TV('vix_approach') else '未触发'),
+         'triggered': (v_vix or 0) > TV('vix_confirm')},
     ],
 }
 DATA['liquidity'] = {
@@ -1867,7 +1961,7 @@ DATA['liquidity'] = {
         'components':[
             {'name':'美联储总资产','value':round(v_walcl/1e6,2),'unit':'T$','sign':'+','color':'#4361ee','note':'Fed H.4.1 周度 · QT中'},
             {'name':'RRP 余额','value':round(v_rrpn/1000,4),'unit':'T$','sign':'−','color':'#2a9d8f','note':'NY Fed · 已耗尽'},
-            {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'Treasury DTS · 变动中'},
+            {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'FRED WTREGEN · 财政侧抽水'},
         ]},
     'chartData': {'labels': _dates_for('walcl'), 'series': {
         '净流动性': [round(x/1000,2) for x in series90('netliq')] if v_nl else [],
@@ -1876,7 +1970,7 @@ DATA['liquidity'] = {
     'weeklyChanges': [
         {'component':'美联储总资产 (WALCL)','current':f'${comma(v_walcl/1000000,2)}T','weekChange':cell('walcl','w'),'monthChange':cell('walcl','m'),'source':'Fed H.4.1','signal':_msig(dir_of(tfm("walcl")["w"]), False)},
         {'component':'RRP 余额','current':f'${f2(v_rrpn)}B','weekChange':bp(tfm("rrp")["w"],"$B"),'monthChange':bp(tfm("rrp")["m"],"$B"),'source':'NY Fed','signal':_msig(dir_of(tfm("rrp")["w"]), False)},
-        {'component':'TGA 余额','current':f'${comma(v_tgan,1)}B' if v_tgan else '—','weekChange':(f'+${comma(tfm("tga")["w"],0)}B' if v_tgan else '—'),'monthChange':(f'+${comma(tfm("tga")["m"],0)}B' if (v_tgan and tfm("tga")["m"]) else '—'),'source':'Treasury DTS','signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False)},
+        {'component':'TGA 余额','current':f'${comma(v_tgan,1)}B' if v_tgan else '—','weekChange':(f'+${comma(tfm("tga")["w"],0)}B' if v_tgan else '—'),'monthChange':(f'+${comma(tfm("tga")["m"],0)}B' if (v_tgan and tfm("tga")["m"]) else '—'),'source':'FRED WTREGEN','signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False)},
         {'component':'银行准备金 (WRESBAL)','current':f'${comma(v_res/1000000,2)}T','weekChange':cell('resbal','w'),'monthChange':cell('resbal','m'),'source':'Fed H.4.1','signal':_msig(dir_of(tfm("resbal")["w"]), True)},
         {'component':'净流动性(计算值)','current':f'${comma(v_nl/1000,2)}T' if v_nl else '—','weekChange':(bp(tfm("netliq")["w"],"$B") if tfm("netliq")["w"] else '—'),'monthChange':(bp(tfm("netliq")["m"],"$B") if tfm("netliq")["m"] else '—'),'source':'计算','signal':_msig(dir_of(tfm("netliq")["w"]), False)},
     ],
@@ -2392,17 +2486,18 @@ def _build_econ_regime():
     infl = max(0.0, min(100.0, infl))
 
     # ---------- 5. 综合判定 ----------
-    if labor <= 38 and infl >= 58:
+    _ir = THRESHOLDS['inflation_regime']
+    if labor <= _ir['labor_stagflation_max'] and infl >= _ir['infl_stagflation_min']:
         signal, label = 'stagflation', '滞胀风险：就业走弱 + 通胀高企'
-    elif growth <= 42:
-        signal = 'risk-off' if labor <= 48 else 'mixed'
+    elif growth <= _ir['growth_slow_max']:
+        signal = 'risk-off' if labor <= _ir['labor_riskoff_max'] else 'mixed'
         label = '增长放缓 + 就业转弱' if signal == 'risk-off' else '增长分化（动能不足）'
-    elif infl >= 65:
-        signal = 'reflation' if growth >= 55 else 'stagflation'
+    elif infl >= _ir['infl_reflation_min']:
+        signal = 'reflation' if growth >= _ir['growth_reflation_min'] else 'stagflation'
         label = '再通胀：增长回升 + 通胀升温' if signal == 'reflation' else '滞胀风险：增长乏力 + 通胀高企'
-    elif growth >= 58 and labor >= 55 and infl <= 55:
+    elif growth >= _ir['growth_goldilocks_min'] and labor >= _ir['labor_goldilocks_min'] and infl <= _ir['infl_goldilocks_max']:
         signal, label = 'risk-on', '金发女孩：增长稳健 + 就业健康 + 通胀温和'
-    elif infl <= 45 and growth >= 50:
+    elif infl <= _ir['infl_disinflation_max'] and growth >= _ir['growth_disinflation_min']:
         signal, label = 'disinflation', '通胀回落：增长平稳 + 通胀趋势下行'
     else:
         signal, label = 'mixed', '多因子分化：无单一主导'
@@ -2701,12 +2796,12 @@ def vol_metric(label, key, tag, meaning, norm, stress):
             'changes':{k: pt_str(tfm(key)[k]) for k in ('d','w','m','h6')},
             'sparkline':series30(key)}
 vol_metrics = [m for m in [
-    vol_metric('VIX (股票)','vix','VIX','20是系统性风险确认线',15,20),
-    vol_metric('VVIX (波动率的波动)','vvix','VVIX','>110 表示对冲VIX本身的需求激增',95,120),
-    vol_metric('MOVE (债券)','move','MOVE','利率波动率, >120 债市失序',90,120),
-    vol_metric('OVX (原油)','ovx','OVX','>50 供应冲击定价',35,50),
-    vol_metric('GVZ (黄金)','gvz','GVZ','>25 避险需求激增',15,25),
-    vol_metric('SKEW (尾部偏度)','skew','SKEW','>150 尾部保护极贵',130,150),
+    vol_metric('VIX (股票)','vix','VIX','20是系统性风险确认线', TV('vol_vix_norm'), TV('vol_vix_stress')),
+    vol_metric('VVIX (波动率的波动)','vvix','VVIX','>110 表示对冲VIX本身的需求激增', TV('vol_vvix_norm'), TV('vol_vvix_stress')),
+    vol_metric('MOVE (债券)','move','MOVE','利率波动率, >120 债市失序', TV('vol_move_norm'), TV('vol_move_stress')),
+    vol_metric('OVX (原油)','ovx','OVX','>50 供应冲击定价', TV('vol_ovx_norm'), TV('vol_ovx_stress')),
+    vol_metric('GVZ (黄金)','gvz','GVZ','>25 避险需求激增', TV('vol_gvz_norm'), TV('vol_gvz_stress')),
+    vol_metric('SKEW (尾部偏度)','skew','SKEW','>150 尾部保护极贵', TV('vol_skew_norm'), TV('vol_skew_stress')),
 ] if m]
 
 def vol_trend(name, key, meaning):
@@ -2729,8 +2824,8 @@ if vix is not None and vix3m is not None:
     ts_state = '倒挂(Backwardation)' if vix > vix3m else 'Contango(升水)'
 
 # 跨资产仪表盘 (阈值=分析师判断区间, 当前值与分位=真实数据)
-_ca_defs = [('VIX 股票','vix',15,20),('MOVE 债券','move',90,120),('OVX 原油','ovx',35,50),
-            ('GVZ 黄金','gvz',15,25),('VVIX','vvix',95,120),('SKEW','skew',130,150)]
+_ca_defs = [('VIX 股票','vix', TV('vol_vix_norm'), TV('vol_vix_stress')),('MOVE 债券','move', TV('vol_move_norm'), TV('vol_move_stress')),('OVX 原油','ovx', TV('vol_ovx_norm'), TV('vol_ovx_stress')),
+            ('GVZ 黄金','gvz', TV('vol_gvz_norm'), TV('vol_gvz_stress')),('VVIX','vvix', TV('vol_vvix_norm'), TV('vol_vvix_stress')),('SKEW','skew', TV('vol_skew_norm'), TV('vol_skew_stress'))]
 ca_rows = [(lb, val(k), pct(k), n, st) for lb, k, n, st in _ca_defs if val(k) is not None]
 ovx_vix_gap = round(ovx - vix, 1) if (ovx is not None and vix is not None) else None
 stress_assets = [lb for lb, v, p, n, st in ca_rows if v >= st]
@@ -2744,9 +2839,9 @@ _ts_back = (vix is not None and vix3m is not None and vix > vix3m)
 _vol_score = 0
 if _n_stress >= 2: _vol_score -= 2
 elif _n_stress == 1: _vol_score -= 1
-if _vix_v >= 25: _vol_score -= 2
-elif _vix_v >= 18: _vol_score -= 1
-elif _vix_v < 15: _vol_score += 1
+if _vix_v >= TV('vol_score_high'): _vol_score -= 2
+elif _vix_v >= TV('vol_score_mid'): _vol_score -= 1
+elif _vix_v < TV('vol_score_low'): _vol_score += 1
 if _ts_back: _vol_score -= 1
 if _vix_w > 3: _vol_score -= 1
 elif _vix_w < -3: _vol_score += 1
@@ -2757,9 +2852,9 @@ DATA['volatility'] = {
     'regime': {'label':_vol_label,'signal':_vol_signal,'confidence':_confidence(_vol_signal, vix is not None, vix3m is not None, len(ca_rows) >= 3),
         'description':f'当前处于压力区的资产: {(",".join(stress_assets) if stress_assets else "无")}。VIX {f2(vix)}' + (f', OVX {f2(ovx)}' if ovx else '') + (f', MOVE {f2(move)}' if move else '') + '。波动率分化形态反映压力是否从单一资产外溢。'},
     'keySignals': [s for s in [
-        ({'title':f'OVX {f2(ovx)} vs VIX {f2(vix)} 剪刀差 {ovx_vix_gap}pt','meaning':'油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。','direction':('bearish' if (ovx_vix_gap or 0) > 8 else 'mixed')} if ovx_vix_gap is not None else None),
+        ({'title':f'OVX {f2(ovx)} vs VIX {f2(vix)} 剪刀差 {ovx_vix_gap}pt','meaning':'油股波动率极端分化, 历史上多以油价回落或 VIX 补涨收敛。','direction':('bearish' if (ovx_vix_gap or 0) > TV('vol_ovx_vix_gap') else 'mixed')} if ovx_vix_gap is not None else None),
         {'title':f'VIX {f2(vix)}, 周 {bp(tfm("vix")["w"],"pt")}','meaning':'站上20将触发波动率目标基金被动减仓, 抛压自我强化。','direction':'bearish' if (vix or 0) >= 18 else 'mixed'},
-        ({'title':f'SKEW {f1(skew)} 尾部偏度','meaning':'机构对深度虚值看跌的定价, >150 说明尾部保护需求极贵。','direction':'bearish' if (skew or 0) >= 140 else 'mixed'} if skew is not None else None),
+        ({'title':f'SKEW {f1(skew)} 尾部偏度','meaning':'机构对深度虚值看跌的定价, >150 说明尾部保护需求极贵。','direction':'bearish' if (skew or 0) >= TV('vol_skew_bear') else 'mixed'} if skew is not None else None),
     ] if s],
     'metrics': vol_metrics,
     'trendData': vol_trends,
@@ -2902,13 +2997,13 @@ _recession_signals.append(_recession_signal('Sahm Rule', _sahm['value'], 0.5, _s
     '失业率3M均值-12M低点。触发后历史100%对应衰退。' + (f'当前 {_sahm["value"]}' if _sahm['value'] else '—'), 'red'))
 
 # 纽约联储衰退概率
-_recession_signals.append(_recession_signal('衰退概率(纽约联储)', _recession_p, 40,
-    _recession_p is not None and _recession_p > 40,
+_recession_signals.append(_recession_signal('衰退概率(纽约联储)', _recession_p, TV('nyfed_recession_p'),
+    _recession_p is not None and _recession_p > TV('nyfed_recession_p'),
     '基于3M-10Y利差的12月前瞻衰退概率。>40%为预警。' + (f'当前 {_recession_p}%' if _recession_p else '—'), 'orange'))
 
 # 初请失业金4周均值 (已前置计算)
-_recession_signals.append(_recession_signal('初请失业金(4周均)', round(_claims_4wk / 1000, 0) if _claims_4wk else None, 325,
-    _claims_4wk is not None and _claims_4wk > 325000,
+_recession_signals.append(_recession_signal('初请失业金(4周均)', round(_claims_4wk / 1000, 0) if _claims_4wk else None, TV('initial_claims'),
+    _claims_4wk is not None and _claims_4wk > TV('initial_claims') * 1000,
     '突破325K确认就业恶化。当前' + (f'{_claims_4wk/1000:.0f}K' if _claims_4wk else '—'), 'orange'))
 
 # STLFSI 金融压力
@@ -2921,14 +3016,14 @@ _triggered_count = sum(1 for s in _recession_signals if s['status'] == 'triggere
 _warning_count = sum(1 for s in _recession_signals if s['status'] == 'warning')
 _known_count = sum(1 for s in _recession_signals if s['status'] != 'unknown')
 _recession_score = round((_triggered_count * 3 + _warning_count) / max(_known_count * 3, 1) * 100)
-_recession_level = '高风险' if _recession_score >= 60 else ('中风险' if _recession_score >= 30 else '低风险')
+_recession_level = '高风险' if _recession_score >= TV('recession_high') else ('中风险' if _recession_score >= TV('recession_mid') else '低风险')
 
 DATA['recession'] = {
-    'regime': {'label': f'衰退风险: {_recession_level}','signal': 'bearish' if _recession_score >= 50 else ('mixed' if _recession_score >= 25 else 'bullish'),'confidence':'数据驱动',
+    'regime': {'label': f'衰退风险: {_recession_level}','signal': 'bearish' if _recession_score >= TV('recession_bear') else ('mixed' if _recession_score >= TV('recession_signal_mid') else 'bullish'),'confidence':'数据驱动',
         'description': f'6项先行指标聚合: 触发信号 {_triggered_count} 项, 预警 {_warning_count} 项。综合评分 {_recession_score}/100 ({_recession_level})。周期指标（利率利差）+ 就业即时指标（Sahm/初请/失业率）+ 前瞻指标（衰退概率/金融压力）三维交叉验证。'},
     'signals': _recession_signals,
     'score': _recession_score, 'level': _recession_level,
-    'cyclePosition': '扩张后期' if _recession_score >= 40 else ('放缓期' if _recession_score >= 20 else '扩张期'),
+    'cyclePosition': '扩张后期' if _recession_score >= TV('recession_late') else ('放缓期' if _recession_score >= TV('recession_slow') else '扩张期'),
     'analystView': ('衰退仪表盘 6 项独立信号交叉验证, 综合评分 ' + f'{_recession_score}/100 ({_recession_level})。当前: '
         + f'触发 {_triggered_count} 项 / 预警 {_warning_count} 项 (10Y-2Y {_spread_10_2_val:+.0f}bp, Sahm {_sahm["value"]}, 初请4周均 {_claims_4wk/1000:.0f}K, NYFed 衰退概率 {f1(_recession_p)}%)。'
         + '分析框架: ① 利率信号 (10Y-2Y / 3M-10Y) 是领先约 12 个月的"收益率曲线"指标, 当前未倒挂 = 扩张延续; '
@@ -2961,13 +3056,13 @@ _rate_risk = _RR.get(_rates_signal, 50)
 if _r_10y_pct is not None:
     _rate_risk += (_r_10y_pct - 50) * 0.3   # 10Y 分位高 → 风险更高
 _rate_risk = max(0, min(100, round(_rate_risk)))
-_rate_status = 'bearish' if _rate_risk >= 60 else ('mixed' if _rate_risk >= 30 else 'bullish')
+_rate_status = 'bearish' if _rate_risk >= TV('risk_high') else ('mixed' if _rate_risk >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_rate_risk, 14, '利率环境', _rate_status))
 
 # 2. 流动性压力: LPI 评分 (liquidity 板块已数据驱动合成)
 _lpi = DATA.get('liquidity', {}).get('lpi', {})
 _lpi_score = _lpi.get('score', 5) * 10
-_lpi_status = 'bearish' if _lpi_score >= 60 else ('mixed' if _lpi_score >= 30 else 'bullish')
+_lpi_status = 'bearish' if _lpi_score >= TV('risk_high') else ('mixed' if _lpi_score >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_lpi_score, 16, '流动性压力', _lpi_status))
 
 # 3. 信用市场: 用 credit regime (HY/CCC 分位 + NFCI + 走阔方向), 叠加 CCC 分位修正
@@ -2975,47 +3070,47 @@ _credit_risk = _RR.get(_cr_signal, 50)
 if _cr_ccc_pct is not None:
     _credit_risk += (_cr_ccc_pct - 50) * 0.3
 _credit_risk = max(0, min(100, round(_credit_risk)))
-_credit_status = 'bearish' if _credit_risk >= 60 else ('mixed' if _credit_risk >= 30 else 'bullish')
+_credit_status = 'bearish' if _credit_risk >= TV('risk_high') else ('mixed' if _credit_risk >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_credit_risk, 12, '信用市场', _credit_status))
 
 # 4. 波动率风险: 用 volatility 评分 (_vol_score -4..+3 → 0-100)
 _vix_risk = max(0, min(100, round(50 - (_vol_score or 0) * 12)))
-_vix_status = 'bearish' if _vix_risk >= 55 else ('mixed' if _vix_risk >= 28 else 'bullish')
+_vix_status = 'bearish' if _vix_risk >= TV('vol_risk_high') else ('mixed' if _vix_risk >= TV('vol_risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_vix_risk, 11, '波动率风险', _vix_status))
 
 # 5. 经济基本面: 用 economy regime 三块评分 (劳动力+通胀+增长)
 _eS = _econ_regime.get('scores', {})
 _econ_risk = round((100 - _eS.get('labor', 50)) * 0.35 + _eS.get('inflation', 50) * 0.35 + (100 - _eS.get('growth', 50)) * 0.30)
 _econ_risk = max(0, min(100, _econ_risk))
-_econ_status = 'bearish' if _econ_risk >= 60 else ('mixed' if _econ_risk >= 30 else 'bullish')
+_econ_status = 'bearish' if _econ_risk >= TV('risk_high') else ('mixed' if _econ_risk >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_econ_risk, 13, '经济基本面', _econ_status))
 
 # 6. 政策路径: 用 fed regime (隐含降/加息次数), 加息定价越多风险越高
 _fed_risk = _RR.get(_fed_signal, 50) + (_fed_hikes or 0) * 10
 _fed_risk = max(0, min(100, _fed_risk))
-_fed_status = 'bearish' if _fed_risk >= 60 else ('mixed' if _fed_risk >= 30 else 'bullish')
+_fed_status = 'bearish' if _fed_risk >= TV('risk_high') else ('mixed' if _fed_risk >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_fed_risk, 9, '政策路径', _fed_status))
 
 # 7. 跨资产信号: 股债相关 + OVX-VIX 剪刀差 + 压力资产数
 _asset_risk = 35 if (spx_tlt_corr and spx_tlt_corr > 0) else 22
-if ovx_vix_gap is not None and ovx_vix_gap > 8:
+if ovx_vix_gap is not None and ovx_vix_gap > TV('vol_ovx_vix_gap'):
     _asset_risk += 20   # 油股波动率极端分化
 if _n_stress >= 2:
     _asset_risk += 20   # 多资产进入压力区
 _asset_risk = max(0, min(100, _asset_risk))
-_asset_status = 'bearish' if _asset_risk >= 60 else ('mixed' if _asset_risk >= 30 else 'bullish')
+_asset_status = 'bearish' if _asset_risk >= TV('risk_high') else ('mixed' if _asset_risk >= TV('risk_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_asset_risk, 8, '跨资产信号', _asset_status))
 
 # 8. 衰退风险: 衰退概率评分 (保留, 已含 10Y-2Y/Sahm/初请/金融压力)
 _rec_risk = _recession_score * 0.7
-_rec_status = 'bearish' if _rec_risk >= 50 else ('mixed' if _rec_risk >= 25 else 'bullish')
+_rec_status = 'bearish' if _rec_risk >= TV('recession_bear') else ('mixed' if _rec_risk >= TV('recession_signal_mid') else 'bullish')
 _risk_factors.append(_risk_factor(_rec_risk, 17, '衰退风险', _rec_status))
 
 # 加权综合
 _total_weight = sum(f['weight'] for f in _risk_factors)
 _total_score = round(sum(f['score'] * f['weight'] for f in _risk_factors) / _total_weight)
-_risk_level = '高风险' if _total_score >= 65 else ('中等风险' if _total_score >= 35 else '低风险')
-_risk_color = '#e63946' if _total_score >= 65 else ('#f59e0b' if _total_score >= 35 else '#2a9d8f')
+_risk_level = '高风险' if _total_score >= TV('total_risk_high') else ('中等风险' if _total_score >= TV('total_risk_mid') else '低风险')
+_risk_color = '#e63946' if _total_score >= TV('total_risk_high') else ('#f59e0b' if _total_score >= TV('total_risk_mid') else '#2a9d8f')
 
 DATA['riskScore'] = {
     'score': _total_score, 'level': _risk_level, 'color': _risk_color,
@@ -3080,7 +3175,7 @@ def _prepend_section_alerts():
         A['credit'].append(_sig_alert('⚠ CCC 极端高分位', f'CCC 利差历史分位 {_cr_ccc_pct}%, 低评级承压极值', 'bearish', 2))
 
     # ---- 波动率: VIX 突破 / 期限结构倒挂 / 压力扩散 ----
-    if _vix_v >= 20 and (_vix_v < 25):
+    if _vix_v >= TV('vix_confirm') and (_vix_v < 25):
         A['volatility'].append(_sig_alert('⚠ VIX 站上 20', f'VIX {_vix_v:.1f}, 波动率目标基金被动减仓触发, 抛压自我强化', 'bearish', 2))
     if _ts_back:
         A['volatility'].append(_sig_alert('⚠ VIX 期限结构倒挂', '近月 VIX 高于远月 (backwardation), 短期恐慌定价', 'bearish', 1))
@@ -4053,31 +4148,31 @@ _c_liq_score = 50
 _c_liq_pts = []
 if _c_stable.get('total_b'):
     _c_liq_pts.append(f'稳定币总市值 ${_c_stable["total_b"]:.0f}B (USDT {_c_stable.get("usdt_b","—")} + USDC {_c_stable.get("usdc_b","—")})')
-    if _c_stable['total_b'] > 250: _c_liq_score += 15; _c_liq_pts.append('>250B 充裕的场外购买力蓄水池')
-    elif _c_stable['total_b'] < 180: _c_liq_score -= 10; _c_liq_pts.append('<180B 蓄水池偏薄')
+    if _c_stable['total_b'] > TV('stablecoin_abundant'): _c_liq_score += 15; _c_liq_pts.append('>250B 充裕的场外购买力蓄水池')
+    elif _c_stable['total_b'] < TV('stablecoin_thin'): _c_liq_score -= 10; _c_liq_pts.append('<180B 蓄水池偏薄')
 if _c_funding is not None:
     _c_liq_pts.append(f'永续资金费率 {_c_funding:+.3f}%')
-    if _c_funding > 0.03: _c_liq_score -= 10; _c_liq_pts.append('资金费率>0.03% 多头杠杆过热(潜在踩踏)')
-    elif _c_funding < -0.03: _c_liq_score += 5; _c_liq_pts.append('负费率=空头拥挤(反弹燃料)')
+    if _c_funding > TV('funding_overheat'): _c_liq_score -= 10; _c_liq_pts.append('资金费率>0.03% 多头杠杆过热(潜在踩踏)')
+    elif _c_funding < -TV('funding_overheat'): _c_liq_score += 5; _c_liq_pts.append('负费率=空头拥挤(反弹燃料)')
 if _c_fng is not None:
     _c_liq_pts.append(f'恐慌贪婪指数 {_c_fng} ({_c_fng_label})')
-    if _c_fng <= 30: _c_liq_score -= 8; _c_liq_pts.append('恐慌区=流动性收缩/抛压主导')
-    elif _c_fng >= 75: _c_liq_score -= 6; _c_liq_pts.append('贪婪区=追涨盘主导(反向风险)')
+    if _c_fng <= TV('crypto_fng_fear'): _c_liq_score -= 8; _c_liq_pts.append('恐慌区=流动性收缩/抛压主导')
+    elif _c_fng >= TV('crypto_fng_greed'): _c_liq_score -= 6; _c_liq_pts.append('贪婪区=追涨盘主导(反向风险)')
     else: _c_liq_score += 8; _c_liq_pts.append('中性区间=健康')
-_c_liq_state = '充裕' if _c_liq_score >= 60 else ('收缩' if _c_liq_score <= 40 else '中性')
+_c_liq_state = '充裕' if _c_liq_score >= TV('crypto_liq_ample') else ('收缩' if _c_liq_score <= TV('crypto_liq_tight') else '中性')
 _c_liq_label = f'流动性{_c_liq_state} (评分 {_c_liq_score})'
 
 # ===== 主导叙事判定 (4 类: 数字黄金 / 风险资产beta / ETF机构化 / 链上基本面) =====
 _c_narr = []
 if _v_ethbtc is not None:
-    if _v_ethbtc < 0.038: _c_narr.append('避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)')
-    elif _v_ethbtc > 0.05: _c_narr.append('风险偏好主导: ETH/BTC 走强(Altcoin/风险资产叙事)')
+    if _v_ethbtc < TV('crypto_ethbtc_riskoff_narr'): _c_narr.append('避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)')
+    elif _v_ethbtc > TV('crypto_ethbtc_riskon_narr'): _c_narr.append('风险偏好主导: ETH/BTC 走强(Altcoin/风险资产叙事)')
 if _v_etf_btc is not None:
     if _v_etf_btc > 0 and _etf_data.get('btc_cumsum', 0) > 0:
         _c_narr.append(f'机构化配置: BTC ETF 净流入(30日累计 ${_etf_data.get("btc_cumsum"):+.0f}M)')
     elif _v_etf_btc < 0:
         _c_narr.append('机构获利了结: BTC ETF 净流出')
-if _c_stable.get('total_b') and _c_stable['total_b'] > 250:
+if _c_stable.get('total_b') and _c_stable['total_b'] > TV('stablecoin_abundant'):
     _c_narr.append('流动性蓄水池充沛: 稳定币 >250B 待入场资金')
 if _oc_txn:
     _c_txn_chg = _onchain_change('transactions')
@@ -4130,8 +4225,8 @@ if _v_etf_btc is not None:
     if _v_etf_btc < 0: _c_score += 1          # ETF 净流出=机构撤退
     elif _v_etf_btc > 0: _c_score -= 1
 if _v_ethbtc is not None:
-    if _v_ethbtc < 0.04: _c_score += 1        # ETH/BTC 走弱=避险
-    elif _v_ethbtc > 0.045: _c_score -= 1
+    if _v_ethbtc < TV('crypto_ethbtc_score_low'): _c_score += 1        # ETH/BTC 走弱=避险
+    elif _v_ethbtc > TV('crypto_ethbtc_score_high'): _c_score -= 1
 _crypto_signal = 'risk-off' if _c_score >= 1 else ('risk-on' if _c_score <= -1 else 'mixed')
 _crypto_label = '去风险/流动性收缩传导' if _crypto_signal=='risk-off' else ('风险资产联动走强' if _crypto_signal=='risk-on' else '震荡整理')
 DATA['crypto'] = {
@@ -4144,7 +4239,7 @@ DATA['crypto'] = {
     },
     'keySignals': [s for s in [
         ({'title': f'BTC {_btc_ch.get("w", "—")} 周变动', 'meaning': 'BTC 是加密市场的 beta，其方向决定整个板块的风险偏好基调。', 'direction': dir_of(_btc_ch.get('w'))} if _btc_ch.get('w') is not None else None),
-        ({'title': f'ETH/BTC {_v_ethbtc:.4f}', 'meaning': 'ETH 相对 BTC 的强弱。比率上行=资金偏好高贝塔(ETH)，下行=避险(BTC dominance)。' if _v_ethbtc else '', 'direction': 'up' if (_v_ethbtc and _v_ethbtc > 0.045) else 'down'} if _v_ethbtc else None),
+        ({'title': f'ETH/BTC {_v_ethbtc:.4f}', 'meaning': 'ETH 相对 BTC 的强弱。比率上行=资金偏好高贝塔(ETH)，下行=避险(BTC dominance)。' if _v_ethbtc else '', 'direction': 'up' if (_v_ethbtc and _v_ethbtc > TV('crypto_ethbtc_score_high')) else 'down'} if _v_ethbtc else None),
         ({'title': f'BTC ETF {"净流入" if (_v_etf_btc and _v_etf_btc > 0) else "净流出" if _v_etf_btc else "暂无"} ${abs(_v_etf_btc):.0f}M' if _v_etf_btc is not None else 'BTC ETF 流量数据获取中', 'meaning': '现货 ETF 持续流入=机构配置需求，流出=获利了结或风险规避。', 'direction': 'bullish' if (_v_etf_btc and _v_etf_btc > 0) else ('bearish' if (_v_etf_btc and _v_etf_btc < 0) else 'mixed')} if _v_etf_btc is not None else None),
     ] if s],
     'metrics': [
@@ -4159,7 +4254,7 @@ DATA['crypto'] = {
              'change':pctpt(tfm('eth_btc_ratio')['d']) if val('eth_btc_ratio') else '—',
              'dir':dir_of(tfm('eth_btc_ratio')['d']) if val('eth_btc_ratio') else 'neutral',
              'tag':'Ratio','percentile':pct('eth_btc_ratio') if _v_ethbtc else 50,
-             'signal':'bullish' if (_v_ethbtc and _v_ethbtc > 0.045) else ('bearish' if (_v_ethbtc and _v_ethbtc < 0.04) else 'mixed'),
+             'signal':'bullish' if (_v_ethbtc and _v_ethbtc > TV('crypto_ethbtc_score_high')) else ('bearish' if (_v_ethbtc and _v_ethbtc < TV('crypto_ethbtc_score_low')) else 'mixed'),
              'meaning':'ETH 相对 BTC 强弱 · >0.05=ETH强势区间 · <0.04=BTC极度主导',
              'changes':{k:(round(tfm('eth_btc_ratio').get(k)*100,3) if tfm('eth_btc_ratio').get(k) is not None else '—') for k in ('d','w','m','h6')},
              'sparkline':series30('eth_btc_ratio')},
@@ -4475,8 +4570,34 @@ for _label, _c in (_MPOS.get('cftc') or {}).items():
         'crowding': round(_crowd * 100, 1),   # 净持仓/OI % = 单边拥挤度
     }
     _cftc_rows.append(_row)
-    if _crowd > 0.25:
+    if _crowd > TV('cftc_crowd_legacy'):
         _cftc_crowded.append(f'{_label} 净持仓占 OI {_crowd*100:.0f}% (极端单边)')
+
+# ---- CFTC 离散 COT (dealer/assetMgr/leveraged 三分法, P1) ----
+# 用 CFTC TFF 官方报告细化"谁在动": 中介 vs 真实资金 vs 杠杆 (取代了 legacy 投机/套保二分)
+_TFF_GLABEL = {'dealer': '交易商/中介', 'assetMgr': '资产管理/真实资金', 'leveraged': '杠杆基金'}
+_cftc_disagg = []
+_cftc_disagg_crowded = []
+_cftc_disagg_movers = []
+for _label, _c in (_MPOS.get('cftc_disagg') or {}).items():
+    _groups_src = _c.get('groups') or {}
+    _grows = []
+    for _gk in ['dealer', 'assetMgr', 'leveraged']:
+        _g = _groups_src.get(_gk)
+        if not _g:
+            continue
+        _grows.append({'group': _gk, 'groupLabel': _TFF_GLABEL.get(_gk, _gk),
+                       'net': _g.get('net'), 'chgNet': _g.get('chgNet'), 'pctOi': _g.get('pctOi')})
+        if (_g.get('pctOi') is not None) and _g['pctOi'] > TV('cftc_crowd'):
+            _cftc_disagg_crowded.append(f"{_label} · {_TFF_GLABEL.get(_gk, _gk)} 净持仓占 OI {_g['pctOi']:.0f}% (极端单边)")
+    _mover = _c.get('mover')
+    if _mover:
+        _mg = next((x for x in _grows if x['group'] == _mover), None)
+        if _mg:
+            _mdir = '增持(net多头扩张)' if (_mg['chgNet'] or 0) >= 0 else '减持(net多头收缩)'
+            _cftc_disagg_movers.append(f"{_label} 本周由 {_mg['groupLabel']} {_mdir} 主导")
+    _cftc_disagg.append({'asset': _label, 'note': _c.get('note', ''), 'date': _c.get('date', ''),
+                         'oi': _c.get('oi'), 'groups': _grows, 'mover': _mover})
 
 # ---- 期限溢价 ACM: 拆解 10Y = 预期短端路径 + 期限溢价 ----
 _TP = _MPOS.get('termPremium') or {}
@@ -4486,7 +4607,7 @@ _tp_text = ''
 _tp_signal = 'neutral'
 if _tp_val is not None and _10y_v_now is not None:
     _exp_path = round(_10y_v_now - _tp_val, 2)   # 隐含预期路径 ≈ 10Y - 期限溢价
-    if _tp_val > 0.5: _tp_signal = 'bearish'; _tp_text = f'期限溢价 {_tp_val:.2f}% 偏高: 长端上行由供给/财政/久期风险驱动 (非纯政策预期)'
+    if _tp_val > TV('term_premium_high'): _tp_signal = 'bearish'; _tp_text = f'期限溢价 {_tp_val:.2f}% 偏高: 长端上行由供给/财政/久期风险驱动 (非纯政策预期) 〔模型假设: 此因果归因非数据实证〕'
     elif _tp_val < 0: _tp_signal = 'bullish'; _tp_text = f'期限溢价 {_tp_val:.2f}% 为负: 市场押注未来降息 + 宽松'
     else: _tp_text = f'期限溢价 {_tp_val:.2f}% 中性: 10Y 主要由政策路径预期驱动'
 else:
@@ -4497,8 +4618,8 @@ _SL = _MPOS.get('sloos') or {}
 _sloos_val = _SL.get('value')
 _sloos_signal = 'neutral'; _sloos_text = 'SLOOS 数据缺失'
 if _sloos_val is not None:
-    if _sloos_val > 10: _sloos_signal = 'bearish'; _sloos_text = f'SLOOS 收紧净占比 {_sloos_val:.0f}%: 银行大幅收紧信贷 → 领先信用收缩 2-4 季度'
-    elif _sloos_val > 0: _sloos_signal = 'mixed'; _sloos_text = f'SLOOS {_sloos_val:.0f}%: 边际收紧, 信贷周期转向观察期'
+    if _sloos_val > TV('sloos_tighten'): _sloos_signal = 'bearish'; _sloos_text = f'SLOOS 收紧净占比 {_sloos_val:.0f}%: 银行大幅收紧信贷 → 领先信用收缩 2-4 季度'
+    elif _sloos_val > TV('sloos_marginal'): _sloos_signal = 'mixed'; _sloos_text = f'SLOOS {_sloos_val:.0f}%: 边际收紧, 信贷周期转向观察期'
     else: _sloos_signal = 'bullish'; _sloos_text = f'SLOOS 净占比 {_sloos_val:.0f}%: 银行放宽信贷, 信用扩张周期延续'
 
 # ---- NFCI 分项: 压力定位 ----
@@ -4507,9 +4628,9 @@ _nfci_rows = []
 for _k, _c in _nfci_parts.items():
     _v = _c.get('value')
     if _v is None: continue
-    _s = 'bearish' if _v > 0.2 else ('mixed' if _v > 0 else 'bullish')
+    _s = 'bearish' if _v > TV('nfci_stress') else ('mixed' if _v > 0 else 'bullish')
     _nfci_rows.append({'key': _c.get('label', _k), 'value': round(_v, 3), 'signal': _s,
-                       'meaning': ('收紧/承压' if _v > 0.2 else ('边际收紧' if _v > 0 else '宽松'))})
+                       'meaning': ('收紧/承压' if _v > TV('nfci_stress') else ('边际收紧' if _v > 0 else '宽松'))})
 
 # ---- 家庭净资产 / 银行信贷 ----
 _HNW = _MPOS.get('householdNetWorth') or {}
@@ -4519,20 +4640,24 @@ DATA['marketPositioning'] = {
     'asOf': _MPOS.get('fetched_at'),
     'cftc': _cftc_rows,
     'cftcCrowded': _cftc_crowded,
+    'cftcDisagg': _cftc_disagg,
+    'cftcDisaggCrowded': _cftc_disagg_crowded,
     'termPremium': {'value': _tp_val, 'expPath': _exp_path, 'note': _TP.get('note', ''),
+                    'modelAssumption': THRESHOLDS['term_premium_high'].get('modelAssumption', False),
                     'signal': _tp_signal, 'text': _tp_text, 'date': _TP.get('date')},
     'sloos': {'value': _sloos_val, 'signal': _sloos_signal, 'text': _sloos_text, 'date': _SL.get('date')},
     'nfciParts': _nfci_rows,
     'householdNetWorth': _HNW,
     'bankCredit': _BC,
     'whatToWatch': [
-        {'trigger': 'CFTC 净持仓占比 >30%', 'implication': '极端单边 = 拥挤交易, 反转风险上升', 'status': ('触发: ' + '、'.join(_cftc_crowded)) if _cftc_crowded else '无'},
+        {'trigger': 'CFTC 三类参与方净持仓占比 >30%', 'implication': '极端单边 = 拥挤交易, 反转风险上升', 'status': ('触发: ' + '、'.join(_cftc_disagg_crowded)) if _cftc_disagg_crowded else (('触发(legacy): ' + '、'.join(_cftc_crowded)) if _cftc_crowded else '无')},
         {'trigger': '期限溢价突破 <span class="watch-threshold">1.0%</span>', 'implication': '财政/供给驱动长端, "higher for longer"强化', 'status': f'当前 {_tp_val:.2f}%' if _tp_val is not None else '—'},
         {'trigger': 'SLOOS 收紧 >20%', 'implication': '信贷收缩确认, 衰退概率显著上升', 'status': f'当前 {_sloos_val:.0f}%' if _sloos_val is not None else '—'},
     ],
     'analystView': (
-        ('持仓面: ' + ('、'.join(f'{r["asset"]} 投机净{"多" if r["dir"]=="long" else "空"} {r["net"]:+,.0f} 手' for r in _cftc_rows[:4]) if _cftc_rows else 'CFTC 数据暂缺') + '。')
-        + ('拥挤警示: ' + '；'.join(_cftc_crowded) + '。' if _cftc_crowded else '')
+        (('持仓面(离散三分法): ' + '；'.join(_cftc_disagg_movers) + '。') if _cftc_disagg_movers else
+         ('持仓面: ' + ('、'.join(f'{r["asset"]} 投机净{"多" if r["dir"]=="long" else "空"} {r["net"]:+,.0f} 手' for r in _cftc_rows[:4]) if _cftc_rows else 'CFTC 数据暂缺') + '。'))
+        + ('拥挤警示: ' + '；'.join(_cftc_disagg_crowded) + '。' if _cftc_disagg_crowded else ('拥挤警示: ' + '；'.join(_cftc_crowded) + '。' if _cftc_crowded else ''))
         + (_tp_text + '。' if _tp_text else '')
         + (_sloos_text + '。' if _sloos_text else '')
         + ('家庭净资产 $%sT / 银行信贷 $%sT 提供实体端锚。' % (_HNW.get('value'), _BC.get('value')) if _HNW.get('value') else '')
@@ -4608,7 +4733,7 @@ for _r in _cftc_rows:
     _cl = _r.get('chgLabel') or ''
     if _chg is None:
         continue
-    if _crowd > 30 and _net < 0 and _chg > 0:
+    if _crowd > TV('cftc_trade_crowd') and _net < 0 and _chg > 0:
         _cftc_trades.append({
             'asset': f'{_r["asset"]} (CFTC 空头回补)', 'side': '做多',
             'thesis': f'投机净空 {abs(_net):,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 且{_cl}——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。',
@@ -4625,7 +4750,7 @@ for _r in _cftc_rows:
             'driver': 'cftc_short_squeeze', 'source': 'cftc_positioning',
             'falsifyRules': [], 'symbol': 'cftc',
         })
-    elif _crowd > 30 and _net > 0 and _chg < 0:
+    elif _crowd > TV('cftc_trade_crowd') and _net > 0 and _chg < 0:
         _cftc_trades.append({
             'asset': f'{_r["asset"]} (CFTC 多头了结)', 'side': '回避/做空',
             'thesis': f'投机净多 {_net:,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 但{_cl}——多头开始离场, 拥挤的多头平仓是下跌燃料。',

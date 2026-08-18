@@ -2872,36 +2872,70 @@ function renderPositioning(c) {
     + '<div style="font-size:12px;color:#5f5e5a;line-height:1.7;">' + (d.analystView || '数据暂缺') + '</div>'
     + '</div>';
 
-  // ===== 1. CFTC 持仓: 谁在动 =====
-  h += sectionH('CFTC 投机净持仓（谁在动）', '非商业(投机)净持仓 · 极端单边 = 拥挤交易, 反转风险上升 · 周更新');
-  const cf = d.cftc || [];
-  if (!cf.length) {
-    h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">CFTC 数据暂缺 (每周五更新)</div>';
-  } else {
-    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">';
-    cf.forEach(function (r) {
-      const long = r.dir === 'long';
-      const col = long ? '#0f6e56' : '#a32d2d';
-      const bg = long ? '#e6f6ee' : '#fcebeb';
-      const crowded = r.crowding > 25;
-      h += '<div style="background:' + bg + ';border:1px solid ' + col + ';border-radius:10px;padding:10px 12px;">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-        + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + r.asset + '</span>'
-        + (crowded ? '<span style="padding:2px 8px;border-radius:10px;background:#fff;color:#a32d2d;font-size:10px;font-weight:600;border:1px solid #f09595;">拥挤 ' + r.crowding + '%</span>' : '')
-        + '</div>'
-        + '<div style="font-size:11px;color:#6b7280;margin:2px 0 6px;">' + (r.note || '') + ' · ' + (r.date || '') + '</div>'
-        + '<div style="font-size:18px;font-weight:600;color:' + col + ';">' + (r.net > 0 ? '+' : '') + Number(r.net).toLocaleString() + ' 手</div>'
-        + '<div style="font-size:11px;color:#5f5e5a;margin-top:4px;">' + (long ? '净多头' : '净空头')
-        + (r.chgLabel ? ' · <b style="color:' + (r.chgLabel.indexOf('增') >= 0 ? '#a32d2d' : '#0f6e56') + ';">' + r.chgLabel + '</b>'
-                       : (r.chg != null ? ' · 周变化 ' + (r.chg > 0 ? '+' : '') + Number(r.chg).toLocaleString() : '')) + '</div>'
-        + '<div style="height:5px;background:rgba(0,0,0,0.08);border-radius:3px;margin-top:6px;overflow:hidden;">'
-        + '<div style="height:100%;width:' + Math.min(Math.abs(r.crowding) * 2, 100) + '%;background:' + col + ';border-radius:3px;"></div></div>'
-        + '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">单边度 ' + r.crowding + '% (OI)</div>'
-        + '</div>';
+  // ===== 1. CFTC 离散持仓: 谁在动 (dealer / assetMgr / leveraged 三分法) =====
+  const GLABEL = { dealer: '交易商/中介', assetMgr: '资产管理/真实资金', leveraged: '杠杆基金' };
+  const GCOLOR = { dealer: '#185FA5', assetMgr: '#0F6E56', leveraged: '#a32d2d' };
+  h += sectionH('CFTC 离散持仓（谁在动）', 'CFTC TFF 报告: 交易商/中介 · 资产管理(真实资金) · 杠杆基金 三分法 — 取代 legacy 投机/套保二分 · 周更新');
+  const cda = d.cftcDisagg || [];
+  if (cda.length) {
+    cda.forEach(function (c) {
+      const mover = c.mover;
+      h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:12px;">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">'
+        + '<span style="font-size:14px;font-weight:700;color:#1a1d29;">' + c.asset + '</span>'
+        + '<span style="font-size:11px;color:#9ca3af;">' + (c.note || '') + ' · OI ' + (c.oi != null ? Number(c.oi).toLocaleString() : '—') + ' · ' + (c.date || '') + '</span></div>';
+      h += '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:4px;font-size:10px;color:#9ca3af;padding:0 2px 4px;border-bottom:1px solid #eee;">'
+        + '<span>参与方</span><span style="text-align:right;">净持仓(手)</span><span style="text-align:right;">周变化</span><span style="text-align:right;">占OI%</span></div>';
+      (c.groups || []).forEach(function (g) {
+        const gk = g.group;
+        const isMover = (gk === mover);
+        const netCol = (g.net != null && g.net > 0) ? '#0f6e56' : '#a32d2d';
+        const chgCol = (g.chgNet == null) ? '#9ca3af' : ((g.chgNet >= 0) ? '#0f6e56' : '#a32d2d');
+        const crowd = (g.pctOi != null && g.pctOi > 30);
+        h += '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:4px;align-items:center;padding:6px 2px;border-bottom:1px solid #f5f5f5;'
+          + (isMover ? 'background:#fff8ec;border-radius:6px;' : '') + '">';
+        h += '<span style="font-size:12px;font-weight:600;color:' + GCOLOR[gk] + ';">' + (GLABEL[gk] || gk)
+          + (isMover ? ' <span style="font-size:9px;background:#854f0b;color:#fff;padding:1px 5px;border-radius:8px;font-weight:600;vertical-align:middle;">本周主要变动</span>' : '') + '</span>';
+        h += '<span style="text-align:right;font-size:12px;font-weight:600;color:' + netCol + ';">' + (g.net == null ? '—' : ((g.net > 0 ? '+' : '') + Number(g.net).toLocaleString())) + '</span>';
+        h += '<span style="text-align:right;font-size:12px;color:' + chgCol + ';">' + (g.chgNet == null ? '—' : ((g.chgNet > 0 ? '+' : '') + Number(g.chgNet).toLocaleString())) + '</span>';
+        h += '<span style="text-align:right;font-size:12px;' + (crowd ? 'color:#a32d2d;font-weight:700;' : 'color:#374151;') + '">' + (g.pctOi == null ? '—' : (g.pctOi + '%')) + (crowd ? ' ⚠' : '') + '</span>';
+        h += '</div>';
+      });
+      h += '</div>';
     });
-    h += '</div>';
-    if (d.cftcCrowded && d.cftcCrowded.length) {
-      h += '<div style="margin-top:10px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + d.cftcCrowded.join('；') + '</div>';
+    const cdg = d.cftcDisaggCrowded || [];
+    if (cdg.length) h += '<div style="margin-top:2px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + cdg.join('；') + '</div>';
+  } else {
+    // 回退: legacy 投机净持仓 (非商业)
+    const cf = d.cftc || [];
+    if (!cf.length) {
+      h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;color:#6b7280;font-size:13px;">CFTC 数据暂缺 (每周五更新)</div>';
+    } else {
+      h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">';
+      cf.forEach(function (r) {
+        const long = r.dir === 'long';
+        const col = long ? '#0f6e56' : '#a32d2d';
+        const bg = long ? '#e6f6ee' : '#fcebeb';
+        const crowded = r.crowding > 25;
+        h += '<div style="background:' + bg + ';border:1px solid ' + col + ';border-radius:10px;padding:10px 12px;">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+          + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + r.asset + '</span>'
+          + (crowded ? '<span style="padding:2px 8px;border-radius:10px;background:#fff;color:#a32d2d;font-size:10px;font-weight:600;border:1px solid #f09595;">拥挤 ' + r.crowding + '%</span>' : '')
+          + '</div>'
+          + '<div style="font-size:11px;color:#6b7280;margin:2px 0 6px;">' + (r.note || '') + ' · ' + (r.date || '') + '</div>'
+          + '<div style="font-size:18px;font-weight:600;color:' + col + ';">' + (r.net > 0 ? '+' : '') + Number(r.net).toLocaleString() + ' 手</div>'
+          + '<div style="font-size:11px;color:#5f5e5a;margin-top:4px;">' + (long ? '净多头' : '净空头')
+          + (r.chgLabel ? ' · <b style="color:' + (r.chgLabel.indexOf('增') >= 0 ? '#a32d2d' : '#0f6e56') + ';">' + r.chgLabel + '</b>'
+                         : (r.chg != null ? ' · 周变化 ' + (r.chg > 0 ? '+' : '') + Number(r.chg).toLocaleString() : '')) + '</div>'
+          + '<div style="height:5px;background:rgba(0,0,0,0.08);border-radius:3px;margin-top:6px;overflow:hidden;">'
+          + '<div style="height:100%;width:' + Math.min(Math.abs(r.crowding) * 2, 100) + '%;background:' + col + ';border-radius:3px;"></div></div>'
+          + '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">单边度 ' + r.crowding + '% (OI)</div>'
+          + '</div>';
+      });
+      h += '</div>';
+      if (d.cftcCrowded && d.cftcCrowded.length) {
+        h += '<div style="margin-top:10px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + d.cftcCrowded.join('；') + '</div>';
+      }
     }
   }
 
@@ -2925,10 +2959,10 @@ function renderPositioning(c) {
       + '</div></div>'
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:4px;">'
       + '<div style="background:#f7f8fa;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#185FA5;margin-bottom:3px;">① 溢价怎么来</div><div style="font-size:11px;color:#374151;line-height:1.6;">ACM 模型把 10Y 拆成「未来短端利率预期」+「持有长债的额外补偿」。这 ' + tp.value.toFixed(2) + '% 是超出政策预期的那部分补偿。</div></div>'
-      + '<div style="background:#fdf5f4;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:3px;">② 为什么偏高</div><div style="font-size:11px;color:#374151;line-height:1.6;">平台判据 &gt;0.5% 即偏高(偏空信号)。长端上行由<b>供给/财政/久期风险</b>驱动, 而非单纯降息预期, 美联储也压不住长端。</div></div>'
+      + '<div style="background:#fdf5f4;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:3px;">② 为什么偏高<span style="display:inline-block;background:#fff4e5;color:#9a5b00;border:1px solid #f0c98a;border-radius:4px;font-size:10px;padding:0 5px;margin-left:5px;font-weight:600;">模型假设</span></div><div style="font-size:11px;color:#374151;line-height:1.6;">平台判据 &gt;0.5% 即偏高(偏空信号)。长端上行由<b>供给/财政/久期风险</b><span style="display:inline-block;background:#fff4e5;color:#9a5b00;border:1px solid #f0c98a;border-radius:4px;font-size:10px;padding:0 5px;margin-left:3px;font-weight:600;">模型假设</span>驱动, 而非单纯降息预期, 美联储也压不住长端。此因果归因并非数据实证, 仅作分析框架假设。</div></div>'
       + '<div style="background:#fff8ec;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:600;color:#854f0b;margin-bottom:3px;">③ 留意什么</div><div style="font-size:11px;color:#374151;line-height:1.6;">危险阈值 <b>1.0%</b>(财政驱动强化); 数据截至 ' + (tp.date || '—') + ' 有滞后; 需与 CFTC 持仓、30Y-10Y 利差交叉验证才可靠。</div></div>'
       + '</div>'
-      + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-top:8px;"><b style="color:' + tpCol + ';">' + tp.text + '</b></div>'
+      + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-top:8px;"><b style="color:' + tpCol + ';">' + tp.text + '</b>' + (tp.modelAssumption ? ' <span style="display:inline-block;background:#fff4e5;color:#9a5b00;border:1px solid #f0c98a;border-radius:4px;font-size:10px;padding:0 5px;font-weight:600;">模型假设</span>' : '') + '</div>'
       + '</div>';
   }
 
