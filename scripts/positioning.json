@@ -47,6 +47,168 @@
       "note": "长端利率(投机净持仓)"
     }
   },
+  "cftc_disagg": {
+    "E-mini S&P 500": {
+      "date": "2026-08-11",
+      "oi": 2119506.0,
+      "groups": {
+        "dealer": {
+          "long": 216163.0,
+          "short": 995795.0,
+          "spread": 61405.0,
+          "net": -779632.0,
+          "chgNet": -62806.0,
+          "pctOi": 36.8
+        },
+        "assetMgr": {
+          "long": 1154700.0,
+          "short": 206219.0,
+          "spread": 95003.0,
+          "net": 948481.0,
+          "chgNet": 11448.0,
+          "pctOi": 44.8
+        },
+        "leveraged": {
+          "long": 205744.0,
+          "short": 486190.0,
+          "spread": 61420.0,
+          "net": -280446.0,
+          "chgNet": 49553.0,
+          "pctOi": 13.2
+        }
+      },
+      "mover": "dealer",
+      "note": "股市(机构定位)"
+    },
+    "10Y 美债期货": {
+      "date": "2026-08-11",
+      "oi": 5458890.0,
+      "groups": {
+        "dealer": {
+          "long": 162930.0,
+          "short": 637196.0,
+          "spread": 66281.0,
+          "net": -474266.0,
+          "chgNet": -65812.0,
+          "pctOi": 8.7
+        },
+        "assetMgr": {
+          "long": 3290600.0,
+          "short": 736189.0,
+          "spread": 665819.0,
+          "net": 2554411.0,
+          "chgNet": -40268.0,
+          "pctOi": 46.8
+        },
+        "leveraged": {
+          "long": 341893.0,
+          "short": 2505607.0,
+          "spread": 211070.0,
+          "net": -2163714.0,
+          "chgNet": 67956.0,
+          "pctOi": 39.6
+        }
+      },
+      "mover": "leveraged",
+      "note": "长端利率(机构定位)"
+    },
+    "2Y 美债期货": {
+      "date": "2026-08-11",
+      "oi": 4377812.0,
+      "groups": {
+        "dealer": {
+          "long": 123637.0,
+          "short": 604089.0,
+          "spread": 31830.0,
+          "net": -480452.0,
+          "chgNet": 21693.0,
+          "pctOi": 11.0
+        },
+        "assetMgr": {
+          "long": 2342975.0,
+          "short": 662586.0,
+          "spread": 561141.0,
+          "net": 1680389.0,
+          "chgNet": -12900.0,
+          "pctOi": 38.4
+        },
+        "leveraged": {
+          "long": 618328.0,
+          "short": 1977849.0,
+          "spread": 151061.0,
+          "net": -1359521.0,
+          "chgNet": -25340.0,
+          "pctOi": 31.1
+        }
+      },
+      "mover": "leveraged",
+      "note": "短端利率(机构定位)"
+    },
+    "欧元": {
+      "date": "2026-08-11",
+      "oi": 801884.0,
+      "groups": {
+        "dealer": {
+          "long": 53721.0,
+          "short": 259757.0,
+          "spread": 11181.0,
+          "net": -206036.0,
+          "chgNet": -1558.0,
+          "pctOi": 25.7
+        },
+        "assetMgr": {
+          "long": 450831.0,
+          "short": 225442.0,
+          "spread": 57918.0,
+          "net": 225389.0,
+          "chgNet": 6127.0,
+          "pctOi": 28.1
+        },
+        "leveraged": {
+          "long": 86753.0,
+          "short": 147353.0,
+          "spread": 28510.0,
+          "net": -60600.0,
+          "chgNet": -8395.0,
+          "pctOi": 7.6
+        }
+      },
+      "mover": "leveraged",
+      "note": "美元(机构定位)"
+    },
+    "Nasdaq 100": {
+      "date": "2026-08-11",
+      "oi": 302340.0,
+      "groups": {
+        "dealer": {
+          "long": 72360.0,
+          "short": 58881.0,
+          "spread": 10431.0,
+          "net": 13479.0,
+          "chgNet": -5136.0,
+          "pctOi": 4.5
+        },
+        "assetMgr": {
+          "long": 105223.0,
+          "short": 42634.0,
+          "spread": 4762.0,
+          "net": 62589.0,
+          "chgNet": -2663.0,
+          "pctOi": 20.7
+        },
+        "leveraged": {
+          "long": 30345.0,
+          "short": 127072.0,
+          "spread": 15858.0,
+          "net": -96727.0,
+          "chgNet": 3914.0,
+          "pctOi": 32.0
+        }
+      },
+      "mover": "dealer",
+      "note": "科技股(机构定位)"
+    }
+  },
   "termPremium": {
     "date": "2026-08-07",
     "value": 0.8257,
