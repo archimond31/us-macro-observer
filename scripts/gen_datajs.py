@@ -4458,10 +4458,19 @@ for _label, _c in (_MPOS.get('cftc') or {}).items():
         continue
     _dir = 'long' if _net > 0 else 'short'
     _crowd = abs(_net) / max(_c.get('oi') or 1, 1)  # 净持仓占 OI 比例 = 拥挤度
+    # 方向化周变化标签: 直接描述净头寸(空/多)本身的增减, 规避原始净变化符号歧义
+    _chg_label = None
+    if _chg is not None:
+        _mag = f'{abs(_chg):,.0f}'
+        if _dir == 'short':
+            _chg_label = f'净空头周{"增" if _chg < 0 else "减"} {_mag} 手'
+        else:
+            _chg_label = f'净多头周{"增" if _chg > 0 else "减"} {_mag} 手'
     _row = {
         'asset': _label, 'note': _c.get('note', ''),
         'net': round(_net, 0), 'oi': _c.get('oi'),
         'chg': round(_chg, 0) if _chg is not None else None,
+        'chgLabel': _chg_label,
         'dir': _dir, 'date': _c.get('date', ''),
         'crowding': round(_crowd * 100, 1),   # 净持仓/OI % = 单边拥挤度
     }
@@ -4589,27 +4598,28 @@ DATA['marketPositioning'] = {
 }
 
 # ===== CFTC 拥挤度反转信号 → 交易雷达候选 (2026-08-17) =====
-# 规则: 空头拥挤>30% + 周变化转正 → 空头回补候选 (做多);
-#       多头拥挤>30% + 周变化转负 → 获利了结候选 (做空/回避)
+# 规则: 空头拥挤>30% + 净空头周减(空头回补) → 做多候选;
+#       多头拥挤>30% + 净多头周减(多头了结) → 回避/做空候选
 _cftc_trades = []
 for _r in _cftc_rows:
     _crowd = _r.get('crowding') or 0
     _chg = _r.get('chg')
     _net = _r.get('net') or 0
+    _cl = _r.get('chgLabel') or ''
     if _chg is None:
         continue
     if _crowd > 30 and _net < 0 and _chg > 0:
         _cftc_trades.append({
             'asset': f'{_r["asset"]} (CFTC 空头回补)', 'side': '做多',
-            'thesis': f'投机净空 {abs(_net):,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 且周变化 {_chg:+,.0f} 转正——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。',
-            'bet': f'赌拥挤空头回补: CFTC 净空极端 ({_crowd:.0f}%) 后周变化转正, 平仓力量推动价格向上修复',
-            'verify': '①下周 CFTC 净空继续收窄 ②标的反弹伴随持仓下降(确认回补) ③无新增宏观利空',
-            'falsify': '①CFTC 净空重新扩大 ②跌破回补起点(空头卷土重来) ③黑天鹅打断回补',
-            'trigger': '周变化连续 2 周为正 + 单边度仍 >25%',
+            'thesis': f'投机净空 {abs(_net):,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 且{_cl}——空头开始回补, 极端拥挤提供反转燃料, 轧空概率上升。',
+            'bet': f'赌拥挤空头回补: CFTC 净空极端 ({_crowd:.0f}%) 后净空头开始下降, 平仓力量推动价格向上修复',
+            'verify': '①下周 CFTC 净空头继续收窄 ②标的反弹伴随持仓下降(确认回补) ③无新增宏观利空',
+            'falsify': '①CFTC 净空头重新扩大 ②跌破回补起点(空头卷土重来) ③黑天鹅打断回补',
+            'trigger': '净空头连续 2 周下降 + 单边度仍 >25%',
             'confidence': 'mid',
             'asymmetry': {'score': 3, 'note': '中性: 回补上行空间取决于拥挤度, 但若空头加码则反向',
-                          'falsify': ['CFTC 净空重新扩大', '价格跌破回补起点']},
-            'evidenceFor': [f'净空 {abs(_net):,.0f} 手 ({_crowd:.0f}% 单边)', f'周变化 {_chg:+,.0f} 转正'],
+                          'falsify': ['CFTC 净空头重新扩大', '价格跌破回补起点']},
+            'evidenceFor': [f'净空 {abs(_net):,.0f} 手 ({_crowd:.0f}% 单边)', _cl],
             'evidenceAgainst': ['拥挤可维持 (趋势延续)', '回补可能已部分发生'],
             'exposures': {'growth': +1, 'haven': -1},
             'driver': 'cftc_short_squeeze', 'source': 'cftc_positioning',
@@ -4618,14 +4628,14 @@ for _r in _cftc_rows:
     elif _crowd > 30 and _net > 0 and _chg < 0:
         _cftc_trades.append({
             'asset': f'{_r["asset"]} (CFTC 多头了结)', 'side': '回避/做空',
-            'thesis': f'投机净多 {_net:,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 但周变化 {_chg:+,.0f} 转负——多头开始离场, 拥挤的多头平仓是下跌燃料。',
-            'bet': f'赌拥挤多头了结: CFTC 净多极端 ({_crowd:.0f}%) 后周变化转负, 获利盘离场压价格',
-            'verify': '①下周 CFTC 净多继续收窄 ②标的回落伴随持仓下降',
-            'falsify': '①CFTC 净多重新扩大 ②突破前高(新资金进场)',
-            'trigger': '周变化连续 2 周为负 + 单边度仍 >25%',
+            'thesis': f'投机净多 {_net:,.0f} 手 (单边度 {_crowd:.0f}% 拥挤) 但{_cl}——多头开始离场, 拥挤的多头平仓是下跌燃料。',
+            'bet': f'赌拥挤多头了结: CFTC 净多极端 ({_crowd:.0f}%) 后净多头开始下降, 获利盘离场压价格',
+            'verify': '①下周 CFTC 净多头继续收窄 ②标的回落伴随持仓下降',
+            'falsify': '①CFTC 净多头重新扩大 ②突破前高(新资金进场)',
+            'trigger': '净多头连续 2 周下降 + 单边度仍 >25%',
             'confidence': 'mid',
             'asymmetry': {'score': 2, 'note': '中性偏负: 做空拥挤多头有踏空风险'},
-            'evidenceFor': [f'净多 {_net:,.0f} 手 ({_crowd:.0f}% 单边)', f'周变化 {_chg:+,.0f} 转负'],
+            'evidenceFor': [f'净多 {_net:,.0f} 手 ({_crowd:.0f}% 单边)', _cl],
             'evidenceAgainst': ['拥挤多头可继续加码', '动量趋势可能延续'],
             'exposures': {'growth': -1, 'haven': +1},
             'driver': 'cftc_long_unwind', 'source': 'cftc_positioning',

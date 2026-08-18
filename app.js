@@ -2892,7 +2892,8 @@ function renderPositioning(c) {
         + '<div style="font-size:11px;color:#6b7280;margin:2px 0 6px;">' + (r.note || '') + ' · ' + (r.date || '') + '</div>'
         + '<div style="font-size:18px;font-weight:600;color:' + col + ';">' + (r.net > 0 ? '+' : '') + Number(r.net).toLocaleString() + ' 手</div>'
         + '<div style="font-size:11px;color:#5f5e5a;margin-top:4px;">' + (long ? '净多头' : '净空头')
-        + (r.chg != null ? ' · 周变化 ' + (r.chg > 0 ? '+' : '') + Number(r.chg).toLocaleString() : '') + '</div>'
+        + (r.chgLabel ? ' · <b style="color:' + (r.chgLabel.indexOf('增') >= 0 ? '#a32d2d' : '#0f6e56') + ';">' + r.chgLabel + '</b>'
+                       : (r.chg != null ? ' · 周变化 ' + (r.chg > 0 ? '+' : '') + Number(r.chg).toLocaleString() : '')) + '</div>'
         + '<div style="height:5px;background:rgba(0,0,0,0.08);border-radius:3px;margin-top:6px;overflow:hidden;">'
         + '<div style="height:100%;width:' + Math.min(Math.abs(r.crowding) * 2, 100) + '%;background:' + col + ';border-radius:3px;"></div></div>'
         + '<div style="font-size:10px;color:#9ca3af;margin-top:2px;">单边度 ' + r.crowding + '% (OI)</div>'
