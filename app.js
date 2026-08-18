@@ -2905,6 +2905,9 @@ function renderPositioning(c) {
     });
     const cdg = d.cftcDisaggCrowded || [];
     if (cdg.length) h += '<div style="margin-top:2px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + cdg.join('；') + '</div>';
+    // 数据驱动解读(规则生成, 非固定叙事)
+    const cds = d.cftcDisaggSummary || '';
+    if (cds) h += '<div style="margin-top:12px;padding:12px 14px;background:#f0f7fb;border:1px solid #cce3f0;border-radius:8px;font-size:12px;color:#2c3e50;line-height:1.7;"><b style="color:#185FA5;">数据解读：</b>' + cds + '</div>';
   } else {
     // 回退: legacy 投机净持仓 (非商业)
     const cf = d.cftc || [];

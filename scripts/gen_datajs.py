@@ -4599,6 +4599,51 @@ for _label, _c in (_MPOS.get('cftc_disagg') or {}).items():
     _cftc_disagg.append({'asset': _label, 'note': _c.get('note', ''), 'date': _c.get('date', ''),
                          'oi': _c.get('oi'), 'groups': _grows, 'mover': _mover})
 
+# ---- 离散 COT 数据驱动解读 (规则化, 非固定叙事) ----
+def _build_cftc_disagg_summary(disagg):
+    if not disagg:
+        return ''
+    _bullets = []
+    # 1) 逐合约: mover + 拥挤方
+    for _c in disagg:
+        _asset = _c['asset']
+        _mover = _c.get('mover')
+        _mover_label = None
+        if _mover:
+            _mg = next((g for g in _c.get('groups', []) if g['group'] == _mover), None)
+            if _mg:
+                _mover_label = _mg['groupLabel']
+        _crowded_groups = [g['groupLabel'] for g in (_c.get('groups') or []) if (g.get('pctOi') or 0) > TV('cftc_crowd')]
+        _seg = []
+        if _mover_label:
+            _seg.append(f'本周由 {_mover_label} 主导变动')
+        if _crowded_groups:
+            _seg.append(f"拥挤: {', '.join(_crowded_groups)}")
+        if _seg:
+            _bullets.append(f"{_asset}: {'; '.join(_seg)}")
+    # 2) 跨资产结构 (rates / equity)
+    _rates = [c for c in disagg if '美债期货' in c.get('asset', '')]
+    _eqs = [c for c in disagg if any(x in c.get('asset', '') for x in ['S&P', 'Nasdaq'])]
+    if _rates:
+        _def = lambda c, k: next((g for g in c.get('groups', []) if g['group'] == k), None) or {}
+        _lev_short_all = all((_def(c, 'leveraged').get('net') or 0) < 0 for c in _rates)
+        _am_long_all = all((_def(c, 'assetMgr').get('net') or 0) > 0 for c in _rates)
+        if _lev_short_all and _am_long_all:
+            _bullets.append(f"利率曲线结构: {len(_rates)}个美债期货合约上，杠杆基金净卖出 vs 资产管理/真实资金净买入，呈现'陡峭化/宽松押注'结构")
+        elif _lev_short_all:
+            _bullets.append(f"利率曲线: 杠杆基金在 {len(_rates)} 个美债期货合约同步净卖出，做空方向一致")
+        elif _am_long_all:
+            _bullets.append(f"利率曲线: 真实资金在 {len(_rates)} 个美债期货合约同步净买入，承接杠杆空头")
+    if _eqs:
+        _def = lambda c, k: next((g for g in c.get('groups', []) if g['group'] == k), None) or {}
+        _dealer_short_all = all((_def(c, 'dealer').get('net') or 0) < 0 for c in _eqs)
+        _am_long_all = all((_def(c, 'assetMgr').get('net') or 0) > 0 for c in _eqs)
+        if _dealer_short_all and _am_long_all:
+            _bullets.append(f"股指期货结构: {len(_eqs)}个股指期货上，交易商/中介净做空、真实资金净做多，显示做市/对冲 vs 长期吸筹的分歧")
+    return ' · '.join(_bullets)
+
+_cftc_disagg_summary = _build_cftc_disagg_summary(_cftc_disagg)
+
 # ---- 期限溢价 ACM: 拆解 10Y = 预期短端路径 + 期限溢价 ----
 _TP = _MPOS.get('termPremium') or {}
 _tp_val = _TP.get('value')
@@ -4642,6 +4687,7 @@ DATA['marketPositioning'] = {
     'cftcCrowded': _cftc_crowded,
     'cftcDisagg': _cftc_disagg,
     'cftcDisaggCrowded': _cftc_disagg_crowded,
+    'cftcDisaggSummary': _cftc_disagg_summary,
     'termPremium': {'value': _tp_val, 'expPath': _exp_path, 'note': _TP.get('note', ''),
                     'modelAssumption': THRESHOLDS['term_premium_high'].get('modelAssumption', False),
                     'signal': _tp_signal, 'text': _tp_text, 'date': _TP.get('date')},
