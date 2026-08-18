@@ -4599,6 +4599,10 @@ for _label, _c in (_MPOS.get('cftc_disagg') or {}).items():
     _cftc_disagg.append({'asset': _label, 'note': _c.get('note', ''), 'date': _c.get('date', ''),
                          'oi': _c.get('oi'), 'groups': _grows, 'mover': _mover})
 
+# 显示顺序: 股指优先且 Nasdaq 100 紧随 E-mini S&P 500, 利率其次, 外汇最后
+_CFTC_DISAGG_ORDER = ['E-mini S&P 500', 'Nasdaq 100', '10Y 美债期货', '2Y 美债期货', '欧元']
+_cftc_disagg.sort(key=lambda c: _CFTC_DISAGG_ORDER.index(c['asset']) if c['asset'] in _CFTC_DISAGG_ORDER else 99)
+
 # ---- 离散 COT 数据驱动解读 (规则化, 非固定叙事) ----
 def _build_cftc_disagg_summary(disagg):
     if not disagg:
@@ -4640,6 +4644,22 @@ def _build_cftc_disagg_summary(disagg):
         _am_long_all = all((_def(c, 'assetMgr').get('net') or 0) > 0 for c in _eqs)
         if _dealer_short_all and _am_long_all:
             _bullets.append(f"股指期货结构: {len(_eqs)}个股指期货上，交易商/中介净做空、真实资金净做多，显示做市/对冲 vs 长期吸筹的分歧")
+        # S&P 500 vs Nasdaq 100 对比(若两者都存在)
+        _sp = next((c for c in _eqs if 'S&P' in c.get('asset', '')), None)
+        _nq = next((c for c in _eqs if 'Nasdaq' in c.get('asset', '')), None)
+        if _sp and _nq:
+            _sp_lev = _def(_sp, 'leveraged'); _nq_lev = _def(_nq, 'leveraged')
+            _sp_am = _def(_sp, 'assetMgr'); _nq_am = _def(_nq, 'assetMgr')
+            if (_sp_lev.get('net', 0) < 0 and _nq_lev.get('net', 0) < 0 and
+                _sp_am.get('net', 0) > 0 and _nq_am.get('net', 0) > 0):
+                _nq_crowded = (_nq_lev.get('pctOi') or 0) > TV('cftc_crowd')
+                _sp_crowded = (_sp_lev.get('pctOi') or 0) > TV('cftc_crowd')
+                if _nq_crowded and not _sp_crowded:
+                    _bullets.append("股指对比: S&P 500 与 Nasdaq 100 均为杠杆基金净空、真实资金净多；Nasdaq 杠杆空头更拥挤(>30% OI)，显示科技股投机分歧更大")
+                elif _sp_crowded and not _nq_crowded:
+                    _bullets.append("股指对比: 两大股指结构一致，但 S&P 500 杠杆空头更拥挤")
+                else:
+                    _bullets.append("股指对比: S&P 500 与 Nasdaq 100 均呈现杠杆基金净空 + 真实资金净多的镜像结构")
     return ' · '.join(_bullets)
 
 _cftc_disagg_summary = _build_cftc_disagg_summary(_cftc_disagg)
