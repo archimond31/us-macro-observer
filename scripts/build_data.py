@@ -406,6 +406,20 @@ def yahoo(symbol, rng='2y'):
     return []
 
 
+def merge_series(base, overlay, min_overlay_len=30):
+    """用 base 的长历史回填 overlay，再用 overlay 的最近值覆盖。
+    用于 Yahoo 实时源偶发短历史时，用 FRED 等官方源补全长序列。
+    要求 overlay 至少 min_overlay_len 个点才执行覆盖，避免完全用死数据替换实时值。
+    返回按日期排序的 [(date, value), ...]。"""
+    if not base:
+        return overlay
+    if not overlay or len(overlay) < min_overlay_len:
+        return base
+    merged = dict(base)
+    for d, v in overlay:
+        merged[d] = v
+    return sorted(merged.items())
+
 def cboe_vol(file_name):
     """CBOE 官方日度波动率历史 CSV 兜底 (VIX/GVZ/OVX)。
     FRED 已下架 VIXCLS/OVXCLS/GVZCLS, Yahoo 又常抽风, 故 CBOE 官方 CSV 作最后兜底。返回 [(date, close), ...] 或 []。"""
@@ -749,6 +763,13 @@ for sym, key in YH_IDS.items():
     print(f'  YH {sym:10s} → {len(S[key]):4d} pts, latest {last(S[key])}')
     time.sleep(0.4)
 
+# 30Y 国债: Yahoo ^TYX 是实时主源，但偶发只返回短历史。
+# 若 TYX 短于 DGS30，用 FRED DGS30 长历史回填，再用 TYX 最新值覆盖，保证前端的 90天/2年图完整。
+if S.get('tyx') and S.get('dgs30') and len(S['tyx']) < len(S['dgs30']):
+    _orig_len = len(S['tyx'])
+    S['tyx'] = merge_series(S['dgs30'], S['tyx'], min_overlay_len=10)
+    print(f'  [TYX回填] ^TYX 原 {_orig_len} pts < DGS30 {len(S["dgs30"])} pts, 已用 DGS30 回填至 {len(S["tyx"])} pts')
+
 # AI 公司行情 (与主线行情分开, 便于阅读日志)
 for sym, key in AI_YH_IDS.items():
     S[key] = yahoo(sym)
@@ -783,16 +804,27 @@ if S.get('btc') and S.get('eth'):
         S['eth_btc_ratio'] = _ethbtc
         print(f'  [ETH/BTC] → {len(_ethbtc)} pts, latest {_ethbtc[-1]}')
 
-# 与上次运行合并: 本次拉取失败(空)的序列沿用昨日缓存, 避免瞬时故障导致前端数据回退为空
+# 与上次运行合并: 本次拉取失败(空)或返回短历史的序列, 用昨日缓存回填/合并,
+# 避免瞬时故障导致前端曲线截断。30Y/SOX 等 Yahoo 指数偶发只返回几个月历史,
+# 合并后保留长历史 + 最新实时值。
 try:
     PREV = json.load(open(SCRIPT_DIR / 'raw_series.json'))
     healed = []
+    merged = []
     for k in list(S.keys()):
-        if not S[k] and PREV.get(k):
-            S[k] = PREV[k]
+        prev = PREV.get(k, [])
+        if not S[k] and prev:
+            S[k] = prev
             healed.append(k)
+        elif prev and len(S[k]) < len(prev) * 0.85:
+            _old_len = len(S[k])
+            # min_overlay_len=1: 即使本次只返回 1 个最新点, 也要覆盖到长历史上
+            S[k] = merge_series(prev, S[k], min_overlay_len=1)
+            merged.append(f'{k}:{_old_len}->{len(S[k])}')
     if healed:
         print(f'  [缓存回补] {len(healed)} 个序列沿用上次数据: {", ".join(healed)}')
+    if merged:
+        print(f'  [缓存合并] {len(merged)} 个序列合并长历史: {", ".join(merged)}')
 except Exception:
     pass
 

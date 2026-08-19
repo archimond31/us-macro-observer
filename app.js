@@ -837,7 +837,8 @@ function renderAssets(c) {
           data: uid.series[n],
           rawData: (uid.rawSeries && uid.rawSeries[n]) ? uid.rawSeries[n] : null,
           borderColor: COLORS.series[i % COLORS.series.length],
-          backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+          backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3,
+          spanGaps: true
         }))
       },
       options: uiOpts
@@ -1366,7 +1367,8 @@ function renderRates(c) {
             data: yt.series[n],
             rawData: (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null,
             borderColor: ytColors[n] || COLORS.series[ytNames.indexOf(n) % COLORS.series.length],
-            backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3
+            backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3,
+            spanGaps: true
           };
         })
       },
