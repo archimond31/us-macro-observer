@@ -772,6 +772,60 @@ def _build_cb_purchases_chart():
     }
 
 
+def _build_treasury_auctions(auct):
+    """把 Treasury Fiscal Data 的拍卖结果 blob 转成利率板块展示结构。
+    返回: { asOf, source, note, table[], curve{labels,nominal,tips}, history{labels,series} } 或 None。
+    表格列: 期限/类型/拍卖日/中标利率/较前次Δbp/投标倍数/间接认购%/发行量/重开发行。
+    曲线: 各期限最新拍卖中标利率 (名义 + TIPS 实利率)。
+    历史: 2Y/5Y/10Y/30Y 拍卖中标利率, 对齐到共同拍卖日期轴 (spanGaps)。"""
+    if not auct or not auct.get('tenors'):
+        return None
+    tenors = auct['tenors']
+    table = []
+    for t in tenors:
+        L = t['latest']
+        chg = L.get('change_bp')
+        table.append({
+            'label': t['label'], 'type': t['type'], 'date': L['date'],
+            'rate': f2(L['rate']) + '%',
+            'rateType': ('投资利率' if L['rate_type'] == 'investment' else '中标收益率'),
+            'changeBp': {'text': (f'{chg:+.1f}bp' if chg is not None else '—'),
+                         'dir': ('up' if (chg or 0) > 0 else ('down' if (chg or 0) < 0 else 'neutral'))},
+            'bidToCover': (f"{L['bid_to_cover']:.2f}" if L.get('bid_to_cover') is not None else '—'),
+            'indirectPct': (f"{L['indirect_pct']:.1f}%" if L.get('indirect_pct') is not None else '—'),
+            'offeringB': (f"${L['offering_b']:.0f}B" if L.get('offering_b') is not None else '—'),
+            'reopening': bool(L.get('reopening')),
+        })
+    # 拍卖收益率曲线: 名义 + TIPS 实利率 (与 tenor 顺序对齐, TIPS 仅在 5/10/30 位置有值)
+    curve_labels = [t['label'] for t in tenors]
+    curve_nom = [round(t['latest']['rate'], 3) if t['group'] != 'tips' else None for t in tenors]
+    curve_tips = [round(t['latest']['rate'], 3) if t['group'] == 'tips' else None for t in tenors]
+    # 拍卖历史: 2Y/5Y/10Y/30Y 对齐共同日期轴
+    HIST_KEYS = ['auct_2y', 'auct_5y', 'auct_10y', 'auct_30y']
+    hmap = {t['key']: t for t in tenors}
+    union = []
+    for k in HIST_KEYS:
+        if k in hmap:
+            for h in hmap[k]['history']:
+                if h['date'] not in union:
+                    union.append(h['date'])
+    union.sort()
+    hist_series = {}
+    for k in HIST_KEYS:
+        if k not in hmap:
+            continue
+        hm = {h['date']: round(h['rate'], 3) for h in hmap[k]['history']}
+        hist_series[hmap[k]['label']] = [hm.get(d) for d in union]
+    return {
+        'asOf': auct.get('as_of'),
+        'source': auct.get('source'),
+        'note': auct.get('note'),
+        'table': table,
+        'curve': {'labels': curve_labels, 'nominal': curve_nom, 'tips': curve_tips},
+        'history': {'labels': union, 'series': hist_series},
+    }
+
+
 def _build_labor_triangle():
     """劳动力市场 '需求-供给-价格' 三角框架图表数据 (近 3 年月度, 9 序列, 3 panel)。
     便于观察三个维度的中长期趋势与交叉信号。"""
@@ -1571,6 +1625,8 @@ DATA['rates'] = {
         'spreadNote': f'10Y-2Y 利差 {spread_10_2/100:.2f}% ({spread_10_2:+.0f}bp) · Breakeven {f2(v_bei)}% (1年分位 {pct("bei10")})',
         'trendNote': f'10Y 周Δ{bp(tfm("dgs10")["w"]*100 if tfm("dgs10")["w"] is not None else None)} / 月Δ{bp(tfm("dgs10")["m"]*100 if tfm("dgs10")["m"] is not None else None)} / 半年Δ{bp(tfm("dgs10")["h6"]*100 if tfm("dgs10")["h6"] is not None else None)} · 2Y 周Δ{bp(tfm("dgs2")["w"]*100 if tfm("dgs2")["w"] is not None else None)}',
     },
+    # ===== 美国国债拍卖利率追踪 (Treasury Fiscal Data auctions_query) =====
+    'auctions': _build_treasury_auctions(C.get('treasury_auctions')),
 }
 
 # ====== 美联储 ======

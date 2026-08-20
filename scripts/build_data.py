@@ -16,6 +16,7 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 """
 import csv, io, json, os, sys, time, subprocess, re
 import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta
 from html import unescape
 from pathlib import Path
@@ -585,6 +586,152 @@ def fetch_gdpnow():
         return [(d, v)]
     return None
 
+# ---------- 美国国债拍卖利率 (Treasury Fiscal Data, 公开免 key) ----------
+def fetch_treasury_auctions(lookback_years=2.5):
+    """抓取各期限美国国债拍卖中标利率与需求指标, 归并到 canonical tenor。
+    源: U.S. Treasury Fiscal Data auctions_query API (公开, 免 API key)。
+    返回结构化 dict:
+      { as_of, source, note,
+        tenors: [ { key,label,group,type,
+                     latest:{date,rate,rate_type,prev_date,prev_rate,change_bp,
+                             bid_to_cover,indirect_pct,offering_b,reopening,security_term},
+                     history:[{date,rate}, ...] }, ... ] }   # 升序 by tenor
+    失败返回 None (不阻塞主管线)。
+    """
+    def _f(x):
+        try: return float(x) if x not in (None, 'null', '') else None
+        except Exception: return None
+    def _billion(x):
+        v = _f(x)
+        return round(v / 1e9, 2) if v is not None else None
+    def _pct(num, den):
+        n, d = _f(num), _f(den)
+        if n is None or d is None or d == 0: return None
+        return round(n / d * 100, 1)
+    def _st_label(g):
+        return {'bill': 'Bill 国库券', 'note': 'Note 中期票据', 'bond': 'Bond 长期国债', 'tips': 'TIPS 通胀保值'}.get(g, g)
+
+    import datetime as _dt
+    start = (_dt.datetime.now() - _dt.timedelta(days=int(lookback_years * 365))).strftime('%Y-%m-%d')
+    base = 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query'
+    fields = ('auction_date,record_date,security_type,security_term,original_security_term,'
+              'inflation_index_security,'
+              'high_yield,high_investment_rate,high_discnt_rate,bid_to_cover_ratio,'
+              'offering_amt,total_accepted,indirect_bidder_accepted,reopening')
+    # 注意: API 中 TIPS 的 security_type 是 'Note'/'Bond' (并带 inflation_index_security='Yes'),
+    # 并非 'TIPS'; 国库券的 original_security_term 不可靠(重开发行为 17-Week 等), 须用 security_term 基准期限。
+    # 因此: 国库券按 security_term 精确匹配基准期限; 附息国债/债券按 security_term 精确匹配; TIPS 按 original_security_term 匹配并跳过重开发行(同期限)。
+    BILL_TERMS = {  # security_term -> (key, label, group)
+        '4-Week': ('auct_4w', '4周', 'bill'), '8-Week': ('auct_8w', '8周', 'bill'),
+        '13-Week': ('auct_13w', '13周', 'bill'), '26-Week': ('auct_26w', '26周', 'bill'),
+        '52-Week': ('auct_52w', '52周', 'bill'),
+    }
+    NOMINAL_TERMS = {  # security_term -> (key, label, group)
+        '2-Year': ('auct_2y', '2年', 'note'), '3-Year': ('auct_3y', '3年', 'note'),
+        '5-Year': ('auct_5y', '5年', 'note'), '7-Year': ('auct_7y', '7年', 'note'),
+        '10-Year': ('auct_10y', '10年', 'note'), '20-Year': ('auct_20y', '20年', 'note'),
+        '30-Year': ('auct_30y', '30年', 'bond'),
+    }
+    TIPS_T = {  # original_security_term -> (key, label, group)
+        '5-Year': ('auct_tips5y', '5年 TIPS', 'tips'),
+        '10-Year': ('auct_tips10y', '10年 TIPS', 'tips'),
+        '30-Year': ('auct_tips30y', '30年 TIPS', 'tips'),
+    }
+    ORDER = ['auct_4w', 'auct_8w', 'auct_13w', 'auct_26w', 'auct_52w',
+             'auct_2y', 'auct_3y', 'auct_5y', 'auct_7y', 'auct_10y', 'auct_20y', 'auct_30y',
+             'auct_tips5y', 'auct_tips10y', 'auct_tips30y']
+    KEYMETA = {}
+    for _v in list(BILL_TERMS.values()) + list(NOMINAL_TERMS.values()) + list(TIPS_T.values()):
+        KEYMETA[_v[0]] = (_v[1], _v[2])
+
+    # 分页抓取 (urllib.request, 失败静默跳过不阻塞管线; CI 环境无本地代理, 直连 Treasury API)
+    rows = []
+    size = 5000
+    for p in range(1, 25):
+        url = (f'{base}?fields={fields}&filter=record_date:gte:{start}'
+               f'&sort=-auction_date&page[size]={size}&page[number]={p}')
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            j = json.load(urllib.request.urlopen(req, timeout=30))
+        except Exception as e:
+            print(f'  [AUCT] 第{p}页抓取失败: {e}')
+            break
+        batch = j.get('data', [])
+        rows.extend(batch)
+        total = j.get('meta', {}).get('total-count', 0)
+        if not batch or len(rows) >= total:
+            break
+
+    if not rows:
+        print('  [AUCT] 无数据返回, 跳过')
+        return None
+
+    buckets = {k: [] for k in ORDER}
+    for r in rows:
+        st = r.get('security_type')
+        term = r.get('security_term')          # 基准期限标签 (bill/note/bond 最可靠)
+        ot = r.get('original_security_term')
+        is_tips = (r.get('inflation_index_security') == 'Yes')
+        if is_tips and ot in TIPS_T:
+            key, rtype = TIPS_T[ot][0], 'yield'
+        elif st == 'Bill' and term in BILL_TERMS:
+            key, rtype = BILL_TERMS[term][0], 'investment'
+        elif st in ('Note', 'Bond') and term in NOMINAL_TERMS:
+            key, rtype = NOMINAL_TERMS[term][0], 'yield'
+        else:
+            continue
+        rate = _f(r.get('high_investment_rate')) if rtype == 'investment' else _f(r.get('high_yield'))
+        if rate is None:
+            continue  # 结果尚未出炉 (拍卖日=今日/未来)
+        buckets[key].append({
+            'date': r.get('auction_date'),
+            'rate': rate, 'rate_type': rtype,
+            'bid_to_cover': _f(r.get('bid_to_cover_ratio')),
+            'offering_b': _billion(r.get('offering_amt')),
+            'indirect_pct': _pct(r.get('indirect_bidder_accepted'), r.get('total_accepted')),
+            'reopening': (r.get('reopening') == 'Yes'),
+            'security_term': r.get('security_term'),
+        })
+
+    tenors = []
+    as_of = None
+    for key in ORDER:
+        recs = sorted(buckets[key], key=lambda x: x['date'] or '')
+        if not recs:
+            continue
+        meta = KEYMETA[key]
+        latest = recs[-1]
+        prev = recs[-2] if len(recs) >= 2 else None
+        change_bp = round((latest['rate'] - prev['rate']) * 100, 1) if prev else None
+        tenors.append({
+            'key': key, 'label': meta[0], 'group': meta[1], 'type': _st_label(meta[1]),
+            'latest': {
+                'date': latest['date'], 'rate': latest['rate'], 'rate_type': latest['rate_type'],
+                'prev_date': prev['date'] if prev else None,
+                'prev_rate': prev['rate'] if prev else None,
+                'change_bp': change_bp,
+                'bid_to_cover': latest['bid_to_cover'],
+                'indirect_pct': latest['indirect_pct'],
+                'offering_b': latest['offering_b'],
+                'reopening': latest['reopening'],
+                'security_term': latest['security_term'],
+            },
+            'history': [{'date': x['date'], 'rate': x['rate']} for x in recs],
+        })
+        if as_of is None or (latest['date'] or '') > as_of:
+            as_of = latest['date']
+
+    if not tenors:
+        print('  [AUCT] 归并后无有效期限, 跳过')
+        return None
+    print(f'  [AUCT] 抓取 {len(rows)} 条拍卖记录, 覆盖 {len(tenors)} 个期限, 最新拍卖日 {as_of}')
+    return {
+        'as_of': as_of,
+        'source': 'U.S. Treasury Fiscal Data · auctions_query (公开免 key)',
+        'note': '国库券按投资利率(债券等价收益率)列示; 附息国债/TIPS 按中标收益率(high yield)列示。Δbp 为相对前次同期限拍卖的中标利率变动。',
+        'tenors': tenors,
+    }
+
 # ---------- 计算 ----------
 def chg(series, back):
     """变化值: 最新 - back个点之前 (series按时间升序)"""
@@ -895,6 +1042,9 @@ if S.get('empire'): reg('empire', S['empire'])
 if _gnow:
     reg('gdpnow', _gnow)
 
+# 美国国债拍卖利率 (Treasury Fiscal Data, 公开免 key) — 结构化 blob 存入 R, 不进 reg/HEALTH 时间序列体系
+AUCT = fetch_treasury_auctions()
+
 # Crypto 专用序列: ETH/BTC 比率 + ETF 流量
 if S.get('eth_btc_ratio'):
     reg('eth_btc_ratio', S['eth_btc_ratio'])
@@ -981,6 +1131,12 @@ if _gnow:
     HEALTH['gdpnow'] = {'status': 'OK', 'source': 'AtlantaFed:GDPNow',
                         'last_date': _gnow[0][0], 'value': _gnow[0][1]}
 
+# 国债拍卖利率: 结构化 blob, 单独登记健康状态 (非时间序列)
+if AUCT:
+    HEALTH['treasury_auctions'] = {'status': 'OK', 'source': AUCT['source'],
+                                   'last_date': AUCT['as_of'],
+                                   'note': f'{len(AUCT["tenors"])} 个期限拍卖中标利率+投标倍数+间接认购%'}
+
 with open(SCRIPT_DIR / 'data_health.json', 'w') as f:
     json.dump({'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
                'series': HEALTH}, f, indent=2, default=str)
@@ -993,6 +1149,8 @@ with open(SCRIPT_DIR / 'computed.json', 'w') as f:
     R['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     R['pmi_meta'] = PMI_META
     R['empire_meta'] = EMPIRE_META
+    if AUCT:
+        R['treasury_auctions'] = AUCT
     json.dump(R, f, default=str)
 print(f'计算结果已存 computed.json')
 

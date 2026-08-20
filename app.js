@@ -1261,6 +1261,24 @@ function renderRates(c) {
   html += watchList(d.whatToWatch);
   html += sectionH('关键期限利率拆解', '名义利率 = 实际利率 + 通胀预期');
   html += table(['期限', '名义利率', '日变动', '实际利率', '通胀预期', '数据源'], d.detailedTable.map(r => [r.maturity, r.rate, r.change, r.realRate, r.breakeven, r.source]));
+
+  // ===== 美国国债拍卖利率追踪 =====
+  if (d.auctions) {
+    const a = d.auctions;
+    const aSub = '各期限最新拍卖中标利率与需求 · 来源 ' + (a.source || 'U.S. Treasury') + (a.asOf ? ' · 截至 ' + a.asOf : '');
+    html += sectionH('美国国债拍卖利率追踪', aSub);
+    if (a.note) html += '<div class="section-note" style="margin:-4px 0 10px;">' + a.note + '</div>';
+    html += table(
+      ['期限', '类型', '拍卖日', '中标利率', '较前次', '投标倍数', '间接认购%', '发行量', '性质'],
+      a.table.map(r => [r.label, r.type, r.date, r.rate, r.changeBp, r.bidToCover, r.indirectPct, r.offeringB, (r.reopening ? '重发' : '新发')])
+    );
+    html += '<div class="chart-row one-col">' +
+      chartCard('拍卖收益率曲线', '各期限最新拍卖中标利率 (名义 vs TIPS 实利率)', 'auctCurve', 'tall') +
+      '</div>';
+    html += '<div class="chart-row one-col">' +
+      chartCard('拍卖中标利率历史', '2Y / 5Y / 10Y / 30Y 历次拍卖中标利率走势 (横轴为拍卖日)', 'auctHistory', 'tall') +
+      '</div>';
+  }
   c.innerHTML = html;
 
   const yc = d.yieldCurve;
@@ -1378,6 +1396,50 @@ function renderRates(c) {
       labels: yt.labels,
       nums: ytNames.map(function (n) { return (yt.rawNums && yt.rawNums[n]) ? yt.rawNums[n] : null; }),
       raws: ytNames.map(function (n) { return (yt.rawSeries && yt.rawSeries[n]) ? yt.rawSeries[n] : null; })
+    });
+  }
+
+  // 美国国债拍卖利率追踪: 拍卖收益率曲线 + 拍卖历史
+  const ac = d.auctions;
+  if (ac && ac.curve && ac.curve.labels && ac.curve.labels.length) {
+    const cv = ac.curve;
+    charts.auctCurve = new Chart(document.getElementById('auctCurve'), {
+      type: 'line',
+      data: {
+        labels: cv.labels,
+        datasets: [
+          { label: '名义中标利率', data: cv.nominal, borderColor: '#4361ee',
+            backgroundColor: 'rgba(67,97,238,0.08)', borderWidth: 2.5, fill: true, pointRadius: 3, tension: 0.3, spanGaps: true },
+          { label: 'TIPS 实利率', data: cv.tips, borderColor: '#e63946',
+            backgroundColor: 'transparent', borderWidth: 2, borderDash: [5, 3], pointRadius: 3, tension: 0.3, spanGaps: true }
+        ]
+      },
+      options: Object.assign(baseOpts('%'), {
+        plugins: { tooltip: { callbacks: { label: function (ctx) {
+          return ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(3) + '%');
+        } } } }
+      })
+    });
+  }
+  if (ac && ac.history && ac.history.labels && ac.history.labels.length) {
+    const h = ac.history;
+    const hColors = { '2年': '#3a86ff', '5年': '#10b981', '10年': '#4361ee', '30年': '#7209b7' };
+    charts.auctHistory = new Chart(document.getElementById('auctHistory'), {
+      type: 'line',
+      data: {
+        labels: h.labels,
+        datasets: Object.keys(h.series).map(function (n) {
+          return {
+            label: n, data: h.series[n], borderColor: hColors[n] || COLORS.series[Object.keys(h.series).indexOf(n) % COLORS.series.length],
+            backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.3, spanGaps: true
+          };
+        })
+      },
+      options: Object.assign(baseOpts('%'), {
+        plugins: { tooltip: { callbacks: { label: function (ctx) {
+          return ctx.dataset.label + ' 拍卖: ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(3) + '%');
+        } } } }
+      })
     });
   }
 }

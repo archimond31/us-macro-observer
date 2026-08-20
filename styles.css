@@ -290,6 +290,14 @@ body {
   font-size: 13px; color: #7d6608;
   line-height: 1.7;
 }
+
+/* ===== Section Note (细分小节说明, 如拍卖利率口径) ===== */
+.section-note {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  margin: -4px 0 12px;
+}
 .info-note strong { color: #5d4e0a; }
 
 /* ===== Mini Bar ===== */
