@@ -123,7 +123,10 @@ def fetch_tga_dts(days=380):
         if not rows: break
         for x in rows:
             if x.get('account_type', '').startswith('Treasury General Account'):
-                bal = x.get('close_today_bal') or x.get('open_today_bal')
+                # close_today_bal 对 Opening Balance 行恒为字符串 "null", 需 fallback 到 open_today_bal
+                bal = x.get('close_today_bal')
+                if not bal or bal == 'null':
+                    bal = x.get('open_today_bal')
                 if bal and bal != 'null':
                     out.append((x['record_date'], float(bal) / 1e3))  # $M → $B
         if rows[-1].get('record_date', '9999') <= start:
@@ -133,11 +136,22 @@ def fetch_tga_dts(days=380):
     return sorted(seen.items())
 
 def fetch_tga(days=420):
-    s = fetch_tga_fred(days)
-    if s:
-        return s
-    print('  [TGA] FRED WTREGEN 不可用, 回退 Treasury DTS')
-    return fetch_tga_dts(days)
+    """TGA 主源: FRED WTREGEN (H.4.1 口径); 当 FRED 明显滞后时, 用 Treasury DTS 补齐最新日度数据。
+    实测 FRED WTREGEN 常滞后 5-7 天, 而 DTS 通常次日更新, 因此以"最新日期"为准做源选择。"""
+    fred_s = fetch_tga_fred(days)
+    dts_s = fetch_tga_dts(days)
+    fred_last = fred_s[-1][0] if fred_s else None
+    dts_last = dts_s[-1][0] if dts_s else None
+    # 日期比较: 取更晚的数据源; 若相等则优先 FRED (H.4.1 市场通用口径)
+    if fred_s and (not dts_s or fred_last >= dts_last):
+        if dts_last and fred_last < dts_last:
+            # 不会走到, 但保留逻辑对称
+            print(f'  [TGA] FRED WTREGEN 最新 {fred_last}, DTS 更新到 {dts_last}; 主源仍用 FRED')
+        return fred_s
+    if dts_s:
+        print(f'  [TGA] FRED WTREGEN 最新 {fred_last}, 改用更及时的 Treasury DTS ({dts_last})')
+        return dts_s
+    return fred_s if fred_s else []
 
 # ---------- PMI (FRED 已下架 ISM 序列 NAPMPMI/NAPM; 改用 S&P Global 美国 PMI, 经 Trading Economics 稳定抓取) ----------
 # 静态兜底: S&P Global 美国 PMI 历史 (final, 来源 Trading Economics/FRED 存档), 仅当实时抓取彻底失败时使用
@@ -1055,13 +1069,17 @@ if S.get('etf_eth_flow'):
     reg('etf_eth_flow', S['etf_eth_flow'], is_pct=False, unit='$M')
 
 # 净流动性(同单位 $B) = WALCL($M→$B) - RRP($B) - TGA($B)
-# WALCL 为周三快照, RRP/TGA 为日度 → 按最近邻(±4天)对齐, 避免交集过稀
+# WALCL 为周三快照, RRP/TGA 为日度 → 以 TGA 日度日期为锚, WALCL 做前向填充(每周三值沿用到下周三),
+# RRP 用最近邻(±1天), 从而把 netliq 更新到最新 TGA 日期, 避免图表被滞后 FRED WTREGEN 卡住。
 def merge_netliq():
     from bisect import bisect_left
     walcl = {d: v / 1000.0 for d, v in S['walcl']}           # $M → $B
     rrp = dict(S['rrp_api'] if S['rrp_api'] else S['rrp'])    # $B
     tga = dict(S['tga'])                                      # $B
-    def nearest(dates_map, d0, tol=4):
+    if not tga:
+        return []
+
+    def nearest(dates_map, d0, tol=1):
         ds = sorted(dates_map)
         if not ds: return None
         i = bisect_left(ds, d0)
@@ -1071,11 +1089,25 @@ def merge_netliq():
         if abs((datetime.fromisoformat(best) - datetime.fromisoformat(d0)).days) <= tol:
             return dates_map[best]
         return None
+
+    # WALCL 前向填充: 对每个 TGA 日期, 取不超过它的最新 WALCL 值
+    walcl_dates = sorted(walcl)
+    def walcl_for(d0):
+        i = bisect_left(walcl_dates, d0)
+        if i == 0:
+            # d0 早于第一个 WALCL, 若差距在 7 天内可借用第一个值, 否则缺省
+            first = walcl_dates[0]
+            if abs((datetime.fromisoformat(d0) - datetime.fromisoformat(first)).days) <= 7:
+                return walcl[first]
+            return None
+        return walcl[walcl_dates[i - 1]]
+
     out = []
-    for d in sorted(walcl):
-        r = nearest(rrp, d); t = nearest(tga, d)
-        if r is not None and t is not None:
-            out.append((d, walcl[d] - r - t))
+    for d in sorted(tga):
+        w = walcl_for(d)
+        r = nearest(rrp, d)
+        if w is not None and r is not None:
+            out.append((d, w - r - tga[d]))
     return out  # $B
 S['netliq'] = merge_netliq()
 print(f'  NETLIQ → {len(S["netliq"])} pts, latest {last(S["netliq"])}')

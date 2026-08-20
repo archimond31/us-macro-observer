@@ -324,6 +324,30 @@ def _dates_for(ref_key):
         return [d for d, _ in arr[-n:]]
     return list(range(n))
 
+def _align_to_dates(key, labels, scale=1.0, digits=2):
+    """把 RAW[key] 时间序列按 labels 日期做前向填充对齐(取不超过该日期的最新值),
+    用于周度序列(WALCL/resbal)对齐到日度 TGA 日期轴。"""
+    arr = s(key)
+    if not arr:
+        return [None] * len(labels)
+    ds = sorted({d: v for d, v in arr})  # 唯一日期升序
+    vals = {d: v for d, v in arr}
+    from bisect import bisect_left
+    out = []
+    for d0 in labels:
+        i = bisect_left(ds, d0)
+        if i == 0:
+            # 早于最早观测, 借用最早值(避免新数据起始段为空)
+            d = ds[0]
+        else:
+            d = ds[i - 1]
+        v = vals.get(d)
+        if v is None:
+            out.append(None)
+        else:
+            out.append(round(v * scale, digits))
+    return out
+
 # ---------- 格式化工具 ----------
 def f2(x):  return f'{x:.2f}' if isinstance(x,(int,float)) else '—'
 def f1(x):  return f'{x:.1f}' if isinstance(x,(int,float)) else '—'
@@ -1832,6 +1856,8 @@ DATA['fed'] = {
 
 # ====== 流动性 ======
 v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (val('sofr')-val('iorb'))
+# 流动性 chart 用 TGA 日度日期做 X 轴 (netliq 在 build_data.py 已日度化到 TGA 最新日期; resbal 为周度, 前向填充)
+_liq_labels = _dates_for('tga')
 # 流动性 regime (2026-08-12 优化): 净流动性水平+趋势 + SOFR-IORB + RRP 缓冲
 _nl_m = tfm('netliq')['m']            # 净流动性月变
 _nl_v = v_nl                          # 净流动性水平 ($B)
@@ -1931,8 +1957,8 @@ DATA['liquidity'] = {
         {'label':'净流动性','value':f'${comma(v_nl/1000,2)}T' if v_nl else '—','change':f'{bp(tfm("netliq")["w"], "$B") if tfm("netliq")["w"] else "—"}','dir':dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else 'neutral','tag':'NetLiq','percentile':pct('netliq'),'signal':_msig(dir_of(tfm("netliq")["w"]) if tfm("netliq")["w"] else None, False),'meaning':'WALCL−RRP−TGA','changes':{k:(bp(tfm("netliq")[k], "$B") if tfm("netliq")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('netliq')},
         {'label':'美联储总资产','value':f'${comma(v_walcl/1000000,2)}T','change':wk('walcl'),'dir':'down','tag':'WALCL','percentile':pct('walcl'),'signal':_msig(dir_of(tfm("walcl")["w"]), False),'meaning':'QT 第一驱动','changes':wk_dict('walcl'),'sparkline':series30('walcl')},
         {'label':'RRP 余额','value':f'${f2(v_rrpn)}B','change':bp(tfm("rrp")["w"], "$B"),'dir':dir_of(tfm("rrp")["w"]),'tag':'RRP','percentile':pct('rrp'),'signal':_msig(dir_of(tfm("rrp")["w"]), False),'meaning':'缓冲垫耗尽','changes':{k:(bp(tfm("rrp")[k], "$B") if tfm("rrp")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('rrp')},
-        {'label':'TGA 余额','value':f'${comma(v_tgan,1)}B' if v_tgan else '—','change':(f'+${comma(tfm("tga")["w"],0)}B' if (v_tgan and tfm("tga")["w"]) else '—'),'dir':dir_of(tfm("tga")["w"]) if v_tgan else 'neutral','tag':'TGA','percentile':pct('tga'),'signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False),'meaning':'财政部抽水','changes':{k:(f'+${comma(tfm("tga")[k],0)}B' if (v_tgan and tfm("tga")[k]) else '—') for k in ('d','w','m','h6')},'sparkline':series30('tga')},
-        {'label':'银行准备金','value':f'${comma(v_res/1000000,2)}T','change':f'+${comma(tfm("resbal")["w"]/1000,0)}B/周','dir':'up','tag':'Reserves','percentile':pct('resbal'),'signal':_msig(dir_of(tfm("resbal")["w"]), True),'meaning':'充裕区间下沿','changes':wk_dict('resbal'),'sparkline':series30('resbal')},
+        {'label':'TGA 余额','value':f'${comma(v_tgan,1)}B' if v_tgan else '—','change':(f'{"-" if tfm("tga")["w"]<0 else "+"}${comma(abs(tfm("tga")["w"]),0)}B' if (v_tgan and tfm("tga")["w"] is not None) else '—'),'dir':dir_of(tfm("tga")["w"]) if v_tgan else 'neutral','tag':'TGA','percentile':pct('tga'),'signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False),'meaning':'财政部抽水','changes':{k:(f'{"-" if tfm("tga")[k]<0 else "+"}${comma(abs(tfm("tga")[k]),0)}B' if (v_tgan and tfm("tga")[k] is not None) else '—') for k in ('d','w','m','h6')},'sparkline':series30('tga')},
+        {'label':'银行准备金','value':f'${comma(v_res/1000000,2)}T','change':f'{"-" if tfm("resbal")["w"]<0 else "+"}${comma(abs(tfm("resbal")["w"]/1000),0)}B/周','dir':dir_of(tfm("resbal")["w"]),'tag':'Reserves','percentile':pct('resbal'),'signal':_msig(dir_of(tfm("resbal")["w"]), True),'meaning':'充裕区间下沿','changes':wk_dict('resbal'),'sparkline':series30('resbal')},
         {'label':'SOFR-IORB','value':bp(v_sofr_iorb*100),'change':bp((tfm("sofr")["w"]-tfm("iorb")["w"])*100),'dir':dir_of((tfm("sofr")["w"] or 0)-(tfm("iorb")["w"] or 0)),'tag':'Spread','percentile':pct('sofr'),'signal':_msig(dir_of((tfm("sofr")["w"] or 0)-(tfm("iorb")["w"] or 0)), False),'meaning':'负值=充裕','changes':{k:(bp((tfm("sofr")[k]-tfm("iorb")[k])*100) if (tfm("sofr")[k] is not None and tfm("iorb")[k] is not None) else '—') for k in ('d','w','m','h6')},'sparkline':series30('sofr')},
     ],
     'trendData': [
@@ -2017,16 +2043,16 @@ DATA['liquidity'] = {
         'components':[
             {'name':'美联储总资产','value':round(v_walcl/1e6,2),'unit':'T$','sign':'+','color':'#4361ee','note':'Fed H.4.1 周度 · QT中'},
             {'name':'RRP 余额','value':round(v_rrpn/1000,4),'unit':'T$','sign':'−','color':'#2a9d8f','note':'NY Fed · 已耗尽'},
-            {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'FRED WTREGEN · 财政侧抽水'},
+            {'name':'TGA 余额','value':round(v_tgan/1000,4) if v_tgan else 0,'unit':'T$','sign':'−','color':'#e63946','note':'FRED WTREGEN / Treasury DTS · 财政侧抽水'},
         ]},
-    'chartData': {'labels': _dates_for('walcl'), 'series': {
+    'chartData': {'labels': _liq_labels, 'series': {
         '净流动性': [round(x/1000,2) for x in series90('netliq')] if v_nl else [],
-        '准备金': [round(x/1e6,2) for x in series90('resbal')],
+        '准备金': _align_to_dates('resbal', _liq_labels, scale=1/1e6, digits=2),
         'TGA': [round(x/1000,2) for x in series90('tga')] if v_tgan else []}},
     'weeklyChanges': [
         {'component':'美联储总资产 (WALCL)','current':f'${comma(v_walcl/1000000,2)}T','weekChange':cell('walcl','w'),'monthChange':cell('walcl','m'),'source':'Fed H.4.1','signal':_msig(dir_of(tfm("walcl")["w"]), False)},
         {'component':'RRP 余额','current':f'${f2(v_rrpn)}B','weekChange':bp(tfm("rrp")["w"],"$B"),'monthChange':bp(tfm("rrp")["m"],"$B"),'source':'NY Fed','signal':_msig(dir_of(tfm("rrp")["w"]), False)},
-        {'component':'TGA 余额','current':f'${comma(v_tgan,1)}B' if v_tgan else '—','weekChange':(f'+${comma(tfm("tga")["w"],0)}B' if v_tgan else '—'),'monthChange':(f'+${comma(tfm("tga")["m"],0)}B' if (v_tgan and tfm("tga")["m"]) else '—'),'source':'FRED WTREGEN','signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False)},
+        {'component':'TGA 余额','current':f'${comma(v_tgan,1)}B' if v_tgan else '—','weekChange':(f'{"-" if tfm("tga")["w"]<0 else "+"}${comma(abs(tfm("tga")["w"]),0)}B' if (v_tgan and tfm("tga")["w"] is not None) else '—'),'monthChange':(f'{"-" if tfm("tga")["m"]<0 else "+"}${comma(abs(tfm("tga")["m"]),0)}B' if (v_tgan and tfm("tga")["m"] is not None) else '—'),'source':'FRED WTREGEN / Treasury DTS','signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False)},
         {'component':'银行准备金 (WRESBAL)','current':f'${comma(v_res/1000000,2)}T','weekChange':cell('resbal','w'),'monthChange':cell('resbal','m'),'source':'Fed H.4.1','signal':_msig(dir_of(tfm("resbal")["w"]), True)},
         {'component':'净流动性(计算值)','current':f'${comma(v_nl/1000,2)}T' if v_nl else '—','weekChange':(bp(tfm("netliq")["w"],"$B") if tfm("netliq")["w"] else '—'),'monthChange':(bp(tfm("netliq")["m"],"$B") if tfm("netliq")["m"] else '—'),'source':'计算','signal':_msig(dir_of(tfm("netliq")["w"]), False)},
     ],
