@@ -3840,20 +3840,36 @@ def _aiclip(x, lo=0, hi=100):
     try: return max(lo, min(hi, x))
     except Exception: return 50
 
-def _ai_valuation(pe, fpe, peg):
-    """便宜度评分: PEG 优先, 其次远期/静态 PE; 数值越高=越便宜"""
-    if peg and peg > 0:
-        return (90 if peg <= 0.5 else 78 if peg <= 1.0 else 62 if peg <= 1.5
-                else 48 if peg <= 2.0 else 35 if peg <= 3.0 else 22)
-    pe_u = fpe or pe
-    if pe_u and pe_u > 0:
-        return (85 if pe_u <= 15 else 72 if pe_u <= 25 else 58 if pe_u <= 35
-                else 44 if pe_u <= 50 else 30)
-    return 50
+def _ai_fcf_yield_score(pe, fcfMargin):
+    """隐含FCF收益率视角(现金定价): fcfMargin%/pe 越高=越便宜。
+    例: FCF率35%/PE30 → 隐含收益率1.17% → 偏高(现金转化强)。
+    PE 或 FCF率缺失时返回 None, 由调用方回退到纯 PE/PEG。"""
+    if not pe or pe <= 0 or fcfMargin is None:
+        return None
+    yld = fcfMargin / pe  # 百分比点
+    return _aiclip(35 + yld * 27)
 
-def _ai_growth(g):
+def _ai_valuation(pe, fpe, peg, fcfMargin=None):
+    """便宜度评分(0-100, 越高越便宜): PEG/PE 为主(65%), 叠加隐含FCF收益率视角(35%)。
+    叠加项让'高FCF率+合理PE'的应用层标的被识别为便宜, 对应'市场尚未为应用层FCF付费'的错位。"""
+    if peg and peg > 0:
+        base = (90 if peg <= 0.5 else 78 if peg <= 1.0 else 62 if peg <= 1.5
+                else 48 if peg <= 2.0 else 35 if peg <= 3.0 else 22)
+    else:
+        pe_u = fpe or pe
+        base = (85 if (pe_u and pe_u <= 15) else 72 if (pe_u and pe_u <= 25) else 58 if (pe_u and pe_u <= 35)
+                else 44 if (pe_u and pe_u <= 50) else 30) if (pe_u and pe_u > 0) else 50
+    fcf_s = _ai_fcf_yield_score(pe, fcfMargin)
+    return round(0.65 * base + 0.35 * fcf_s) if fcf_s is not None else base
+
+def _ai_growth(g, rpo=None):
+    """成长评分: 静态营收增速为主; 可选 rpoVisibility(订单能见度, RPO/营收 倍数)做成长可确认度加成。
+    rpo 缺失时仅用营收增速。"""
     if g is None: return 50
-    return _aiclip(45 + g * 1.1)
+    s = 45 + g * 1.1
+    if rpo is not None:
+        s += rpo * 4  # 每 1x 订单能见度 +4 分(封顶由 _aiclip 处理)
+    return _aiclip(s)
 
 def _ai_quality(gm, fcf, roe):
     def _q(x, hi): return _aiclip((x or 0) / hi * 100) if x is not None else 60
@@ -3904,12 +3920,12 @@ for _ly in AIC.get('layers', []):
         _mom = _ai_momentum(_ch)
         _h6 = (_ch or {}).get('h6')
         _falling = (_h6 is not None and _h6 < -8)  # 半年跌超8% = 下落的刀
-        _val_abs = _ai_valuation(_c.get('pe'), _c.get('fwdPe'), _c.get('peg'))
+        _val_abs = _ai_valuation(_c.get('pe'), _c.get('fwdPe'), _c.get('peg'), _c.get('fcfMargin'))
         _val_hist = _ai_relative_val(_c.get('pe'), _c.get('peHist5y'))
         # 估值便宜度 = 60%绝对 + 40%相对自身历史(若无可比历史则纯绝对)
         _val = round(0.6 * _val_abs + 0.4 * _val_hist) if _val_hist is not None else _val_abs
         # 成长 = 静态营收增速(60%) + 盈利修正动量(40%, 比静态增长更具预测力)
-        _gro = round(0.6 * _ai_growth(_c.get('revGrowth')) + 0.4 * _ai_revision(_c.get('epsRevision')))
+        _gro = round(0.6 * _ai_growth(_c.get('revGrowth'), _c.get('rpoVisibility')) + 0.4 * _ai_revision(_c.get('epsRevision')))
         _qua = _ai_quality(_c.get('grossMargin'), _c.get('fcfMargin'), _c.get('roe'))
         # 研报共识 = 评级水平(70%) + 评级修正趋势(30%)
         _res = round(0.7 * _ai_research(_c.get('research')) + 0.3 * _ai_rating_trend(_c.get('ratingTrend')))
@@ -3997,10 +4013,12 @@ for _ly in AIC.get('layers', []):
     }
     _ai_layers_out.append({
         'id': _ly.get('id'), 'name': _ly.get('name'), 'en': _ly.get('en'),
+        'scarcity': _ly.get('scarcity'), 'structuralPremium': (_ly.get('scarcity') or 0) >= 70,
         'desc': _ly.get('desc'), 'techRoutes': _ly.get('techRoutes', []),
         'companies': _comps_sorted, 'comparison': _comparison,
         'stats': {
             'count': len(_comps),
+            'scarcity': _ly.get('scarcity'),
             'avgFundamental': _avg('fundamental'), 'avgValuation': _avg('valuation'),
             'avgMomentum': _avg('momentum'), 'avgAiValue': _avg('aiValue'),
             'topPick': (_comps_sorted[0]['ticker'] if _comps_sorted else None),

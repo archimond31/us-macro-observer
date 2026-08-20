@@ -2695,6 +2695,13 @@ function renderAiLayer(L) {
   var s = L.stats || {};
   var inner = '';
   if (L.desc) inner += '<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">' + L.desc + '</div>';
+  if (L.scarcity != null) {
+    var _sc = L.scarcity;
+    var _scCol = _sc >= 75 ? '#993c1d' : _sc >= 60 ? '#854f0b' : '#5f5e5a';
+    var _scBg = _sc >= 75 ? '#fbeaf0' : _sc >= 60 ? '#faedda' : '#f1efe8';
+    var _scLbl = _sc >= 75 ? '瓶颈稀缺·吃超额利润' : _sc >= 60 ? '供给偏紧·景气托底' : _sc >= 45 ? '中性·商品化中' : '承压·被平台挤压';
+    inner += '<div style="margin:2px 0 10px"><span style="font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;background:' + _scBg + ';color:' + _scCol + '">结构性稀缺 ' + _sc + ' · ' + _scLbl + '</span></div>';
+  }
   if (L.techRoutes && L.techRoutes.length) {
     inner += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
     L.techRoutes.forEach(function (r) {

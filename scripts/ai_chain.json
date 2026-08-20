@@ -1,11 +1,12 @@
 {
   "asOf": "2026-08-17 (A股最新财报经腾讯自选股 MCP 核实 real, 报告期 H1'26/2026-06-30 或 Q1'26/2026-03-31; 美股/韩股估值与市值经 Yahoo Finance 核实 real; 韩股 pe/fwdPe 仍为策展 est=true, 因腾讯自选股仅覆盖 A股)",
-  "disclaimer": "股价/动量由 Yahoo 自动拉取。A股最新财报(营收/归母净利/毛利率)经腾讯自选股 MCP(利润表)核实 real, 报告期见各公司 summary; 美股/韩股市值与估值(pe/fwdPe/peg/revGrowth/grossMargin/fcfMargin/roe)经 Yahoo Finance 核实(real); 韩股 pe/fwdPe 仍为策展估计(est=true), 因腾讯自选股仅覆盖 A股。市值: 美股/韩股 $B / A股 ¥亿(实时 USDCNY 换算)。",
+  "disclaimer": "股价/动量由 Yahoo 自动拉取。A股最新财报(营收/归母净利/毛利率)经腾讯自选股 MCP(利润表)核实 real, 报告期见各公司 summary; 美股/韩股市值与估值(pe/fwdPe/peg/revGrowth/grossMargin/fcfMargin/roe)经 Yahoo Finance 核实(real); 韩股 pe/fwdPe 仍为策展估计(est=true), 因腾讯自选股仅覆盖 A股。市值: 美股/韩股 $B / A股 ¥亿(实时 USDCNY 换算)。各层 scarcity(结构性稀缺/瓶颈强度 0-100)为策展判断, 依据'微笑曲线'框架: 上游硅/HBM/CoWoS/InP 与带宽/电力瓶颈端吃超额利润→高; 模型层被商品化→低; 应用层 FCF 最强但 AI 收入渗透中位偏低→中。新增可选策展字段 fcfYield(隐含FCF收益率, 现由 fcfMargin/pe 自动算, 无需手填)、rpoVisibility(RPO/营收 倍数, 订单能见度加成), 缺失则优雅回退。",
   "layers": [
     {
       "id": "app",
       "name": "应用层",
       "en": "Applications",
+      "scarcity": 58,
       "desc": "将 AI 能力封装进产品或工作流、直接面向企业与消费者的公司。最容易感知 AI 变现，但壁垒相对最低、易被平台方挤压。",
       "techRoutes": [
         "企业级 AI 助手 / Copilot",
@@ -289,6 +290,7 @@
       "id": "model",
       "name": "模型层",
       "en": "Foundation Models",
+      "scarcity": 42,
       "desc": "拥有前沿基础模型能力的公司。绝大多数顶尖实验室(OpenAI/Anthropic)未上市，已上市的是自研大模型的平台型巨头。壁垒在算力、数据、人才飞轮。",
       "techRoutes": [
         "通用多模态大模型",
@@ -416,6 +418,7 @@
       "id": "infra",
       "name": "基础设施层",
       "en": "Infrastructure",
+      "scarcity": 68,
       "desc": "承载 AI 算力的云平台、网络、服务器与散热供配电。训练集群的'卖铲人'，需求由资本开支周期驱动，景气度与超大规模厂商 Capex 强相关。",
       "techRoutes": [
         "AI 云基础设施",
@@ -703,6 +706,7 @@
       "id": "network",
       "name": "网络连接层",
       "en": "Networking",
+      "scarcity": 78,
       "desc": "AI 集群的'神经网络'：交换机、光模块/CPO、光互联器件。随着集群规模从万卡迈向十万卡，网络带宽与延迟成为算力释放的瓶颈，是 2025–2026 景气度最确定的环节之一。",
       "techRoutes": [
         "800G/1.6T 交换机",
@@ -911,6 +915,7 @@
       "id": "chip",
       "name": "芯片层",
       "en": "Silicon",
+      "scarcity": 88,
       "desc": "AI 算力的物理底座：GPU/ASIC、CPU IP、先进制程代工、半导体设备与 HBM 内存。技术壁垒最高、集中度最强，是整个蛋糕的'硬核'。",
       "techRoutes": [
         "GPU + CUDA 全栈",
@@ -1474,6 +1479,7 @@
       "id": "energy",
       "name": "能源层",
       "en": "Energy",
+      "scarcity": 70,
       "desc": "AI 数据中心的电力底座。训练/推理是'电老虎'，电力供应(尤其是核电与气电)成为算力扩张的硬约束，是最近两年才被市场重定价的新环节。",
       "techRoutes": [
         "核电供应 AI 数据中心",
