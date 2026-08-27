@@ -2377,7 +2377,7 @@ DATA['economy'] = {
                     {'asset': '加密', 'dir': 'up', 'when': '低于预期', 'why': '风险偏好修复'},
                 ],
                 'longTerm': '超级核心(除住房服务)是 Fed 内部最关注口径, 其粘性决定"higher for longer"时长',
-                'current': '6月 核心 PCE 3.3% / 超级核心 3.8% (均符合预期)',
+                'current': '7月 核心 PCE 3.3% / 超级核心 3.8% (均符合预期)',
             },
             {
                 'tag': 'UNRATE', 'name': '失业率 / 初请', 'freq': '月度/周度',
@@ -2467,6 +2467,19 @@ DATA['economy']['releasesMeta'] = {
     'asOf': (_ER or {}).get('asOf'),
     'source': (_ER or {}).get('source', ''),
 }
+
+# 用策展真实发布日校正指标卡的"最新公布"标记 (数据驱动, 覆盖 release_info 的规则近似日)
+# 例: PCE 规则估算 latest≈月末最后交易日(8/31), 实为 BEA 报告日 8/26; 以 economic_releases.json 的
+# releaseDate 为准, 避免"标记公布日"滞后/错位。next 仍取自 release_info 的规则推算 (未发布, 属预计)。
+for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
+    _er = _ER_BY_TAG.get(_m.get('tag'))
+    if _er and _er.get('releaseDate'):
+        _base = _m.get('release') or {}
+        _m['release'] = {
+            'latest': _er['releaseDate'],
+            'next': _base.get('next'),
+            'estimated': False,
+        }
 
 def _build_econ_regime():
     """经济 regime 判定 (2026-08-12 优化版)。

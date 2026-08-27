@@ -94,16 +94,16 @@
     {
       "indicator": "核心PCE 同比",
       "tag": "PCE",
-      "periodLabel": "2026年6月",
-      "releaseDate": "2026-07-30",
+      "periodLabel": "2026年7月",
+      "releaseDate": "2026-08-26",
       "unit": "%",
       "actual": 3.3,
       "consensus": 3.3,
-      "previous": 3.4,
-      "previousLabel": "5月",
+      "previous": 3.3,
+      "previousLabel": "6月",
       "higherIsBetter": false,
       "tolerance": 0.1,
-      "note": "同比3.3%符合预期；环比仅+0.1%(预期+0.2%)，为2025年3月以来最小增幅，美联储首选通胀指标连续64个月高于2%目标。"
+      "note": "同比3.3%符合预期；环比+0.2%(预期+0.2%)，与6月持平；整体PCE同比3.7%高于预期0.1pt。美联储首选通胀指标连续高于2%目标。"
     },
     {
       "indicator": "超级核心PCE 同比",
