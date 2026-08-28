@@ -2948,29 +2948,51 @@ function renderPositioning(c) {
   // ===== 1. CFTC 离散持仓: 谁在动 (dealer / assetMgr / leveraged 三分法) =====
   const GLABEL = { dealer: '交易商/中介', assetMgr: '资产管理/真实资金', leveraged: '杠杆基金' };
   const GCOLOR = { dealer: '#185FA5', assetMgr: '#0F6E56', leveraged: '#a32d2d' };
+  const GROLE = { dealer: '做市对冲·方向弱', assetMgr: '长期资金·方向强', leveraged: '投机动量·拥挤易反转' };
   h += sectionH('CFTC 离散持仓（谁在动）', 'CFTC TFF 报告: 交易商/中介 · 资产管理(真实资金) · 杠杆基金 三分法 — 取代 legacy 投机/套保二分 · 周更新');
   const cda = d.cftcDisagg || [];
   if (cda.length) {
+    // 三方角色定位 (明确区分"谁在动、立场含义")
+    h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:12px;">'
+      + '<div style="background:#e6f1fb;border:1px solid #b5d4f4;border-radius:8px;padding:8px 10px;"><span style="font-size:11px;font-weight:600;color:#185FA5;">交易商/中介</span><span style="font-size:10px;color:#374151;display:block;margin-top:2px;">银行做市商 · 净头寸多为对冲客户订单, <b>方向参考性弱</b></span></div>'
+      + '<div style="background:#e6f6ee;border:1px solid #b7e0cf;border-radius:8px;padding:8px 10px;"><span style="font-size:11px;font-weight:600;color:#0F6E56;">资产管理/真实资金</span><span style="font-size:10px;color:#374151;display:block;margin-top:2px;">养老金/保险/共同基金 · 押注中期趋势, <b>方向信号强</b></span></div>'
+      + '<div style="background:#fcebeb;border:1px solid #f0b8b8;border-radius:8px;padding:8px 10px;"><span style="font-size:11px;font-weight:600;color:#a32d2d;">杠杆基金</span><span style="font-size:10px;color:#374151;display:block;margin-top:2px;">对冲基金/CTA · 投机动量, <b>拥挤时易反转</b></span></div>'
+      + '</div>';
+    // 看图引导 (数据如何看 + 如何影响市场)
+    h += '<details style="margin-bottom:12px;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:6px 12px;">'
+      + '<summary style="cursor:pointer;font-size:11px;color:#5f5e5a;outline:none;">📖 怎么看这张表（净持仓 / 周变化 / 拥挤度 → 立场）</summary>'
+      + '<div style="font-size:11px;color:#374151;line-height:1.7;padding:6px 2px 4px;">'
+      + '① <b>净持仓</b> = 多空轧差: 正值 = 净多头(押注上涨), 负值 = 净空头(押注下跌) → 立场列直接给出结论; '
+      + '② <b>周变化</b> = 本周加减仓方向; '
+      + '③ <b>拥挤度</b> = 净持仓/总持仓(OI): &gt;30% = 极端单边, 拥挤交易反转风险上升; '
+      + '④ <b>怎么影响市场</b>: 资产管理 vs 杠杆基金方向相反 = 市场分歧; 杠杆基金极端单边 + 反向变化 = 轧空/踩踏燃料; 交易商净空多为做市对冲, 不直接解读为看空。</div>'
+      + '</details>';
     cda.forEach(function (c) {
       const mover = c.mover;
       h += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:12px;">';
       h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">'
         + '<span style="font-size:14px;font-weight:700;color:#1a1d29;">' + c.asset + '</span>'
         + '<span style="font-size:11px;color:#9ca3af;">' + (c.note || '') + ' · OI ' + (c.oi != null ? Number(c.oi).toLocaleString() : '—') + ' · ' + (c.date || '') + '</span></div>';
-      h += '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:4px;font-size:10px;color:#9ca3af;padding:0 2px 4px;border-bottom:1px solid #eee;">'
-        + '<span>参与方</span><span style="text-align:right;">净持仓(手)</span><span style="text-align:right;">周变化</span><span style="text-align:right;">占OI%</span></div>';
+      h += '<div style="display:grid;grid-template-columns:1.6fr 0.6fr 1fr 1fr 0.7fr;gap:4px;font-size:10px;color:#9ca3af;padding:0 2px 4px;border-bottom:1px solid #eee;">'
+        + '<span>参与方 (角色)</span><span style="text-align:center;">立场</span><span style="text-align:right;">净持仓(手)</span><span style="text-align:right;">周变化</span><span style="text-align:right;">拥挤度</span></div>';
       (c.groups || []).forEach(function (g) {
         const gk = g.group;
         const isMover = (gk === mover);
-        const netCol = (g.net != null && g.net > 0) ? '#0f6e56' : '#a32d2d';
+        const stance = (g.net == null) ? null : ((g.net > 0) ? 'long' : 'short');   // 立场: 净多=看涨 / 净空=看跌
+        const netCol = stance === 'long' ? '#0f6e56' : '#a32d2d';
         const chgCol = (g.chgNet == null) ? '#9ca3af' : ((g.chgNet >= 0) ? '#0f6e56' : '#a32d2d');
         const crowd = (g.pctOi != null && g.pctOi > 30);
-        h += '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:4px;align-items:center;padding:6px 2px;border-bottom:1px solid #f5f5f5;'
+        const stBadge = stance === 'long' ? '<span style="padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;background:#e6f6ee;color:#0f6e56;">看涨</span>'
+                     : stance === 'short' ? '<span style="padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;background:#fcebeb;color:#a32d2d;">看跌</span>'
+                     : '<span style="font-size:10px;color:#9ca3af;">—</span>';
+        h += '<div style="display:grid;grid-template-columns:1.6fr 0.6fr 1fr 1fr 0.7fr;gap:4px;align-items:center;padding:6px 2px;border-bottom:1px solid #f5f5f5;'
           + (isMover ? 'background:#fff8ec;border-radius:6px;' : '') + '">';
         h += '<span style="font-size:12px;font-weight:600;color:' + GCOLOR[gk] + ';">' + (GLABEL[gk] || gk)
-          + (isMover ? ' <span style="font-size:9px;background:#854f0b;color:#fff;padding:1px 5px;border-radius:8px;font-weight:600;vertical-align:middle;">本周主要变动</span>' : '') + '</span>';
+          + '<span style="display:block;font-size:9px;color:#9ca3af;font-weight:400;">' + (GROLE[gk] || '') + '</span>'
+          + (isMover ? ' <span style="font-size:9px;background:#854f0b;color:#fff;padding:1px 5px;border-radius:8px;font-weight:600;vertical-align:middle;">本周主导</span>' : '') + '</span>';
+        h += '<span style="text-align:center;">' + stBadge + '</span>';
         h += '<span style="text-align:right;font-size:12px;font-weight:600;color:' + netCol + ';">' + (g.net == null ? '—' : ((g.net > 0 ? '+' : '') + Number(g.net).toLocaleString())) + '</span>';
-        h += '<span style="text-align:right;font-size:12px;color:' + chgCol + ';">' + (g.chgNet == null ? '—' : ((g.chgNet > 0 ? '+' : '') + Number(g.chgNet).toLocaleString())) + '</span>';
+        h += '<span style="text-align:right;font-size:12px;color:' + chgCol + ';">' + (g.chgNet == null ? '—' : ((g.chgNet > 0 ? '+' : '') + Number(g.chgNet).toLocaleString()) + (g.chgNet >= 0 ? ' <span style="font-size:9px;opacity:.7;">增</span>' : ' <span style="font-size:9px;opacity:.7;">减</span>')) + '</span>';
         h += '<span style="text-align:right;font-size:12px;' + (crowd ? 'color:#a32d2d;font-weight:700;' : 'color:#374151;') + '">' + (g.pctOi == null ? '—' : (g.pctOi + '%')) + (crowd ? ' ⚠' : '') + '</span>';
         h += '</div>';
       });
@@ -2978,9 +3000,14 @@ function renderPositioning(c) {
     });
     const cdg = d.cftcDisaggCrowded || [];
     if (cdg.length) h += '<div style="margin-top:2px;padding:8px 12px;background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;font-size:12px;color:#a32d2d;">⚠ 拥挤警示: ' + cdg.join('；') + '</div>';
-    // 数据驱动解读(规则生成, 非固定叙事)
+    // 数据驱动解读(规则生成, 非固定叙事): 拆行为逐条要点, 避免一大段密文
     const cds = d.cftcDisaggSummary || '';
-    if (cds) h += '<div style="margin-top:12px;padding:12px 14px;background:#f0f7fb;border:1px solid #cce3f0;border-radius:8px;font-size:12px;color:#2c3e50;line-height:1.7;"><b style="color:#185FA5;">数据解读：</b>' + cds + '</div>';
+    if (cds) {
+      const cdsLines = cds.split(' · ').filter(function (s) { return s; });
+      h += '<div style="margin-top:12px;padding:12px 14px;background:#f0f7fb;border:1px solid #cce3f0;border-radius:8px;font-size:12px;color:#2c3e50;line-height:1.7;"><b style="color:#185FA5;">数据解读：</b>'
+        + cdsLines.map(function (s) { return '<div style="margin-top:3px;">· ' + s + '</div>'; }).join('')
+        + '</div>';
+    }
   } else {
     // 回退: legacy 投机净持仓 (非商业)
     const cf = d.cftc || [];
