@@ -1460,7 +1460,9 @@ function renderFed(c) {
     chartCard('美联储资产负债表', '总资产/国债/MBS(万亿美元) · QT持续推进', 'fedBs', 'tall') +
     chartCard('鹰鸽指数', (d.chartNotes || {}).hawkNote || ('0=极度鸽派 / 10=极度鹰派 · 当前 ' + d.hawkishDovish.score + ' ' + d.hawkishDovish.label), 'hawkDov', 'tall') +
   '</div>';
-  html += sectionCard('FOMC 会议时间线', '油价表态是7月会议的唯一看点', renderFomcTimeline(d.fomcTimeline));
+  const _nf = (d.fomcTimeline||[]).find(e => ['decision','meeting'].includes(e.type) && ['即将召开','进行中','待定'].includes(e.status));
+  const _fomcSub = _nf ? (_nf.date.split('~')[0].slice(5).replace('-','/') + ' 会议 · 油价/通胀粘性定性是核心看点') : '油价/通胀粘性定性是每次会议的核心看点';
+  html += sectionCard('FOMC 会议时间线', _fomcSub, renderFomcTimeline(d.fomcTimeline));
   html += '<div style="height:16px"></div>';
   html += sectionCard('官员讲话追踪', '鹰鸽分化公开化=政策不确定性上升', renderSpeeches(d.speeches));
   html += '<div style="height:16px"></div>';

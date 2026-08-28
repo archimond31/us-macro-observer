@@ -197,6 +197,20 @@ if _NEXT_FOMC:
 else:
     _fomc_md = None; _fomc_days = None
 
+# Jackson Hole 年会动态 (避免硬编码日期导致的过期; 供 Fed 板块 whatToWatch 引用)
+_jh = EV.get('jackson_hole')
+if _jh:
+    _jh_s, _jh_e = _iso(_jh['start']), _iso(_jh['end'])
+    _jh_md = f'{_jh_s.month}月{_jh_s.day}日'
+    _jh_c = _jh.get('chair_date')
+    _jh_chair_md = f'{_iso(_jh_c).month}月{_iso(_jh_c).day}日' if _jh_c else None
+    _jh_td = datetime.date.today()
+    if _jh_e < _jh_td:            _jh_status = '已结束'
+    elif _jh_s <= _jh_td <= _jh_e: _jh_status = '进行中'
+    else:                         _jh_status = f'{ (_jh_s - _jh_td).days }天后'
+else:
+    _jh_md, _jh_chair_md, _jh_status = None, None, '即将'
+
 def build_speeches():
     """返回真实近期讲话列表 [{date,speaker,title,url,stance}]"""
     return EV.get('speeches', []) or []
@@ -1752,7 +1766,7 @@ DATA['fed'] = {
             {'name':'Goolsbee','role':'芝加哥','score':3,'stance':'dovish'},
         ],
         # 'ratePath' 在 _econ_regime 定义后填充 (2169行后)
-        'ratePath': {'nextMeeting': _NEXT_FOMC or '2026-07-29', 'pending': True},
+        'ratePath': {'nextMeeting': _NEXT_FOMC or '2026-09-15', 'pending': True},
     },
 
     # ===== 美联储政策 → 资产传导机制 (2026-08-17) =====
@@ -1836,12 +1850,14 @@ DATA['fed'] = {
         {'trigger':(f'<span class="watch-threshold">{_fomc_md}</span> FOMC会议' if _fomc_md else '下次 FOMC 会议'),
          'implication':'关注对油价的定性: transitory=利多, persistent risk=利空',
          'status':(f'{_fomc_days}天后' if (_fomc_days is not None and _fomc_days>0) else ('今天' if _fomc_days==0 else ('已召开' if _fomc_days is not None else '即将')))},
-        {'trigger':'<span class="watch-threshold">8月22日</span> 杰克逊霍尔','implication':'历史重大政策转向信号窗口','status':'1个月后'},
+        {'trigger':(f'<span class="watch-threshold">{_jh_md}</span> 杰克逊霍尔' if _jh_md else '杰克逊霍尔年会'),
+         'implication':(f'主席 {_jh_chair_md} 讲话 · 历史重大政策转向信号窗口' if _jh_chair_md else '历史重大政策转向信号窗口'),
+         'status':_jh_status},
         {'trigger':'SRF 使用量突破 <span class="watch-threshold">$50B</span>','implication':'银行主动向美联储借钱, 准备金稀缺确认','status':'当前极少'},
     ],
     'chartNotes': {
         'hawkNote': f'0=极度鸽派 / 10=极度鹰派 · 当前 {_hawk_score_data} {_hawk_label_data} (基于2Y利率自动计算 · 月Δ{_v_2y_month:+.0f}bp)',
-        'probNote': f'7月会议: 维持{_hold_prob}% / 降25bp {_cut_prob}% · 基于2Y利率动态推算',
+        'probNote': f'{_fomc_md or "下次会议"}会议: 维持{_hold_prob}% / 降25bp {_cut_prob}% · 基于2Y利率动态推算',
     },
     'impliedPath': {
         'points': _impl_pts,                       # [{tenor, rate}]
@@ -2167,14 +2183,6 @@ def trend_of(v):
 # build_fomc_timeline / build_speeches 见文件顶部, 数据来自 events.json (build_data.py 实时抓取)
 DATA['fed']['fomcTimeline'] = build_fomc_timeline()
 DATA['fed']['speeches'] = build_speeches()
-
-# 修正 whatToWatch 中杰克逊霍尔日期 (原硬编码 8月22日, 实际以官方日程为准)
-_jh = EV.get('jackson_hole')
-if _jh:
-    _jh_md = f"{int(_jh['start'][5:7])}月{_jh['start'][8:10]}日"
-    for _w in DATA['fed'].get('whatToWatch', []):
-        if '杰克逊霍尔' in _w.get('trigger', ''):
-            _w['trigger'] = _w['trigger'].replace('8月22日', _jh_md)
 
 # 利率路径"下次会议"动态化 (取自 FOMC 官方日程的未来首场, 排除杰克逊霍尔)
 _next_fomc = next((it['date'].split('~')[0] for it in build_fomc_timeline()
@@ -2645,7 +2653,7 @@ if _total_p and abs(_total_p - 100) > 0.05:
     _hold_p, _cut25_p, _cut50_p, _h25_p, _h50_p = [round(p*_adj, 1) for p in (_hold_p, _cut25_p, _cut50_p, _h25_p, _h50_p)]
 
 DATA['fed']['hawkishDovish']['ratePath'] = {
-    'nextMeeting':  _NEXT_FOMC or '2026-07-29',
+    'nextMeeting':  _NEXT_FOMC or '2026-09-15',
     'cut50bpProb':  _cut50_p,
     'cut25bpProb':  _cut25_p,
     'holdProb':     _hold_p,
