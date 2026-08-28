@@ -3106,10 +3106,9 @@ function renderTradeRadar(c) {
   };
   let h = '';
 
-  h += '<div style="margin:6px 0 18px;padding:16px 20px;border-radius:12px;background:#f7f8fa;border:1px solid #d3d1c7;">'
+  h += '<div style="margin:6px 0 18px;padding:16px 20px;border-radius:12px;background:#f7f8fa;border:1px solid #d3d1c7;" title="' + (d.method || '') + '">'
     + '<div style="font-size:13px;font-weight:500;color:#2c2c2a;margin-bottom:6px;">扫描结果 · ' + (d.counts ? (d.counts.gaps + ' 个预期差 / ' + d.counts.trades + ' 个候选 / ' + d.counts.bets + ' 个独立赌注') : '') + '</div>'
     + '<div style="font-size:12px;color:#5f5e5a;line-height:1.7;">' + (d.summary || '') + '</div>'
-    + '<div style="font-size:11px;color:#9ca3af;margin-top:8px;">' + (d.method || '') + '</div>'
     + '</div>';
 
   // ===== 唯一主线 (The One) — 决策漏斗输出 =====
@@ -3125,7 +3124,7 @@ function renderTradeRadar(c) {
       + '<span style="font-size:11px;color:#cfc7e6;">非对称性 ' + tAsym.score + '/5</span>'
       + '<span style="font-size:11px;color:#cfc7e6;">' + (theOne.confidence === 'high' ? '高置信' : '中置信') + '</span>'
       + '</div>'
-      + '<div style="font-size:12px;line-height:1.7;color:#cfc7e6;">' + theOne.thesis + '</div>'
+      + '<div style="font-size:12px;line-height:1.7;color:#cfc7e6;">' + (theOne.bet || theOne.thesis || '') + '</div>'
       + '<div style="font-size:11px;color:#9ca3af;margin-top:8px;">入场催化剂: ' + theOne.trigger + '</div>'
       + '</div>';
     const sats = d.satellites || [];
@@ -3220,7 +3219,7 @@ function renderTradeRadar(c) {
         + '<span style="display:inline-block;padding:2px 9px;border-radius:14px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + (g.confidence === 'high' ? '高置信' : g.confidence === 'mid' ? '中置信' : '低置信') + '</span>'
         + '<span style="font-size:11px;color:#9ca3af;">[' + g.category + ']</span>'
         + '</div>'
-        + '<div style="font-size:12px;color:#6b7280;line-height:1.7;margin-top:6px;">' + g.detail + '</div>'
+        + '<div style="font-size:12px;color:#6b7280;line-height:1.7;margin-top:6px;" title="' + String(g.detail || '').replace(/"/g, '&quot;') + '">' + ((g.detail || '').length > 90 ? g.detail.slice(0, 90) + '…' : g.detail) + '</div>'
         + '</div>';
     });
   }
@@ -3246,25 +3245,25 @@ function renderTradeRadar(c) {
       const evAg = t.evidenceAgainst || [];
       // 摘要行 (默认显示)
       const srcTag = t.source === 'cftc_positioning' ? '<span style="margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#eeedfe;color:#3c3489;">CFTC 定位</span>' : (t.source === 'ai_chain' ? '<span style="margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#fbeaf0;color:#993556;">AI 链条</span>' : '');
-      const summaryHtml = '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>' + srcTag
+      const mainTag = (theOne && t.asset === theOne.asset) ? '<span style="margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#15131f;color:#b9a8ff;">⭐ 主线</span>' : '';
+      const summaryHtml = '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>' + mainTag + srcTag
         + '<span style="margin-left:8px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + sideCls + '22;color:' + sideCls + ';">' + t.side + '</span>'
         + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + asymBg + ';color:' + asymCls + ';">非对称 ' + asym.score + '/5 ' + asymLabel + '</span>'
         + '<span style="margin-left:6px;padding:1px 9px;border-radius:12px;font-size:11px;font-weight:600;background:' + confBg + ';color:' + confFg + ';">' + confTxt + '</span>';
-      // 展开详情
+      // 展开详情 (精简: bet 已含核心论点, 证据/反证/证伪各限前2条)
       const bodyHtml = '<div style="padding:10px 4px 2px;">'
-        + (t.bet ? '<div style="font-size:12px;font-weight:600;color:#15131f;background:#f1eefc;border-left:3px solid #534ab7;border-radius:6px;padding:7px 10px;margin-bottom:8px;line-height:1.6;">底层赌注: ' + t.bet + '</div>' : '')
-        + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + t.thesis + '</div>'
+        + (t.bet ? '<div style="font-size:12px;font-weight:600;color:#15131f;background:#f1eefc;border-left:3px solid #534ab7;border-radius:6px;padding:7px 10px;margin-bottom:8px;line-height:1.6;">底层赌注: ' + t.bet + '</div>' : '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + (t.thesis || '') + '</div>')
         + (asym.note ? '<div style="font-size:11px;color:' + asymCls + ';line-height:1.6;margin-bottom:8px;">非对称性解读: ' + asym.note + '</div>' : '')
         + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">'
-        + '<div style="background:#e6f6ee;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#0f6e56;margin-bottom:4px;">支持证据（下注依据）</div>'
-        + (evFor.map(function (e) { return '<div style="font-size:11px;color:#0f6e56;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#0f6e56;">—</div>')
+        + '<div style="background:#e6f6ee;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#0f6e56;margin-bottom:4px;">支持证据' + (evFor.length > 2 ? ' (前2)' : '') + '</div>'
+        + (evFor.slice(0, 2).map(function (e) { return '<div style="font-size:11px;color:#0f6e56;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#0f6e56;">—</div>')
         + '</div>'
-        + '<div style="background:#fcebeb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">反对证据（证伪风险）</div>'
-        + (evAg.map(function (e) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
+        + '<div style="background:#fcebeb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">反对证据' + (evAg.length > 2 ? ' (前2)' : '') + '</div>'
+        + (evAg.slice(0, 2).map(function (e) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + e + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
         + '</div></div>'
         + '<div style="background:#fff3f3;border:1px solid #f7c1c1;border-radius:8px;padding:8px 10px;margin-bottom:8px;">'
-        + '<div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">证伪退出（触发即假设错误 → 平仓）</div>'
-        + (falsify.map(function (f) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + f + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
+        + '<div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">证伪退出（触发即假设错误 → 平仓）' + (falsify.length > 2 ? ' (前2)' : '') + '</div>'
+        + (falsify.slice(0, 2).map(function (f) { return '<div style="font-size:11px;color:#a32d2d;line-height:1.5;">· ' + f + '</div>'; }).join('') || '<div style="font-size:11px;color:#a32d2d;">—</div>')
         + '</div>'
         + '<div style="font-size:11px;color:#854f0b;">入场催化剂: ' + t.trigger + '</div>'
         + '</div>';
@@ -3315,33 +3314,7 @@ function renderTradeRadar(c) {
     h += valCard('⚠ 高估候选', av.overvalued, '#a32d2d', true);
     h += valCard('✓ 低估候选', av.undervalued, '#0f6e56', false);
     h += '</div>';
-
-    // ===== AI 交易机会"假设卡片" (交易化表达) =====
-    const aiT = (av.trades || []).filter(function (t) { return t.source === 'ai_chain'; });
-    if (aiT.length) {
-      h += sectionH('AI 链条交易机会（可下注的假设）', '每笔机会 = 赌什么 → 验证什么 → 证伪条件 · 已纳入组合净暴露与独立性审计');
-      aiT.forEach(function (t) {
-        const tSideCls = t.side.indexOf('做空') >= 0 || t.side.indexOf('回避') >= 0 ? '#a32d2d' : '#0f6e56';
-        const aScore = (t.asymmetry || {}).score || 3;
-        const aCls = aScore >= 4 ? '#0f6e56' : (aScore === 3 ? '#854f0b' : '#a32d2d');
-        h += '<div style="background:#fff;border:1px solid #e5e7eb;border-left:4px solid ' + tSideCls + ';border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
-          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
-          + '<span style="font-size:13px;font-weight:600;color:#1a1d29;">' + t.asset + '</span>'
-          + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:' + tSideCls + '22;color:' + tSideCls + ';">' + t.side + '</span>'
-          + '<span style="padding:2px 10px;border-radius:14px;font-size:11px;font-weight:600;background:#f1eefc;color:#534ab7;">非对称 ' + aScore + '/5</span>'
-          + '<span style="font-size:11px;color:#9ca3af;">驱动: ' + (t.driver || '—') + '</span>'
-          + '</div>'
-          + '<div style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:8px;">' + (t.bet || t.thesis || '') + '</div>'
-          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-          + '<div style="background:#e6f1fb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#185fa5;margin-bottom:4px;">🔎 需要验证什么</div>'
-          + '<div style="font-size:11px;color:#0c447c;line-height:1.6;">' + (t.verify || t.trigger || '—') + '</div></div>'
-          + '<div style="background:#fcebeb;border-radius:8px;padding:8px 10px;"><div style="font-size:11px;font-weight:600;color:#a32d2d;margin-bottom:4px;">✗ 什么情况被证伪</div>'
-          + '<div style="font-size:11px;color:#791f1f;line-height:1.6;">' + (t.falsify || '—') + '</div></div>'
-          + '</div>'
-          + '<div style="font-size:11px;color:' + aCls + ';margin-top:8px;line-height:1.6;">非对称性解读: ' + ((t.asymmetry || {}).note || '') + '</div>'
-          + '</div>';
-      });
-    }
+    // 注: AI 交易机会已合并进上方"全品类交易映射" (带 AI 链条 tag), 不再重复渲染
   }
 
   // ===== 交易日志 (localStorage) =====
