@@ -154,8 +154,8 @@ def TV(key):
     """取阈值配置的数值 (value)。"""
     return THRESHOLDS[key]['value']
 
-def _iso(d):  # '2026-07-28' → date
-    return datetime.date.fromisoformat(d)
+def _iso(d):  # '2026-07-28' 或 date → date
+    return d if isinstance(d, datetime.date) else datetime.date.fromisoformat(d)
 
 def build_fomc_timeline():
     """用官方 FOMC 日程 + 当前日期动态计算每场会议状态 (已召开/进行中/即将召开/待定)"""
@@ -283,10 +283,21 @@ def release_info(tag):
         return {'latest': None, 'next': None, 'estimated': True}
     ref_d = _iso(ref)
     freq = rule[1]
-    latest = _release_on(rule, _add_months(ref_d, 1))
-    if latest > datetime.date.today():        # 推算的"最新"仍未来 → 回退一个周期
-        latest = _release_on(rule, _add_months(latest, -1 if freq == 'monthly' else -3))
+    today = datetime.date.today()
+    # 策展真实发布日优先 (economic_releases.json 的 releaseDate, 数据驱动覆盖规则近似日)
+    # 惰性读取: release_info 可能早于 _ER_BY_TAG 定义被调用 (如指标卡构建), 此时回退规则推算
+    _er = (globals().get('_ER_BY_TAG') or {}).get(tag) or {}
+    if _er.get('releaseDate'):
+        latest = _iso(_er['releaseDate'])
+    else:
+        latest = _release_on(rule, _add_months(ref_d, 1))
+        if latest > today:          # 推算的"最新"仍未来 → 回退一个周期
+            latest = _release_on(rule, _add_months(latest, -1 if freq == 'monthly' else -3))
     nxt = _release_on(rule, _add_months(latest, 1 if freq == 'monthly' else 3))
+    for _ in range(4):              # 保证 next 指向未来 (规则/数据滞后时顺延)
+        if nxt > today:
+            break
+        nxt = _release_on(rule, _add_months(nxt, 1 if freq == 'monthly' else 3))
     return {'latest': latest.isoformat(), 'next': nxt.isoformat(), 'estimated': True}
 
 # 实时源覆盖: Yahoo 实时序列优先于 FRED 滞后序列, 缺失时回退原 FRED 序列
@@ -2478,14 +2489,15 @@ DATA['economy']['releasesMeta'] = {
 
 # 用策展真实发布日校正指标卡的"最新公布"标记 (数据驱动, 覆盖 release_info 的规则近似日)
 # 例: PCE 规则估算 latest≈月末最后交易日(8/31), 实为 BEA 报告日 8/26; 以 economic_releases.json 的
-# releaseDate 为准, 避免"标记公布日"滞后/错位。next 仍取自 release_info 的规则推算 (未发布, 属预计)。
+# releaseDate 为准, 避免"标记公布日"滞后/错位。此时 _ER_BY_TAG 已加载, 重算 release_info 同时拿到
+# 基于真实发布日顺延的 next (如 PCE next=9/30, 而非规则误推的 8/31)。
 for _m in DATA['economy']['metrics'] + DATA['economy'].get('trendData', []):
     _er = _ER_BY_TAG.get(_m.get('tag'))
     if _er and _er.get('releaseDate'):
-        _base = _m.get('release') or {}
+        _ri2 = release_info(_m.get('tag'))
         _m['release'] = {
-            'latest': _er['releaseDate'],
-            'next': _base.get('next'),
+            'latest': (_ri2 or {}).get('latest') or _er['releaseDate'],
+            'next': (_ri2 or {}).get('next'),
             'estimated': False,
         }
 
@@ -3361,33 +3373,36 @@ def _build_price_implied():
 
 def _build_catalyst_calendar(gaps):
     """催化剂日历: 未来关键数据/FOMC → 收敛或扩大哪个预期差。
-    每个事件的 affect 说明双向触发条件 (数据方向决定收敛/扩大)。"""
+    每个事件的 affect 说明双向触发条件 (数据方向决定收敛/扩大)。
+    数据事件: 标签月份/日期从 release_info 动态推导 (跟随最新数据周期), 已发布的过期事件自动剔除。"""
     gap_by_id = {g.get('id'): g for g in gaps}
     cal = []
 
-    def _rel(tag, label, gid, affect, importance='high'):
-        ri = release_info(tag)
-        if ri and ri.get('next'):
-            cal.append({'date': ri['next'], 'event': label, 'importance': importance,
+    def _rel(tag, name, gid, affect, importance='high', src_tag=None):
+        """src_tag: 实际用于推算发布日的 tag (如 SuperCore 与 PCE 同日发布 → src_tag='PCE')"""
+        ri = release_info(src_tag or tag)
+        if ri and ri.get('next') and ri['next'] >= GEN_DATE:
+            _pd = _add_months(_iso(ri['next']), -1)     # 下次发布的数据周期 = 发布日 - 1 个月 (月度)
+            cal.append({'date': ri['next'], 'event': f'美国 {_pd.month} 月{name}', 'importance': importance,
                         'gapId': gid, 'gapTitle': gap_by_id.get(gid, {}).get('title', ''),
                         'effect': affect})
 
-    # 通胀/政策类 (核心 CPI / PCE / 超级核心)
-    _rel('Core', '美国 7 月核心 CPI', 'policy_gap',
+    # 通胀/政策类 (核心 CPI / PCE / 超级核心; SuperCore 跟随 PCE 同批发布)
+    _rel('Core', '核心 CPI', 'policy_gap',
          '核心 CPI 环比 <0.2% → 收敛(加息定价压缩, 利多短端); >0.3% → 扩大(加息尾部定价升温)')
-    _rel('CPI', '美国 7 月 CPI', 'infl_surprise',
+    _rel('CPI', 'CPI', 'infl_surprise',
          'CPI 连续低于预期 → 收敛(通胀降温确认); 高于预期 → 扩大(粘性回归)')
-    _rel('SuperCore', '美国 6 月 PCE(含超级核心)', 'policy_gap',
-         '超级核心同比 <3.5% → 收敛; >4% → 扩大(服务通胀顽固)')
+    _rel('SuperCore', 'PCE(含超级核心)', 'policy_gap',
+         '超级核心同比 <3.5% → 收敛; >4% → 扩大(服务通胀顽固)', src_tag='PCE')
     # 就业类
-    _rel('NFP', '美国 8 月非农就业', 'jobs_surprise',
+    _rel('NFP', '非农就业', 'jobs_surprise',
          '非农再负或 <80K → 收敛(就业拐点确认, 利多短端/黄金); >180K → 扩大(噪音, 软着陆强化)')
-    _rel('UNRATE', '美国 8 月失业率', 'jobs_surprise',
+    _rel('UNRATE', '失业率', 'jobs_surprise',
          '失业率月变 >0.1pt → 收敛(Sahm 逼近触发); 回落 → 扩大')
-    # 增长类 (标注)
-    _rel('Retail', '美国 7 月零售销售', 'pct_10y',
+    # 增长类
+    _rel('Retail', '零售销售', 'pct_10y',
          '零售环比 >0.5% → 扩大(增长强, 利率高位延续); <-0.3% → 收敛(消费转弱)')
-    _rel('Conf', '美国 8 月消费者信心', 'pct_10y',
+    _rel('Conf', '消费者信心', 'pct_10y',
          '信心大幅走弱 → 收敛(衰退式降息预期升温)')
 
     # FOMC 未来会议
