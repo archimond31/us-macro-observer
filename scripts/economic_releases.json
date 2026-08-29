@@ -1,7 +1,22 @@
 {
-  "asOf": "2026-08-28",
+  "asOf": "2026-08-29",
   "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)",
   "releases": [
+    {
+      "indicator": "非农就业 (月增)",
+      "tag": "NFP",
+      "periodLabel": "",
+      "releaseDate": "2026-08-28",
+      "unit": "K",
+      "actual": -79.0,
+      "consensus": null,
+      "previous": -911.0,
+      "previousLabel": "6月(下修后)",
+      "higherIsBetter": true,
+      "tolerance": 25,
+      "note": "远逊预期，为2025年以来首次负增长；5、6月合计下修10.3万，就业市场转冷信号。",
+      "source": "te_auto"
+    },
     {
       "indicator": "GDP 环比年化 (实际)",
       "tag": "GDP",
@@ -74,21 +89,6 @@
       "higherIsBetter": true,
       "tolerance": 0.05,
       "note": "61.4%（彭博预期61.6%），为2021年来最低；自年初累计降0.7pt，壮年人口退出求职市场，供给收缩压低失业率读数。"
-    },
-    {
-      "indicator": "非农就业 (月增)",
-      "tag": "NFP",
-      "periodLabel": "Jul",
-      "releaseDate": "2026-08-07",
-      "unit": "K",
-      "actual": -23.0,
-      "consensus": 80.0,
-      "previous": 20.0,
-      "previousLabel": "6月(下修后)",
-      "higherIsBetter": true,
-      "tolerance": 25,
-      "note": "远逊预期，为2025年以来首次负增长；5、6月合计下修10.3万，就业市场转冷信号。",
-      "source": "te_auto"
     },
     {
       "indicator": "失业率",
