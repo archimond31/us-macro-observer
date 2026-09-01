@@ -773,6 +773,21 @@ function renderAssets(c) {
   html += riskScoreBar();
   html += regimeBanner({ label: DATA.globalRegime.name, signal: DATA.globalRegime.signal, confidence: DATA.globalRegime.confidence, description: DATA.globalRegime.description });
   html += regimeBanner(d.regime);
+  // ===== 关键资产阈值警报 (市场公认关口, 突破 = 宏观信号确认) =====
+  const kal = d.keyAlerts || [];
+  const kalTrg = kal.filter(function (a) { return a.status === 'triggered'; });
+  const kalNear = kal.filter(function (a) { return a.status === 'near'; });
+  if (kalTrg.length || kalNear.length) {
+    html += '<div style="margin:6px 0 14px;padding:12px 16px;border-radius:10px;background:#fbf6f0;border:1px solid #e8d5b5;">'
+      + '<div style="font-size:12px;font-weight:600;color:#2c2c2a;margin-bottom:6px;">⚠ 关键资产阈值警报 <span style="font-weight:400;color:#9ca3af;font-size:11px;">突破市场公认关口 = 宏观信号确认</span></div>'
+      + kalTrg.map(function (a) {
+          return '<div style="font-size:12px;color:#a32d2d;line-height:1.7;margin-top:4px;">🔴 <b>' + a.name + '</b> ' + a.value + a.unit + ' 已突破 <b>' + a.label + '</b> — ' + a.meaning + '</div>';
+        }).join('')
+      + kalNear.map(function (a) {
+          return '<div style="font-size:12px;color:#b45309;line-height:1.7;margin-top:4px;">🟠 <b>' + a.name + '</b> ' + a.value + a.unit + ' 逼近 <b>' + a.label + '</b>（相距 ' + a.distPct + '%）— ' + a.meaning + '</div>';
+        }).join('')
+      + '</div>';
+  }
   html += sectionH('关键信号', '按对风险资产的影响方向排序');
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);

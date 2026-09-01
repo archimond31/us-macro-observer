@@ -148,6 +148,20 @@ THRESHOLDS = {
     'vol_score_high':      {'value': 25,      'unit': 'pt', 'meaning': 'VIX >=25 波动率评分高位'},
     'vol_score_mid':       {'value': 18,      'unit': 'pt', 'meaning': 'VIX >=18 波动率评分中位'},
     'vol_score_low':       {'value': 15,      'unit': 'pt', 'meaning': 'VIX <15 波动率评分低位'},
+    # --- 关键资产阈值警报: 市场公认关键关口, 突破 = 宏观信号确认 (2026-09-01) ---
+    # dir: 'up'=上破触发 / 'down'=下破触发; 前端对距阈值 <3% 的显示"逼近"
+    'asset_alerts': [
+        {'key': 'dgs30',  'name': '30Y 美债收益率', 'unit': '%',  'value': 5.0,    'dir': 'up', 'label': '5% 心理关口', 'meaning': '长端财政/供给担忧确认, "higher for longer"强化'},
+        {'key': 'dgs10',  'name': '10Y 美债收益率', 'unit': '%',  'value': 4.75,   'dir': 'up', 'label': '年内高点 4.75%', 'meaning': '系统性 CTA 抛售债券, 利率上行自我强化'},
+        {'key': 'usdjpy', 'name': '美元/日元',      'unit': '',   'value': 160.0,  'dir': 'up', 'label': '160 干预警戒线', 'meaning': '日本央行口头/实际干预风险, 日元贬值压力极端化'},
+        {'key': 'wti',    'name': 'WTI 原油',       'unit': '$',  'value': 90.0,   'dir': 'up', 'label': '$90 能源冲击线', 'meaning': '能源冲击确认, 通胀预期与利率进一步上行'},
+        {'key': 'wti',    'name': 'WTI 原油',       'unit': '$',  'value': 100.0,  'dir': 'up', 'label': '$100 心理大关', 'meaning': '供给冲击极端化, 全面通胀预期重定价'},
+        {'key': 'gold',   'name': '黄金',           'unit': '$',  'value': 5000.0, 'dir': 'up', 'label': '$5,000 整数关口', 'meaning': '避险/去美元化叙事强化, 实际利率见顶假设验证'},
+        {'key': 'vix',    'name': 'VIX',            'unit': 'pt', 'value': 20.0,   'dir': 'up', 'label': '20 恐慌线', 'meaning': '波动率目标基金强制减仓, 系统性风险确认'},
+        {'key': 'spx',    'name': '标普500',        'unit': '',   'value': 8000.0, 'dir': 'up', 'label': '8,000 整数关口', 'meaning': '牛市情绪强化, 但拥挤度同步上升'},
+        {'key': 'btc',    'name': '比特币',         'unit': '$',  'value': 100000.0,'dir': 'up','label': '$100K 心理关口', 'meaning': '加密风险偏好极值, 情绪指标过热警戒'},
+        {'key': 'dxy',    'name': '美元指数',       'unit': '',   'value': 100.0,  'dir': 'up', 'label': '100 心理关口', 'meaning': '美元走强确认, 压制新兴市场与大宗'},
+    ],
 }
 
 def TV(key):
@@ -1322,7 +1336,23 @@ if _a_hy_pct is not None and _a_hy_pct > 70: _a_score += 1
 elif _a_hy_pct is not None and _a_hy_pct < 30: _a_score -= 1
 _a_signal = 'risk-off' if _a_score >= 2 else ('risk-on' if _a_score <= -2 else 'mixed')
 _a_label = '利率驱动的风险规避' if _a_signal=='risk-off' else ('宽松驱动的风险偏好' if _a_signal=='risk-on' else '利率定价下的资产分化')
+# ---- 关键资产阈值警报: 市场公认关键关口, 突破 = 宏观信号确认 ----
+_asset_alert_rows = []
+for _aa in THRESHOLDS.get('asset_alerts', []):
+    _av = val(_aa['key'])
+    if _av is None:
+        continue
+    _hit = (_av > _aa['value']) if _aa['dir'] == 'up' else (_av < _aa['value'])
+    _dist_pct = abs(_av - _aa['value']) / _aa['value'] * 100
+    _status = 'triggered' if _hit else ('near' if _dist_pct < 3 else 'ok')
+    _asset_alert_rows.append({
+        'name': _aa['name'], 'value': round(_av, 2), 'unit': _aa['unit'],
+        'threshold': _aa['value'], 'dir': _aa['dir'], 'label': _aa['label'],
+        'meaning': _aa['meaning'], 'status': _status, 'distPct': round(_dist_pct, 1),
+    })
+
 DATA['assets'] = {
+    'keyAlerts': _asset_alert_rows,
     'regime': {'label':_a_label,'signal':_a_signal,'confidence':_confidence(_a_signal, v_vix is not None, _a_spx_w is not None, _g_spread is not None, v_hy is not None),
         'description': f'10Y 利率 {f2(v_dgs10)}% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI {f2(v_wti)} 波动影响通胀预期, 利率上行压制估值。'},
     'keySignals': [
