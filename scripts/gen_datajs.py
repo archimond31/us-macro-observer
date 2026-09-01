@@ -4331,7 +4331,13 @@ _c_liq_label = f'流动性{_c_liq_state} (评分 {_c_liq_score})'
 # ===== 主导叙事判定 (4 类: 数字黄金 / 风险资产beta / ETF机构化 / 链上基本面) =====
 _c_narr = []
 if _v_ethbtc is not None:
-    if _v_ethbtc < TV('crypto_ethbtc_riskoff_narr'): _c_narr.append('避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)')
+    _eb_m = tfm('eth_btc_ratio').get('m') if val('eth_btc_ratio') else None
+    if _v_ethbtc < TV('crypto_ethbtc_riskoff_narr'):
+        if _eb_m is not None and _eb_m > 0.001:
+            # 低位≠去风险: ETH/BTC 绝对水平低是 BTC dominance(数字黄金属性占优), 月线 ETH 在跑赢 = 风险偏好扩圈
+            _c_narr.append(f'BTC 主导(ETH/BTC {_v_ethbtc:.4f} 低位)但月线 ETH 跑赢({_eb_m*1000:+.0f}‰)——数字黄金占优≠板块去风险, 风险偏好月线在扩圈')
+        else:
+            _c_narr.append('避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)')
     elif _v_ethbtc > TV('crypto_ethbtc_riskon_narr'): _c_narr.append('风险偏好主导: ETH/BTC 走强(Altcoin/风险资产叙事)')
 if _v_etf_btc is not None:
     if _v_etf_btc > 0 and _etf_data.get('btc_cumsum', 0) > 0:
@@ -4381,27 +4387,52 @@ if _c_fng is not None and _v_btc is not None:
                           'detail': f'BTC 月 {_c_btc_m:+.1f}% 但恐慌贪婪指数仅 {_c_fng} ({_c_fng_label})——情绪滞后于价格, 上涨未获情绪确认。'})
 _c_contra = _c_contra[:4]
 
-# 加密 regime: 由 BTC 周变动 + ETF 流量 + ETH/BTC 动态合成 (替代预设 'mixed')
+# ===== 加密 regime v2: 多时间尺度 + 板块内部一致性 + macroSignal 交叉验证 (2026-09-01) =====
+# 原则(方法论): 单周是噪音, 月/季趋势才是信号; regime 必须与同板块流动性/情绪一致;
+#               且与 macroSignal 的 crypto 判定交叉验证 (避免"板块标签时滞"陷阱)
 _c_score = 0
+_c_regime_pts = []
 _c_btc_w = _btc_ch.get('w')
+# ① 趋势主信号: 月/半年变化 (权重 2 — "趋势才是信号")
+_c_btc_m = _btc_ch.get('m')
+if _c_btc_m is not None:
+    if _c_btc_m < -5: _c_score += 2; _c_regime_pts.append(f'BTC 月 {_c_btc_m:+.0f}% 下跌(趋势转弱)')
+    elif _c_btc_m > 5: _c_score -= 2; _c_regime_pts.append(f'BTC 月 {_c_btc_m:+.0f}% 上涨(趋势偏强)')
+# ② 周度噪音 (权重 1 — 仅作修正, 不主导)
 if _c_btc_w is not None:
-    if _c_btc_w < -5: _c_score += 1          # BTC 周跌>5%=去风险
-    elif _c_btc_w > 5: _c_score -= 1           # BTC 周涨>5%=risk-on
+    if _c_btc_w < -5: _c_score += 1
+    elif _c_btc_w > 5: _c_score -= 1
+# ③ ETH/BTC 月趋势: ETH 跑赢 = 风险偏好扩圈 (权重 1; 不用当前值判方向, 避免"强弱比误读成方向")
+_eb_m = tfm('eth_btc_ratio').get('m') if val('eth_btc_ratio') else None
+if _eb_m is not None:
+    if _eb_m < -0.001: _c_score += 1; _c_regime_pts.append(f'ETH/BTC 月 {_eb_m*1000:+.1f}‰ 走弱(避险占优)')
+    elif _eb_m > 0.001: _c_score -= 1; _c_regime_pts.append(f'ETH/BTC 月 {_eb_m*1000:+.1f}‰ 走强(风险偏好扩圈)')
+# ④ 板块内部一致性: 流动性水位 (稳定币蓄水池/杠杆情绪/贪婪指数) — 标签不得与"水位"自相矛盾 (权重 1)
+if _c_liq_state == '充裕': _c_score -= 1; _c_regime_pts.append('流动性充裕(稳定币蓄水池/情绪健康)')
+elif _c_liq_state == '收缩': _c_score += 1; _c_regime_pts.append('流动性收缩(蓄水池偏薄/恐慌)')
+# ⑤ macroSignal 交叉验证: 宏观信号层对加密的判定 (避免板块间更新不同步)
+if any('crypto' in (x.get('id') or '') for x in (MS.get('divergence') or [])):
+    _c_score -= 1
+    _c_regime_pts.append('macroSignal 交叉验证: 加密由背离转扩圈确认')
+# ⑥ ETF 流量 (日度, 权重 1 — 机构边际动向)
 if _v_etf_btc is not None:
     if _v_etf_btc < 0: _c_score += 1          # ETF 净流出=机构撤退
     elif _v_etf_btc > 0: _c_score -= 1
-if _v_ethbtc is not None:
-    if _v_ethbtc < TV('crypto_ethbtc_score_low'): _c_score += 1        # ETH/BTC 走弱=避险
-    elif _v_ethbtc > TV('crypto_ethbtc_score_high'): _c_score -= 1
-_crypto_signal = 'risk-off' if _c_score >= 1 else ('risk-on' if _c_score <= -1 else 'mixed')
-_crypto_label = '去风险/流动性收缩传导' if _crypto_signal=='risk-off' else ('风险资产联动走强' if _crypto_signal=='risk-on' else '震荡整理')
+
+_crypto_signal = 'risk-off' if _c_score >= 2 else ('risk-on' if _c_score <= -2 else 'mixed')
+_crypto_label = {
+    'risk-off': '去风险(趋势转弱/水位收缩)',
+    'risk-on': '风险偏好扩圈(月线确认)',
+    'mixed': '震荡(趋势与水位背离, 待方向确认)',
+}[_crypto_signal]
+_crypto_regime_note = ' · '.join(_c_regime_pts) if _c_regime_pts else '数据不足'
 DATA['crypto'] = {
     'regime': {
         'label': _crypto_label,
         'signal': _crypto_signal, 'confidence': _confidence(_crypto_signal, _v_btc is not None, _v_etf_btc is not None, _v_ethbtc is not None),
         'description': f'BTC ${comma(_v_btc,0) if _v_btc else "—"} · ETH ${comma(_v_eth,0) if _v_eth else "—"}'
-            + f' · ETH/BTC {_v_ethbtc:.4f}' if _v_ethbtc else ''
-            + '。加密市场与风险资产的联动性是关键观察变量——BTC 走强通常对应 risk-on，走弱则预示流动性收缩传导。',
+            + (f' · ETH/BTC {_v_ethbtc:.4f}' if _v_ethbtc else '')
+            + f'。判定依据(多时间尺度+板块内水位+macroSignal交叉验证): {_crypto_regime_note}。',
     },
     'keySignals': [s for s in [
         ({'title': f'BTC {_btc_ch.get("w", "—")} 周变动', 'meaning': 'BTC 是加密市场的 beta，其方向决定整个板块的风险偏好基调。', 'direction': dir_of(_btc_ch.get('w'))} if _btc_ch.get('w') is not None else None),
