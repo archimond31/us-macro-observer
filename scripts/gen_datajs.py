@@ -1919,7 +1919,7 @@ _liq_labels = _dates_for('tga')
 _nl_m = tfm('netliq')['m']            # 净流动性月变
 _nl_v = v_nl                          # 净流动性水平 ($B)
 _rrp_w = tfm('rrp').get('w') or 0     # RRP 周变 ($B)
-_sofr_gap = (v_sofr_iorb or 0)        # SOFR - IORB (bp 转 小数, >0 融资紧张)
+_sofr_gap = (v_sofr_iorb or 0)        # SOFR - IORB 百分点差 (如 0.03 = 3bp), >0 融资紧张
 _liq_score = 0
 if _nl_m is not None:
     _liq_score += 1 if _nl_m > 0 else -1
@@ -3310,8 +3310,10 @@ def _prepend_section_alerts():
     _nl_m2 = _nl_m
     if _rev_dn(_nl_h6, _nl_m2):
         A['liquidity'].append(_sig_alert('⚠ 净流动性转向收缩', '半年扩张后月内转降, 流动性环境拐点', 'bearish', 2))
-    if _sofr_gap > 0.001:
-        A['liquidity'].append(_sig_alert('⚠ 融资市场紧张', f'SOFR 高于 IORB {( _sofr_gap*10000):.0f}bp, 资金价格上行', 'bearish', 1))
+    # 触发阈值 ≥ 1bp (0.01pp) — 与下方 'SOFR-IORB 连续转正(>1bp)' 信号定义一致;
+    # 改用 bp() 助手保证与全站 (line 2026 等) 格式一致, 修复 ×10000 单位冗余 (2026-09-02)
+    if _sofr_gap > 0.01:
+        A['liquidity'].append(_sig_alert('⚠ 融资市场紧张', f'SOFR 高于 IORB {bp(_sofr_gap*100)}, 资金价格上行', 'bearish', 1))
 
     # ---- 信用: 利差快速走阔 / 低评级极端 ----
     if _cr_hy_w > 10:
