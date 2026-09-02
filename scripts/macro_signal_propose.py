@@ -97,6 +97,15 @@ def _ms_status(a):
     if t == 'trend_down':
         last = vals[-1]; mean = sum(vals) / len(vals)
         return ('on' if last < mean else 'off'), round(last, 2), '当前 %.2f vs 均值 %.2f' % (last, mean)
+    if t == 'mom_negative':
+        # 序列相邻期水平差 (非农月增), 最新一期 < 0 = 转负
+        chg = []
+        for i in range(1, len(vals)):
+            chg.append(vals[i] - vals[i - 1])
+        if len(chg) < 1:
+            return 'unknown', None, '样本不足'
+        last = chg[-1]
+        return ('on' if last < 0 else 'off'), round(last, 0), '最新月增 %+.0fK' % last
     if t == 'mom_accel':
         chg = []
         for i in range(1, len(vals)):
@@ -122,7 +131,8 @@ def _ms_status(a):
             return 'unknown', None, '序列缺失'
         sn = v10[-1] - v2[-1]; sp = v10[0] - v2[0]
         on = (sn > sp) and (v10[-1] > v10[0]) and (v2[-1] > v2[0])
-        return ('on' if on else 'off'), round(sn, 1), '10Y-2Y 斜率 %.0fbps' % sn
+        # sn/sp 单位为百分点(pp), 展示需 x100 换算为 bp
+        return ('on' if on else 'off'), round(sn * 100, 1), '10Y-2Y 斜率 %.0fbps' % (sn * 100)
     return 'unknown', None, ''
 
 # 锚点状态
