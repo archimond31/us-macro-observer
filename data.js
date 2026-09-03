@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-09-03 01:44
+ * 生成时间: 2026-09-03 02:06
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-09-03 01:44 (官方数据, 自动更新)",
+    "lastUpdated": "2026-09-03 02:05 (官方数据, 自动更新)",
     "dataAsOf": "2026-09-02",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,7 +17,7 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 4.79% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.49% (分位 100), 而 HY 整体 2.65%。油价 (WTI 90.87) 与波动率 (VIX 15.20) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 4.79% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.49% (分位 100), 而 HY 整体 2.65%。油价 (WTI 91.19) 与波动率 (VIX 15.20) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "keyAlerts": [
@@ -45,7 +45,7 @@ const DATA = {
       },
       {
         "name": "美元/日元",
-        "value": 158.37,
+        "value": 158.44,
         "unit": "",
         "threshold": 160.0,
         "dir": "up",
@@ -56,36 +56,36 @@ const DATA = {
       },
       {
         "name": "WTI 原油",
-        "value": 90.87,
+        "value": 91.19,
         "unit": "$",
         "threshold": 90.0,
         "dir": "up",
         "label": "$90 能源冲击线",
         "meaning": "能源冲击确认, 通胀预期与利率进一步上行",
         "status": "triggered",
-        "distPct": 1.0
+        "distPct": 1.3
       },
       {
         "name": "WTI 原油",
-        "value": 90.87,
+        "value": 91.19,
         "unit": "$",
         "threshold": 100.0,
         "dir": "up",
         "label": "$100 心理大关",
         "meaning": "供给冲击极端化, 全面通胀预期重定价",
         "status": "ok",
-        "distPct": 9.1
+        "distPct": 8.8
       },
       {
         "name": "黄金",
-        "value": 4451.1,
+        "value": 4452.6,
         "unit": "$",
         "threshold": 5000.0,
         "dir": "up",
         "label": "$5,000 整数关口",
         "meaning": "避险/去美元化叙事强化, 实际利率见顶假设验证",
         "status": "ok",
-        "distPct": 11.0
+        "distPct": 10.9
       },
       {
         "name": "VIX",
@@ -122,7 +122,7 @@ const DATA = {
       },
       {
         "name": "美元指数",
-        "value": 99.49,
+        "value": 99.54,
         "unit": "",
         "threshold": 100.0,
         "dir": "up",
@@ -136,7 +136,7 @@ const DATA = {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 4.79% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 90.87 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 4.79% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 91.19 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -145,17 +145,17 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "WTI 原油周涨 +10.51%",
+        "title": "WTI 原油周涨 +10.90%",
         "meaning": "油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。",
         "direction": "bearish"
       },
       {
-        "title": "布伦特原油周涨 +8.54%",
+        "title": "布伦特原油周涨 +8.88%",
         "meaning": "布伦特对地缘与海运风险更敏感, 其溢价反映全球供需而非仅美国库存。",
         "direction": "bearish"
       },
       {
-        "title": "黄金 -3.20% 下跌",
+        "title": "黄金 -3.17% 下跌",
         "meaning": "黄金回落说明实际利率上行或风险偏好修复, 资金从避险资产回流风险资产。",
         "direction": "bullish"
       }
@@ -403,18 +403,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,451.10",
-        "change": "+2.37%",
+        "value": "$4,452.60",
+        "change": "+2.41%",
         "dir": "up",
         "tag": "GC=F",
         "percentile": 57,
         "signal": "down",
         "meaning": "当前位于近一年 57 分位",
         "changes": {
-          "d": "+2.37%",
-          "w": "-3.20%",
-          "m": "+8.69%",
-          "h6": "-13.07%"
+          "d": "+2.41%",
+          "w": "-3.17%",
+          "m": "+8.72%",
+          "h6": "-13.04%"
         },
         "sparkline": [
           4046.6001,
@@ -446,23 +446,23 @@ const DATA = {
           4478.1001,
           4431.1001,
           4348.0,
-          4451.1001
+          4452.6001
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$90.87",
-        "change": "+0.72%",
+        "value": "$91.19",
+        "change": "+1.08%",
         "dir": "up",
         "tag": "CL=F",
         "percentile": 78,
         "signal": "up",
         "meaning": "当前位于近一年 78 分位",
         "changes": {
-          "d": "+0.72%",
-          "w": "+10.51%",
-          "m": "+19.93%",
-          "h6": "+21.71%"
+          "d": "+1.08%",
+          "w": "+10.90%",
+          "m": "+20.35%",
+          "h6": "+22.14%"
         },
         "sparkline": [
           92.19,
@@ -494,23 +494,23 @@ const DATA = {
           83.4,
           85.76,
           90.22,
-          90.87
+          91.19
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$95.34",
-        "change": "+0.73%",
+        "value": "$95.64",
+        "change": "+1.05%",
         "dir": "up",
         "tag": "BZ=F",
-        "percentile": 79,
+        "percentile": 80,
         "signal": "up",
-        "meaning": "当前位于近一年 79 分位",
+        "meaning": "当前位于近一年 80 分位",
         "changes": {
-          "d": "+0.73%",
-          "w": "+8.54%",
-          "m": "+20.14%",
-          "h6": "+17.13%"
+          "d": "+1.05%",
+          "w": "+8.88%",
+          "m": "+20.51%",
+          "h6": "+17.49%"
         },
         "sparkline": [
           100.69,
@@ -542,23 +542,23 @@ const DATA = {
           89.31,
           90.49,
           94.65,
-          95.34
+          95.64
         ]
       },
       {
         "label": "铜",
         "value": "6.61",
-        "change": "+1.64%",
+        "change": "+1.56%",
         "dir": "up",
         "tag": "HG=F",
-        "percentile": 98,
+        "percentile": 97,
         "signal": "up",
-        "meaning": "当前位于近一年 98 分位",
+        "meaning": "当前位于近一年 97 分位",
         "changes": {
-          "d": "+1.64%",
-          "w": "+0.28%",
-          "m": "-0.08%",
-          "h6": "+12.95%"
+          "d": "+1.56%",
+          "w": "+0.20%",
+          "m": "-0.16%",
+          "h6": "+12.86%"
         },
         "sparkline": [
           6.305,
@@ -590,26 +590,25 @@ const DATA = {
           6.562,
           6.5935,
           6.5065,
-          6.613
+          6.608
         ]
       },
       {
         "label": "美元指数",
-        "value": "99.49",
-        "change": "-0.18%",
+        "value": "99.54",
+        "change": "-0.02%",
         "dir": "down",
         "tag": "DX-Y.NYB",
         "percentile": 66,
         "signal": "up",
         "meaning": "当前位于近一年 66 分位",
         "changes": {
-          "d": "-0.18%",
-          "w": "+0.32%",
-          "m": "-0.40%",
-          "h6": "+0.73%"
+          "d": "-0.02%",
+          "w": "+0.38%",
+          "m": "-0.15%",
+          "h6": "+0.22%"
         },
         "sparkline": [
-          101.43,
           101.47,
           101.51,
           101.38,
@@ -638,23 +637,24 @@ const DATA = {
           99.7,
           99.43,
           99.67,
-          99.492
+          99.56,
+          99.539
         ]
       },
       {
         "label": "美元/日元",
-        "value": "158.37",
-        "change": "-1.14%",
+        "value": "158.44",
+        "change": "-1.09%",
         "dir": "down",
         "tag": "USDJPY=X",
-        "percentile": 55,
+        "percentile": 56,
         "signal": "down",
-        "meaning": "当前位于近一年 55 分位",
+        "meaning": "当前位于近一年 56 分位",
         "changes": {
-          "d": "-1.14%",
-          "w": "-0.55%",
-          "m": "+0.43%",
-          "h6": "+0.16%"
+          "d": "-1.09%",
+          "w": "-0.51%",
+          "m": "+0.48%",
+          "h6": "+0.21%"
         },
         "sparkline": [
           163.832,
@@ -686,7 +686,7 @@ const DATA = {
           160.122,
           159.747,
           160.196,
-          158.374
+          158.443
         ]
       },
       {
@@ -787,21 +787,20 @@ const DATA = {
       },
       {
         "label": "20+年国债ETF",
-        "value": "81.87",
-        "change": "-0.79%",
-        "dir": "down",
+        "value": "81.95",
+        "change": "+0.10%",
+        "dir": "up",
         "tag": "TLT",
-        "percentile": 1,
+        "percentile": 2,
         "signal": "down",
-        "meaning": "当前位于近一年 1 分位",
+        "meaning": "当前位于近一年 2 分位",
         "changes": {
-          "d": "-0.79%",
-          "w": "-1.92%",
-          "m": "-0.39%",
-          "h6": "-8.45%"
+          "d": "+0.10%",
+          "w": "-1.62%",
+          "m": "-1.05%",
+          "h6": "-8.08%"
         },
         "sparkline": [
-          83.44,
           83.17,
           83.25,
           83.75,
@@ -830,26 +829,26 @@ const DATA = {
           83.13,
           82.88,
           82.52,
-          81.87
+          81.87,
+          81.95
         ]
       },
       {
         "label": "投资级债ETF",
-        "value": "105.22",
-        "change": "-0.93%",
-        "dir": "down",
+        "value": "105.35",
+        "change": "+0.12%",
+        "dir": "up",
         "tag": "LQD",
-        "percentile": 0,
+        "percentile": 1,
         "signal": "down",
-        "meaning": "当前位于近一年 0 分位",
+        "meaning": "当前位于近一年 1 分位",
         "changes": {
-          "d": "-0.93%",
-          "w": "-1.53%",
-          "m": "-0.84%",
-          "h6": "-5.10%"
+          "d": "+0.12%",
+          "w": "-1.34%",
+          "m": "-1.32%",
+          "h6": "-5.06%"
         },
         "sparkline": [
-          106.67,
           106.26,
           106.23,
           106.51,
@@ -878,26 +877,26 @@ const DATA = {
           106.73,
           106.35,
           106.21,
-          105.22
+          105.22,
+          105.35
         ]
       },
       {
         "label": "高收益债ETF",
-        "value": "79.10",
-        "change": "-0.89%",
-        "dir": "down",
+        "value": "79.11",
+        "change": "+0.01%",
+        "dir": "up",
         "tag": "HYG",
         "percentile": 2,
         "signal": "down",
         "meaning": "当前位于近一年 2 分位",
         "changes": {
-          "d": "-0.89%",
-          "w": "-1.03%",
-          "m": "-0.26%",
-          "h6": "-1.27%"
+          "d": "+0.01%",
+          "w": "-0.99%",
+          "m": "-0.55%",
+          "h6": "-1.60%"
         },
         "sparkline": [
-          79.52,
           79.23,
           79.23,
           79.27,
@@ -926,7 +925,8 @@ const DATA = {
           79.87,
           79.74,
           79.81,
-          79.1
+          79.1,
+          79.11
         ]
       }
     ],
@@ -994,72 +994,72 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,451.10",
+        "current": "$4,452.60",
         "changes": {
-          "d": 2.37,
-          "w": -3.2,
-          "m": 8.69,
-          "h6": -13.07
+          "d": 2.41,
+          "w": -3.17,
+          "m": 8.72,
+          "h6": -13.04
         },
         "meaning": "半年 -13% 但近周转弱——顶部预警"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$90.87",
+        "current": "$91.19",
         "changes": {
-          "d": 0.72,
-          "w": 10.51,
-          "m": 19.93,
-          "h6": 21.71
+          "d": 1.08,
+          "w": 10.9,
+          "m": 20.35,
+          "h6": 22.14
         },
         "meaning": "半年 +22% 的上升趋势中, 近月 +20% 仍在加速"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$95.34",
+        "current": "$95.64",
         "changes": {
-          "d": 0.73,
-          "w": 8.54,
-          "m": 20.14,
-          "h6": 17.13
+          "d": 1.05,
+          "w": 8.88,
+          "m": 20.51,
+          "h6": 17.49
         },
-        "meaning": "半年 +17% 的上升趋势中, 近月 +20% 仍在加速"
+        "meaning": "半年 +17% 的上升趋势中, 近月 +21% 仍在加速"
       },
       {
         "name": "铜",
         "unit": "%",
         "current": "6.61",
         "changes": {
-          "d": 1.64,
-          "w": 0.28,
-          "m": -0.08,
-          "h6": 12.95
+          "d": 1.56,
+          "w": 0.2,
+          "m": -0.16,
+          "h6": 12.86
         },
         "meaning": "半年 +13% 但近月转弱——底部可能形成"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "99.49",
+        "current": "99.54",
         "changes": {
-          "d": -0.18,
-          "w": 0.32,
-          "m": -0.4,
-          "h6": 0.73
+          "d": -0.02,
+          "w": 0.38,
+          "m": -0.15,
+          "h6": 0.22
         },
-        "meaning": "半年 +1% 但近月转弱——底部可能形成"
+        "meaning": "半年 +0% 但近月转弱——底部可能形成"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "158.37",
+        "current": "158.44",
         "changes": {
-          "d": -1.14,
-          "w": -0.55,
-          "m": 0.43,
-          "h6": 0.16
+          "d": -1.09,
+          "w": -0.51,
+          "m": 0.48,
+          "h6": 0.21
         },
         "meaning": "半年 +0% 但近周转弱——顶部预警"
       },
@@ -1090,36 +1090,36 @@ const DATA = {
       {
         "name": "20+年国债ETF",
         "unit": "%",
-        "current": "81.87",
+        "current": "81.95",
         "changes": {
-          "d": -0.79,
-          "w": -1.92,
-          "m": -0.39,
-          "h6": -8.45
+          "d": 0.1,
+          "w": -1.62,
+          "m": -1.05,
+          "h6": -8.08
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "投资级债ETF",
         "unit": "%",
-        "current": "105.22",
+        "current": "105.35",
         "changes": {
-          "d": -0.93,
-          "w": -1.53,
-          "m": -0.84,
-          "h6": -5.1
+          "d": 0.12,
+          "w": -1.34,
+          "m": -1.32,
+          "h6": -5.06
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "高收益债ETF",
         "unit": "%",
-        "current": "79.10",
+        "current": "79.11",
         "changes": {
-          "d": -0.89,
-          "w": -1.03,
-          "m": -0.26,
-          "h6": -1.27
+          "d": 0.01,
+          "w": -0.99,
+          "m": -0.55,
+          "h6": -1.6
         },
         "meaning": "多尺度方向不一, 趋势不明"
       }
@@ -1163,43 +1163,43 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,451.10",
-        "change": "+2.37%",
+        "price": "$4,452.60",
+        "change": "+2.41%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$90.87",
-        "change": "+0.72%",
+        "price": "$91.19",
+        "change": "+1.08%",
         "dir": "up"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$95.34",
-        "change": "+0.73%",
+        "price": "$95.64",
+        "change": "+1.05%",
         "dir": "up"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
         "price": "6.61",
-        "change": "+1.64%",
+        "change": "+1.56%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "99.49",
-        "change": "-0.18%",
+        "price": "99.54",
+        "change": "-0.02%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "158.37",
-        "change": "-1.14%",
+        "price": "158.44",
+        "change": "-1.09%",
         "dir": "down"
       },
       {
@@ -1219,23 +1219,23 @@ const DATA = {
       {
         "ticker": "TLT",
         "name": "20+年国债ETF",
-        "price": "81.87",
-        "change": "-0.79%",
-        "dir": "down"
+        "price": "81.95",
+        "change": "+0.10%",
+        "dir": "up"
       },
       {
         "ticker": "LQD",
         "name": "投资级债ETF",
-        "price": "105.22",
-        "change": "-0.93%",
-        "dir": "down"
+        "price": "105.35",
+        "change": "+0.12%",
+        "dir": "up"
       },
       {
         "ticker": "HYG",
         "name": "高收益债ETF",
-        "price": "79.10",
-        "change": "-0.89%",
-        "dir": "down"
+        "price": "79.11",
+        "change": "+0.01%",
+        "dir": "up"
       }
     ],
     "chartData": {
@@ -1366,7 +1366,7 @@ const DATA = {
           83.4,
           85.76,
           90.22,
-          90.87
+          91.19
         ],
         "Gold": [
           4046.6001,
@@ -1398,7 +1398,7 @@ const DATA = {
           4478.1001,
           4431.1001,
           4348.0,
-          4451.1001
+          4452.6001
         ],
         "Copper": [
           6.305,
@@ -1430,7 +1430,7 @@ const DATA = {
           6.562,
           6.5935,
           6.5065,
-          6.613
+          6.608
         ],
         "BTC": [
           64023.39,
@@ -1593,7 +1593,7 @@ const DATA = {
       ],
       "note": "近60个共同交易日日度收益的真实 Pearson 相关 · 股债 +0.30 / 油股 -0.45"
     },
-    "analystView": "条件性重定价: 纳指 (-0.28%) 与长债 (TLT -1.92%) 同步承压, 但实际利率上行尚未引发系统性风险——属于分母端(贴现率)驱动的估值压缩, 而非风险溢价(分母+分子)同时恶化。判别标准: ① VIX 是否破 20 (波动率目标基金强制减仓阈值); ② HY OAS 是否走阔 10bp+; ③ 黄金是否跟跌 (实际利率 vs 避险)。三者未触发前维持\"高利率环境下的结构分化\"判断: 规避高久期成长, 偏好短久期价值与实物资产。",
+    "analystView": "条件性重定价: 纳指 (-0.28%) 与长债 (TLT -1.62%) 同步承压, 但实际利率上行尚未引发系统性风险——属于分母端(贴现率)驱动的估值压缩, 而非风险溢价(分母+分子)同时恶化。判别标准: ① VIX 是否破 20 (波动率目标基金强制减仓阈值); ② HY OAS 是否走阔 10bp+; ③ 黄金是否跟跌 (实际利率 vs 避险)。三者未触发前维持\"高利率环境下的结构分化\"判断: 规避高久期成长, 偏好短久期价值与实物资产。",
     "whatToWatch": [
       {
         "trigger": "<span class=\"watch-threshold\">10Y 突破 4.85%</span>",
@@ -7936,7 +7936,7 @@ const DATA = {
           24.63,
           23.32,
           21.01,
-          23.88
+          23.92
         ],
         "实际利率": [
           0.0,
@@ -8444,7 +8444,7 @@ const DATA = {
           1.59,
           1.31,
           1.56,
-          1.38
+          1.43
         ],
         "避险 VIX": [
           0.0,
@@ -8956,7 +8956,7 @@ const DATA = {
         ]
       },
       "current": {
-        "黄金": "$4,451",
+        "黄金": "$4,453",
         "实际利率": "2.44%",
         "美元指数": "99.5",
         "避险 VIX": "15.2",
@@ -9215,7 +9215,7 @@ const DATA = {
           "$4,478",
           "$4,431",
           "$4,348",
-          "$4,451"
+          "$4,453"
         ],
         "实际利率": [
           "1.82%",
@@ -10487,7 +10487,7 @@ const DATA = {
           4478.10009765625,
           4431.10009765625,
           4348.0,
-          4451.10009765625
+          4452.60009765625
         ],
         "实际利率": [
           1.82,
@@ -10995,7 +10995,7 @@ const DATA = {
           99.69999694824219,
           99.43000030517578,
           99.66999816894531,
-          99.49199676513672
+          99.53900146484375
         ],
         "避险 VIX": [
           16.350000381469727,
@@ -21913,7 +21913,7 @@ const DATA = {
       "asOf": "2026-09-03",
       "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)"
     },
-    "generatedAt": "2026-09-03 01:44",
+    "generatedAt": "2026-09-03 02:05",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -25406,8 +25406,8 @@ const DATA = {
     },
     "priceImplied": {
       "goldRealCorr": -0.11495043032149188,
-      "stockBondCorr": 0.30572605097934813,
-      "goldUsdCorr": -0.4774843695093553,
+      "stockBondCorr": 0.30695847822537614,
+      "goldUsdCorr": -0.48036169928377076,
       "realizedVol": 7.9,
       "vixImplRealGap": 7.3,
       "curveSlope": 40.0
@@ -25649,29 +25649,29 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "创意生成式 AI",
             "productDir": "Firefly、Photoshop Express、GenStudio",
-            "price": 286.0799865722656,
+            "price": 279.7900085449219,
             "ch": {
-              "d": -2.29,
-              "w": 4.44,
-              "m": 13.82,
-              "h6": 5.57
+              "d": -2.2,
+              "w": 2.31,
+              "m": 8.66,
+              "h6": 2.44
             },
             "scores": {
-              "momentum": 65.885,
+              "momentum": 59.45,
               "valuation": 72,
               "growth": 67,
               "quality": 84,
               "aiExposure": 47,
               "research": 73,
               "fundamental": 70,
-              "aiValue": 64,
+              "aiValue": 65,
               "lp_valuation": 100,
               "lp_fundamental": 83,
-              "lp_momentum": 33,
+              "lp_momentum": 50,
               "lp_aiValue": 100
             },
             "tags": [
-              "领跑",
+              "价值股候选",
               "高质量"
             ],
             "marketCap": 101.0,
@@ -25716,29 +25716,28 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "决策智能 / AI 作战平台",
             "productDir": "AIP 平台、Foundry、政府 + 商业决策",
-            "price": 179.9199981689453,
+            "price": 169.4600067138672,
             "ch": {
-              "d": -3.47,
-              "w": 4.16,
-              "m": 43.19,
-              "h6": 22.21
+              "d": -5.81,
+              "w": -4.53,
+              "m": 4.18,
+              "h6": 10.62
             },
             "scores": {
-              "momentum": 97.198,
+              "momentum": 55.136,
               "valuation": 37,
               "growth": 100,
               "quality": 71,
               "aiExposure": 92,
               "research": 66,
               "fundamental": 83,
-              "aiValue": 51,
+              "aiValue": 59,
               "lp_valuation": 50,
               "lp_fundamental": 100,
-              "lp_momentum": 83,
+              "lp_momentum": 17,
               "lp_aiValue": 83
             },
             "tags": [
-              "领跑",
               "高质量"
             ],
             "marketCap": 414.6,
@@ -25776,72 +25775,6 @@ const DATA = {
             "layerPct": 83
           },
           {
-            "ticker": "CRM",
-            "name": "Salesforce",
-            "key": "crm",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "CRM + 自主 Agent",
-            "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
-            "price": 258.1099853515625,
-            "ch": {
-              "d": 0.22,
-              "w": 25.48,
-              "m": 38.81,
-              "h6": 31.66
-            },
-            "scores": {
-              "momentum": 100,
-              "valuation": 61,
-              "growth": 68,
-              "quality": 62,
-              "aiExposure": 47,
-              "research": 72,
-              "fundamental": 62,
-              "aiValue": 49,
-              "lp_valuation": 83,
-              "lp_fundamental": 50,
-              "lp_momentum": 100,
-              "lp_aiValue": 67
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 156.4,
-            "pe": 22.7,
-            "fwdPe": 12.3,
-            "peg": 0.81,
-            "revGrowth": 13.3,
-            "grossMargin": 77.6,
-            "fcfMargin": 38.6,
-            "roe": 16.9,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.9,
-              "reports": 32,
-              "summary": "Q1 FY27(截至4/30)营收 $11.1B +13%、non-GAAP EPS $3.88 +50%；Agentforce ARR 破 $1.2B(+205%)，cRPO $33.6B +14%；上调 FY27 至 $45.9-46.2B(+11%)。估值温和(PE~28)，Agent 变现验证中。",
-              "sources": [
-                {
-                  "title": "Salesforce Investor",
-                  "url": "https://www.salesforce.com/company/investor/"
-                }
-              ]
-            },
-            "notes": "估值温和(PE~28)、现金流强劲(FCF $6.6B)，Agentforce ARR 破 $1.2B 验证 Agent 变现。",
-            "est": false,
-            "epsRevision": 10,
-            "ratingTrend": 0.3,
-            "ratingDispersion": 35,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 25,
-            "aiRevGrowth": 30,
-            "pricingPower": 65,
-            "peHist5y": 34,
-            "layerPct": 67
-          },
-          {
             "ticker": "MSFT",
             "name": "微软",
             "key": "msft",
@@ -25849,25 +25782,25 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "企业级 AI 助手 (Copilot)",
             "productDir": "Microsoft 365 Copilot、Azure OpenAI、GitHub Copilot、Copilot Studio",
-            "price": 501.0199890136719,
+            "price": 496.82000732421875,
             "ch": {
-              "d": -1.24,
-              "w": 1.89,
-              "m": 2.74,
-              "h6": 24.04
+              "d": -0.84,
+              "w": 0.09,
+              "m": 0.81,
+              "h6": 22.61
             },
             "scores": {
-              "momentum": 60.434,
+              "momentum": 57.548,
               "valuation": 41,
               "growth": 73,
               "quality": 43,
               "aiExposure": 48,
               "research": 79,
               "fundamental": 58,
-              "aiValue": 48,
+              "aiValue": 49,
               "lp_valuation": 67,
               "lp_fundamental": 17,
-              "lp_momentum": 17,
+              "lp_momentum": 33,
               "lp_aiValue": 50
             },
             "tags": [],
@@ -25906,6 +25839,72 @@ const DATA = {
             "layerPct": 50
           },
           {
+            "ticker": "CRM",
+            "name": "Salesforce",
+            "key": "crm",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "CRM + 自主 Agent",
+            "productDir": "Agentforce 自主代理平台、Einstein AI、Data Cloud",
+            "price": 256.92999267578125,
+            "ch": {
+              "d": -0.46,
+              "w": 24.95,
+              "m": 34.53,
+              "h6": 33.07
+            },
+            "scores": {
+              "momentum": 100,
+              "valuation": 61,
+              "growth": 68,
+              "quality": 62,
+              "aiExposure": 47,
+              "research": 72,
+              "fundamental": 62,
+              "aiValue": 49,
+              "lp_valuation": 83,
+              "lp_fundamental": 50,
+              "lp_momentum": 100,
+              "lp_aiValue": 50
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 156.4,
+            "pe": 22.7,
+            "fwdPe": 12.3,
+            "peg": 0.81,
+            "revGrowth": 13.3,
+            "grossMargin": 77.6,
+            "fcfMargin": 38.6,
+            "roe": 16.9,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 32,
+              "summary": "Q1 FY27(截至4/30)营收 $11.1B +13%、non-GAAP EPS $3.88 +50%；Agentforce ARR 破 $1.2B(+205%)，cRPO $33.6B +14%；上调 FY27 至 $45.9-46.2B(+11%)。估值温和(PE~28)，Agent 变现验证中。",
+              "sources": [
+                {
+                  "title": "Salesforce Investor",
+                  "url": "https://www.salesforce.com/company/investor/"
+                }
+              ]
+            },
+            "notes": "估值温和(PE~28)、现金流强劲(FCF $6.6B)，Agentforce ARR 破 $1.2B 验证 Agent 变现。",
+            "est": false,
+            "epsRevision": 10,
+            "ratingTrend": 0.3,
+            "ratingDispersion": 35,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 25,
+            "aiRevGrowth": 30,
+            "pricingPower": 65,
+            "peHist5y": 34,
+            "layerPct": 50
+          },
+          {
             "ticker": "NOW",
             "name": "ServiceNow",
             "key": "now",
@@ -25913,25 +25912,25 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "工作流 AI 代理",
             "productDir": "Now Assist、AI Agent、ITSM / 企业自动化平台",
-            "price": 142.89999389648438,
+            "price": 136.72000122070312,
             "ch": {
-              "d": -3.44,
-              "w": 12.52,
-              "m": 25.14,
-              "h6": 26.25
+              "d": -4.32,
+              "w": 8.68,
+              "m": 15.73,
+              "h6": 20.08
             },
             "scores": {
-              "momentum": 85.509,
+              "momentum": 73.653,
               "valuation": 34,
               "growth": 75,
               "quality": 57,
               "aiExposure": 47,
               "research": 77,
               "fundamental": 63,
-              "aiValue": 43,
+              "aiValue": 46,
               "lp_valuation": 33,
               "lp_fundamental": 67,
-              "lp_momentum": 67,
+              "lp_momentum": 83,
               "lp_aiValue": 33
             },
             "tags": [
@@ -25980,25 +25979,25 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "数据云 + AI",
             "productDir": "Cortex、Snowpark、Document AI",
-            "price": 319.79998779296875,
+            "price": 305.8399963378906,
             "ch": {
-              "d": -3.51,
-              "w": 0.88,
-              "m": 3.99,
-              "h6": 92.89
+              "d": -4.37,
+              "w": -3.02,
+              "m": -3.45,
+              "h6": 81.77
             },
             "scores": {
-              "momentum": 81.81,
+              "momentum": 70.21799999999999,
               "valuation": 22,
               "growth": 79,
               "quality": 48,
               "aiExposure": 47,
               "research": 67,
               "fundamental": 60,
-              "aiValue": 38,
+              "aiValue": 41,
               "lp_valuation": 17,
               "lp_fundamental": 33,
-              "lp_momentum": 50,
+              "lp_momentum": 67,
               "lp_aiValue": 17
             },
             "tags": [
@@ -26047,15 +26046,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "认知大模型 + 行业应用",
             "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-            "price": 39.41999816894531,
+            "price": 39.540000915527344,
             "ch": {
-              "d": -1.99,
-              "w": -0.61,
-              "m": -9.36,
-              "h6": -24.41
+              "d": 0.3,
+              "w": -0.58,
+              "m": -10.48,
+              "h6": -23.55
             },
             "scores": {
-              "momentum": 34.009,
+              "momentum": 33.271,
               "valuation": 21,
               "growth": 50,
               "quality": 17,
@@ -26111,7 +26110,7 @@ const DATA = {
             "US": {
               "ticker": "ADBE",
               "name": "Adobe",
-              "aiValue": 64,
+              "aiValue": 65,
               "count": 6
             },
             "A": {
@@ -26132,10 +26131,12 @@ const DATA = {
           "scarcity": 58,
           "avgFundamental": 62,
           "avgValuation": 41,
-          "avgMomentum": 75,
-          "avgAiValue": 46,
+          "avgMomentum": 64,
+          "avgAiValue": 49,
           "topPick": "ADBE",
-          "valuePicks": []
+          "valuePicks": [
+            "ADBE"
+          ]
         }
       },
       {
@@ -26159,30 +26160,28 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "通用多模态大模型",
             "productDir": "Gemini 系列、Vertex AI、DeepMind",
-            "price": 335.0199890136719,
+            "price": 337.1199951171875,
             "ch": {
-              "d": -1.28,
-              "w": -3.44,
-              "m": -10.3,
-              "h6": 10.36
+              "d": 0.63,
+              "w": -1.43,
+              "m": -10.73,
+              "h6": 11.21
             },
             "scores": {
-              "momentum": 42.461999999999996,
+              "momentum": 43.134,
               "valuation": 57,
               "growth": 75,
               "quality": 46,
               "aiExposure": 82,
               "research": 77,
               "fundamental": 67,
-              "aiValue": 62,
+              "aiValue": 61,
               "lp_valuation": 50,
               "lp_fundamental": 100,
               "lp_momentum": 0,
               "lp_aiValue": 100
             },
-            "tags": [
-              "价值股候选"
-            ],
+            "tags": [],
             "marketCap": 4207.1,
             "pe": 17.4,
             "fwdPe": 23.3,
@@ -26225,15 +26224,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "云上大模型 + 外部投资",
             "productDir": "Nova 模型、Bedrock、Anthropic 战略投资",
-            "price": 254.9199981689453,
+            "price": 254.97999572753906,
             "ch": {
-              "d": -1.87,
-              "w": -2.35,
-              "m": -10.25,
-              "h6": 22.13
+              "d": 0.02,
+              "w": -2.04,
+              "m": -8.09,
+              "h6": 17.6
             },
             "scores": {
-              "momentum": 46.474000000000004,
+              "momentum": 47.183,
               "valuation": 57,
               "growth": 78,
               "quality": 32,
@@ -26243,7 +26242,7 @@ const DATA = {
               "aiValue": 59,
               "lp_valuation": 50,
               "lp_fundamental": 50,
-              "lp_momentum": 100,
+              "lp_momentum": 50,
               "lp_aiValue": 50
             },
             "tags": [],
@@ -26289,25 +26288,25 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "开源大模型 + 广告 AI",
             "productDir": "Llama 开源生态、广告推荐 AI、AI 眼镜",
-            "price": 578.5399780273438,
+            "price": 592.8499755859375,
             "ch": {
-              "d": 1.08,
-              "w": 1.49,
-              "m": -1.98,
-              "h6": -11.68
+              "d": 2.47,
+              "w": 2.9,
+              "m": 0.84,
+              "h6": -11.21
             },
             "scores": {
-              "momentum": 45.309999999999995,
+              "momentum": 48.553,
               "valuation": 56,
               "growth": 53,
               "quality": 49,
               "aiExposure": 82,
               "research": 72,
               "fundamental": 60,
-              "aiValue": 50,
+              "aiValue": 49,
               "lp_valuation": 0,
               "lp_fundamental": 0,
-              "lp_momentum": 50,
+              "lp_momentum": 100,
               "lp_aiValue": 0
             },
             "tags": [
@@ -26353,7 +26352,7 @@ const DATA = {
             "US": {
               "ticker": "GOOGL",
               "name": "Alphabet",
-              "aiValue": 62,
+              "aiValue": 61,
               "count": 3
             }
           },
@@ -26367,12 +26366,10 @@ const DATA = {
           "scarcity": 42,
           "avgFundamental": 63,
           "avgValuation": 57,
-          "avgMomentum": 45,
-          "avgAiValue": 57,
+          "avgMomentum": 46,
+          "avgAiValue": 56,
           "topPick": "GOOGL",
-          "valuePicks": [
-            "GOOGL"
-          ]
+          "valuePicks": []
         }
       },
       {
@@ -26398,22 +26395,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "GPU 专用云",
             "productDir": "GPU 专用云、AI 训练 / 推理集群租赁",
-            "price": 81.8499984741211,
+            "price": 80.93000030517578,
             "ch": {
-              "d": -3.58,
-              "w": -7.03,
-              "m": -4.56,
-              "h6": 10.94
+              "d": -1.12,
+              "w": -8.04,
+              "m": -11.94,
+              "h6": 1.8
             },
             "scores": {
-              "momentum": 46.366,
+              "momentum": 36.577999999999996,
               "valuation": 58,
               "growth": 100,
               "quality": 30,
               "aiExposure": 92,
               "research": 70,
               "fundamental": 69,
-              "aiValue": 62,
+              "aiValue": 64,
               "lp_valuation": 100,
               "lp_fundamental": 100,
               "lp_momentum": 0,
@@ -26464,15 +26461,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "AI 云基础设施 (OCI)",
             "productDir": "Oracle Cloud Infrastructure、AI 超级集群 (ZEUS)、多云",
-            "price": 141.32000732421875,
+            "price": 145.75,
             "ch": {
-              "d": -5.23,
-              "w": -2.38,
-              "m": -0.37,
-              "h6": -5.16
+              "d": 3.13,
+              "w": -2.1,
+              "m": 0.01,
+              "h6": -4.34
             },
             "scores": {
-              "momentum": 47.167,
+              "momentum": 47.867,
               "valuation": 51,
               "growth": 75,
               "quality": 47,
@@ -26482,7 +26479,7 @@ const DATA = {
               "aiValue": 57,
               "lp_valuation": 83,
               "lp_fundamental": 50,
-              "lp_momentum": 17,
+              "lp_momentum": 33,
               "lp_aiValue": 83
             },
             "tags": [],
@@ -26528,25 +26525,25 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "散热与供配电",
             "productDir": "液冷 (Liquid Cooling)、UPS、热管理基础设施",
-            "price": 255.97000122070312,
+            "price": 256.70001220703125,
             "ch": {
-              "d": -1.06,
-              "w": 0.09,
-              "m": -2.69,
-              "h6": 4.72
+              "d": 0.29,
+              "w": -2.7,
+              "m": -4.9,
+              "h6": 2.16
             },
             "scores": {
-              "momentum": 49.031,
+              "momentum": 45.15800000000001,
               "valuation": 34,
               "growth": 77,
               "quality": 48,
               "aiExposure": 66,
               "research": 75,
               "fundamental": 64,
-              "aiValue": 51,
+              "aiValue": 52,
               "lp_valuation": 50,
               "lp_fundamental": 50,
-              "lp_momentum": 33,
+              "lp_momentum": 17,
               "lp_aiValue": 67
             },
             "tags": [],
@@ -26592,22 +26589,22 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 (代工)",
             "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
-            "price": 61.79999923706055,
+            "price": 63.33000183105469,
             "ch": {
-              "d": -1.81,
-              "w": 2.03,
-              "m": 3.12,
-              "h6": 12.61
+              "d": 2.48,
+              "w": -0.83,
+              "m": -3.93,
+              "h6": 17.8
             },
             "scores": {
-              "momentum": 57.403,
+              "momentum": 51.471000000000004,
               "valuation": 31,
               "growth": 97,
               "quality": 15,
               "aiExposure": 66,
               "research": 73,
               "fundamental": 58,
-              "aiValue": 45,
+              "aiValue": 47,
               "lp_valuation": 0,
               "lp_fundamental": 17,
               "lp_momentum": 50,
@@ -26656,22 +26653,22 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 PCB",
             "productDir": "高速 PCB、交换机板、AI 服务器主板",
-            "price": 118.38999938964844,
+            "price": 117.93000030517578,
             "ch": {
-              "d": -1.93,
-              "w": -0.7,
-              "m": 5.92,
-              "h6": 55.33
+              "d": -0.39,
+              "w": -3.35,
+              "m": 2.02,
+              "h6": 55.17
             },
             "scores": {
-              "momentum": 71.647,
+              "momentum": 67.029,
               "valuation": 31,
               "growth": 94,
               "quality": 27,
               "aiExposure": 66,
               "research": 74,
               "fundamental": 62,
-              "aiValue": 44,
+              "aiValue": 45,
               "lp_valuation": 0,
               "lp_fundamental": 33,
               "lp_momentum": 67,
@@ -26723,12 +26720,12 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "AI 服务器",
             "productDir": "PowerEdge XE 加速服务器、企业 AI 方案",
-            "price": 425.0,
+            "price": 492.20001220703125,
             "ch": {
-              "d": -6.8,
-              "w": -5.87,
-              "m": -0.94,
-              "h6": 192.74
+              "d": 15.81,
+              "w": 6.12,
+              "m": 5.34,
+              "h6": 234.6
             },
             "scores": {
               "momentum": 100,
@@ -26789,15 +26786,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器",
             "productDir": "AI 服务器、液冷整机柜",
-            "price": 85.69000244140625,
+            "price": 88.80000305175781,
             "ch": {
-              "d": 0.11,
-              "w": 16.13,
-              "m": 15.58,
-              "h6": 45.9
+              "d": 3.63,
+              "w": 13.45,
+              "m": 15.03,
+              "h6": 52.24
             },
             "scores": {
-              "momentum": 84.244,
+              "momentum": 84.579,
               "valuation": 31,
               "growth": 48,
               "quality": 7,
@@ -26854,13 +26851,13 @@ const DATA = {
             "US": {
               "ticker": "CRWV",
               "name": "CoreWeave",
-              "aiValue": 62,
+              "aiValue": 64,
               "count": 4
             },
             "A": {
               "ticker": "601138.SS",
               "name": "工业富联",
-              "aiValue": 45,
+              "aiValue": 47,
               "count": 3
             }
           },
@@ -26875,8 +26872,8 @@ const DATA = {
           "scarcity": 68,
           "avgFundamental": 61,
           "avgValuation": 39,
-          "avgMomentum": 65,
-          "avgAiValue": 48,
+          "avgMomentum": 62,
+          "avgAiValue": 49,
           "topPick": "CRWV",
           "valuePicks": [
             "CRWV"
@@ -26898,68 +26895,68 @@ const DATA = {
         ],
         "companies": [
           {
-            "ticker": "300308.SZ",
-            "name": "中际旭创",
-            "key": "zhongji",
-            "market": "A",
-            "ccy": "CNY",
-            "techRoute": "光模块 (800G/1.6T)",
-            "productDir": "800G/1.6T 光模块、硅光、LPO",
-            "price": 822.4000244140625,
+            "ticker": "LITE",
+            "name": "Lumentum",
+            "key": "lite",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "光互联器件",
+            "productDir": "激光器、光模块、云与 AI 光互联",
+            "price": 870.5800170898438,
             "ch": {
-              "d": -4.29,
-              "w": -3.35,
-              "m": -19.53,
-              "h6": 45.87
+              "d": 0.19,
+              "w": -7.29,
+              "m": 2.49,
+              "h6": 27.88
             },
             "scores": {
-              "momentum": 44.843999999999994,
-              "valuation": 32,
-              "growth": 100,
-              "quality": 45,
-              "aiExposure": 83,
-              "research": 80,
-              "fundamental": 74,
+              "momentum": 57.689,
+              "valuation": 52,
+              "growth": 99,
+              "quality": 26,
+              "aiExposure": 78,
+              "research": 71,
+              "fundamental": 65,
               "aiValue": 56,
-              "lp_valuation": 0,
-              "lp_fundamental": 50,
-              "lp_momentum": 25,
-              "lp_aiValue": 75
+              "lp_valuation": 100,
+              "lp_fundamental": 25,
+              "lp_momentum": 100,
+              "lp_aiValue": 100
             },
             "tags": [],
-            "marketCap": 11558.1,
-            "pe": 73.7,
-            "fwdPe": 15.8,
-            "peg": 1.2,
-            "revGrowth": 182.5,
-            "grossMargin": 46.0,
-            "fcfMargin": 8.1,
-            "roe": 53.9,
+            "marketCap": 86.9,
+            "pe": 25,
+            "fwdPe": 29.3,
+            "peg": 0.63,
+            "revGrowth": 109.3,
+            "grossMargin": 44.6,
+            "fcfMargin": 10,
+            "roe": 6,
             "research": {
-              "consensus": "增持",
-              "ratingScore": 4.4,
-              "reports": 30,
-              "summary": "2026 H1(已披露,8/21)营收 417.78亿(+182.5%)、归母净利 136.51亿(+241.7%)、毛利率 ~46%；Q2 单季营收 222.81亿、净利 79.17亿(+228%)；800G/1.6T 放量，海外收入 396亿(+210%)、占94%。订单排至2027，10派12元。",
+              "consensus": "中性",
+              "ratingScore": 3.7,
+              "reports": 18,
+              "summary": "Q3 FY26(截至3/28)营收 $808.4M +90%、non-GAAP GM 47.9%、EPS $2.37；英伟达 $20亿投资、OCS 订单 >$4B；AI 光互联需求强劲。",
               "sources": [
                 {
-                  "title": "中际旭创投资者关系",
-                  "url": "https://www.zjxc.com"
+                  "title": "Lumentum Investor",
+                  "url": "https://www.lumentum.com"
                 }
               ]
             },
-            "notes": "光模块全球龙头，H1'26 营收 417.78亿(+182.5%)、净利 136.51亿(+241.7%)；800G/1.6T 放量+份额领先；7/28 单日-15.69%后董事长提议 40-80亿回购；客户集中(北美云厂)是风险。",
+            "notes": "光器件弹性标的，营收+90%且英伟达战略投资；波动较大。",
             "est": false,
-            "epsRevision": 18,
+            "epsRevision": 16,
             "ratingTrend": 0.5,
             "ratingDispersion": 30,
             "curatedDate": "2026-08",
             "stale": false,
             "thesis": null,
             "aiRevPct": 85,
-            "aiRevGrowth": 90,
+            "aiRevGrowth": 55,
             "pricingPower": 60,
-            "peHist5y": 45,
-            "layerPct": 75
+            "peHist5y": 35,
+            "layerPct": 100
           },
           {
             "ticker": "300502.SZ",
@@ -26969,22 +26966,22 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "光模块 (800G)",
             "productDir": "800G 光模块、相干光模块",
-            "price": 386.70001220703125,
+            "price": 392.0,
             "ch": {
-              "d": -4.0,
-              "w": -3.03,
-              "m": -13.68,
-              "h6": 41.65
+              "d": 1.37,
+              "w": -4.18,
+              "m": -7.61,
+              "h6": 48.58
             },
             "scores": {
-              "momentum": 48.971,
+              "momentum": 56.053,
               "valuation": 32,
               "growth": 100,
               "quality": 54,
               "aiExposure": 83,
               "research": 79,
               "fundamental": 77,
-              "aiValue": 56,
+              "aiValue": 55,
               "lp_valuation": 0,
               "lp_fundamental": 100,
               "lp_momentum": 50,
@@ -27026,70 +27023,68 @@ const DATA = {
             "layerPct": 75
           },
           {
-            "ticker": "LITE",
-            "name": "Lumentum",
-            "key": "lite",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "光互联器件",
-            "productDir": "激光器、光模块、云与 AI 光互联",
-            "price": 868.9500122070312,
+            "ticker": "300308.SZ",
+            "name": "中际旭创",
+            "key": "zhongji",
+            "market": "A",
+            "ccy": "CNY",
+            "techRoute": "光模块 (800G/1.6T)",
+            "productDir": "800G/1.6T 光模块、硅光、LPO",
+            "price": 823.5999755859375,
             "ch": {
-              "d": -5.01,
-              "w": -1.88,
-              "m": 11.42,
-              "h6": 25.13
+              "d": 0.15,
+              "w": -4.91,
+              "m": -13.1,
+              "h6": 52.8
             },
             "scores": {
-              "momentum": 67.065,
-              "valuation": 52,
-              "growth": 99,
-              "quality": 26,
-              "aiExposure": 78,
-              "research": 71,
-              "fundamental": 65,
+              "momentum": 52.086,
+              "valuation": 32,
+              "growth": 100,
+              "quality": 45,
+              "aiExposure": 83,
+              "research": 80,
+              "fundamental": 74,
               "aiValue": 54,
-              "lp_valuation": 100,
-              "lp_fundamental": 25,
-              "lp_momentum": 75,
-              "lp_aiValue": 50
+              "lp_valuation": 0,
+              "lp_fundamental": 50,
+              "lp_momentum": 25,
+              "lp_aiValue": 25
             },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 86.9,
-            "pe": 25,
-            "fwdPe": 29.3,
-            "peg": 0.63,
-            "revGrowth": 109.3,
-            "grossMargin": 44.6,
-            "fcfMargin": 10,
-            "roe": 6,
+            "tags": [],
+            "marketCap": 11558.1,
+            "pe": 73.7,
+            "fwdPe": 15.8,
+            "peg": 1.2,
+            "revGrowth": 182.5,
+            "grossMargin": 46.0,
+            "fcfMargin": 8.1,
+            "roe": 53.9,
             "research": {
-              "consensus": "中性",
-              "ratingScore": 3.7,
-              "reports": 18,
-              "summary": "Q3 FY26(截至3/28)营收 $808.4M +90%、non-GAAP GM 47.9%、EPS $2.37；英伟达 $20亿投资、OCS 订单 >$4B；AI 光互联需求强劲。",
+              "consensus": "增持",
+              "ratingScore": 4.4,
+              "reports": 30,
+              "summary": "2026 H1(已披露,8/21)营收 417.78亿(+182.5%)、归母净利 136.51亿(+241.7%)、毛利率 ~46%；Q2 单季营收 222.81亿、净利 79.17亿(+228%)；800G/1.6T 放量，海外收入 396亿(+210%)、占94%。订单排至2027，10派12元。",
               "sources": [
                 {
-                  "title": "Lumentum Investor",
-                  "url": "https://www.lumentum.com"
+                  "title": "中际旭创投资者关系",
+                  "url": "https://www.zjxc.com"
                 }
               ]
             },
-            "notes": "光器件弹性标的，营收+90%且英伟达战略投资；波动较大。",
+            "notes": "光模块全球龙头，H1'26 营收 417.78亿(+182.5%)、净利 136.51亿(+241.7%)；800G/1.6T 放量+份额领先；7/28 单日-15.69%后董事长提议 40-80亿回购；客户集中(北美云厂)是风险。",
             "est": false,
-            "epsRevision": 16,
+            "epsRevision": 18,
             "ratingTrend": 0.5,
             "ratingDispersion": 30,
             "curatedDate": "2026-08",
             "stale": false,
             "thesis": null,
             "aiRevPct": 85,
-            "aiRevGrowth": 55,
+            "aiRevGrowth": 90,
             "pricingPower": 60,
-            "peHist5y": 35,
-            "layerPct": 50
+            "peHist5y": 45,
+            "layerPct": 25
           },
           {
             "ticker": "ANET",
@@ -27099,31 +27094,28 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "AI 数据中心网络",
             "productDir": "800G / 1.6T 交换机、EOS、AI 后端网络",
-            "price": 189.25999450683594,
+            "price": 186.10000610351562,
             "ch": {
-              "d": -3.29,
-              "w": -0.88,
-              "m": 2.36,
-              "h6": 51.89
+              "d": -1.67,
+              "w": -7.99,
+              "m": -2.31,
+              "h6": 38.03
             },
             "scores": {
-              "momentum": 67.339,
+              "momentum": 56.134,
               "valuation": 32,
               "growth": 89,
               "quality": 61,
               "aiExposure": 78,
               "research": 78,
               "fundamental": 75,
-              "aiValue": 51,
+              "aiValue": 54,
               "lp_valuation": 0,
               "lp_fundamental": 75,
-              "lp_momentum": 100,
+              "lp_momentum": 75,
               "lp_aiValue": 25
             },
-            "tags": [
-              "高估值",
-              "领跑"
-            ],
+            "tags": [],
             "marketCap": 254.5,
             "pe": 62.9,
             "fwdPe": 39.1,
@@ -27166,22 +27158,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "光互联器件",
             "productDir": "激光器、光器件、800G/1.6T 光模块",
-            "price": 272.0299987792969,
+            "price": 268.6400146484375,
             "ch": {
-              "d": -2.09,
-              "w": -5.59,
-              "m": -5.59,
-              "h6": -3.13
+              "d": -1.25,
+              "w": -8.74,
+              "m": -17.02,
+              "h6": -2.26
             },
             "scores": {
-              "momentum": 41.794000000000004,
+              "momentum": 30.508,
               "valuation": 37,
               "growth": 84,
               "quality": 17,
               "aiExposure": 78,
               "research": 71,
               "fundamental": 57,
-              "aiValue": 50,
+              "aiValue": 52,
               "lp_valuation": 75,
               "lp_fundamental": 0,
               "lp_momentum": 0,
@@ -27226,19 +27218,19 @@ const DATA = {
         "comparison": {
           "leaders": {
             "A": {
-              "ticker": "300308.SZ",
-              "name": "中际旭创",
-              "aiValue": 56,
+              "ticker": "300502.SZ",
+              "name": "新易盛",
+              "aiValue": 55,
               "count": 2
             },
             "US": {
               "ticker": "LITE",
               "name": "Lumentum",
-              "aiValue": 54,
+              "aiValue": 56,
               "count": 3
             }
           },
-          "crossMarketBest": "300308.SZ",
+          "crossMarketBest": "LITE",
           "marketCounts": {
             "A": 2,
             "US": 3
@@ -27249,9 +27241,9 @@ const DATA = {
           "scarcity": 78,
           "avgFundamental": 70,
           "avgValuation": 37,
-          "avgMomentum": 54,
-          "avgAiValue": 53,
-          "topPick": "300308.SZ",
+          "avgMomentum": 50,
+          "avgAiValue": 54,
+          "topPick": "LITE",
           "valuePicks": []
         }
       },
@@ -27282,15 +27274,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "GPU + CUDA 全栈",
             "productDir": "数据中心 GPU (B 系列)、CUDA、NIM 微服务、InfiniBand 网络",
-            "price": 217.44000244140625,
+            "price": 224.41000366210938,
             "ch": {
-              "d": -1.51,
-              "w": 2.06,
-              "m": 5.23,
-              "h6": 20.77
+              "d": 3.21,
+              "w": 7.04,
+              "m": 5.88,
+              "h6": 22.6
             },
             "scores": {
-              "momentum": 61.762,
+              "momentum": 64.888,
               "valuation": 62,
               "growth": 94,
               "quality": 76,
@@ -27300,11 +27292,10 @@ const DATA = {
               "aiValue": 67,
               "lp_valuation": 92,
               "lp_fundamental": 100,
-              "lp_momentum": 46,
+              "lp_momentum": 69,
               "lp_aiValue": 100
             },
             "tags": [
-              "价值股候选",
               "高质量"
             ],
             "marketCap": 5490.0,
@@ -27342,73 +27333,6 @@ const DATA = {
             "layerPct": 100
           },
           {
-            "ticker": "000660.KS",
-            "name": "SK海力士",
-            "key": "skhynix",
-            "market": "KR",
-            "ccy": "KRW",
-            "techRoute": "HBM 存储 (全球领先)",
-            "productDir": "HBM3E/4、DRAM、NAND",
-            "price": 1630000.0,
-            "ch": {
-              "d": 1.05,
-              "w": -5.78,
-              "m": 3.36,
-              "h6": 73.59
-            },
-            "scores": {
-              "momentum": 72.789,
-              "valuation": 65,
-              "growth": 99,
-              "quality": 70,
-              "aiExposure": 72,
-              "research": 80,
-              "fundamental": 81,
-              "aiValue": 65,
-              "lp_valuation": 100,
-              "lp_fundamental": 92,
-              "lp_momentum": 69,
-              "lp_aiValue": 92
-            },
-            "tags": [
-              "领跑",
-              "高质量"
-            ],
-            "marketCap": 842.7,
-            "pe": 10,
-            "fwdPe": 9,
-            "peg": 0.23,
-            "revGrowth": 256.8,
-            "grossMargin": 70.2,
-            "fcfMargin": 16,
-            "roe": 92.7,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.4,
-              "reports": 36,
-              "summary": "HBM 绝对领先，HBM4 大规模出货；Q2 营收 +257%、OP 76%；利润略低于预期但创纪录。",
-              "sources": [
-                {
-                  "title": "SK hynix IR",
-                  "url": "https://www.skhynix.com"
-                }
-              ]
-            },
-            "notes": "HBM 核心受益(Q2 营收 +257%、OP 76%)；与英伟达/微软深度绑定，周期属性仍存。",
-            "est": true,
-            "epsRevision": 16,
-            "ratingTrend": 0.5,
-            "ratingDispersion": 28,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 70,
-            "aiRevGrowth": 50,
-            "pricingPower": 65,
-            "peHist5y": 15,
-            "layerPct": 92
-          },
-          {
             "ticker": "AVGO",
             "name": "博通",
             "key": "avgo",
@@ -27416,22 +27340,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "定制 AI ASIC + 网络",
             "productDir": "定制 AI 芯片 (TPU 等)、Tomahawk 交换、VMware",
-            "price": 369.67999267578125,
+            "price": 367.239990234375,
             "ch": {
-              "d": -0.18,
-              "w": 3.63,
-              "m": -5.75,
-              "h6": 17.79
+              "d": -0.66,
+              "w": 3.28,
+              "m": -12.18,
+              "h6": 15.66
             },
             "scores": {
-              "momentum": 51.614000000000004,
+              "momentum": 45.047999999999995,
               "valuation": 54,
               "growth": 93,
               "quality": 68,
               "aiExposure": 76,
               "research": 80,
               "fundamental": 79,
-              "aiValue": 64,
+              "aiValue": 65,
               "lp_valuation": 69,
               "lp_fundamental": 85,
               "lp_momentum": 23,
@@ -27473,6 +27397,73 @@ const DATA = {
             "layerPct": 85
           },
           {
+            "ticker": "000660.KS",
+            "name": "SK海力士",
+            "key": "skhynix",
+            "market": "KR",
+            "ccy": "KRW",
+            "techRoute": "HBM 存储 (全球领先)",
+            "productDir": "HBM3E/4、DRAM、NAND",
+            "price": 1633000.0,
+            "ch": {
+              "d": 1.24,
+              "w": -5.61,
+              "m": 3.55,
+              "h6": 73.91
+            },
+            "scores": {
+              "momentum": 73.124,
+              "valuation": 65,
+              "growth": 99,
+              "quality": 70,
+              "aiExposure": 72,
+              "research": 80,
+              "fundamental": 81,
+              "aiValue": 65,
+              "lp_valuation": 100,
+              "lp_fundamental": 92,
+              "lp_momentum": 77,
+              "lp_aiValue": 85
+            },
+            "tags": [
+              "领跑",
+              "高质量"
+            ],
+            "marketCap": 842.7,
+            "pe": 10,
+            "fwdPe": 9,
+            "peg": 0.23,
+            "revGrowth": 256.8,
+            "grossMargin": 70.2,
+            "fcfMargin": 16,
+            "roe": 92.7,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.4,
+              "reports": 36,
+              "summary": "HBM 绝对领先，HBM4 大规模出货；Q2 营收 +257%、OP 76%；利润略低于预期但创纪录。",
+              "sources": [
+                {
+                  "title": "SK hynix IR",
+                  "url": "https://www.skhynix.com"
+                }
+              ]
+            },
+            "notes": "HBM 核心受益(Q2 营收 +257%、OP 76%)；与英伟达/微软深度绑定，周期属性仍存。",
+            "est": true,
+            "epsRevision": 16,
+            "ratingTrend": 0.5,
+            "ratingDispersion": 28,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 15,
+            "layerPct": 85
+          },
+          {
             "ticker": "005930.KS",
             "name": "三星电子",
             "key": "ssamsung",
@@ -27480,15 +27471,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "存储 (HBM) + 代工 + 移动",
             "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-            "price": 253250.0,
+            "price": 253500.0,
             "ch": {
-              "d": 1.1,
-              "w": -4.79,
-              "m": 5.52,
-              "h6": 29.81
+              "d": 1.2,
+              "w": -4.7,
+              "m": 5.62,
+              "h6": 29.93
             },
             "scores": {
-              "momentum": 61.995000000000005,
+              "momentum": 62.157,
               "valuation": 61,
               "growth": 94,
               "quality": 42,
@@ -27544,22 +27535,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "先进制程代工",
             "productDir": "3/2nm 制程、CoWoS 先进封装",
-            "price": 414.0,
+            "price": 415.5,
             "ch": {
-              "d": -0.32,
-              "w": -0.82,
-              "m": 1.94,
-              "h6": 17.24
+              "d": 0.36,
+              "w": -0.52,
+              "m": -0.4,
+              "h6": 16.24
             },
             "scores": {
-              "momentum": 56.589999999999996,
+              "momentum": 54.304,
               "valuation": 46,
               "growth": 85,
               "quality": 51,
               "aiExposure": 71,
               "research": 80,
               "fundamental": 70,
-              "aiValue": 56,
+              "aiValue": 57,
               "lp_valuation": 54,
               "lp_fundamental": 54,
               "lp_momentum": 38,
@@ -27601,72 +27592,6 @@ const DATA = {
             "layerPct": 69
           },
           {
-            "ticker": "MU",
-            "name": "美光",
-            "key": "mu",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "HBM 内存",
-            "productDir": "HBM3E / 4、DRAM、AI 内存",
-            "price": 933.4400024414062,
-            "ch": {
-              "d": -2.64,
-              "w": 0.05,
-              "m": 12.53,
-              "h6": 145.85
-            },
-            "scores": {
-              "momentum": 100,
-              "valuation": 55,
-              "growth": 100,
-              "quality": 60,
-              "aiExposure": 60,
-              "research": 83,
-              "fundamental": 75,
-              "aiValue": 53,
-              "lp_valuation": 77,
-              "lp_fundamental": 77,
-              "lp_momentum": 92,
-              "lp_aiValue": 62
-            },
-            "tags": [
-              "领跑"
-            ],
-            "marketCap": 1142.7,
-            "pe": 22.0,
-            "fwdPe": 6.5,
-            "peg": 0.14,
-            "revGrowth": 345.7,
-            "grossMargin": 72.6,
-            "fcfMargin": 8.5,
-            "roe": 66.6,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.6,
-              "reports": 32,
-              "summary": "HBM 供不应求贯穿周期，FQ3 营收 +346%、Q4 指引 $50B/+86% GM；罕见低估值但周期属性强。",
-              "sources": [
-                {
-                  "title": "Micron Investor",
-                  "url": "https://www.micron.com/about/innovation/investors"
-                }
-              ]
-            },
-            "notes": "HBM 超级周期，FQ3 营收 +346%(存储涨价)；Q4 指引 $50B/+86% GM；低 PEG 但周期属性强。",
-            "est": false,
-            "epsRevision": 18,
-            "ratingTrend": 0.5,
-            "ratingDispersion": 28,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 55,
-            "aiRevGrowth": 40,
-            "pricingPower": 55,
-            "peHist5y": 30,
-            "layerPct": 62
-          },
-          {
             "ticker": "AMAT",
             "name": "应用材料",
             "key": "amat",
@@ -27674,22 +27599,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "半导体设备",
             "productDir": "薄膜沉积、刻蚀、制程设备",
-            "price": 441.8500061035156,
+            "price": 438.4599914550781,
             "ch": {
-              "d": -3.61,
-              "w": -7.96,
-              "m": -14.74,
-              "h6": 25.77
+              "d": -0.77,
+              "w": -8.61,
+              "m": -19.79,
+              "h6": 22.56
             },
             "scores": {
-              "momentum": 41.281000000000006,
+              "momentum": 35.513,
               "valuation": 33,
               "growth": 78,
               "quality": 42,
               "aiExposure": 69,
               "research": 77,
               "fundamental": 63,
-              "aiValue": 52,
+              "aiValue": 53,
               "lp_valuation": 38,
               "lp_fundamental": 8,
               "lp_momentum": 0,
@@ -27731,6 +27656,72 @@ const DATA = {
             "layerPct": 54
           },
           {
+            "ticker": "MU",
+            "name": "美光",
+            "key": "mu",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "HBM 内存",
+            "productDir": "HBM3E / 4、DRAM、AI 内存",
+            "price": 956.0800170898438,
+            "ch": {
+              "d": 2.43,
+              "w": 1.88,
+              "m": 7.1,
+              "h6": 138.56
+            },
+            "scores": {
+              "momentum": 98.71000000000001,
+              "valuation": 55,
+              "growth": 100,
+              "quality": 60,
+              "aiExposure": 60,
+              "research": 83,
+              "fundamental": 75,
+              "aiValue": 53,
+              "lp_valuation": 77,
+              "lp_fundamental": 77,
+              "lp_momentum": 100,
+              "lp_aiValue": 54
+            },
+            "tags": [
+              "领跑"
+            ],
+            "marketCap": 1142.7,
+            "pe": 22.0,
+            "fwdPe": 6.5,
+            "peg": 0.14,
+            "revGrowth": 345.7,
+            "grossMargin": 72.6,
+            "fcfMargin": 8.5,
+            "roe": 66.6,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.6,
+              "reports": 32,
+              "summary": "HBM 供不应求贯穿周期，FQ3 营收 +346%、Q4 指引 $50B/+86% GM；罕见低估值但周期属性强。",
+              "sources": [
+                {
+                  "title": "Micron Investor",
+                  "url": "https://www.micron.com/about/innovation/investors"
+                }
+              ]
+            },
+            "notes": "HBM 超级周期，FQ3 营收 +346%(存储涨价)；Q4 指引 $50B/+86% GM；低 PEG 但周期属性强。",
+            "est": false,
+            "epsRevision": 18,
+            "ratingTrend": 0.5,
+            "ratingDispersion": 28,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 55,
+            "aiRevGrowth": 40,
+            "pricingPower": 55,
+            "peHist5y": 30,
+            "layerPct": 54
+          },
+          {
             "ticker": "ASML",
             "name": "阿斯麦",
             "key": "asml",
@@ -27738,15 +27729,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "光刻设备",
             "productDir": "EUV 光刻机、High-NA EUV",
-            "price": 1665.1400146484375,
+            "price": 1682.300048828125,
             "ch": {
-              "d": -1.82,
-              "w": -4.53,
-              "m": 1.38,
-              "h6": 22.35
+              "d": 1.03,
+              "w": -3.63,
+              "m": -1.73,
+              "h6": 20.22
             },
             "scores": {
-              "momentum": 56.135,
+              "momentum": 53.057,
               "valuation": 23,
               "growth": 75,
               "quality": 58,
@@ -27802,25 +27793,25 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "x86 CPU + DCU (国产)",
             "productDir": "海光 CPU、深算 DCU (GPGPU)",
-            "price": 247.2100067138672,
+            "price": 248.0,
             "ch": {
-              "d": -1.29,
-              "w": 7.04,
-              "m": -10.22,
-              "h6": 2.58
+              "d": 0.32,
+              "w": 0.83,
+              "m": -14.14,
+              "h6": 5.08
             },
             "scores": {
-              "momentum": 44.392,
+              "momentum": 39.13,
               "valuation": 20,
               "growth": 94,
               "quality": 27,
               "aiExposure": 70,
               "research": 74,
               "fundamental": 63,
-              "aiValue": 46,
+              "aiValue": 48,
               "lp_valuation": 0,
               "lp_fundamental": 8,
-              "lp_momentum": 15,
+              "lp_momentum": 8,
               "lp_aiValue": 38
             },
             "tags": [],
@@ -27859,6 +27850,70 @@ const DATA = {
             "layerPct": 38
           },
           {
+            "ticker": "ARM",
+            "name": "Arm",
+            "key": "arm",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "CPU IP 架构",
+            "productDir": "Armv9 架构、CSS 计算子系统、端侧 AI",
+            "price": 234.86000061035156,
+            "ch": {
+              "d": 0.02,
+              "w": -6.45,
+              "m": -16.29,
+              "h6": 89.24
+            },
+            "scores": {
+              "momentum": 59.531,
+              "valuation": 22,
+              "growth": 80,
+              "quality": 56,
+              "aiExposure": 72,
+              "research": 78,
+              "fundamental": 70,
+              "aiValue": 47,
+              "lp_valuation": 15,
+              "lp_fundamental": 54,
+              "lp_momentum": 46,
+              "lp_aiValue": 31
+            },
+            "tags": [],
+            "marketCap": 289.9,
+            "pe": 285.7,
+            "fwdPe": 88.8,
+            "peg": 2.29,
+            "revGrowth": 22.4,
+            "grossMargin": 97.5,
+            "fcfMargin": 25.9,
+            "roe": 13.4,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.3,
+              "reports": 32,
+              "summary": "特许权+授权模式毛利 93%，v9 提价与 AGI CPU 打开数据中心新空间；估值昂贵但稀缺。",
+              "sources": [
+                {
+                  "title": "Arm Investor",
+                  "url": "https://www.arm.com/company/investors"
+                }
+              ]
+            },
+            "notes": "高毛利 IP 模式，贵但稀缺；AGI CPU 打开数据中心新空间。",
+            "est": false,
+            "epsRevision": 15,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 32,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 135,
+            "layerPct": 31
+          },
+          {
             "ticker": "AMD",
             "name": "AMD",
             "key": "amd",
@@ -27866,26 +27921,26 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "GPU + CPU 双线",
             "productDir": "Instinct MI 系列、EPYC、ROCm 生态",
-            "price": 459.6099853515625,
+            "price": 457.05999755859375,
             "ch": {
-              "d": -2.36,
-              "w": -4.08,
-              "m": -5.16,
-              "h6": 140.7
+              "d": -0.55,
+              "w": -4.96,
+              "m": -11.86,
+              "h6": 126.19
             },
             "scores": {
-              "momentum": 85.934,
+              "momentum": 75.199,
               "valuation": 32,
               "growth": 94,
               "quality": 39,
               "aiExposure": 72,
               "research": 74,
               "fundamental": 67,
-              "aiValue": 44,
+              "aiValue": 46,
               "lp_valuation": 31,
               "lp_fundamental": 31,
               "lp_momentum": 85,
-              "lp_aiValue": 15
+              "lp_aiValue": 23
             },
             "tags": [
               "高估值",
@@ -27923,74 +27978,7 @@ const DATA = {
             "aiRevGrowth": 50,
             "pricingPower": 65,
             "peHist5y": 75,
-            "layerPct": 15
-          },
-          {
-            "ticker": "ARM",
-            "name": "Arm",
-            "key": "arm",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "CPU IP 架构",
-            "productDir": "Armv9 架构、CSS 计算子系统、端侧 AI",
-            "price": 234.82000732421875,
-            "ch": {
-              "d": -2.93,
-              "w": -2.79,
-              "m": -1.77,
-              "h6": 92.92
-            },
-            "scores": {
-              "momentum": 75.167,
-              "valuation": 22,
-              "growth": 80,
-              "quality": 56,
-              "aiExposure": 72,
-              "research": 78,
-              "fundamental": 70,
-              "aiValue": 44,
-              "lp_valuation": 15,
-              "lp_fundamental": 54,
-              "lp_momentum": 77,
-              "lp_aiValue": 15
-            },
-            "tags": [
-              "高估值",
-              "领跑"
-            ],
-            "marketCap": 289.9,
-            "pe": 285.7,
-            "fwdPe": 88.8,
-            "peg": 2.29,
-            "revGrowth": 22.4,
-            "grossMargin": 97.5,
-            "fcfMargin": 25.9,
-            "roe": 13.4,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.3,
-              "reports": 32,
-              "summary": "特许权+授权模式毛利 93%，v9 提价与 AGI CPU 打开数据中心新空间；估值昂贵但稀缺。",
-              "sources": [
-                {
-                  "title": "Arm Investor",
-                  "url": "https://www.arm.com/company/investors"
-                }
-              ]
-            },
-            "notes": "高毛利 IP 模式，贵但稀缺；AGI CPU 打开数据中心新空间。",
-            "est": false,
-            "epsRevision": 15,
-            "ratingTrend": 0.4,
-            "ratingDispersion": 32,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 70,
-            "aiRevGrowth": 50,
-            "pricingPower": 65,
-            "peHist5y": 135,
-            "layerPct": 15
+            "layerPct": 23
           },
           {
             "ticker": "688256.SS",
@@ -28000,31 +27988,28 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 训练/推理芯片 (国产)",
             "productDir": "思元系列 AI 芯片、训练/推理卡",
-            "price": 1108.0,
+            "price": 1109.469970703125,
             "ch": {
-              "d": -0.09,
-              "w": 8.63,
-              "m": 2.76,
-              "h6": 45.71
+              "d": 0.13,
+              "w": 5.87,
+              "m": -2.41,
+              "h6": 47.98
             },
             "scores": {
-              "momentum": 69.649,
+              "momentum": 64.57300000000001,
               "valuation": 20,
               "growth": 98,
               "quality": 34,
               "aiExposure": 86,
               "research": 69,
               "fundamental": 69,
-              "aiValue": 44,
+              "aiValue": 45,
               "lp_valuation": 0,
               "lp_fundamental": 38,
               "lp_momentum": 62,
               "lp_aiValue": 15
             },
-            "tags": [
-              "高估值",
-              "领跑"
-            ],
+            "tags": [],
             "marketCap": 7303.9,
             "pe": 223.6,
             "fwdPe": 59.8,
@@ -28060,72 +28045,6 @@ const DATA = {
             "layerPct": 15
           },
           {
-            "ticker": "042700.KS",
-            "name": "韩美半导体",
-            "key": "hansmi",
-            "market": "KR",
-            "ccy": "KRW",
-            "techRoute": "TC Bonder (HBM 封装设备)",
-            "productDir": "TC Bonder、HBM 封装键合设备",
-            "price": 211500.0,
-            "ch": {
-              "d": -0.94,
-              "w": -4.73,
-              "m": 4.19,
-              "h6": -25.0
-            },
-            "scores": {
-              "momentum": 44.379,
-              "valuation": 49,
-              "growth": 34,
-              "quality": 45,
-              "aiExposure": 72,
-              "research": 74,
-              "fundamental": 51,
-              "aiValue": 43,
-              "lp_valuation": 62,
-              "lp_fundamental": 0,
-              "lp_momentum": 8,
-              "lp_aiValue": 8
-            },
-            "tags": [
-              "下行趋势"
-            ],
-            "marketCap": 15.5,
-            "pe": 25,
-            "fwdPe": 20,
-            "peg": 1.23,
-            "revGrowth": -65.5,
-            "grossMargin": 55.6,
-            "fcfMargin": 17.1,
-            "roe": 30.8,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.0,
-              "reports": 16,
-              "summary": "HBM TC Bonder 全球第一，HBM4 量产直接拉动；Q2 营收 +39.5%、OP 52% 创纪录。",
-              "sources": [
-                {
-                  "title": "Hanmi Semiconductor IR",
-                  "url": "https://www.hanmi.co.kr"
-                }
-              ]
-            },
-            "notes": "HBM 封装设备弹性标的；TC Bonder 全球第一，Q2 创纪录。",
-            "est": true,
-            "epsRevision": 12,
-            "ratingTrend": 0.4,
-            "ratingDispersion": 30,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 70,
-            "aiRevGrowth": 50,
-            "pricingPower": 65,
-            "peHist5y": 38,
-            "layerPct": 8
-          },
-          {
             "ticker": "MRVL",
             "name": "Marvell",
             "key": "mrvl",
@@ -28133,22 +28052,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "定制芯片 + 光互联",
             "productDir": "定制 AI ASIC、PAM4 / DSP、光模块",
-            "price": 210.38999938964844,
+            "price": 206.47999572753906,
             "ch": {
-              "d": -0.6,
-              "w": -12.48,
-              "m": 8.57,
-              "h6": 171.44
+              "d": -1.86,
+              "w": -15.76,
+              "m": -5.54,
+              "h6": 164.41
             },
             "scores": {
-              "momentum": 100,
+              "momentum": 88.033,
               "valuation": 34,
               "growth": 80,
               "quality": 43,
               "aiExposure": 70,
               "research": 74,
               "fundamental": 64,
-              "aiValue": 41,
+              "aiValue": 43,
               "lp_valuation": 46,
               "lp_fundamental": 23,
               "lp_momentum": 92,
@@ -28191,6 +28110,72 @@ const DATA = {
             "pricingPower": 70,
             "peHist5y": 60,
             "layerPct": 0
+          },
+          {
+            "ticker": "042700.KS",
+            "name": "韩美半导体",
+            "key": "hansmi",
+            "market": "KR",
+            "ccy": "KRW",
+            "techRoute": "TC Bonder (HBM 封装设备)",
+            "productDir": "TC Bonder、HBM 封装键合设备",
+            "price": 211500.0,
+            "ch": {
+              "d": -0.94,
+              "w": -4.73,
+              "m": 4.19,
+              "h6": -25.0
+            },
+            "scores": {
+              "momentum": 44.379,
+              "valuation": 49,
+              "growth": 34,
+              "quality": 45,
+              "aiExposure": 72,
+              "research": 74,
+              "fundamental": 51,
+              "aiValue": 43,
+              "lp_valuation": 62,
+              "lp_fundamental": 0,
+              "lp_momentum": 15,
+              "lp_aiValue": 0
+            },
+            "tags": [
+              "下行趋势"
+            ],
+            "marketCap": 15.5,
+            "pe": 25,
+            "fwdPe": 20,
+            "peg": 1.23,
+            "revGrowth": -65.5,
+            "grossMargin": 55.6,
+            "fcfMargin": 17.1,
+            "roe": 30.8,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.0,
+              "reports": 16,
+              "summary": "HBM TC Bonder 全球第一，HBM4 量产直接拉动；Q2 营收 +39.5%、OP 52% 创纪录。",
+              "sources": [
+                {
+                  "title": "Hanmi Semiconductor IR",
+                  "url": "https://www.hanmi.co.kr"
+                }
+              ]
+            },
+            "notes": "HBM 封装设备弹性标的；TC Bonder 全球第一，Q2 创纪录。",
+            "est": true,
+            "epsRevision": 12,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 30,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 38,
+            "layerPct": 0
           }
         ],
         "comparison": {
@@ -28204,7 +28189,7 @@ const DATA = {
             "A": {
               "ticker": "688041.SS",
               "name": "海光信息",
-              "aiValue": 46,
+              "aiValue": 48,
               "count": 2
             },
             "KR": {
@@ -28226,12 +28211,10 @@ const DATA = {
           "scarcity": 88,
           "avgFundamental": 70,
           "avgValuation": 41,
-          "avgMomentum": 66,
-          "avgAiValue": 52,
+          "avgMomentum": 61,
+          "avgAiValue": 53,
           "topPick": "NVDA",
-          "valuePicks": [
-            "NVDA"
-          ]
+          "valuePicks": []
         }
       },
       {
@@ -28259,15 +28242,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "发电设备 + 电网",
             "productDir": "燃气轮机、电网设备、核电服务",
-            "price": 898.530029296875,
+            "price": 921.9400024414062,
             "ch": {
-              "d": 0.0,
-              "w": -3.04,
-              "m": -10.75,
-              "h6": 6.71
+              "d": 2.61,
+              "w": -3.27,
+              "m": -9.48,
+              "h6": 9.59
             },
             "scores": {
-              "momentum": 41.12199999999999,
+              "momentum": 43.037,
               "valuation": 57,
               "growth": 73,
               "quality": 66,
@@ -28277,7 +28260,7 @@ const DATA = {
               "aiValue": 61,
               "lp_valuation": 86,
               "lp_fundamental": 100,
-              "lp_momentum": 43,
+              "lp_momentum": 57,
               "lp_aiValue": 100
             },
             "tags": [],
@@ -28323,22 +28306,22 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "核电直供数据中心",
             "productDir": "Susquehanna 核电、Amazon 直连供电",
-            "price": 293.7300109863281,
+            "price": 302.0299987792969,
             "ch": {
-              "d": -0.69,
-              "w": -4.53,
-              "m": -14.73,
-              "h6": -13.96
+              "d": 2.83,
+              "w": -1.39,
+              "m": -11.17,
+              "h6": -10.26
             },
             "scores": {
-              "momentum": 30.743,
+              "momentum": 36.313,
               "valuation": 62,
               "growth": 92,
               "quality": 38,
               "aiExposure": 44,
               "research": 68,
               "fundamental": 60,
-              "aiValue": 55,
+              "aiValue": 53,
               "lp_valuation": 100,
               "lp_fundamental": 86,
               "lp_momentum": 14,
@@ -28382,72 +28365,6 @@ const DATA = {
             "layerPct": 86
           },
           {
-            "ticker": "VST",
-            "name": "Vistra",
-            "key": "vst",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "燃气 + 核电调峰",
-            "productDir": "天然气发电、核电、零售电力",
-            "price": 138.0800018310547,
-            "ch": {
-              "d": 0.52,
-              "w": -0.68,
-              "m": -11.45,
-              "h6": -14.61
-            },
-            "scores": {
-              "momentum": 35.04,
-              "valuation": 43,
-              "growth": 55,
-              "quality": 32,
-              "aiExposure": 44,
-              "research": 75,
-              "fundamental": 48,
-              "aiValue": 42,
-              "lp_valuation": 57,
-              "lp_fundamental": 43,
-              "lp_momentum": 29,
-              "lp_aiValue": 71
-            },
-            "tags": [
-              "下行趋势"
-            ],
-            "marketCap": 49.0,
-            "pe": 25.0,
-            "fwdPe": 14.1,
-            "peg": 0.43,
-            "revGrowth": -5.5,
-            "grossMargin": 38.3,
-            "fcfMargin": 0.2,
-            "roe": 43.0,
-            "research": {
-              "consensus": "增持",
-              "ratingScore": 4.1,
-              "reports": 26,
-              "summary": "Q1 2026 营收 $5.64B +43%、净利 $1.029B(同比扭亏)、Ongoing Ops adj EBITDA $1.494B；Meta 20年 PPA 2,609MW、Cogentrix 5,500MW 待收购；Fitch 升投资级。多元电源 + AI 电力。",
-              "sources": [
-                {
-                  "title": "Vistra Investor",
-                  "url": "https://www.vistracorp.com/about-us/investors/"
-                }
-              ]
-            },
-            "notes": "估值低、电力弹性大，Meta PPA + 投资级上调；价值候选。",
-            "est": false,
-            "epsRevision": 10,
-            "ratingTrend": 0.4,
-            "ratingDispersion": 25,
-            "curatedDate": "2026-08",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 30,
-            "aiRevGrowth": 25,
-            "pricingPower": 50,
-            "peHist5y": 23,
-            "layerPct": 71
-          },
-          {
             "ticker": "OKLO",
             "name": "Oklo",
             "key": "oklo",
@@ -28455,15 +28372,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "小型模块化堆 (SMR)",
             "productDir": "小型模块化核反应堆、快堆技术",
-            "price": 38.529998779296875,
+            "price": 39.52000045776367,
             "ch": {
-              "d": -5.03,
-              "w": -12.97,
-              "m": -6.53,
-              "h6": -39.13
+              "d": 2.57,
+              "w": -5.0,
+              "m": -8.79,
+              "h6": -39.8
             },
             "scores": {
-              "momentum": 27.195999999999994,
+              "momentum": 28.149,
               "valuation": 50,
               "growth": 54,
               "quality": 15,
@@ -28474,7 +28391,7 @@ const DATA = {
               "lp_valuation": 71,
               "lp_fundamental": 0,
               "lp_momentum": 0,
-              "lp_aiValue": 43
+              "lp_aiValue": 57
             },
             "tags": [
               "下行趋势"
@@ -28511,7 +28428,7 @@ const DATA = {
             "aiRevGrowth": 80,
             "pricingPower": 40,
             "peHist5y": null,
-            "layerPct": 43
+            "layerPct": 57
           },
           {
             "ticker": "ETN",
@@ -28521,15 +28438,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "电力设备 + 电网",
             "productDir": "配电设备、变压器、数据中心电力基础设施",
-            "price": 390.7099914550781,
+            "price": 390.8500061035156,
             "ch": {
-              "d": -2.78,
-              "w": -4.52,
-              "m": -10.84,
-              "h6": 9.89
+              "d": 0.04,
+              "w": -6.82,
+              "m": -12.12,
+              "h6": 10.27
             },
             "scores": {
-              "momentum": 41.403,
+              "momentum": 39.445,
               "valuation": 17,
               "growth": 73,
               "quality": 28,
@@ -28539,8 +28456,8 @@ const DATA = {
               "aiValue": 41,
               "lp_valuation": 0,
               "lp_fundamental": 71,
-              "lp_momentum": 57,
-              "lp_aiValue": 43
+              "lp_momentum": 29,
+              "lp_aiValue": 57
             },
             "tags": [],
             "marketCap": 176.8,
@@ -28575,6 +28492,72 @@ const DATA = {
             "aiRevGrowth": 25,
             "pricingPower": 50,
             "peHist5y": 46,
+            "layerPct": 57
+          },
+          {
+            "ticker": "VST",
+            "name": "Vistra",
+            "key": "vst",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "燃气 + 核电调峰",
+            "productDir": "天然气发电、核电、零售电力",
+            "price": 143.4600067138672,
+            "ch": {
+              "d": 3.9,
+              "w": 2.45,
+              "m": 0.16,
+              "h6": -12.18
+            },
+            "scores": {
+              "momentum": 47.47,
+              "valuation": 43,
+              "growth": 55,
+              "quality": 32,
+              "aiExposure": 44,
+              "research": 75,
+              "fundamental": 48,
+              "aiValue": 39,
+              "lp_valuation": 57,
+              "lp_fundamental": 43,
+              "lp_momentum": 86,
+              "lp_aiValue": 43
+            },
+            "tags": [
+              "下行趋势"
+            ],
+            "marketCap": 49.0,
+            "pe": 25.0,
+            "fwdPe": 14.1,
+            "peg": 0.43,
+            "revGrowth": -5.5,
+            "grossMargin": 38.3,
+            "fcfMargin": 0.2,
+            "roe": 43.0,
+            "research": {
+              "consensus": "增持",
+              "ratingScore": 4.1,
+              "reports": 26,
+              "summary": "Q1 2026 营收 $5.64B +43%、净利 $1.029B(同比扭亏)、Ongoing Ops adj EBITDA $1.494B；Meta 20年 PPA 2,609MW、Cogentrix 5,500MW 待收购；Fitch 升投资级。多元电源 + AI 电力。",
+              "sources": [
+                {
+                  "title": "Vistra Investor",
+                  "url": "https://www.vistracorp.com/about-us/investors/"
+                }
+              ]
+            },
+            "notes": "估值低、电力弹性大，Meta PPA + 投资级上调；价值候选。",
+            "est": false,
+            "epsRevision": 10,
+            "ratingTrend": 0.4,
+            "ratingDispersion": 25,
+            "curatedDate": "2026-08",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 30,
+            "aiRevGrowth": 25,
+            "pricingPower": 50,
+            "peHist5y": 23,
             "layerPct": 43
           },
           {
@@ -28585,15 +28568,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "可再生 + 储能",
             "productDir": "风电、光伏、电池储能",
-            "price": 82.93000030517578,
+            "price": 83.0999984741211,
             "ch": {
-              "d": 0.72,
-              "w": -1.53,
-              "m": -4.18,
-              "h6": -10.43
+              "d": 0.2,
+              "w": -1.33,
+              "m": -4.7,
+              "h6": -10.26
             },
             "scores": {
-              "momentum": 42.497,
+              "momentum": 42.16,
               "valuation": 32,
               "growth": 65,
               "quality": 27,
@@ -28603,7 +28586,7 @@ const DATA = {
               "aiValue": 37,
               "lp_valuation": 43,
               "lp_fundamental": 57,
-              "lp_momentum": 71,
+              "lp_momentum": 43,
               "lp_aiValue": 29
             },
             "tags": [
@@ -28651,26 +28634,26 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "核电供应 AI 数据中心",
             "productDir": "核电、与科技巨头 PPA 购电协议",
-            "price": 280.30999755859375,
+            "price": 290.0400085449219,
             "ch": {
-              "d": 2.02,
-              "w": 0.68,
-              "m": 2.41,
-              "h6": -13.72
+              "d": 3.47,
+              "w": 3.76,
+              "m": 8.53,
+              "h6": -10.16
             },
             "scores": {
-              "momentum": 48.324999999999996,
+              "momentum": 56.132999999999996,
               "valuation": 23,
               "growth": 73,
               "quality": 14,
               "aiExposure": 44,
               "research": 76,
               "fundamental": 47,
-              "aiValue": 32,
+              "aiValue": 30,
               "lp_valuation": 14,
               "lp_fundamental": 29,
               "lp_momentum": 100,
-              "lp_aiValue": 14
+              "lp_aiValue": 0
             },
             "tags": [
               "下行趋势"
@@ -28707,7 +28690,7 @@ const DATA = {
             "aiRevGrowth": 25,
             "pricingPower": 50,
             "peHist5y": 39,
-            "layerPct": 14
+            "layerPct": 0
           },
           {
             "ticker": "CCJ",
@@ -28717,15 +28700,15 @@ const DATA = {
             "ccy": "USD",
             "techRoute": "核燃料铀",
             "productDir": "铀矿开采、核燃料循环",
-            "price": 96.26000213623047,
+            "price": 96.37999725341797,
             "ch": {
-              "d": -2.53,
-              "w": -10.0,
-              "m": 7.29,
-              "h6": -18.28
+              "d": 0.12,
+              "w": -10.23,
+              "m": 3.53,
+              "h6": -19.84
             },
             "scores": {
-              "momentum": 47.077,
+              "momentum": 43.133,
               "valuation": 26,
               "growth": 52,
               "quality": 16,
@@ -28735,7 +28718,7 @@ const DATA = {
               "aiValue": 30,
               "lp_valuation": 29,
               "lp_fundamental": 14,
-              "lp_momentum": 86,
+              "lp_momentum": 71,
               "lp_aiValue": 0
             },
             "tags": [
@@ -28795,7 +28778,7 @@ const DATA = {
           "scarcity": 70,
           "avgFundamental": 50,
           "avgValuation": 39,
-          "avgMomentum": 39,
+          "avgMomentum": 42,
           "avgAiValue": 42,
           "topPick": "GEV",
           "valuePicks": []
@@ -28804,47 +28787,39 @@ const DATA = {
     ],
     "bestValuePicks": [
       {
-        "ticker": "NVDA",
-        "name": "英伟达",
-        "layer": "芯片层",
-        "aiValue": 67,
+        "ticker": "ADBE",
+        "name": "Adobe",
+        "layer": "应用层",
+        "aiValue": 65,
         "layerPct": 100,
-        "why": "基本面 84/100、估值便宜度 62/100、动量 61.762/100(未充分定价), AI价值分 67/100"
-      },
-      {
-        "ticker": "GOOGL",
-        "name": "Alphabet",
-        "layer": "模型层",
-        "aiValue": 62,
-        "layerPct": 100,
-        "why": "基本面 67/100、估值便宜度 57/100、动量 42.461999999999996/100(未充分定价), AI价值分 62/100"
+        "why": "基本面 70/100、估值便宜度 72/100、动量 59.45/100(未充分定价), AI价值分 65/100"
       },
       {
         "ticker": "CRWV",
         "name": "CoreWeave",
         "layer": "基础设施层",
-        "aiValue": 62,
+        "aiValue": 64,
         "layerPct": 100,
-        "why": "基本面 69/100、估值便宜度 58/100、动量 46.366/100(未充分定价), AI价值分 62/100"
+        "why": "基本面 69/100、估值便宜度 58/100、动量 36.577999999999996/100(未充分定价), AI价值分 64/100"
       }
     ],
     "summary": {
       "companies": 44,
       "layers": 6,
-      "valuePicks": 3,
-      "avgAiValue": 49,
-      "avgMomentum": 60
+      "valuePicks": 2,
+      "avgAiValue": 50,
+      "avgMomentum": 56
     },
     "marketSummary": {
       "US": {
         "count": 33,
-        "avgAiValue": 50,
+        "avgAiValue": 51,
         "best": "NVDA"
       },
       "A": {
         "count": 8,
-        "avgAiValue": 44,
-        "best": "300308.SZ"
+        "avgAiValue": 45,
+        "best": "300502.SZ"
       },
       "KR": {
         "count": 3,
@@ -28965,31 +28940,16 @@ const DATA = {
           "detail": "若 AI 收入不及预期，高估值 capex 链面临重估"
         }
       ],
-      "heat": 54,
+      "heat": 49,
       "heatDriver": {
-        "avgMomentum": 60,
+        "avgMomentum": 56,
         "avgValuationScore": 41,
-        "breadthPct": 36
+        "breadthPct": 23
       }
     },
     "flowData": {
       "asOf": "2026-09-03",
       "layers": [
-        {
-          "name": "应用层",
-          "id": "app",
-          "companyCount": 7,
-          "totalMarketCap": 5464.7,
-          "topMover": "CRM",
-          "topMoverMomentum": 100,
-          "flowScore": 48,
-          "flowSharePct": 26.2,
-          "avgMomentum": 75,
-          "breadthPct": 71,
-          "capWeightedMomentum": 61,
-          "momentumAccel": -9.94,
-          "valuationHeat": 59
-        },
         {
           "name": "基础设施层",
           "id": "infra",
@@ -28997,12 +28957,12 @@ const DATA = {
           "totalMarketCap": 17607.6,
           "topMover": "DELL",
           "topMoverMomentum": 100,
-          "flowScore": 44,
-          "flowSharePct": 22.6,
-          "avgMomentum": 65,
+          "flowScore": 49,
+          "flowSharePct": 27.6,
+          "avgMomentum": 62,
           "breadthPct": 43,
-          "capWeightedMomentum": 62,
-          "momentumAccel": -1.97,
+          "capWeightedMomentum": 56,
+          "momentumAccel": 0.13,
           "valuationHeat": 61
         },
         {
@@ -29011,13 +28971,28 @@ const DATA = {
           "companyCount": 14,
           "totalMarketCap": 29140.9,
           "topMover": "MU",
+          "topMoverMomentum": 98.71,
+          "flowScore": 47,
+          "flowSharePct": 25.5,
+          "avgMomentum": 61,
+          "breadthPct": 29,
+          "capWeightedMomentum": 58,
+          "momentumAccel": 1.57,
+          "valuationHeat": 59
+        },
+        {
+          "name": "应用层",
+          "id": "app",
+          "companyCount": 7,
+          "totalMarketCap": 5464.7,
+          "topMover": "CRM",
           "topMoverMomentum": 100,
           "flowScore": 43,
-          "flowSharePct": 21.8,
-          "avgMomentum": 66,
+          "flowSharePct": 21.7,
+          "avgMomentum": 64,
           "breadthPct": 43,
-          "capWeightedMomentum": 61,
-          "momentumAccel": -2.46,
+          "capWeightedMomentum": 55,
+          "momentumAccel": -3.15,
           "valuationHeat": 59
         },
         {
@@ -29025,14 +29000,14 @@ const DATA = {
           "id": "network",
           "companyCount": 5,
           "totalMarketCap": 18273.3,
-          "topMover": "ANET",
-          "topMoverMomentum": 67.34,
-          "flowScore": 36,
-          "flowSharePct": 15.8,
-          "avgMomentum": 54,
-          "breadthPct": 40,
-          "capWeightedMomentum": 47,
-          "momentumAccel": 2.06,
+          "topMover": "LITE",
+          "topMoverMomentum": 57.69,
+          "flowScore": 29,
+          "flowSharePct": 10.8,
+          "avgMomentum": 50,
+          "breadthPct": 0,
+          "capWeightedMomentum": 53,
+          "momentumAccel": 0.89,
           "valuationHeat": 63
         },
         {
@@ -29040,14 +29015,14 @@ const DATA = {
           "id": "model",
           "companyCount": 3,
           "totalMarketCap": 8475.2,
-          "topMover": "AMZN",
-          "topMoverMomentum": 46.47,
-          "flowScore": 23,
-          "flowSharePct": 7.1,
-          "avgMomentum": 45,
+          "topMover": "META",
+          "topMoverMomentum": 48.55,
+          "flowScore": 25,
+          "flowSharePct": 8.1,
+          "avgMomentum": 46,
           "breadthPct": 0,
-          "capWeightedMomentum": 44,
-          "momentumAccel": 6.08,
+          "capWeightedMomentum": 45,
+          "momentumAccel": 5.8,
           "valuationHeat": 43
         },
         {
@@ -29056,17 +29031,17 @@ const DATA = {
           "companyCount": 8,
           "totalMarketCap": 859.8,
           "topMover": "CEG",
-          "topMoverMomentum": 48.32,
+          "topMoverMomentum": 56.13,
           "flowScore": 22,
-          "flowSharePct": 6.5,
-          "avgMomentum": 39,
+          "flowSharePct": 6.3,
+          "avgMomentum": 42,
           "breadthPct": 0,
-          "capWeightedMomentum": 42,
-          "momentumAccel": 1.52,
+          "capWeightedMomentum": 44,
+          "momentumAccel": 1.53,
           "valuationHeat": 61
         }
       ],
-      "maxLayer": "应用层",
+      "maxLayer": "基础设施层",
       "method": "资金流向强度(v2) = 先对 5 维度(平均动量/领涨广度/资金加速度/市值加权动量/估值热度)做跨层 z-score 标准化, 再 softmax 映射为份额分(加总≈100)。分数越高=近期资金流入/关注度越高。"
     }
   },
@@ -31279,7 +31254,7 @@ const DATA = {
       "txnChg": -7.3,
       "activeLatest": null,
       "activeChg": null,
-      "volLatest": 437176194.075,
+      "volLatest": 303564788.1216,
       "mcapLatest": 1550228013221.875
     },
     "trendData": [
