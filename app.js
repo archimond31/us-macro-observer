@@ -1764,6 +1764,10 @@ function renderLiquidity(c) {
     chartCard('流动性构成走势', '净流动性/准备金/TGA(万亿美元)', 'liqChart', 'tall') +
     chartCard('LPI 流动性压力指数', '规则型监测(0-10) · 结构紧但价格未确认', 'lpiChart', 'tall') +
   '</div>';
+  if (d.sofrIorbChart && d.sofrIorbChart.labels && d.sofrIorbChart.labels.length) {
+    const scInfo = d.sofrIorbChart;
+    html += chartCard('SOFR-IORB 利差历史走势', 'SOFR−IORB (bp) · 红=转正(融资紧张) 绿=负(充裕) · 0=分水岭 · 尾部情景 2019-09 回购危机即 SOFR 飙升' + (scInfo.window ? ' · ' + scInfo.window : ''), 'sofrIorbChart', 'tall');
+  }
   html += renderLPIComponents(d.lpi);
   html += renderConfirmConds(d.lpi.confirmationConditions);
   html += sectionH('多尺度趋势追踪', (d.chartNotes || {}).trendNote || '日/周/月/半年变化 → 识别流动性收缩斜率');
@@ -1786,6 +1790,57 @@ function renderLiquidity(c) {
     },
     options: baseOpts('T$')
   });
+  if (d.sofrIorbChart && d.sofrIorbChart.labels && d.sofrIorbChart.labels.length) {
+    const si = d.sofrIorbChart;
+    charts.sofrIorb = new Chart(document.getElementById('sofrIorbChart'), {
+      type: 'line',
+      data: {
+        labels: si.labels,
+        datasets: Object.keys(si.series).map(function (n) {
+          return {
+            label: n, data: si.series[n],
+            borderColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.25,
+            segment: {
+              borderColor: function (ctx) {
+                const v = ctx.p1 && ctx.p1.parsed ? ctx.p1.parsed.y : null;
+                if (v == null || isNaN(v)) return 'transparent';
+                return v > 0.01 ? '#e63946' : '#2a9d8f';
+              }
+            }
+          };
+        }).concat([{
+          label: '基准0', data: si.labels.map(function () { return 0; }),
+          borderColor: 'rgba(148,163,184,0.5)', borderWidth: 1, borderDash: [4, 4],
+          pointRadius: 0, fill: false, hitRadius: 0
+        }])
+      },
+      options: Object.assign(baseOpts(''), {
+        scales: Object.assign({}, baseOpts('').scales, {
+          y: Object.assign({}, baseOpts('').scales.y, {
+            ticks: Object.assign({}, baseOpts('').scales.y.ticks, {
+              callback: function (v) { return v.toFixed(0) + 'bp'; }
+            })
+          })
+        }),
+        plugins: Object.assign({}, baseOpts('').plugins, {
+          legend: Object.assign({}, baseOpts('').plugins.legend, {
+            labels: Object.assign({}, baseOpts('').plugins.legend.labels, {
+              filter: function (item) { return item.text !== '基准0'; }
+            })
+          }),
+          tooltip: Object.assign({}, baseOpts('').plugins.tooltip, {
+            callbacks: {
+              label: function (ctx) {
+                if (ctx.dataset.label === '基准0') return '';
+                if (ctx.parsed.y == null || isNaN(ctx.parsed.y)) return '';
+                return ctx.dataset.label + ': ' + (ctx.parsed.y > 0 ? '+' : '') + ctx.parsed.y.toFixed(1) + ' bp';
+              }
+            }
+          })
+        })
+      })
+    });
+  }
   renderLPIGauge(d.lpi);
 }
 

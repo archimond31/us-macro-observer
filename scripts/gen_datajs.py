@@ -1981,6 +1981,31 @@ _lpi_block = {
          'triggered': (v_vix or 0) > TV('vix_confirm')},
     ],
 }
+# ===== 2026-09-03 新增: SOFR-IORB 利差历史走势图数据 =====
+def _sofr_iorb_spread_chart():
+    """SOFR-IORB 利差历史走势 (bp) — 共同交易日对齐 (SOFR 工作日序列 ∩ IORB 日度序列交集)。
+    负=准备金充裕, 0附近=充裕与压力分水岭, 转正(>+1bp)=融资紧张第一价格信号。
+    SOFR 自 2026-02 起抓取窗口扩至 500 期 (build_data nyfed_sofr(500))。"""
+    sofr = s('sofr'); iorb = s('iorb')
+    out = {'labels': [], 'series': {'SOFR-IORB': []}, 'latest': None, 'min': None, 'max': None, 'window': ''}
+    if not (sofr and iorb):
+        return out
+    sm = {d: v for d, v in sofr}; im = {d: v for d, v in iorb}
+    dates = sorted(set(sm) & set(im))[-500:]
+    if len(dates) < 20:
+        return out
+    vals = []
+    for d in dates:
+        sv, iv = sm[d], im[d]
+        vals.append(round((sv - iv) * 100, 2) if (sv is not None and iv is not None) else None)
+    nz = [v for v in vals if v is not None]
+    if nz:
+        out.update(latest=nz[-1], min=min(nz), max=max(nz),
+                   window=f'{dates[0]} → {dates[-1]} · {len(dates)} 个共同交易日 (约{max(1, round(len(dates)/21))}个月)')
+    out['labels'] = dates
+    out['series'] = {'SOFR-IORB': vals}
+    return out
+
 DATA['liquidity'] = {
     'regime': {'label':_liq_label,'signal':_liq_signal,'confidence':_confidence(_liq_signal, v_rrpn is not None, v_nl is not None, v_sofr_iorb is not None),
         'description':f'RRP 仅 ${f2(v_rrpn)}B, 货币市场基金可搬回美联储的钱基本耗尽。TGA 上升与 QT 收缩将更直接影响银行准备金——流动性框架从"有缓冲"切换到"无缓冲"阶段。当前 SOFR-IORB ({bp(v_sofr_iorb*100)}){(" 仍为负, 融资市场尚未出现真实资金争夺" if (v_sofr_iorb or 0) < -0.0001 else (" 接近归零, 价格信号平静但处于分水岭" if abs(v_sofr_iorb or 0) <= 0.0001 else " 已转正(>1bp), 价格信号发出边际争夺压力, 但数量收缩尚未传导为真实流动性事件"))}。'},
@@ -2127,6 +2152,8 @@ DATA['liquidity'] = {
     'chartNotes': {
         'trendNote': f'RRP 半年Δ{bp(tfm("rrp")["h6"],"$B") if tfm("rrp")["h6"] is not None else "—"} · 净流动性 月Δ{bp(tfm("netliq")["m"],"$B") if tfm("netliq")["m"] is not None else "—"} / 半年Δ{bp(tfm("netliq")["h6"],"$B") if tfm("netliq")["h6"] is not None else "—"}',
     },
+    # SOFR-IORB 利差历史走势 (2026-09-03 新增)
+    'sofrIorbChart': _sofr_iorb_spread_chart(),
 }
 
 # 经济数据 (同比用 NSA 未季调口径, 与 BLS 官方公布一致; SA 序列仅用于环比/分位)

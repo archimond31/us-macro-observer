@@ -887,7 +887,7 @@ if _emp['data']:
 EMPIRE_META = {'is_fallback': _emp.get('is_fallback', False), 'asof': _emp.get('asof')}
 
 print('  -- NY Fed / DTS / Yahoo --')
-S['sofr'] = nyfed_sofr();      print(f'  NYFED SOFR → {len(S["sofr"])} pts, latest {last(S["sofr"])}')
+S['sofr'] = nyfed_sofr(500);   print(f'  NYFED SOFR → {len(S["sofr"])} pts, latest {last(S["sofr"])}')   # 500期≈2年, 供 SOFR-IORB 历史走势图
 S['rrp_api'] = nyfed_rrp();    print(f'  NYFED RRP → {len(S["rrp_api"])} pts, latest {last(S["rrp_api"])}')
 S['srf'] = nyfed_srf();        print(f'  NYFED SRF → {len(S["srf"])} pts, latest {last(S["srf"])}')
 S['tga'] = fetch_tga();        print(f'  DTS TGA → {len(S["tga"])} pts, latest {last(S["tga"])}')
