@@ -1621,6 +1621,14 @@ def update_market_consensus():
             target = rows[-1]      # 无已发布行 → 取最后一行 (TEForecast 作 consensus 兜底)
         if not target:
             continue
+        # ---- 手工锁定保护: locked=true 的条目免疫 TE 覆盖 ----
+        # 背景: 2026-09-03 TE 日历曾把未发布的 8月 NFP 错写成 actual=-79/prev=-911/
+        #   releaseDate=08-28 (与 FRED PAYEMS 6月=-23K 矛盾), 且自动覆盖冲掉手工纠错。
+        # 约定: 任何手工纠错/策展确证过的条目加 "locked": true, TE 抓取跳过该 tag。
+        _existing = old_releases.get(tag, {})
+        if _existing.get('locked'):
+            print(f'  [TE-consensus] {tag} locked(手工锁定) → 跳过 TE 覆盖, 保留策展值')
+            continue
         # TE 日历数据行 8 列: [date, time, event, ref, actual, previous, consensus, tef]
         date, ev, ref, act, prev, con, tef = (target[0], target[2], target[3],
                                               target[4], target[5], target[6], target[7])
@@ -1629,14 +1637,14 @@ def update_market_consensus():
         tef_n = _te_parse_num(tef)
         if con_n is None and tef_n is not None:   # consensus 缺失时用 TEForecast 兜底
             con_n = tef_n
-        rec = dict(old_releases.get(tag, {}))
+        rec = dict(_existing)
         rec.update({
             'indicator': name, 'tag': tag,
             'periodLabel': ref, 'releaseDate': date,
             'unit': unit, 'actual': act_n, 'consensus': con_n, 'previous': prev_n,
             'source': 'te_auto' + (' (TEForecast兜底)' if (con is None or not con) and tef_n is not None else ''),
         })
-        # 保留手工字段: higherIsBetter / previousLabel / tolerance
+        # 保留手工字段: higherIsBetter / previousLabel / tolerance / locked / note
         old_releases[tag] = rec
         updated += 1
         print(f'  [TE-consensus] {tag:8s} {ref:10s} actual={act_n} consensus={con_n} prev={prev_n} ← TE')

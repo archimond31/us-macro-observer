@@ -24,6 +24,8 @@ permissions:
 
 jobs:
   update-data:
+    # 防止自循环: bot 自身提交会命中 on.push.paths(scripts/*), 进而重复触发本 workflow 并与自身推送竞争
+    if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,5 +61,24 @@ jobs:
             echo "数据无变化，跳过提交"
           else
             git commit -m "data: daily update $(date -u +%Y-%m-%d)"
-            git push
+            # checkout@v4 在 push 事件下检出的是「触发那一次的 SHA」(游离 HEAD)。
+            # 取数+渲染耗时数分钟, 期间远端 main 常被其他推送(本地 push / 上一轮 bot)推进,
+            # 裸 git push 会 ! [rejected] (fetch first)。故先变基到远端最新再推, 失败重试。
+            for i in 1 2 3 4 5; do
+              git fetch origin main
+              if ! git rebase origin/main; then
+                echo "变基冲突, 放弃本地提交改为重跑基线"
+                git rebase --abort
+                git reset --hard origin/main
+                exit 1
+              fi
+              if git push origin HEAD:refs/heads/main; then
+                echo "push 成功 (第 $i 次尝试)"
+                exit 0
+              fi
+              echo "push 被拒(远端已前进), 重试 $i/5"
+              sleep $((i * 5))
+            done
+            echo "::error::push 重试 5 次仍失败"
+            exit 1
           fi
