@@ -1094,6 +1094,10 @@ function renderCrypto(c) {
     chartCard('BTC vs ETH 走势对比', '累计涨跌(起点=0%) · 相对强弱', 'btcEth', 'tall') +
     chartCard('ETH/BTC 比率', 'Altcoin 季节性核心指标 · >0.05 ETH强势', 'ethBtc', 'tall') +
     '</div>';
+  html += '<div class="chart-row two-col">' +
+    chartCard('黄金 vs BTC 走势对比', '共同交易日累计涨跌(起点=0%) · 近一年 · 数字黄金 vs 风险资产', 'goldBtc', 'tall') +
+    chartCard('黄金 vs BTC 滚动相关性', '日度收益 Pearson 相关 · 30日(虚线)灵敏 / 90日(实线)平滑 · 近一年 · >+0.3 同向联动', 'goldBtcCorr', 'tall') +
+    '</div>';
   if (d.etfFlows && d.etfFlows.labels.length > 0) {
     html += chartCard('现货 ETF 日度净流入/流出', 'BTC $M / ETH $M · 红=流入 绿=流出', 'etfFlow', 'short');
   }
@@ -1141,6 +1145,73 @@ function renderCrypto(c) {
         plugins: Object.assign({}, baseOpts('').plugins, {
           tooltip: Object.assign({}, baseOpts('').plugins.tooltip, {
             callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(5); } }
+          })
+        })
+      })
+    });
+  }
+  if (d.goldBtcChart && d.goldBtcChart.labels && d.goldBtcChart.labels.length) {
+    const gb = d.goldBtcChart;
+    charts.goldBtc = new Chart(document.getElementById('goldBtc'), {
+      type: 'line',
+      data: {
+        labels: gb.labels,
+        datasets: Object.keys(gb.series).map(function (n) {
+          return {
+            label: n, data: gb.series[n],
+            borderColor: n === 'BTC' ? '#f7931a' : '#d4a017',
+            backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, tension: 0.3
+          };
+        })
+      },
+      options: baseOpts('%')
+    });
+  }
+  if (d.goldBtcCorr && d.goldBtcCorr.labels && d.goldBtcCorr.labels.length) {
+    const gc = d.goldBtcCorr;
+    const gColors = { '30日滚动相关': '#0ea5e9', '90日滚动相关': '#7c3aed' };
+    charts.goldBtcCorr = new Chart(document.getElementById('goldBtcCorr'), {
+      type: 'line',
+      data: {
+        labels: gc.labels,
+        datasets: Object.keys(gc.series).map(function (n) {
+          return {
+            label: n, data: gc.series[n],
+            borderColor: gColors[n] || '#7c3aed', backgroundColor: 'transparent',
+            borderWidth: n.indexOf('90') === 0 ? 2.5 : 1.4,
+            borderDash: n.indexOf('90') === 0 ? [] : [3, 3],
+            pointRadius: 0, tension: 0.3
+          };
+        }).concat([{
+          label: '基准线(0)', data: gc.labels.map(function () { return 0; }),
+          borderColor: 'rgba(148,163,184,0.55)', borderWidth: 1, borderDash: [4, 4],
+          pointRadius: 0, fill: false, hitRadius: 0
+        }])
+      },
+      options: Object.assign(baseOpts(''), {
+        scales: Object.assign({}, baseOpts('').scales, {
+          y: Object.assign({}, baseOpts('').scales.y, {
+            min: -1, max: 1,
+            ticks: Object.assign({}, baseOpts('').scales.y.ticks, {
+              stepSize: 0.5,
+              callback: function (v) { return v.toFixed(1); }
+            })
+          })
+        }),
+        plugins: Object.assign({}, baseOpts('').plugins, {
+          legend: Object.assign({}, baseOpts('').plugins.legend, {
+            labels: Object.assign({}, baseOpts('').plugins.legend.labels, {
+              filter: function (item) { return item.text !== '基准线(0)'; }
+            })
+          }),
+          tooltip: Object.assign({}, baseOpts('').plugins.tooltip, {
+            callbacks: {
+              label: function (ctx) {
+                if (ctx.dataset.label === '基准线(0)') return '';
+                if (ctx.parsed.y == null || isNaN(ctx.parsed.y)) return '';
+                return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2);
+              }
+            }
           })
         })
       })

@@ -4256,6 +4256,65 @@ def _ethbtc_chart():
         'series': {'ETH/BTC': [round(v, 6) for _, v in arr[-take:]]},
     }
 
+# ===== 2026-09-03 新增: 黄金 vs BTC 走势对比 + 滚动相关性 (近一年共同交易日) =====
+_GOLD_BTC_LOOKBACK = 265   # 上限约一年交易日; gold(工作日)∩btc(日) 共同日 261 个恰好一整交易年
+
+def _gold_btc_chart():
+    """黄金 vs BTC 走势对比 — 共同交易日归一化累计涨跌(起点=0%), 近一年。
+    gold 为工作日序列, btc 含周末; 取两序列日期交集对齐, 天然消除错位。"""
+    gold_arr = s('gold'); btc_arr = s('btc')
+    if not (gold_arr and btc_arr):
+        return {'labels': [], 'series': {}}
+    gm = {d: v for d, v in gold_arr}; bm = {d: v for d, v in btc_arr}
+    dates = sorted(set(gm) & set(bm))[-_GOLD_BTC_LOOKBACK:]
+    if len(dates) < 20:
+        return {'labels': [], 'series': {}}
+    g0 = gm[dates[0]]; b0 = bm[dates[0]]
+    gv = [gm[d] for d in dates]; bv = [bm[d] for d in dates]
+    def _norm(vals, base):
+        return [round((x / base - 1) * 100, 2) if (base and x) else None for x in vals]
+    return {
+        'labels': dates,
+        'window': f'{dates[0]} → {dates[-1]} · {len(dates)} 个共同交易日(约一年)',
+        'series': {'黄金': _norm(gv, g0), 'BTC': _norm(bv, b0)},
+    }
+
+def _gold_btc_corr_chart():
+    """黄金 vs BTC 滚动 Pearson 相关 — 基于共同交易日日度收益, 30/90日双窗口, 近一年。
+    30日窗口灵敏(领先信号), 90日窗口平滑(趋势), 两线同轴便于观察短期发散与长期中枢。"""
+    gold_arr = s('gold'); btc_arr = s('btc')
+    out = {'labels': [], 'series': {}, 'latest': None}
+    if not (gold_arr and btc_arr):
+        return out
+    gm = {d: v for d, v in gold_arr}; bm = {d: v for d, v in btc_arr}
+    dates = sorted(set(gm) & set(bm))
+    if len(dates) < 100:
+        return out
+    # 共同交易日相邻日收益
+    g_ret = {}; b_ret = {}
+    for i in range(1, len(dates)):
+        g0, g1 = gm[dates[i - 1]], gm[dates[i]]
+        b0, b1 = bm[dates[i - 1]], bm[dates[i]]
+        if g0 and g1 and b0 and b1:
+            g_ret[dates[i]] = g1 / g0 - 1
+            b_ret[dates[i]] = b1 / b0 - 1
+    rdates = sorted(g_ret)[-_GOLD_BTC_LOOKBACK:]
+    if len(rdates) < 90:
+        return out
+    # 以最大窗口(90)对齐 x 轴: 第 i 个点对应日期 rdates[i], 窗口 w 需 i >= w-1
+    lab = rdates[90 - 1:]
+    for w in (30, 90):
+        vals = []
+        for i in range(90 - 1, len(rdates)):
+            r = corr_pair([g_ret[d] for d in rdates[i - w + 1:i + 1]],
+                          [b_ret[d] for d in rdates[i - w + 1:i + 1]])
+            vals.append(round(r, 3) if r is not None else None)
+        out['series'][f'{w}日滚动相关'] = vals
+    out['labels'] = lab
+    out['latest'] = (out['series'].get('90日滚动相关') or [None])[-1]
+    out['window'] = f'{rdates[0]} → {rdates[-1]} · {len(rdates)} 个共同交易日(约一年)'
+    return out
+
 # ETF 流量数据 (最近30天/条)
 def _etf_flow_data():
     out = {'labels': [], 'btc': [], 'eth': []}
@@ -4477,6 +4536,9 @@ DATA['crypto'] = {
     'btcEthChart': _crypto_norm_chart(),
     # ETH/BTC 比率走势图
     'ethBtcChart': _ethbtc_chart(),
+    # 黄金 vs BTC 走势对比图 + 一年滚动相关性 (2026-09-03 新增)
+    'goldBtcChart': _gold_btc_chart(),
+    'goldBtcCorr': _gold_btc_corr_chart(),
     # ETF 流量数据
     'etfFlows': _etf_data,
     # ===== 2026-08-14 新增: 流动性 / 主导叙事 / 定价矛盾 / 链上 =====
