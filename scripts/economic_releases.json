@@ -5,17 +5,17 @@
     {
       "indicator": "非农就业 (月增)",
       "tag": "NFP",
-      "periodLabel": "8月",
-      "releaseDate": "2026-09-04",
+      "periodLabel": "",
+      "releaseDate": "2026-08-28",
       "unit": "K",
-      "actual": null,
+      "actual": -79.0,
       "consensus": null,
-      "previous": -23,
+      "previous": -911.0,
       "previousLabel": "6月",
       "higherIsBetter": true,
       "tolerance": 25,
       "note": "8月 NFP 待发布（BLS 排期 2026-09-04 20:30 ET / 2026-09-05 08:30 北京）。当前 FRED PAYEMS 最新可得为 6月 NFP = -23K（已转负）；7/8月真实值须等 9/4 BLS 报告。",
-      "source": "BLS"
+      "source": "te_auto"
     },
     {
       "indicator": "GDP 环比年化 (实际)",
