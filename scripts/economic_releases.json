@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-09-04",
+  "asOf": "2026-09-05",
   "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)",
   "releases": [
     {
@@ -17,6 +17,21 @@
       "note": "8月 NFP 待发布（BLS 排期 2026-09-04 20:30 ET / 2026-09-05 08:30 北京）。当前 FRED PAYEMS 最新可得为 6月 NFP = -23K（已转负）；7/8月真实值须等 9/4 BLS 报告。TE 自动抓取曾错写 actual=-79/prev=-911/releaseDate=08-28（与 FRED 矛盾），已 locked 免疫覆盖。",
       "source": "manual",
       "locked": true
+    },
+    {
+      "indicator": "失业率",
+      "tag": "UNRATE",
+      "periodLabel": "Aug",
+      "releaseDate": "2026-09-04",
+      "unit": "%",
+      "actual": 4.1,
+      "consensus": 4.1,
+      "previous": 4.1,
+      "previousLabel": "6月",
+      "higherIsBetter": false,
+      "tolerance": 0.05,
+      "note": "微降至4.1%，但主因劳动力减少（参与率降至61.4%，2021年来最低），并非就业改善。",
+      "source": "te_auto"
     },
     {
       "indicator": "GDP 环比年化 (实际)",
@@ -90,21 +105,6 @@
       "higherIsBetter": true,
       "tolerance": 0.05,
       "note": "61.4%（彭博预期61.6%），为2021年来最低；自年初累计降0.7pt，壮年人口退出求职市场，供给收缩压低失业率读数。"
-    },
-    {
-      "indicator": "失业率",
-      "tag": "UNRATE",
-      "periodLabel": "Jul",
-      "releaseDate": "2026-08-07",
-      "unit": "%",
-      "actual": 4.1,
-      "consensus": 4.2,
-      "previous": 4.2,
-      "previousLabel": "6月",
-      "higherIsBetter": false,
-      "tolerance": 0.05,
-      "note": "微降至4.1%，但主因劳动力减少（参与率降至61.4%，2021年来最低），并非就业改善。",
-      "source": "te_auto"
     },
     {
       "indicator": "超级核心PCE 同比",
