@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-09-05 00:38
+ * 生成时间: 2026-09-05 01:14
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-09-05 00:38 (官方数据, 自动更新)",
+    "lastUpdated": "2026-09-05 01:14 (官方数据, 自动更新)",
     "dataAsOf": "2026-09-04",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -20824,11 +20824,11 @@ const DATA = {
       "signal": "reflation",
       "label": "再通胀：增长回升 + 通胀升温",
       "confidence": "高置信",
-      "description": "劳动力 55/100 · 通胀 82/100 · 增长 66/100。失业率走平 / 非农 +162K 温和 / 初请低位 / 辞职率低位 / CPI 3.4% 偏高 / 核心CPI 2.5%",
+      "description": "劳动力 59/100 · 通胀 82/100 · 增长 72/100。失业率走平 / 非农 +162K 温和 / 初请低位 / 辞职率低位 / CPI 3.4% 偏高 / 核心CPI 2.5%",
       "scores": {
-        "labor": 55,
+        "labor": 59,
         "inflation": 82,
-        "growth": 66
+        "growth": 72
       },
       "drivers": [
         "失业率走平",
@@ -20843,7 +20843,8 @@ const DATA = {
         "WEI 动能强",
         "制造业PMI 55.7 扩张",
         "服务业PMI 55.0 扩张",
-        "零售环比弱"
+        "零售环比弱",
+        "非农就业 (月增) 好于预期"
       ]
     },
     "keySignals": [
@@ -21075,7 +21076,7 @@ const DATA = {
         "consensusInfo": {
           "consensus": "4.1%",
           "verdict": "inline",
-          "periodLabel": "Aug"
+          "periodLabel": "8月"
         }
       },
       {
@@ -21120,15 +21121,15 @@ const DATA = {
           61.6
         ],
         "release": {
-          "latest": "2026-08-07",
+          "latest": "2026-09-04",
           "next": "2026-10-02",
           "estimated": false
         },
         "source": "BLS",
         "consensusInfo": {
-          "consensus": "61.6%",
-          "verdict": "miss",
-          "periodLabel": "2026年7月"
+          "consensus": "—",
+          "verdict": "na",
+          "periodLabel": "2026年8月"
         }
       },
       {
@@ -21161,8 +21162,8 @@ const DATA = {
         },
         "source": "BLS",
         "consensusInfo": {
-          "consensus": "—",
-          "verdict": "na",
+          "consensus": "+56K",
+          "verdict": "beat",
           "periodLabel": "8月"
         }
       },
@@ -22264,42 +22265,65 @@ const DATA = {
         "periodLabel": "8月",
         "releaseDate": "2026-09-04",
         "unit": "K",
-        "actual": null,
-        "consensus": null,
-        "previous": -23,
-        "previousLabel": "6月(FRED PAYEMS)",
+        "actual": 162,
+        "consensus": 56,
+        "previous": 21,
+        "previousLabel": "7月(修正后)",
         "higherIsBetter": true,
         "tolerance": 25,
-        "note": "8月 NFP 待发布（BLS 排期 2026-09-04 20:30 ET / 2026-09-05 08:30 北京）。当前 FRED PAYEMS 最新可得为 6月 NFP = -23K（已转负）；7/8月真实值须等 9/4 BLS 报告。TE 自动抓取曾错写 actual=-79/prev=-911/releaseDate=08-28（与 FRED 矛盾），已 locked 免疫覆盖。",
+        "note": "8月 +162K 远超预期(56K, 超预期约+106K)，为5月以来最强单月(5-7月 +63K/+31K/+21K)，7月修正后+21K。失业率 4.1% 连续两月持平，劳动参与率回升至 61.6%(+0.2pt)。就业降温叙事明显缓解、衰退交易退潮，市场收敛美联储连续降息预期；但单月波动仍大(2月曾 -156K)，趋势斜率待 9-10 月确认。FRED PAYEMS 差分 × TE 日历交叉验证。",
         "source": "manual",
         "locked": true,
-        "actualStr": "—",
-        "consensusStr": "—",
-        "previousStr": "-23K",
-        "surprise": null,
-        "surpriseStr": "—",
-        "verdict": "na"
+        "actualStr": "+162K",
+        "consensusStr": "+56K",
+        "previousStr": "+21K",
+        "surprise": 106,
+        "surpriseStr": "高于预期 106K",
+        "verdict": "beat"
       },
       {
         "indicator": "失业率",
         "tag": "UNRATE",
-        "periodLabel": "Aug",
+        "periodLabel": "8月",
         "releaseDate": "2026-09-04",
         "unit": "%",
         "actual": 4.1,
         "consensus": 4.1,
         "previous": 4.1,
-        "previousLabel": "6月",
+        "previousLabel": "7月",
         "higherIsBetter": false,
         "tolerance": 0.05,
-        "note": "微降至4.1%，但主因劳动力减少（参与率降至61.4%，2021年来最低），并非就业改善。",
-        "source": "te_auto",
+        "note": "8月失业率持平 4.1%（连续第二个月），未延续上半年上行；劳动参与率回升至 61.6%（+0.2pt）——供给面改善使 4.1% 读数的质量好于 7 月（当时参与率走低压低读数）。8月非农 +162K 超预期，就业市场企稳而非恶化。FRED × TE 交叉验证。",
+        "source": "manual",
+        "locked": true,
         "actualStr": "4.1%",
         "consensusStr": "4.1%",
         "previousStr": "4.1%",
         "surprise": 0.0,
         "surpriseStr": "符合预期",
         "verdict": "inline"
+      },
+      {
+        "indicator": "劳动参与率",
+        "tag": "LPR",
+        "periodLabel": "2026年8月",
+        "releaseDate": "2026-09-04",
+        "unit": "%",
+        "actual": 61.6,
+        "consensus": null,
+        "previous": 61.4,
+        "previousLabel": "7月",
+        "higherIsBetter": true,
+        "tolerance": 0.05,
+        "note": "8月回升至 61.6%（+0.2pt），扭转 6-7 月连续下滑（61.8%→61.5%→61.4%）；较年初 62.1% 仍低 0.5pt、较 2025 年高点 62.5% 低 0.9pt，劳动力供给约束仅边际缓解。参与率回升 + 失业率 4.1% 持平 = 就业市场企稳信号。无 8 月彭博一致预期（TE 未发布），consensus 留空。",
+        "source": "manual",
+        "locked": true,
+        "actualStr": "61.6%",
+        "consensusStr": "—",
+        "previousStr": "61.4%",
+        "surprise": null,
+        "surpriseStr": "—",
+        "verdict": "na"
       },
       {
         "indicator": "GDP 环比年化 (实际)",
@@ -22385,26 +22409,6 @@ const DATA = {
         "verdict": "inline"
       },
       {
-        "indicator": "劳动参与率",
-        "tag": "LPR",
-        "periodLabel": "2026年7月",
-        "releaseDate": "2026-08-07",
-        "unit": "%",
-        "actual": 61.4,
-        "consensus": 61.6,
-        "previous": 61.5,
-        "previousLabel": "6月",
-        "higherIsBetter": true,
-        "tolerance": 0.05,
-        "note": "61.4%（彭博预期61.6%），为2021年来最低；自年初累计降0.7pt，壮年人口退出求职市场，供给收缩压低失业率读数。",
-        "actualStr": "61.4%",
-        "consensusStr": "61.6%",
-        "previousStr": "61.5%",
-        "surprise": -0.20000000000000284,
-        "surpriseStr": "低于预期 0.2pt",
-        "verdict": "miss"
-      },
-      {
         "indicator": "超级核心PCE 同比",
         "tag": "SuperCore",
         "periodLabel": "2026年6月",
@@ -22429,7 +22433,7 @@ const DATA = {
       "asOf": "2026-09-05",
       "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)"
     },
-    "generatedAt": "2026-09-05 00:38",
+    "generatedAt": "2026-09-05 01:14",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -25153,10 +25157,10 @@ const DATA = {
     ]
   },
   "riskScore": {
-    "score": 55,
+    "score": 54,
     "level": "中等风险",
     "color": "#f59e0b",
-    "description": "8板块加权聚合风险评分 55/100 (中等风险)。权重: 流动性16% + 衰退17% + 利率14% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 跨资产8%。",
+    "description": "8板块加权聚合风险评分 54/100 (中等风险)。权重: 流动性16% + 衰退17% + 利率14% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 跨资产8%。",
     "factors": [
       {
         "label": "利率环境",
@@ -25188,7 +25192,7 @@ const DATA = {
       },
       {
         "label": "经济基本面",
-        "score": 55,
+        "score": 51,
         "weight": 13,
         "status": "mixed",
         "color": "#f59e0b"
@@ -25948,21 +25952,21 @@ const DATA = {
           "a": "AI 算力核心 (芯片/基础设施)",
           "b": "AI 光模块/网络 (Lumentum、Coherent)",
           "factors": [
-            "growth",
-            "rate"
+            "rate",
+            "growth"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌增长强劲"
         },
         {
           "a": "黄金",
           "b": "AI 高估值标的 (回避)",
           "factors": [
-            "infl",
-            "rate"
+            "rate",
+            "infl"
           ],
           "weight": 4,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌通胀回升, 赌利率下行"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌通胀回升"
         },
         {
           "a": "AI 算力核心 (芯片/基础设施)",
@@ -33034,7 +33038,7 @@ const DATA = {
       "stablecoins": {
         "usdt_b": 183.4,
         "usdc_b": 74.6,
-        "total_b": 258.0
+        "total_b": 258.1
       },
       "fundingRate": null,
       "fng": 73,
@@ -33042,11 +33046,11 @@ const DATA = {
     },
     "narrative": {
       "main": "避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)",
-      "full": "避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)；流动性蓄水池充沛: 稳定币 >250B 待入场资金；链上活跃升温: 日交易数 712,367 (+22%)",
+      "full": "避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)；流动性蓄水池充沛: 稳定币 >250B 待入场资金；链上活跃降温: 日交易数 618,290 (-13%)",
       "parts": [
         "避险主导: ETH/BTC 走弱, BTC 相对抗跌(数字黄金叙事)",
         "流动性蓄水池充沛: 稳定币 >250B 待入场资金",
-        "链上活跃升温: 日交易数 712,367 (+22%)"
+        "链上活跃降温: 日交易数 618,290 (-13%)"
       ]
     },
     "contradictions": [],
@@ -33073,7 +33077,8 @@ const DATA = {
         "2026-08-31",
         "2026-09-01",
         "2026-09-02",
-        "2026-09-03"
+        "2026-09-03",
+        "2026-09-04"
       ],
       "series": {
         "日交易数": [
@@ -33098,16 +33103,17 @@ const DATA = {
           697056.0,
           627345.0,
           581418.0,
-          712367.0
+          712367.0,
+          618290.0
         ],
         "活跃地址": []
       },
-      "txnLatest": 712367.0,
-      "txnChg": 22.5,
+      "txnLatest": 618290.0,
+      "txnChg": -13.2,
       "activeLatest": null,
       "activeChg": null,
       "volLatest": 601889069.2464,
-      "mcapLatest": 1603571081062.5
+      "mcapLatest": 1600260408140.625
     },
     "trendData": [
       {

@@ -35,6 +35,22 @@
       "locked": true
     },
     {
+      "indicator": "劳动参与率",
+      "tag": "LPR",
+      "periodLabel": "2026年8月",
+      "releaseDate": "2026-09-04",
+      "unit": "%",
+      "actual": 61.6,
+      "consensus": null,
+      "previous": 61.4,
+      "previousLabel": "7月",
+      "higherIsBetter": true,
+      "tolerance": 0.05,
+      "note": "8月回升至 61.6%（+0.2pt），扭转 6-7 月连续下滑（61.8%→61.5%→61.4%）；较年初 62.1% 仍低 0.5pt、较 2025 年高点 62.5% 低 0.9pt，劳动力供给约束仅边际缓解。参与率回升 + 失业率 4.1% 持平 = 就业市场企稳信号。无 8 月彭博一致预期（TE 未发布），consensus 留空。",
+      "source": "manual",
+      "locked": true
+    },
+    {
       "indicator": "GDP 环比年化 (实际)",
       "tag": "GDP",
       "periodLabel": "Q2",
@@ -92,22 +108,6 @@
       "tolerance": 0.1,
       "note": "核心服务环比仅0%、房租降温；通胀压力缓释，但仍高于2%目标。",
       "source": "te_auto"
-    },
-    {
-      "indicator": "劳动参与率",
-      "tag": "LPR",
-      "periodLabel": "2026年8月",
-      "releaseDate": "2026-09-04",
-      "unit": "%",
-      "actual": 61.6,
-      "consensus": null,
-      "previous": 61.4,
-      "previousLabel": "7月",
-      "higherIsBetter": true,
-      "tolerance": 0.05,
-      "note": "8月回升至 61.6%（+0.2pt），扭转 6-7 月连续下滑（61.8%→61.5%→61.4%）；较年初 62.1% 仍低 0.5pt、较 2025 年高点 62.5% 低 0.9pt，劳动力供给约束仅边际缓解。参与率回升 + 失业率 4.1% 持平 = 就业市场企稳信号。无 8 月彭博一致预期（TE 未发布），consensus 留空。",
-      "source": "manual",
-      "locked": true
     },
     {
       "indicator": "超级核心PCE 同比",
