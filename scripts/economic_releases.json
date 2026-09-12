@@ -1,7 +1,37 @@
 {
-  "asOf": "2026-09-11",
+  "asOf": "2026-09-12",
   "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)",
   "releases": [
+    {
+      "indicator": "CPI 同比",
+      "tag": "CPI",
+      "periodLabel": "Aug",
+      "releaseDate": "2026-09-11",
+      "unit": "%",
+      "actual": 3.4,
+      "consensus": 3.4,
+      "previous": 3.4,
+      "previousLabel": "5月",
+      "higherIsBetter": false,
+      "tolerance": 0.1,
+      "note": "能源环比-5.7%拖累，全面弱于预期；引发市场'宽松交易'，加息预期回撤。",
+      "source": "te_auto"
+    },
+    {
+      "indicator": "核心CPI 同比",
+      "tag": "Core",
+      "periodLabel": "Aug",
+      "releaseDate": "2026-09-11",
+      "unit": "%",
+      "actual": 2.4,
+      "consensus": 2.4,
+      "previous": 2.5,
+      "previousLabel": "5月",
+      "higherIsBetter": false,
+      "tolerance": 0.1,
+      "note": "核心服务环比仅0%、房租降温；通胀压力缓释，但仍高于2%目标。",
+      "source": "te_auto"
+    },
     {
       "indicator": "非农就业 (月增)",
       "tag": "NFP",
@@ -78,36 +108,6 @@
       "higherIsBetter": false,
       "tolerance": 0.1,
       "note": "同比3.3%符合预期；环比+0.2%(预期+0.2%)，与6月持平；整体PCE同比3.7%高于预期0.1pt。美联储首选通胀指标连续高于2%目标。"
-    },
-    {
-      "indicator": "CPI 同比",
-      "tag": "CPI",
-      "periodLabel": "Jul",
-      "releaseDate": "2026-08-12",
-      "unit": "%",
-      "actual": 3.4,
-      "consensus": 3.4,
-      "previous": 3.5,
-      "previousLabel": "5月",
-      "higherIsBetter": false,
-      "tolerance": 0.1,
-      "note": "能源环比-5.7%拖累，全面弱于预期；引发市场'宽松交易'，加息预期回撤。",
-      "source": "te_auto"
-    },
-    {
-      "indicator": "核心CPI 同比",
-      "tag": "Core",
-      "periodLabel": "Jul",
-      "releaseDate": "2026-08-12",
-      "unit": "%",
-      "actual": 2.5,
-      "consensus": 2.5,
-      "previous": 2.6,
-      "previousLabel": "5月",
-      "higherIsBetter": false,
-      "tolerance": 0.1,
-      "note": "核心服务环比仅0%、房租降温；通胀压力缓释，但仍高于2%目标。",
-      "source": "te_auto"
     },
     {
       "indicator": "超级核心PCE 同比",
