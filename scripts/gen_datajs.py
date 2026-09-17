@@ -448,6 +448,30 @@ def rate_changes(key):      # d/w/m/h6 都 *100 转 bp
     t = tfm(key)
     return {k: (round((t.get(k) or 0)*100,1) if t.get(k) is not None else None) for k in ('d','w','m','h6')}
 
+# ---------- SOFR-IORB 利差: 必须按两序列的"共同最新交易日"取值 ----------
+# FOMC 决议日 IORB 次日即跳 (如 2026-09-17 3.65 → 3.90%), 而 SOFR 常滞后 1-2 个工作日。
+# 若各自取最新值直接相减, 会得到 -26bp 这类伪利差 (真实值约 -1bp), 既误导"融资充裕度"判断,
+# 又污染 LPI 融资确认分项与 riskScore。改用共同交易日对齐法 (与 gold/BTC 对比图同一约定):
+# 取日期交集, 免前向填充, 天然对齐; SOFR 追上后利差自动回到真实值。
+def _aligned_spread_series(ka, kb):
+    a = {d: v for d, v in s(ka)}
+    b = {d: v for d, v in s(kb)}
+    return [(d, round(a[d] - b[d], 6)) for d in sorted(set(a) & set(b))]
+
+_sofr_iorb_series = _aligned_spread_series('sofr', 'iorb')
+_sofr_iorb_gap = _sofr_iorb_series[-1][1] if _sofr_iorb_series else None
+_sofr_iorb_asof = _sofr_iorb_series[-1][0] if _sofr_iorb_series else None
+_sofr_iorb_str = bp(_sofr_iorb_gap * 100) if _sofr_iorb_gap is not None else '—'
+
+def _spread_tf(series, off):
+    """与 build_data.tf 同口径的位置偏移变化 (d=1/w=5/m=21/h6=126)。"""
+    if not series or len(series) <= off:
+        return None
+    return round(series[-1][1] - series[-1 - off][1], 6)
+
+_sofr_iorb_tf = ({k: _spread_tf(_sofr_iorb_series, o) for k, o in (('d', 1), ('w', 5), ('m', 21), ('h6', 126))}
+                 if _sofr_iorb_series else {'d': None, 'w': None, 'm': None, 'h6': None})
+
 # 资产类: tf 已是 % 变化
 def asset_val_str(key, dec=2, money=''):
     return (money + comma(val(key), dec)) if money else comma(val(key), dec)
@@ -1508,6 +1532,9 @@ if _ff_up_v is not None and _y1_v is not None:
 _hawk_score_data = round(5 + _v_2y_month * 0.2, 1)
 _hawk_score_data = max(0, min(10, _hawk_score_data))
 _hawk_label_data = '偏鹰' if _hawk_score_data > 6 else ('偏鸽' if _hawk_score_data < 4 else '中性')
+# 旧版粗粒度占位概率 (仅按 2Y 月变推算, 且 _hike_prob 写死 5%)。
+# 真正展示的 5 段概率由文件后段 ratePath 的正态分布模型给出 (短端曲线+2Y波动+经济regime+鹰鸽积分),
+# 下列变量只用于 DATA['fed'] 定义期的临时字符串, 随后被 ratePath 与 chartNotes.probNote 覆盖 —— 勿在新逻辑中引用。
 _cut_prob = max(0, min(80, round(50 - _v_2y_month * 3, 0))) if _v_2y_month else 30
 _hold_prob = round(100 - _cut_prob - 5, 0)
 _hike_prob = 5
@@ -1730,9 +1757,43 @@ if _ff is not None and _y2_f is not None:
         _fed_signal = 'mixed'                                     # 1 次加息预期 → 观望
 _fed_label = f'宽松预期 ({_fed_cuts} 次降息定价)' if _fed_signal == 'risk-on' else (
              f'收紧预期 ({_fed_hikes} 次加息定价)' if _fed_signal == 'risk-off' else '观望/鹰鸽分化')
+
+# ====== 最近一次联邦基金目标区间变动 (数据驱动, 消除"永远维持不变"的硬编码叙事) ======
+# 加息/降息落地后, regime 描述/利率卡片/政策表若仍写死"维持", 会与已变动的区间自相矛盾。
+# 这里从 ffr_up 序列回看最近一次值变动, 自动判定动作与幅度; 变动超过 FRESH_DAYS 天后回归"维持"表述。
+def _policy_last_move():
+    arr = s('ffr_up')
+    if not arr:
+        return None
+    d_last, v_last = arr[-1]
+    prev = next(((d, v) for d, v in reversed(arr[:-1]) if v != v_last), None)
+    if prev is None:
+        return None
+    chg_bp = int(round((v_last - prev[1]) * 100))
+    if chg_bp == 0:
+        return None
+    try:
+        days = (datetime.datetime.now() - datetime.datetime.strptime(d_last, '%Y-%m-%d')).days
+    except Exception:
+        days = None
+    return {'date': d_last, 'days_ago': days, 'from': prev[1], 'to': v_last,
+            'bp': chg_bp, 'action': '加息' if chg_bp > 0 else '降息'}
+
+_PMOVE = _policy_last_move()
+_PMOVE_FRESH_DAYS = 45   # 决议后 45 天内, 卡片/政策表标注实际变动而非"维持"
+_pmove_fresh = bool(_PMOVE and _PMOVE['days_ago'] is not None and _PMOVE['days_ago'] <= _PMOVE_FRESH_DAYS)
+_pm_chg = (f"{'+' if _PMOVE['bp'] > 0 else ''}{_PMOVE['bp']}bp" if _pmove_fresh else '维持')
+_pm_dir = ('up' if _PMOVE['bp'] > 0 else 'down') if _pmove_fresh else 'neutral'
+_pm_note = (f"{_PMOVE['date']} {_PMOVE['action']} {abs(_PMOVE['bp'])}bp" if _pmove_fresh else '2026年以来区间')
+_pm_meaning = (('限制性立场强化 (新近加息)' if _PMOVE['bp'] > 0 else '限制性立场松动 (新近降息)') if _pmove_fresh else '限制性立场未变')
+_pm_regime_txt = (f"已于 {_PMOVE['date']} {_PMOVE['action']} {abs(_PMOVE['bp'])}bp" if _pmove_fresh else '维持不变')
+if _PMOVE:
+    print(f'[gen_datajs] 目标区间最近变动: {_PMOVE["date"]} {_PMOVE["action"]} {_PMOVE["bp"]}bp '
+          f'(距今 {_PMOVE["days_ago"]} 天, {"计入叙事" if _pmove_fresh else "已过叙事窗口"})', file=sys.stderr, flush=True)
+
 DATA['fed'] = {
     'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':_confidence(_fed_signal, _ff is not None, _y2_f is not None, v_walcl is not None, v_rrp2 is not None),
-        'description':f'政策利率 {f2(val("ffr_up"))}%-{f2(val("ffr_lo"))}% 维持不变, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将更直接影响准备金。'},
+        'description':f'政策利率 {f2(val("ffr_lo"))}%-{f2(val("ffr_up"))}% {_pm_regime_txt}, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将更直接影响准备金。'},
     'keySignals': [
         {'title':f'RRP 余额 ${f2(v_rrp2)}B',
          'meaning':(
@@ -1761,12 +1822,12 @@ DATA['fed'] = {
     ],
     'metrics': [
         {'label':'总资产','value':f'${comma(v_walcl/1000000,2)}T','change':wk('walcl'),'dir':'down','tag':'WALCL','percentile':pct('walcl'),'signal':_msig(dir_of(tfm("walcl")["w"]), False),'meaning':'缩表持续推进','changes':wk_dict('walcl'),'sparkline':series30('walcl')},
-        {'label':'联邦基金利率(上限)','value':f'{f2(val("ffr_up"))}%','change':'维持','dir':'neutral','tag':'FFR','percentile':pct('ffr_up'),'signal':_msig(dir_of(tfm("ffr_up")["w"]), False),'meaning':'限制性立场未变','changes':{'d':'0','w':'0','m':'0','h6':pct('ffr_up') and '—'},'sparkline':series30('ffr_up')},
+        {'label':'联邦基金利率(上限)','value':f'{f2(val("ffr_up"))}%','change':_pm_chg,'dir':_pm_dir,'tag':'FFR','percentile':pct('ffr_up'),'signal':_msig(dir_of(tfm("ffr_up")["w"]), False),'meaning':_pm_meaning,'changes':{k:(bp(tfm("ffr_up")[k]*100) if tfm("ffr_up")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('ffr_up')},
         {'label':'国债持仓','value':f'${comma(val("treast")/1000000,2)}T','change':wk('treast'),'dir':'down','tag':'TREAST','percentile':pct('treast'),'signal':_msig(dir_of(tfm("treast")["w"]), False),'meaning':'被动缩表, 节奏可控','changes':wk_dict('treast'),'sparkline':series30('treast')},
         {'label':'MBS 持仓','value':f'${comma(val("mbst")/1000000,2)}T','change':wk('mbst'),'dir':'down','tag':'MBST','percentile':pct('mbst'),'signal':_msig(dir_of(tfm("mbst")["w"]), False),'meaning':'提前还款低迷, MBS缩减慢','changes':wk_dict('mbst'),'sparkline':series30('mbst')},
         {'label':'银行准备金','value':f'${comma(v_res/1000000,2)}T','change':f'+${comma(tfm("resbal")["w"]/1000,0)}B/周','dir':'up','tag':'WRESBAL','percentile':pct('resbal'),'signal':_msig(dir_of(tfm("resbal")["w"]), True),'meaning':'充裕区间','changes':wk_dict('resbal'),'sparkline':series30('resbal')},
         {'label':'RRP 余额','value':f'${f2(v_rrp2)}B','change':f'{bp(tfm("rrp")["w"], "$B")}', 'dir':dir_of(tfm("rrp")["w"]),'tag':'RRP','percentile':pct('rrp'),'signal':_msig(dir_of(tfm("rrp")["w"]), False),'meaning':'缓冲耗尽','changes':{k:(bp(tfm("rrp")[k], "$B") if tfm("rrp")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('rrp')},
-        {'label':'IORB','value':f'{f2(val("iorb"))}%','change':'维持','dir':'neutral','tag':'IORB','percentile':pct('iorb'),'signal':_msig(dir_of(tfm("iorb")["w"]), False),'meaning':'SOFR-IORB 利差反映充裕度','changes':{'d':'0','w':'0','m':'0','h6':'—'},'sparkline':series30('iorb')},
+        {'label':'IORB','value':f'{f2(val("iorb"))}%','change':rate_chg_bp('iorb'),'dir':dir_of(tfm("iorb")["d"]),'tag':'IORB','percentile':pct('iorb'),'signal':_msig(dir_of(tfm("iorb")["w"]), False),'meaning':'准备金利率, 决议日随目标区间同步调整','changes':{k:(bp(tfm("iorb")[k]*100) if tfm("iorb")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('iorb')},
         {'label':'SOFR','value':f'{f2(val("sofr"))}%','change':rate_chg_bp('sofr'),'dir':dir_of(tfm("sofr")["d"]),'tag':'SOFR','percentile':pct('sofr'),'signal':_msig(dir_of(tfm("sofr")["d"]), False),'meaning':'低于 IORB, 融资充裕','changes':{k:(bp(tfm("sofr")[k]*100) if tfm("sofr")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('sofr')},
     ],
     'trendData': [
@@ -1778,9 +1839,9 @@ DATA['fed'] = {
     'chartData': {'labels': _dates_for('walcl'), 'series': {
         '总资产': [round(x/1e6,2) for x in series90('walcl')], '国债': [round(x/1e6,2) for x in series90('treast')], 'MBS': [round(x/1e6,2) for x in series90('mbst')]}},
     'policyTable': [
-        {'item':'联邦基金利率目标区间','value':f'{f2(val("ffr_lo"))}% - {f2(val("ffr_up"))}%','change':'维持','note':'2026年以来区间'},
-        {'item':'IORB (准备金利息)','value':f'{f2(val("iorb"))}%','change':'维持','note':f'SOFR-IORB = {bp((val("sofr")-val("iorb"))*100)}'},
-        {'item':'ON RRP 利率','value':f'{f2(val("iorb")-0.1)}%','change':'维持','note':f'RRP 余额仅 ${f2(v_rrp2)}B'},
+        {'item':'联邦基金利率目标区间','value':f'{f2(val("ffr_lo"))}% - {f2(val("ffr_up"))}%','change':_pm_chg,'note':_pm_note},
+        {'item':'IORB (准备金利息)','value':f'{f2(val("iorb"))}%','change':rate_chg_bp('iorb'),'note':f'SOFR-IORB = {_sofr_iorb_str}'},
+        {'item':'ON RRP 利率','value':f'{f2(val("iorb")-0.1)}%','change':rate_chg_bp('iorb'),'note':f'RRP 余额仅 ${f2(v_rrp2)}B'},
         {'item':'QT 国债月度上限','value':'$250亿','change':'维持','note':'被动缩减'},
         {'item':'QT MBS 月度上限','value':'$150亿','change':'维持','note':'被动缩减'},
     ],
@@ -1867,7 +1928,7 @@ DATA['fed'] = {
                     {'asset': '美元', 'dir': 'down', 'when': '鸽派', 'why': '利差收窄'},
                 ],
                 'longTerm': '点阵图与发布会是季度级路径重定价窗口; 鹰鸽分化公开化 = 政策不确定性上升 = 波动率溢价抬升',
-                'current': 'FOMC 9/15 · 沃什(主席)表态为核心变量',
+                'current': (f'{_fomc_md} FOMC · 沃什(主席)表态为核心变量' if _fomc_md else '沃什(主席)表态为核心变量'),
             },
             {
                 'tag': 'FFR', 'name': '联邦基金利率', 'freq': '会议',
@@ -1882,11 +1943,8 @@ DATA['fed'] = {
             },
         ],
     },
-    'analystView': {
-        'risk-on': f'市场定价宽松路径: 短端曲线隐含未来12个月约 {_fed_cuts} 次降息 (2Y {f2(_y2_f)}% vs 政策利率 {f2(_ff)}%)。政策传导链: 降息预期 → 短端下行 → 实际利率回落 → 权益估值扩张 + 长久期债券资本利得。但 {_fomc_md if _fomc_md else "下次会议"} 是重新定价窗口——若联储鹰派表态(尤其对油价)或核心通胀环比二次抬头, 宽松定价将被压缩; RRP 耗尽 (${f2(v_rrp2)}B) 意味着 QT 后续直击准备金, 是流动性端结构性约束。',
-        'risk-off': f'市场定价收紧路径: 短端曲线隐含约 {_fed_hikes} 次加息 (2Y {f2(_y2_f)}% > 政策利率 {f2(_ff)}%)。政策传导链: 加息预期 → 短端上行 → 贴现率抬升 → 权益估值压缩 (对高久期成长/未盈利资产最重) + 信用利差走阔风险。{_fomc_md if _fomc_md else "下次会议"} 是关键窗口; 若核心 PCE 3.3% 的粘性促使联储上调点阵图, 收紧预期强化。RRP 耗尽后 QT 直击准备金, 流动性约束叠加政策收紧 = 最不利组合。',
-        'mixed': f'美联储处于政策拉锯: 短端曲线未形成单边定价 ({_fed_cuts} 次降息 / {_fed_hikes} 次加息)。政策传导链看两点: ① 核心 PCE 3.3% + 超级核心 3.8% 的通胀粘性决定"更高更久"基线; ② {_fomc_md if _fomc_md else "下次会议"} 对油价的定性决定边际方向。资产配置含义: 政策不明朗期, 权益与长债的久期风险同向, 降低组合 beta + 维持现金/短债缓冲是合理选择; 一旦路径明朗, 再沿方向加仓。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折, 后续 QT 每缩一美元直击准备金。',
-    }[_fed_signal],
+    # 'analystView' 在 core_pce_yoy / 超级核心同比算出后填充 (见下方), 避免把通胀数值硬编码进叙事
+    'analystView': '',
     'whatToWatch': [
         {'trigger':(f'<span class="watch-threshold">{_fomc_md}</span> FOMC会议' if _fomc_md else '下次 FOMC 会议'),
          'implication':'关注对油价的定性: transitory=利多, persistent risk=利空',
@@ -1898,7 +1956,7 @@ DATA['fed'] = {
     ],
     'chartNotes': {
         'hawkNote': f'0=极度鸽派 / 10=极度鹰派 · 当前 {_hawk_score_data} {_hawk_label_data} (基于2Y利率自动计算 · 月Δ{_v_2y_month:+.0f}bp)',
-        'probNote': f'{_fomc_md or "下次会议"}会议: 维持{_hold_prob}% / 降25bp {_cut_prob}% · 基于2Y利率动态推算',
+        'probNote': '日/周/月/半年变化 → 识别政策预期重定价',  # 占位: 在 ratePath 5 段概率算完后覆盖, 保证与概率条同口径
     },
     'impliedPath': {
         'points': _impl_pts,                       # [{tenor, rate}]
@@ -1912,7 +1970,9 @@ DATA['fed'] = {
 }
 
 # ====== 流动性 ======
-v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga'); v_sofr_iorb = (val('sofr')-val('iorb'))
+v_nl = val('netliq'); v_rrpn = val('rrp'); v_tgan = val('tga')
+# SOFR-IORB 用共同交易日对齐后的利差 (见文件上方 _sofr_iorb_series 说明), 避免决议日伪利差
+v_sofr_iorb = _sofr_iorb_gap if _sofr_iorb_gap is not None else (val('sofr')-val('iorb'))
 # 流动性 chart 用 TGA 日度日期做 X 轴 (netliq 在 build_data.py 已日度化到 TGA 最新日期; resbal 为周度, 前向填充)
 _liq_labels = _dates_for('tga')
 # 流动性 regime (2026-08-12 优化): 净流动性水平+趋势 + SOFR-IORB + RRP 缓冲
@@ -2048,7 +2108,7 @@ DATA['liquidity'] = {
         {'name':'RRP 余额','unit':'$B','current':f'${f2(v_rrpn)}B','changes':{k:(round(tfm("rrp")[k],3) if tfm("rrp")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'缓冲消耗已完成的结构事件'},
         {'name':'TGA 余额','unit':'$B','current':f'${comma(v_tgan,1)}B' if v_tgan else '—','changes':{k:(round(tfm("tga")[k],1) if (v_tgan and tfm("tga")[k] is not None) else None) for k in ('d','w','m','h6')},'meaning':'财政部持续抽水' if (v_tgan and tfm("tga")["w"]) else '—'},
         {'name':'银行准备金','unit':'$B','current':f'${comma(v_res/1000000,2)}T','changes':{k:(round(tfm("resbal")[k]/1000,1) if tfm("resbal")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'近月回升但半年仍低, 3万亿关键'},
-        {'name':'SOFR-IORB','unit':'bp','current':bp(v_sofr_iorb*100),'changes':{k:(round((tfm("sofr")[k]-tfm("iorb")[k])*100,1) if (tfm("sofr")[k] is not None and tfm("iorb")[k] is not None) else None) for k in ('d','w','m','h6')},'meaning':'缓慢向零靠拢, 充裕度边际减弱'},
+        {'name':'SOFR-IORB','unit':'bp','current':bp(v_sofr_iorb*100),'changes':{k:(round(_sofr_iorb_tf[k]*100,1) if _sofr_iorb_tf.get(k) is not None else None) for k in ('d','w','m','h6')},'meaning':'缓慢向零靠拢, 充裕度边际减弱'},
     ],
 
     # ===== 流动性 → 资产传导机制 (2026-08-17) =====
@@ -2263,6 +2323,15 @@ _sc_all = supercore_pce_yoy()
 _sc_ys = _sc_all[-24:]
 _sc_yoy = _sc_all[-1][1] if _sc_all else None
 _sc_d1 = (_sc_all[-1][1] - _sc_all[-2][1]) if len(_sc_all) >= 2 else None
+
+# 分析师视角填充: 通胀数值取真实同比序列 (原先把 "核心PCE 3.3% / 超级核心 3.8%" 写死在叙事里, 会随数据漂移)
+_cp_yoy_txt = f'{core_pce_yoy:.1f}%' if core_pce_yoy is not None else '—'
+_sc_yoy_txt = f'{_sc_yoy:.1f}%' if _sc_yoy is not None else '—'
+DATA['fed']['analystView'] = {
+    'risk-on': f'市场定价宽松路径: 短端曲线隐含未来12个月约 {_fed_cuts} 次降息 (2Y {f2(_y2_f)}% vs 政策利率 {f2(_ff)}%)。政策传导链: 降息预期 → 短端下行 → 实际利率回落 → 权益估值扩张 + 长久期债券资本利得。但 {_fomc_md if _fomc_md else "下次会议"} 是重新定价窗口——若联储鹰派表态(尤其对油价)或核心通胀环比二次抬头, 宽松定价将被压缩; RRP 耗尽 (${f2(v_rrp2)}B) 意味着 QT 后续直击准备金, 是流动性端结构性约束。',
+    'risk-off': f'市场定价收紧路径: 短端曲线隐含约 {_fed_hikes} 次加息 (2Y {f2(_y2_f)}% > 政策利率 {f2(_ff)}%)。政策传导链: 加息预期 → 短端上行 → 贴现率抬升 → 权益估值压缩 (对高久期成长/未盈利资产最重) + 信用利差走阔风险。{_fomc_md if _fomc_md else "下次会议"} 是关键窗口; 若核心 PCE {_cp_yoy_txt} 的粘性促使联储上调点阵图, 收紧预期强化。RRP 耗尽后 QT 直击准备金, 流动性约束叠加政策收紧 = 最不利组合。',
+    'mixed': f'美联储处于政策拉锯: 短端曲线未形成单边定价 ({_fed_cuts} 次降息 / {_fed_hikes} 次加息)。政策传导链看两点: ① 核心 PCE {_cp_yoy_txt} + 超级核心 {_sc_yoy_txt} 的通胀粘性决定"更高更久"基线; ② {_fomc_md if _fomc_md else "下次会议"} 对油价的定性决定边际方向。资产配置含义: 政策不明朗期, 权益与长债的久期风险同向, 降低组合 beta + 维持现金/短债缓冲是合理选择; 一旦路径明朗, 再沿方向加仓。RRP 耗尽 (${f2(v_rrp2)}B) 是结构性转折, 后续 QT 每缩一美元直击准备金。',
+}[_fed_signal]
 
 # 经济 regime: 由 劳动力/通胀/增长 三块评分 + 市场预期差 动态判定
 # (2026-08-12 优化: 见 _build_econ_regime 函数, 在 economic_releases 载入后计算)
@@ -2732,6 +2801,11 @@ DATA['fed']['hawkishDovish']['ratePath'] = {
     'stdCuts':   round(_std_cuts, 2),
     'note': f'多维度正态分布: 1Y 隐含路径 {round(_impl_cuts_1m or 0,2)} 次/12月 → 下次会议 {round(_mean_cuts,2)} 次 · 短端波动 2Y 周std {_v_2y_vol:.0f}bp · 经济regime {_e_sig_path} (偏置 {_regime_bias_path:+.1f}) · 鹰鸽积分 {round(_hawk_score_data,1)} ({_hawk_label_data})'
 }
+# chartNotes.probNote 与 ratePath 5 段概率保持同口径
+# (原实现引用 _cut_prob/_hike_prob 占位模型, 且完全不含加息项——刚好在加息周期里给出误导性描述)
+DATA['fed'].setdefault('chartNotes', {})['probNote'] = (
+    f'{_fomc_md or "下次会议"}会议: 维持 {_hold_p:.0f}% / 降息 {_cut25_p+_cut50_p:.0f}% / '
+    f'加息 {_h25_p+_h50_p:.0f}% · 由短端曲线+2Y波动+经济regime动态推算')
 # 同步: transmissionMap 中的 RatePath current 用真实 5 段概率
 try:
     _rp_tm = DATA['fed'].get('transmissionMap', {}).get('indicators', [])
@@ -4740,7 +4814,8 @@ def _ms_composites():
     _credit_on = _ms_status_map.get('credit_widen') == 'on'
     _growth_weak = _eq_down or _credit_on
     _growth_strong = (_spx > 1) and not _credit_on
-    _sofr_iorb = (val('sofr') or 0) - (val('iorb') or 0)
+    # SOFR-IORB 用共同交易日对齐后的利差, 避免 FOMC 决议日 IORB 先跳造成的伪利差污染评分
+    _sofr_iorb = _sofr_iorb_gap if _sofr_iorb_gap is not None else ((val('sofr') or 0) - (val('iorb') or 0))
     _nl_m = (tfm('netliq') or {}).get('m')
     _liq_tight = (_sofr_iorb or 0) > 0.0001 or (_nl_m is not None and _nl_m < 0)
     _liq_easy = (_sofr_iorb or 0) < -0.0001

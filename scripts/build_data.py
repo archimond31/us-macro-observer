@@ -1003,6 +1003,33 @@ else:
 # Atlanta Fed GDPNow 本季实时预估 (免 key, 端点可能失效, 失败静默跳过)
 _gnow = fetch_gdpnow()
 
+# ================= 联邦基金目标区间: IORB 反推即时同步 =================
+# 经验规律(2025-09~2026-09 全样本 380 个交易日零例外): IORB = 目标区间上限 - 0.10。
+# FOMC 决议当天 FRED 的 IORB 先更新(次营业日), 而 DFEDTARU/DFEDTARL 常再滞后 1-3 天。
+# 若只等 DFEDTARU, 决议后会短暂出现"准备金利率已变、目标区间未变"的自相矛盾,
+# 导致利率卡片/政策表/降息概率/隐含路径/regime 文案全部停留在旧区间。
+# 这里在写 raw_series.json 与 reg() 之前修正 S 序列, 使所有下游(raw/computed/health/data.js)自动跟随。
+# 自愈性: FRED 追上 DFEDTARU 后, 本条件(日期领先 + 偏离≥12bp)自动不成立, 无需人工清理。
+# 注: 序列元素可能是 tuple(FRED 直出) 或 list(缓存回载), 统一重建为 list 后再改, 避免元组不可写。
+_FFR_DERIVED = None
+if S.get('iorb') and S.get('ffr_up'):
+    _d_io, _v_io = last(S['iorb'])
+    _d_up0, _v_up0 = last(S['ffr_up'])
+    if _v_io is not None and _v_up0 is not None and _d_io and _d_up0 and _d_io > _d_up0:
+        _up_new = round(_v_io + 0.10, 4)      # 上限 = IORB + 10bp
+        _lo_new = round(_up_new - 0.25, 4)    # 标准 25bp 区间宽度
+        if abs(_up_new - _v_up0) >= 0.12:  # 25bp 调整的 IORB 前置缺口恰为 15bp; 阈值取 12bp 留噪声余量
+            for _k, _val in (('ffr_up', _up_new), ('ffr_lo', _lo_new)):
+                _seq = [[a, b] for a, b in (S.get(_k) or [])]
+                if _seq and _seq[-1][0] == _d_io:
+                    _seq[-1] = [_d_io, _val]
+                else:
+                    _seq.append([_d_io, _val])
+                S[_k] = _seq
+            _FFR_DERIVED = (_d_up0, _v_up0, _d_io, _lo_new, _up_new)
+            print(f'  [数据源自检] FOMC 决议同步: IORB {_d_io} 领先 DFEDTARU {_d_up0} '
+                  f'→ 联邦基金目标区间 {_v_up0}% 修正为 {_lo_new}%-{_up_new}% (按 IORB+10bp 反推)')
+
 # 保存原始数据供检查
 with open(SCRIPT_DIR / 'raw_series.json', 'w') as f:
     json.dump({k: v for k, v in S.items()}, f)
@@ -1138,9 +1165,19 @@ for k, r in R.items():
                  'last_date': r['date'], 'age': r.get('age'), 'value': r.get('value'),
                  'fallback': r.get('fallback', False)}
 
-# 联邦基金目标区间: DFEDTARU/DFEDTARL 已停更(2026-01), 用更当前的有效利率 FEDFUNDS 推导目标区间
+# IORB 反推的目标区间: 修正来源标注, 便于审计该数值是"官方直出"还是"推导"
+if _FFR_DERIVED:
+    _hd_note = f'IORB {_FFR_DERIVED[2]} 领先 DFEDTARU {_FFR_DERIVED[0]}, 按 IORB+10bp 反推'
+    for _k in ('ffr_up', 'ffr_lo'):
+        if HEALTH.get(_k):
+            HEALTH[_k]['source'] = 'FRED:IORB→derive (FOMC 决议同步)'
+            HEALTH[_k]['note'] = _hd_note
+            HEALTH[_k]['fallback'] = True
+
+# 联邦基金目标区间兜底: 若 DFEDTARU/DFEDTARL 再次停更, 用月度有效利率 FEDFUNDS 推导
 # 推导规则: 上限 = ceil(有效利率*4)/4, 下限 = 上限 - 0.25 (标准 25bp 区间)
-if R.get('ffr_up') and R['ffr_up'].get('stale') and S.get('ffr_eff'):
+# 注: 若已由 IORB 反推修正(_FFR_DERIVED), ffr_up 不再 stale, 本分支自然不触发; 保留显式守卫以防未来改动重置 stale。
+if R.get('ffr_up') and R['ffr_up'].get('stale') and S.get('ffr_eff') and not _FFR_DERIVED:
     d_eff, eff = last(S['ffr_eff'])
     if eff is not None:
         up = ((eff * 4 + 0.999) // 1) / 4.0
