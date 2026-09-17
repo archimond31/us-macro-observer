@@ -4787,29 +4787,42 @@ _ms_scenarios = []
 for _sc in MS.get('scenarios', []):
     _trig = _sc.get('triggers', [])
     _on = sum(1 for _t in _trig if _ms_status_map.get(_t) == 'on')
+    _tot = len(_trig)
     _ms_scenarios.append(dict(_sc))
-    _ms_scenarios[-1]['triggeredCount'] = _on
-    _ms_scenarios[-1]['triggerStatus'] = {_t: _ms_status_map.get(_t) for _t in _trig}
+    _ms_scenarios[-1].update({
+        'triggeredCount': _on,
+        'triggerTotal': _tot,
+        'matchRatio': round(_on / _tot, 3) if _tot else 0.0,
+        'fullTriggered': bool(_tot and _on == _tot),
+        'triggerStatus': {_t: _ms_status_map.get(_t) for _t in _trig},
+    })
 
-_ms_active = None
-for _sc in _ms_scenarios:
-    if _sc.get('baseline') and _sc['triggeredCount'] == len(_sc.get('triggers', [])):
-        _ms_active = _sc['id']; break
-if not _ms_active:
-    _best = max(_ms_scenarios, key=lambda x: x['triggeredCount']) if _ms_scenarios else None
-    _ms_active = _best['id'] if (_best and _best['triggeredCount'] > 0) else None
+# 情景排序 / 激活判定延后到主导矛盾确定之后执行 —— 排序需要一个"与主导矛盾同源"的平手裁决项,
+# 否则两个尾部情景同样 N/N 时会退回列表顺序(隐式硬编码), 并可能与主导矛盾互相打脸。
+# 见下方 "情景排序与激活" 段。
 
 # ---------- 主导矛盾原型自动判定 (数据驱动) ----------
 def _ms_composites():
     """由实时序列合成 5 维复合指标，用于从 archetypes[] 选出当前主导矛盾原型。"""
     _d10 = (tfm('dgs10') or {}).get('m') or 0      # 10Y 月变化 (百分点)
     _spx = (tfm('spx') or {}).get('m') or 0        # SPX 月变化 (%)
-    _cpi = (tfm('core_cpi') or {}).get('m') or 0    # 核心CPI 月变化 (pt)
     _yld_up = _d10 > 0.05                           # 10Y 上行 > 5bp/月 = 债跌
     _eq_up = _spx > 0
     _disagreement = _yld_up and _eq_up             # 债跌 + 股涨 = 反向解读
     _cpi_on = _ms_status_map.get('cpi_accel') == 'on'
-    _infl_high = _cpi_on or _cpi > 0
+    # 核心CPI 环比%: 用水平序列末两点换算。
+    # 旧代码取的是「指数点位月度差」再与 0 比大小 —— 既不是比率, 也使 'mod' 分支不可达
+    # (not _infl_high 时必然走 'low'), inflation 实为二态。改为与 0.2% 阈值直接比较。
+    _cpi_s = _ms_vals('core_cpi')
+    _cpi_mom = round((_cpi_s[-1] / _cpi_s[-2] - 1) * 100, 3) if (len(_cpi_s) >= 2 and _cpi_s[-2]) else None
+    if _cpi_mom is None:
+        _inflation = 'high' if _cpi_on else 'low'
+    elif _cpi_on or _cpi_mom > 0.20:
+        _inflation = 'high'
+    elif _cpi_mom < 0.15:
+        _inflation = 'low'
+    else:
+        _inflation = 'mod'
     _eq_down = _spx < 0
     _credit_on = _ms_status_map.get('credit_widen') == 'on'
     _growth_weak = _eq_down or _credit_on
@@ -4826,7 +4839,10 @@ def _ms_composites():
         'disagreement': _disagreement,
         'yldUp': _yld_up,
         'eqUp': _eq_up,
-        'inflation': 'high' if _infl_high else ('low' if not (_cpi_on or _cpi > 0) else 'mod'),
+        'yieldsHigh': _ms_status_map.get('yields_high') == 'on',  # 10Y 创区间新高: 长端已开始定价
+        'creditStress': _credit_on,                               # 信用利差走阔: 压力扩散确认
+        'cpiAccel': _cpi_on,                                      # 核心通胀环比再加速
+        'inflation': _inflation,
         'growth': 'weak' if _growth_weak else ('strong' if _growth_strong else 'mod'),
         'liquidity': 'tight' if _liq_tight else ('easy' if _liq_easy else 'neutral'),
         'breadth': 'narrow' if _breadth_narrow else ('broad' if _breadth_broad else 'neutral'),
@@ -4835,43 +4851,88 @@ def _ms_composites():
 _MS_COMP = _ms_composites()
 
 def _ms_match(req, comp):
-    if isinstance(req, bool):
-        return req == comp
+    """触发条件比对: 布尔项直接比真假, 字符串项(如 inflation='high')比标签。"""
     return req == comp
 
 def _ms_scores():
-    _sc = {}
+    """原型匹配明细: {id: {matched,total,ratio,matchedKeys,missingKeys,full}}。
+    按「匹配比例 + 是否全命中」评估, 而非原始命中数 —— 各原型条件数不同(1~4 条),
+    用原始计数会让「1 条件全中」与「4 条件中 1」同分, 跨原型不可比。
+    """
+    _out = {}
     for _a in MS.get('archetypes', []):
-        _trig = _a.get('trigger', {})
-        _s = 0
-        for _k, _v in _trig.items():
-            if _k in _MS_COMP and _ms_match(_v, _MS_COMP[_k]):
-                _s += 1
-        _sc[_a['id']] = _s
-    return _sc
+        _trig = _a.get('trigger', {}) or {}
+        _known = {k: v for k, v in _trig.items() if k in _MS_COMP}
+        _matched = [k for k, v in _known.items() if _ms_match(v, _MS_COMP[k])]
+        _missing = [k for k in _known if k not in _matched]
+        _total = len(_known)
+        _out[_a['id']] = {
+            'matched': len(_matched),
+            'total': _total,
+            'ratio': round(len(_matched) / _total, 3) if _total else 0.0,
+            'matchedKeys': _matched,
+            'missingKeys': _missing,
+            'full': bool(_total and len(_matched) == _total),
+        }
+    return _out
 
 _MS_SCORES = _ms_scores()
 _MS_ARCHS = MS.get('archetypes', [])
 _PRIO = {'high': 3, 'normal': 2, 'low': 1}
-# 先在「非 calm」原型中取最高分; calm 仅作为全 0 分时的回退, 避免其宽松条件(disagreement=false+inflation=low)抢分
+
+def _arch_rank(a):
+    """原型排序键: ① 全命中 ② 命中条数(证据数量) ③ 匹配比例 ④ 优先级 ⑤ 策展 rank 兜底。
+    先比「全命中」保证部分命中的原型不会压过条件齐全的原型; 再比命中条数,
+    使「2/2 命中」强于「1/1 命中」(两条独立确认 > 单条)。
+    """
+    s = _MS_SCORES.get(a['id'], {})
+    return (1 if s.get('full') else 0, s.get('matched', 0), s.get('ratio', 0),
+            _PRIO.get(a.get('priority', 'normal'), 2), -int(a.get('rank', 99)))
+
+# 主竞赛仅在「条件全部命中」的原型中进行; calm_goldilocks 条件最宽松, 排除在外,
+# 只在没有任何原型全命中时作为低张力基准回退。
 _MS_NON_CALM = [x for x in _MS_ARCHS if x['id'] != 'calm_goldilocks']
-_MS_BEST = None; _MS_BEST_S = -1
-for _a in _MS_NON_CALM:
-    _s = _MS_SCORES.get(_a['id'], 0)
-    _p = _PRIO.get(_a.get('priority', 'normal'), 2)
-    if _s > _MS_BEST_S or (_s == _MS_BEST_S and _MS_BEST is not None and _p > _PRIO.get(_MS_BEST.get('priority', 'normal'), 2)):
-        _MS_BEST = _a; _MS_BEST_S = _s
-if _MS_BEST_S <= 0:
+_MS_RANKED = sorted(_MS_NON_CALM, key=_arch_rank, reverse=True)
+_MS_BEST = _MS_RANKED[0] if (_MS_RANKED and _MS_SCORES.get(_MS_RANKED[0]['id'], {}).get('full')) else None
+_MS_RUNNER = _MS_RANKED[1] if _MS_BEST and len(_MS_RANKED) > 1 else None
+if _MS_BEST is None:
     _calm = next((x for x in _MS_ARCHS if x['id'] == 'calm_goldilocks'), None)
-    if _calm:
-        _MS_BEST = _calm; _MS_BEST_S = _MS_SCORES.get('calm_goldilocks', 0)
-    elif MS.get('dominant'):
-        _MS_BEST = None   # 全部 0 分且无 calm -> 回退策展 dominant
+    if _calm and _MS_SCORES.get('calm_goldilocks', {}).get('full'):
+        _MS_BEST = _calm
+    # 全部未全命中且无 calm -> 保持 None, 回退策展 dominant
+
+# ---------- 情景排序与激活 (依赖主导矛盾, 故置于其后) ----------
+# 排序键: ① 条件全部满足 ② 与主导矛盾同源 ③ 尾部情景优先于基准 ④ 触发比例 ⑤ 触发数
+# 旧实现按列表顺序先检查 baseline 并 break —— 基准情景只要自身 N/N 就抢占 activeScenario,
+# 即使尾部情景同样 N/N, 面板会出现「主导矛盾=通胀再燃 / 情景判定=金发姑娘」的自相矛盾。
+# 现规则: (a) 只有「条件全部满足」才算达成, 否则返回空并由前端呈现"未达成 + 最接近者";
+#         (b) 同为达成时优先与主导矛盾同源的情景(原型↔情景的对应关系写在 macro_signal.json 的 archetype.scenarioId),
+#             使两层判定不会互相打脸; (c) 仍并列时由列表顺序兜底, 但并列项会经 scenarioMeta.fullIds 显式暴露, 可审计。
+_MS_ARCH2SC = {_a['id']: _a['scenarioId'] for _a in _MS_ARCHS if _a.get('scenarioId')}
+_dom_sc_id = _MS_ARCH2SC.get(_MS_BEST['id']) if _MS_BEST else None
+
+def _sc_rank(s):
+    return (1 if s.get('fullTriggered') else 0,
+            1 if (s.get('id') == _dom_sc_id) else 0,
+            0 if s.get('baseline') else 1,
+            s.get('matchRatio', 0), s.get('triggeredCount', 0))
+
+_ms_ranked = sorted(_ms_scenarios, key=_sc_rank, reverse=True)
+_ms_best_sc = _ms_ranked[0] if _ms_ranked else None
+# 只有「条件全部满足」才判定为当前情景; 否则返回 None, 前端按"未达成 + 最接近者"呈现
+_ms_active = _ms_best_sc['id'] if (_ms_best_sc and _ms_best_sc.get('fullTriggered')) else None
+_ms_near = _ms_best_sc['id'] if _ms_best_sc else None
+# 全部达成的情景 id (可 >1, 表示多个路径同时满足阈值; 前端据此标注"并列")
+_ms_full_ids = [s['id'] for s in _ms_ranked if s.get('fullTriggered')]
 
 if MS.get('manualOverride') and MS.get('dominant'):
     _MS_DOMINANT = MS['dominant']; _MS_SOURCE = 'override'
 elif _MS_BEST:
-    _MS_DOMINANT = {'title': _MS_BEST['title'], 'keyTension': _MS_BEST['keyTension'], 'body': _MS_BEST['body']}
+    _MS_DOMINANT = {_k: _MS_BEST[_k] for _k in ('title', 'keyTension', 'body') if _k in _MS_BEST}
+    # 结构化字段 (结论 / 逻辑链 / 确认点 / 证伪点) 供前端突出重点; 缺失时前端自动降级为纯长文
+    for _k in ('core', 'chain', 'confirm', 'falsify'):
+        if _MS_BEST.get(_k):
+            _MS_DOMINANT[_k] = _MS_BEST[_k]
     _MS_SOURCE = 'auto'
 else:
     _MS_DOMINANT = MS.get('dominant', {}); _MS_SOURCE = 'curated'
@@ -4884,8 +4945,27 @@ DATA['macroSignal'] = {
     'dominantMeta': {
         'source': _MS_SOURCE,
         'archetypeId': (_MS_BEST['id'] if _MS_BEST else None),
+        'archetypeTitle': (_MS_BEST.get('title') if _MS_BEST else None),
+        'priority': (_MS_BEST.get('priority') if _MS_BEST else None),
         'composites': _MS_COMP,
+        # 全原型匹配明细 (matched/total/ratio/matchedKeys/missingKeys/full) —— 判定过程可审计
         'archetypeScores': _MS_SCORES,
+        'runnerUpId': (_MS_RUNNER['id'] if (_MS_BEST and _MS_RUNNER) else None),
+        'runnerUpScore': (_MS_SCORES.get(_MS_RUNNER['id']) if (_MS_BEST and _MS_RUNNER) else None),
+    },
+    'scenarioMeta': {
+        'activeId': _ms_active,
+        'nearestId': _ms_near,
+        'basis': ('无情景条件全部满足, 展示最接近者' if not _ms_active
+                  else (('尾部情景条件全部满足' if not _ms_best_sc.get('baseline') else '基准情景条件全部满足')
+                        + ('，且与主导矛盾同源' if (_ms_best_sc.get('id') == _dom_sc_id) else '')
+                        + ('；另有 %d 个情景同样达成' % (len(_ms_full_ids) - 1) if len(_ms_full_ids) > 1 else ''))),
+        'sameSourceAsDominant': bool(_ms_active and _ms_best_sc and _ms_best_sc.get('id') == _dom_sc_id),
+        'fullIds': _ms_full_ids,
+        'ranked': [{'id': _s['id'], 'label': _s.get('label'), 'baseline': bool(_s.get('baseline')),
+                    'triggered': _s['triggeredCount'], 'total': _s['triggerTotal'],
+                    'ratio': _s['matchRatio'], 'full': _s['fullTriggered'],
+                    'sameSourceAsDominant': bool(_s['id'] == _dom_sc_id)} for _s in _ms_ranked],
     },
     'consensus': MS.get('consensus', []),
     'divergence': MS.get('divergence', []),
@@ -4893,7 +4973,11 @@ DATA['macroSignal'] = {
     'anchors': _ms_anchors,
     'activeScenario': _ms_active,
 }
-print('[gen_datajs] macroSignal section OK (dominant source=%s, archetype=%s)' % (_MS_SOURCE, (_MS_BEST['id'] if _MS_BEST else 'curated')), file=sys.stderr, flush=True)
+print('[gen_datajs] macroSignal OK (dominant=%s/%s%s, scenario=%s/%s, full=%s)'
+      % (_MS_SOURCE, (_MS_BEST['id'] if _MS_BEST else 'curated'),
+         ('(+%s)' % _MS_RUNNER['id']) if _MS_RUNNER else '',
+         _ms_active, _ms_near, ','.join(_ms_full_ids) or '-'),
+      file=sys.stderr, flush=True)
 
 # ==================== 市场定位 (谁在动 / 定价到什么程度) ====================
 # P0-P1: CFTC 投机净持仓(谁) + 期限溢价 ACM(10Y拆解) + SLOOS(信贷领先) + NFCI分项(压力定位)

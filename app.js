@@ -2978,27 +2978,86 @@ function renderMacroSignal(c) {
     ? '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#e8ecff;color:#4361ee;">✍️ 策展覆盖</span>'
     : '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#e6f6ee;color:#1d9e75;">🔄 数据自动判定</span>';
 
-  // 主导矛盾
+  // 主导矛盾 (hero): 一句话结论(core) → 逻辑链(chain) → 确认/证伪 → 完整论证(折叠)
   const dom = d.dominant || {};
-  h += '<div style="margin:6px 0 18px;padding:18px 20px;border-radius:12px;background:#15131f;color:#fff;border:1px solid #3a2f6b;">';
+  h += '<div style="margin:6px 0 14px;padding:20px 22px;border-radius:12px;background:#15131f;color:#fff;border:1px solid #3a2f6b;">';
   h += '<div style="font-size:12px;color:#b9a8ff;letter-spacing:.5px;margin-bottom:8px;">主导矛盾 · ' + (dom.keyTension || '') + '</div>';
-  h += '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">' + (dom.title || '') + '</div>';
-  h += '<div style="font-size:13px;line-height:1.8;color:#cfc7e6;">' + (dom.body || '') + '</div>';
+  h += '<div style="font-size:17px;font-weight:700;line-height:1.5;margin-bottom:14px;">' + (dom.title || '') + '</div>';
+  if (dom.core) {
+    h += '<div style="display:flex;gap:11px;align-items:flex-start;background:rgba(185,168,255,.13);border-left:3px solid #b9a8ff;border-radius:0 8px 8px 0;padding:11px 14px;margin-bottom:16px;">'
+      + '<div style="font-size:11px;font-weight:700;color:#b9a8ff;white-space:nowrap;padding-top:3px;letter-spacing:.5px;">核心结论</div>'
+      + '<div style="font-size:13.5px;line-height:1.75;color:#f0ecff;">' + dom.core + '</div></div>';
+  }
+  if (dom.chain && dom.chain.length) {
+    h += '<div style="font-size:11px;font-weight:700;color:#8f80d9;letter-spacing:.5px;margin-bottom:8px;">逻辑链</div>';
+    h += '<div style="border-left:2px solid #3a2f6b;margin-left:5px;padding-left:15px;">';
+    dom.chain.forEach(function (t) {
+      h += '<div style="position:relative;font-size:12.5px;line-height:1.75;color:#cfc7e6;padding:4px 0;">'
+        + '<span style="position:absolute;left:-20px;top:10px;width:8px;height:8px;border-radius:50%;background:#7f77dd;box-shadow:0 0 0 3px #15131f;"></span>'
+        + t + '</div>';
+    });
+    h += '</div>';
+  }
+  const _domList = function (arr, colFg, bullet) {
+    return (arr || []).map(function (t) {
+      return '<div style="font-size:11.5px;line-height:1.7;color:' + colFg + ';padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:' + bullet + ';">·</span>' + t + '</div>';
+    }).join('');
+  };
+  if ((dom.confirm && dom.confirm.length) || (dom.falsify && dom.falsify.length)) {
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">';
+    h += '<div style="background:rgba(29,158,117,.13);border:1px solid rgba(29,158,117,.38);border-radius:8px;padding:11px 13px;">'
+      + '<div style="font-size:11px;font-weight:700;color:#5ee0ad;margin-bottom:6px;">✓ 确认点（兑现则张力加固）</div>'
+      + _domList(dom.confirm, '#d9f7ea', '#5ee0ad') + '</div>';
+    h += '<div style="background:rgba(224,90,90,.13);border:1px solid rgba(224,90,90,.38);border-radius:8px;padding:11px 13px;">'
+      + '<div style="font-size:11px;font-weight:700;color:#ff9c9c;margin-bottom:6px;">✕ 证伪点（兑现则该原型退位）</div>'
+      + _domList(dom.falsify, '#ffe0e0', '#ff9c9c') + '</div>';
+    h += '</div>';
+  }
+  if (dom.body) {
+    h += '<details style="margin-top:15px;"><summary style="cursor:pointer;font-size:11.5px;color:#8f80d9;outline:none;">展开完整论证</summary>'
+      + '<div style="font-size:12.5px;line-height:1.85;color:#bfb6d9;margin-top:9px;padding-top:10px;border-top:1px dashed #3a2f6b;">' + dom.body + '</div></details>';
+  }
   h += '</div>';
-  h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;">' + srcBadge + compChips
-     + (meta.archetypeId ? ' <span style="font-size:11px;color:#9ca3af;">原型: ' + meta.archetypeId + '</span>' : '') + '</div>';
 
-  // 当前情景判定
-  const act = (d.scenarios || []).find(function (s) { return s.id === d.activeScenario; });
-  h += sectionH('当前情景判定', act ? ('最匹配：' + act.label + ' · ' + act.desc) : '数据不足，无法自动判定');
-  const scHtml = (d.scenarios || []).map(function (s) {
-    const active = s.id === d.activeScenario;
+  const _ruFull = meta.runnerUpScore && meta.runnerUpScore.full;
+  h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;">' + srcBadge + compChips
+     + (meta.archetypeId ? ' <span style="font-size:11px;color:#9ca3af;">原型: ' + meta.archetypeId
+          + (meta.runnerUpId ? '（次席 ' + meta.runnerUpId + (_ruFull ? '，亦条件全命中 → 按策展序排位' : '') + '）' : '') + '</span>' : '') + '</div>';
+
+  // 情景路径判定 (按达成进度排序; 无全达成者时展示最接近者)
+  const sm = d.scenarioMeta || {};
+  const scById = {};
+  (d.scenarios || []).forEach(function (s) { scById[s.id] = s; });
+  const activeId = sm.activeId || d.activeScenario || null;
+  const fullIds = sm.fullIds || [];
+  const ranked = sm.ranked || (d.scenarios || []).map(function (s) {
+    return { id: s.id, label: s.label, baseline: s.baseline, triggered: (s.triggeredCount || 0), total: (s.triggerTotal || (s.triggers || []).length), ratio: s.matchRatio || 0, full: s.fullTriggered };
+  });
+  const act = scById[activeId];
+  h += sectionH('情景路径判定', sm.basis || (act ? ('最匹配：' + act.label) : '数据不足，无法自动判定'));
+  if (!activeId) {
+    h += '<div style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #f59e0b;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#92400e;line-height:1.7;">'
+      + '⚠️ <b>当前没有任何情景的条件被全部满足</b>——下表按触发进度排序，仅展示最接近者，不代表情景已确立。</div>';
+  }
+  const scHtml = ranked.map(function (r) {
+    const s = scById[r.id] || {};
+    const isActive = (r.id === activeId);
+    const isTie = r.full && fullIds.length > 1 && !isActive;
+    const barCol = r.full ? '#4361ee' : (r.ratio >= 0.5 ? '#f59e0b' : '#d1d5db');
     const trigHtml = (s.triggers || []).map(function (t) {
       const st = (s.triggerStatus && s.triggerStatus[t]) || 'unknown';
       return '<span style="display:inline-flex;align-items:center;gap:5px;margin:3px 6px 3px 0;font-size:11px;color:#374151;">' + pill(st) + '<span>' + t + '</span></span>';
     }).join('');
-    return '<div style="background:' + (active ? '#fff' : '#fafafa') + ';border:1px solid ' + (active ? '#4361ee' : '#e5e7eb') + ';border-radius:10px;padding:14px;' + (active ? 'box-shadow:0 2px 10px rgba(67,97,238,.15)' : '') + '">'
-      + '<div style="font-size:14px;font-weight:600;color:' + (active ? '#4361ee' : '#1a1d29') + ';margin-bottom:4px;">' + s.label + (s.tail ? ' ⚠️' : '') + '</div>'
+    let badges = '';
+    if (isActive) badges += '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:#e8ecff;color:#4361ee;margin-left:6px;">当前</span>';
+    if (isTie) badges += '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:#fef3e2;color:#b45309;margin-left:6px;">同样达成</span>';
+    if (isActive && r.sameSourceAsDominant) badges += '<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;background:#e6f6ee;color:#1d9e75;margin-left:6px;">与主导矛盾同源</span>';
+    return '<div style="background:' + (isActive ? '#fff' : '#fafafa') + ';border:1px solid ' + (isActive ? '#4361ee' : '#e5e7eb') + ';border-radius:10px;padding:14px;' + (isActive ? 'box-shadow:0 2px 10px rgba(67,97,238,.15)' : '') + '">'
+      + '<div style="font-size:14px;font-weight:600;color:' + (isActive ? '#4361ee' : '#1a1d29') + ';margin-bottom:4px;">' + (r.label || s.label || '') + (s.tail ? ' ⚠️' : '') + badges + '</div>'
+      + '<div style="display:flex;align-items:center;gap:9px;margin:7px 0 8px;">'
+      +   '<div style="flex:1;height:5px;background:#eef0f4;border-radius:3px;overflow:hidden;"><div style="width:' + Math.round((r.ratio || 0) * 100) + '%;height:100%;background:' + barCol + ';"></div></div>'
+      +   '<div style="font-size:11px;font-weight:600;color:' + (r.full ? '#4361ee' : '#6b7280') + ';white-space:nowrap;">' + r.triggered + ' / ' + r.total + (r.full ? ' 已达成' : '') + '</div>'
+      + '</div>'
       + '<div style="font-size:12px;color:#6b7280;margin-bottom:8px;line-height:1.6;">' + (s.desc || '') + '</div>'
       + '<div>' + trigHtml + '</div>'
       + (s.next ? '<div style="font-size:11px;color:#7f77dd;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;line-height:1.6;"><b style="color:#5b4fd1;">演化方向 →</b> ' + s.next + '</div>' : '')
