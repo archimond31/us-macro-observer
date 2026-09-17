@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-09-17 05:51
+ * 生成时间: 2026-09-17 06:20
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-09-17 05:51 (官方数据, 自动更新)",
+    "lastUpdated": "2026-09-17 06:20 (官方数据, 自动更新)",
     "dataAsOf": "2026-09-16",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,7 +17,7 @@ const DATA = {
     "name": "风险偏好",
     "signal": "risk-on",
     "confidence": "高置信",
-    "description": "10Y 美债 5.00% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.85% (分位 100), 而 HY 整体 2.76%。油价 (WTI 101.81) 与波动率 (VIX 17.71) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 5.00% 处于近一年 100 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 10.85% (分位 100), 而 HY 整体 2.76%。油价 (WTI 101.30) 与波动率 (VIX 17.71) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "keyAlerts": [
@@ -45,7 +45,7 @@ const DATA = {
       },
       {
         "name": "美元/日元",
-        "value": 155.76,
+        "value": 155.64,
         "unit": "",
         "threshold": 160.0,
         "dir": "up",
@@ -56,36 +56,36 @@ const DATA = {
       },
       {
         "name": "WTI 原油",
-        "value": 101.81,
+        "value": 101.3,
         "unit": "$",
         "threshold": 90.0,
         "dir": "up",
         "label": "$90 能源冲击线",
         "meaning": "能源冲击确认, 通胀预期与利率进一步上行",
         "status": "triggered",
-        "distPct": 13.1
+        "distPct": 12.6
       },
       {
         "name": "WTI 原油",
-        "value": 101.81,
+        "value": 101.3,
         "unit": "$",
         "threshold": 100.0,
         "dir": "up",
         "label": "$100 心理大关",
         "meaning": "供给冲击极端化, 全面通胀预期重定价",
         "status": "triggered",
-        "distPct": 1.8
+        "distPct": 1.3
       },
       {
         "name": "黄金",
-        "value": 4335.1,
+        "value": 4347.4,
         "unit": "$",
         "threshold": 5000.0,
         "dir": "up",
         "label": "$5,000 整数关口",
         "meaning": "避险/去美元化叙事强化, 实际利率见顶假设验证",
         "status": "ok",
-        "distPct": 13.3
+        "distPct": 13.1
       },
       {
         "name": "VIX",
@@ -122,21 +122,21 @@ const DATA = {
       },
       {
         "name": "美元指数",
-        "value": 100.28,
+        "value": 100.24,
         "unit": "",
         "threshold": 100.0,
         "dir": "up",
         "label": "100 心理关口",
         "meaning": "美元走强确认, 压制新兴市场与大宗",
         "status": "triggered",
-        "distPct": 0.3
+        "distPct": 0.2
       }
     ],
     "regime": {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 5.00% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 101.81 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 5.00% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 101.30 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -145,17 +145,17 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "WTI 原油周跌 -0.65%",
+        "title": "WTI 原油周跌 -1.15%",
         "meaning": "油价回落缓解通胀压力, 通胀预期下行空间打开。",
         "direction": "bullish"
       },
       {
-        "title": "布伦特原油周跌 -2.17%",
+        "title": "布伦特原油周跌 -2.69%",
         "meaning": "布伦特回落, 全球油价压力缓和。",
         "direction": "bullish"
       },
       {
-        "title": "黄金 -1.64% 下跌",
+        "title": "黄金 -1.36% 下跌",
         "meaning": "黄金回落说明实际利率上行或风险偏好修复, 资金从避险资产回流风险资产。",
         "direction": "bullish"
       }
@@ -403,18 +403,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,335.10",
-        "change": "-1.19%",
+        "value": "$4,347.40",
+        "change": "-0.91%",
         "dir": "down",
         "tag": "GC=F",
-        "percentile": 41,
+        "percentile": 42,
         "signal": "down",
-        "meaning": "当前位于近一年 41 分位",
+        "meaning": "当前位于近一年 42 分位",
         "changes": {
-          "d": "-1.19%",
-          "w": "-1.64%",
-          "m": "-1.93%",
-          "h6": "-11.46%"
+          "d": "-0.91%",
+          "w": "-1.36%",
+          "m": "-1.66%",
+          "h6": "-11.21%"
         },
         "sparkline": [
           4299.6001,
@@ -446,23 +446,23 @@ const DATA = {
           4351.8999,
           4332.7998,
           4387.5,
-          4335.1001
+          4347.3999
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$101.81",
-        "change": "-0.61%",
+        "value": "$101.30",
+        "change": "-1.10%",
         "dir": "down",
         "tag": "CL=F",
-        "percentile": 94,
+        "percentile": 93,
         "signal": "down",
-        "meaning": "当前位于近一年 94 分位",
+        "meaning": "当前位于近一年 93 分位",
         "changes": {
-          "d": "-0.61%",
-          "w": "-0.65%",
-          "m": "+19.86%",
-          "h6": "+5.70%"
+          "d": "-1.10%",
+          "w": "-1.15%",
+          "m": "+19.26%",
+          "h6": "+5.17%"
         },
         "sparkline": [
           77.29,
@@ -494,23 +494,23 @@ const DATA = {
           101.39,
           105.83,
           102.43,
-          101.81
+          101.3
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$105.29",
-        "change": "-0.51%",
+        "value": "$104.73",
+        "change": "-1.04%",
         "dir": "down",
         "tag": "BZ=F",
-        "percentile": 89,
+        "percentile": 88,
         "signal": "down",
-        "meaning": "当前位于近一年 89 分位",
+        "meaning": "当前位于近一年 88 分位",
         "changes": {
-          "d": "-0.51%",
-          "w": "-2.17%",
-          "m": "+15.68%",
-          "h6": "-1.95%"
+          "d": "-1.04%",
+          "w": "-2.69%",
+          "m": "+15.06%",
+          "h6": "-2.47%"
         },
         "sparkline": [
           82.49,
@@ -542,23 +542,23 @@ const DATA = {
           105.68,
           108.75,
           105.83,
-          105.29
+          104.73
         ]
       },
       {
         "label": "铜",
         "value": "6.53",
-        "change": "+1.51%",
+        "change": "+1.59%",
         "dir": "up",
         "tag": "HG=F",
         "percentile": 90,
         "signal": "up",
         "meaning": "当前位于近一年 90 分位",
         "changes": {
-          "d": "+1.51%",
-          "w": "+0.95%",
-          "m": "+0.71%",
-          "h6": "+17.55%"
+          "d": "+1.59%",
+          "w": "+1.03%",
+          "m": "+0.79%",
+          "h6": "+17.64%"
         },
         "sparkline": [
           6.687,
@@ -590,23 +590,23 @@ const DATA = {
           6.33,
           6.3685,
           6.4315,
-          6.5285
+          6.5335
         ]
       },
       {
         "label": "美元指数",
-        "value": "100.28",
-        "change": "-0.03%",
+        "value": "100.24",
+        "change": "-0.07%",
         "dir": "down",
         "tag": "DX-Y.NYB",
         "percentile": 88,
         "signal": "up",
         "meaning": "当前位于近一年 88 分位",
         "changes": {
-          "d": "-0.03%",
-          "w": "+1.20%",
-          "m": "+0.63%",
-          "h6": "+0.19%"
+          "d": "-0.07%",
+          "w": "+1.16%",
+          "m": "+0.59%",
+          "h6": "+0.15%"
         },
         "sparkline": [
           99.97,
@@ -638,23 +638,23 @@ const DATA = {
           99.46,
           99.65,
           100.31,
-          100.278
+          100.239
         ]
       },
       {
         "label": "美元/日元",
-        "value": "155.76",
-        "change": "+0.32%",
+        "value": "155.64",
+        "change": "+0.24%",
         "dir": "up",
         "tag": "USDJPY=X",
         "percentile": 29,
         "signal": "up",
         "meaning": "当前位于近一年 29 分位",
         "changes": {
-          "d": "+0.32%",
-          "w": "+1.42%",
-          "m": "-2.38%",
-          "h6": "-1.87%"
+          "d": "+0.24%",
+          "w": "+1.35%",
+          "m": "-2.45%",
+          "h6": "-1.94%"
         },
         "sparkline": [
           158.409,
@@ -686,7 +686,7 @@ const DATA = {
           153.424,
           154.385,
           155.266,
-          155.756
+          155.639
         ]
       },
       {
@@ -994,36 +994,36 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,335.10",
+        "current": "$4,347.40",
         "changes": {
-          "d": -1.19,
-          "w": -1.64,
-          "m": -1.93,
-          "h6": -11.46
+          "d": -0.91,
+          "w": -1.36,
+          "m": -1.66,
+          "h6": -11.21
         },
         "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$101.81",
+        "current": "$101.30",
         "changes": {
-          "d": -0.61,
-          "w": -0.65,
-          "m": 19.86,
-          "h6": 5.7
+          "d": -1.1,
+          "w": -1.15,
+          "m": 19.26,
+          "h6": 5.17
         },
-        "meaning": "半年 +6% 但近周转弱——顶部预警"
+        "meaning": "半年 +5% 但近周转弱——顶部预警"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$105.29",
+        "current": "$104.73",
         "changes": {
-          "d": -0.51,
-          "w": -2.17,
-          "m": 15.68,
-          "h6": -1.95
+          "d": -1.04,
+          "w": -2.69,
+          "m": 15.06,
+          "h6": -2.47
         },
         "meaning": "半年 -2% 但近周转弱——顶部预警"
       },
@@ -1032,34 +1032,34 @@ const DATA = {
         "unit": "%",
         "current": "6.53",
         "changes": {
-          "d": 1.51,
-          "w": 0.95,
-          "m": 0.71,
-          "h6": 17.55
+          "d": 1.59,
+          "w": 1.03,
+          "m": 0.79,
+          "h6": 17.64
         },
         "meaning": "半年 +18% 的上升趋势中, 近月 +1% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "100.28",
+        "current": "100.24",
         "changes": {
-          "d": -0.03,
-          "w": 1.2,
-          "m": 0.63,
-          "h6": 0.19
+          "d": -0.07,
+          "w": 1.16,
+          "m": 0.59,
+          "h6": 0.15
         },
         "meaning": "半年 +0% 的上升趋势中, 近月 +1% 仍在加速"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "155.76",
+        "current": "155.64",
         "changes": {
-          "d": 0.32,
-          "w": 1.42,
-          "m": -2.38,
-          "h6": -1.87
+          "d": 0.24,
+          "w": 1.35,
+          "m": -2.45,
+          "h6": -1.94
         },
         "meaning": "半年 -2% 但近月转弱——底部可能形成"
       },
@@ -1163,43 +1163,43 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,335.10",
-        "change": "-1.19%",
+        "price": "$4,347.40",
+        "change": "-0.91%",
         "dir": "down"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$101.81",
-        "change": "-0.61%",
+        "price": "$101.30",
+        "change": "-1.10%",
         "dir": "down"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$105.29",
-        "change": "-0.51%",
+        "price": "$104.73",
+        "change": "-1.04%",
         "dir": "down"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
         "price": "6.53",
-        "change": "+1.51%",
+        "change": "+1.59%",
         "dir": "up"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "100.28",
-        "change": "-0.03%",
+        "price": "100.24",
+        "change": "-0.07%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "155.76",
-        "change": "+0.32%",
+        "price": "155.64",
+        "change": "+0.24%",
         "dir": "up"
       },
       {
@@ -1366,7 +1366,7 @@ const DATA = {
           101.39,
           105.83,
           102.43,
-          101.81
+          101.3
         ],
         "Gold": [
           4299.6001,
@@ -1398,7 +1398,7 @@ const DATA = {
           4351.8999,
           4332.7998,
           4387.5,
-          4335.1001
+          4347.3999
         ],
         "Copper": [
           6.687,
@@ -1430,7 +1430,7 @@ const DATA = {
           6.33,
           6.3685,
           6.4315,
-          6.5285
+          6.5335
         ],
         "BTC": [
           64625.4,
@@ -7936,7 +7936,7 @@ const DATA = {
           17.06,
           16.54,
           18.01,
-          16.6
+          16.93
         ],
         "实际利率": [
           0.0,
@@ -8444,7 +8444,7 @@ const DATA = {
           2.67,
           2.87,
           3.55,
-          3.52
+          3.48
         ],
         "避险 VIX": [
           0.0,
@@ -8956,9 +8956,9 @@ const DATA = {
         ]
       },
       "current": {
-        "黄金": "$4,335",
+        "黄金": "$4,347",
         "实际利率": "2.62%",
-        "美元指数": "100.3",
+        "美元指数": "100.2",
         "避险 VIX": "17.7",
         "通胀预期 BEI": "2.33%"
       },
@@ -9215,7 +9215,7 @@ const DATA = {
           "$4,352",
           "$4,333",
           "$4,388",
-          "$4,335"
+          "$4,347"
         ],
         "实际利率": [
           "1.68%",
@@ -9723,7 +9723,7 @@ const DATA = {
           "99.5",
           "99.7",
           "100.3",
-          "100.3"
+          "100.2"
         ],
         "避险 VIX": [
           "15.7",
@@ -10487,7 +10487,7 @@ const DATA = {
           4351.89990234375,
           4332.7998046875,
           4387.5,
-          4335.10009765625
+          4347.39990234375
         ],
         "实际利率": [
           1.68,
@@ -10995,7 +10995,7 @@ const DATA = {
           99.45999908447266,
           99.6500015258789,
           100.30999755859375,
-          100.27799987792969
+          100.23899841308594
         ],
         "避险 VIX": [
           15.720000267028809,
@@ -22433,7 +22433,7 @@ const DATA = {
       "asOf": "2026-09-17",
       "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)"
     },
-    "generatedAt": "2026-09-17 05:51",
+    "generatedAt": "2026-09-17 06:20",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -25826,7 +25826,7 @@ const DATA = {
     "priceImplied": {
       "goldRealCorr": -0.19101635835613295,
       "stockBondCorr": 0.29917577861245814,
-      "goldUsdCorr": -0.47286187897577114,
+      "goldUsdCorr": -0.4725567102788498,
       "realizedVol": 9.6,
       "vixImplRealGap": 8.1,
       "curveSlope": 33.0
@@ -25839,21 +25839,21 @@ const DATA = {
           "a": "AI 算力核心 (芯片/基础设施)",
           "b": "AI 光模块/网络 (Lumentum、Coherent)",
           "factors": [
-            "rate",
-            "growth"
+            "growth",
+            "rate"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌增长强劲"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行"
         },
         {
           "a": "黄金",
           "b": "AI 高估值标的 (回避)",
           "factors": [
-            "rate",
-            "infl"
+            "infl",
+            "rate"
           ],
           "weight": 4,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌通胀回升, 赌利率下行"
         },
         {
           "a": "AI 算力核心 (芯片/基础设施)",
@@ -26459,15 +26459,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "认知大模型 + 行业应用",
             "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-            "price": 38.619998931884766,
+            "price": 38.47999954223633,
             "ch": {
-              "d": -0.72,
-              "w": -1.38,
-              "m": -3.01,
-              "h6": -25.13
+              "d": -1.08,
+              "w": -1.74,
+              "m": -3.37,
+              "h6": -25.4
             },
             "scores": {
-              "momentum": 39.199999999999996,
+              "momentum": 38.651,
               "valuation": 21,
               "growth": 50,
               "quality": 17,
@@ -27004,15 +27004,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 (代工)",
             "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
-            "price": 61.630001068115234,
+            "price": 61.380001068115234,
             "ch": {
-              "d": -1.12,
-              "w": -3.57,
-              "m": -0.32,
-              "h6": 18.38
+              "d": -1.52,
+              "w": -3.96,
+              "m": -0.73,
+              "h6": 17.9
             },
             "scores": {
-              "momentum": 53.798,
+              "momentum": 53.129,
               "valuation": 31,
               "growth": 97,
               "quality": 15,
@@ -27068,15 +27068,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 PCB",
             "productDir": "高速 PCB、交换机板、AI 服务器主板",
-            "price": 125.19999694824219,
+            "price": 124.41000366210938,
             "ch": {
-              "d": -2.03,
-              "w": -2.13,
-              "m": 10.4,
-              "h6": 37.58
+              "d": -2.65,
+              "w": -2.74,
+              "m": 9.7,
+              "h6": 36.71
             },
             "scores": {
-              "momentum": 69.782,
+              "momentum": 68.647,
               "valuation": 31,
               "growth": 94,
               "quality": 27,
@@ -27201,15 +27201,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器",
             "productDir": "AI 服务器、液冷整机柜",
-            "price": 70.12000274658203,
+            "price": 69.91999816894531,
             "ch": {
-              "d": -1.45,
-              "w": -0.44,
-              "m": -3.77,
-              "h6": 12.44
+              "d": -1.73,
+              "w": -0.72,
+              "m": -4.05,
+              "h6": 12.12
             },
             "scores": {
-              "momentum": 50.163,
+              "momentum": 49.703,
               "valuation": 31,
               "growth": 48,
               "quality": 7,
@@ -27284,7 +27284,7 @@ const DATA = {
           "scarcity": 68,
           "avgFundamental": 61,
           "avgValuation": 39,
-          "avgMomentum": 53,
+          "avgMomentum": 52,
           "avgAiValue": 49,
           "topPick": "CRWV",
           "valuePicks": [
@@ -27378,15 +27378,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "光模块 (800G)",
             "productDir": "800G 光模块、相干光模块",
-            "price": 429.2799987792969,
+            "price": 427.42999267578125,
             "ch": {
-              "d": 1.32,
-              "w": 4.47,
-              "m": 4.32,
-              "h6": 39.47
+              "d": 0.88,
+              "w": 4.02,
+              "m": 3.87,
+              "h6": 38.87
             },
             "scores": {
-              "momentum": 67.517,
+              "momentum": 66.752,
               "valuation": 32,
               "growth": 100,
               "quality": 54,
@@ -27509,15 +27509,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "光模块 (800G/1.6T)",
             "productDir": "800G/1.6T 光模块、硅光、LPO",
-            "price": 907.260009765625,
+            "price": 903.6199951171875,
             "ch": {
-              "d": -0.06,
-              "w": 1.93,
-              "m": 1.3,
-              "h6": 56.42
+              "d": -0.46,
+              "w": 1.52,
+              "m": 0.9,
+              "h6": 55.8
             },
             "scores": {
-              "momentum": 68.868,
+              "momentum": 68.158,
               "valuation": 32,
               "growth": 100,
               "quality": 45,
@@ -27659,7 +27659,7 @@ const DATA = {
           "scarcity": 78,
           "avgFundamental": 70,
           "avgValuation": 37,
-          "avgMomentum": 59,
+          "avgMomentum": 58,
           "avgAiValue": 52,
           "topPick": "LITE",
           "valuePicks": []
@@ -27823,15 +27823,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "HBM 存储 (全球领先)",
             "productDir": "HBM3E/4、DRAM、NAND",
-            "price": 1752000.0,
+            "price": 1742000.0,
             "ch": {
-              "d": -0.4,
-              "w": -5.45,
-              "m": 16.8,
-              "h6": 80.62
+              "d": -0.97,
+              "w": -5.99,
+              "m": 16.13,
+              "h6": 79.59
             },
             "scores": {
-              "momentum": 87.126,
+              "momentum": 85.99799999999999,
               "valuation": 65,
               "growth": 99,
               "quality": 70,
@@ -27890,15 +27890,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "存储 (HBM) + 代工 + 移动",
             "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-            "price": 253250.0,
+            "price": 252000.0,
             "ch": {
-              "d": -0.1,
-              "w": -5.86,
-              "m": 2.32,
-              "h6": 30.61
+              "d": -0.59,
+              "w": -6.32,
+              "m": 1.82,
+              "h6": 29.96
             },
             "scores": {
-              "momentum": 58.927,
+              "momentum": 58.098,
               "valuation": 61,
               "growth": 94,
               "quality": 42,
@@ -28212,15 +28212,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "x86 CPU + DCU (国产)",
             "productDir": "海光 CPU、深算 DCU (GPGPU)",
-            "price": 233.19000244140625,
+            "price": 231.7899932861328,
             "ch": {
-              "d": -0.81,
-              "w": 0.35,
-              "m": -10.22,
-              "h6": 0.77
+              "d": -1.4,
+              "w": -0.25,
+              "m": -10.76,
+              "h6": 0.17
             },
             "scores": {
-              "momentum": 41.173,
+              "momentum": 40.267,
               "valuation": 20,
               "growth": 94,
               "quality": 27,
@@ -28343,15 +28343,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "TC Bonder (HBM 封装设备)",
             "productDir": "TC Bonder、HBM 封装键合设备",
-            "price": 225750.0,
+            "price": 224500.0,
             "ch": {
-              "d": -0.11,
-              "w": -10.77,
-              "m": 2.15,
-              "h6": -25.0
+              "d": -0.66,
+              "w": -11.26,
+              "m": 1.58,
+              "h6": -25.42
             },
             "scores": {
-              "momentum": 40.127,
+              "momentum": 39.292,
               "valuation": 49,
               "growth": 34,
               "quality": 45,
@@ -28409,15 +28409,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 训练/推理芯片 (国产)",
             "productDir": "思元系列 AI 芯片、训练/推理卡",
-            "price": 1119.0,
+            "price": 1110.1400146484375,
             "ch": {
-              "d": -1.5,
-              "w": 7.2,
-              "m": 6.52,
-              "h6": 56.41
+              "d": -2.28,
+              "w": 6.35,
+              "m": 5.68,
+              "h6": 55.17
             },
             "scores": {
-              "momentum": 75.671,
+              "momentum": 74.203,
               "valuation": 20,
               "growth": 98,
               "quality": 34,
@@ -28636,7 +28636,7 @@ const DATA = {
           "scarcity": 88,
           "avgFundamental": 70,
           "avgValuation": 41,
-          "avgMomentum": 60,
+          "avgMomentum": 59,
           "avgAiValue": 53,
           "topPick": "NVDA",
           "valuePicks": [
@@ -29391,12 +29391,12 @@ const DATA = {
           "companyCount": 5,
           "totalMarketCap": 18273.3,
           "topMover": "300308.SZ",
-          "topMoverMomentum": 68.87,
+          "topMoverMomentum": 68.16,
           "flowScore": 54,
-          "flowSharePct": 32.6,
-          "avgMomentum": 59,
+          "flowSharePct": 32.5,
+          "avgMomentum": 58,
           "breadthPct": 40,
-          "capWeightedMomentum": 68,
+          "capWeightedMomentum": 67,
           "momentumAccel": 3.27,
           "valuationHeat": 63
         },
@@ -29408,11 +29408,11 @@ const DATA = {
           "topMover": "AMD",
           "topMoverMomentum": 98.81,
           "flowScore": 43,
-          "flowSharePct": 21.6,
-          "avgMomentum": 60,
+          "flowSharePct": 21.4,
+          "avgMomentum": 59,
           "breadthPct": 43,
-          "capWeightedMomentum": 57,
-          "momentumAccel": -0.68,
+          "capWeightedMomentum": 56,
+          "momentumAccel": -0.67,
           "valuationHeat": 59
         },
         {
@@ -29423,7 +29423,7 @@ const DATA = {
           "topMover": "CRM",
           "topMoverMomentum": 87.6,
           "flowScore": 38,
-          "flowSharePct": 17.2,
+          "flowSharePct": 17.4,
           "avgMomentum": 63,
           "breadthPct": 43,
           "capWeightedMomentum": 56,
@@ -29438,11 +29438,11 @@ const DATA = {
           "topMover": "DELL",
           "topMoverMomentum": 100,
           "flowScore": 32,
-          "flowSharePct": 12.6,
-          "avgMomentum": 53,
+          "flowSharePct": 12.5,
+          "avgMomentum": 52,
           "breadthPct": 29,
-          "capWeightedMomentum": 56,
-          "momentumAccel": -2.19,
+          "capWeightedMomentum": 55,
+          "momentumAccel": -2.17,
           "valuationHeat": 61
         },
         {
@@ -29453,7 +29453,7 @@ const DATA = {
           "topMover": "META",
           "topMoverMomentum": 70.15,
           "flowScore": 31,
-          "flowSharePct": 11.6,
+          "flowSharePct": 11.7,
           "avgMomentum": 57,
           "breadthPct": 33,
           "capWeightedMomentum": 55,
@@ -33079,32 +33079,176 @@ const DATA = {
   "macroSignal": {
     "asOf": "2026-09-17",
     "curatedDate": "2026-09",
-    "method": "信号分级框架：主导矛盾(数据自动选原型) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。主导矛盾由 gen_datajs.py 依据实时复合指标(债股背离/通胀压力/增长/流动性/广度)从 archetypes[] 自动选出原型；manualOverride=true 时改回使用下方 dominant 策展文案。锚点状态实时计算；序列缺失回退策展。2026-08-12 刷新：纳入经济 regime(滞胀组合: 劳动力37/通胀68/增长60)、利率熊陡47bp、非农-23K 转负、核心PCE 3.3%/超级核心3.8%、CoreWeave Q2 营收+112%/订单$1040B、WGC 央行购金 Q2 289吨(+62%)、中国央行21连增。 2026-08-19 刷新：核心CPI环比由-0.02%反弹至+0.22%(cpi_accel转on)；流动性由easy转tight(SOFR 3.66%>IORB 3.65%)；10Y-2Y由平重新熊陡至1bp；10Y 4.72距前高4.75仅3bp。 2026-08-27 刷新：主导矛盾仍为 inflation_reignite；disagreement 由 T→F、crypto_divergence/curve_bear_steep 转 off、breadth 由 narrow→broad、yields_high 仍 off(10Y 4.70)。 2026-09-03 刷新：inflation_reignite(score=1, 与 cb_gold 并列但 priority=high 胜出)；yields_high/curve_bear_steep 转 on、nfp_negative 由 unknown→on。 2026-09-10 刷新：inflation_reignite(score=1, 与 growth_rolling 并列, 按遍历顺序保留)；nfp_negative 由 on→off(8月非农+162K, 7月上修至+21K)、yields_high 由 on→off(10Y 4.78 距区间高 4.79 仅 1bp)、liquidity 转 neutral。 2026-09-17 刷新：主导矛盾仍为 inflation_reignite(自动判定 score=1，与 growth_rolling 并列；二者 priority 同为 high，按遍历顺序 + 同分不降级保留 inflation_reignite；calm_goldilocks 得 1 分但按设计仅作全 0 分回退、不参与主竞赛；manualOverride=false，面板由数据自动选原型)。本次是「利率暴力重定价 + 风险资产开始跟上」的一周，三项关键状态变化：(1) yields_high 由 off→on —— 10Y 由 4.78 升至 4.97(月 +34bp / 周 +19bp)，首度上破 4.90 并创 90 日区间新高(4.97 = 区间高)，2Y 同步升至 4.65(月 +50bp)、30Y 5.34，10Y 历史分位 100、实际利率 2.60%(100 分位)；(2) credit_widen 由 off→on —— HY OAS 由 2.68 走阔至 2.71(月 +4bp，21 分位)，CCC 10.81(100 分位，月 +69bp)，分层由最弱环节向 HY 指数层蔓延；(3) cpi_accel 维持 on —— 8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，9/11 已公布的确认点达成，核心 CPI 同比 2.4%、CPI 同比 3.4%、核心 PCE 3.34%。其余：curve_bear_steep 维持 on 但斜率由 41bp 收窄至 32bp(周内 2Y +28bp vs 10Y +19bp，短端领涨 = 近周实为熊平)，liquidity 由 neutral 转 easy(SOFR 3.62% < IORB 3.65%，净流动性 $5.87T/83 分位)，nfp_negative 维持 off，crypto_divergence 维持 off(BTC 60 日 +16.8% vs SPX +1.5%)。价格层面：SPX 7585.73(87 分位，月 -2.57%)、SOX 月 -10.0%、CRWV 月 -23.1%(高杠杆 AI 链条率先破位)、NVDA 月 -5.77%、ORCL 处 9 分位；VIX 由 15.72 升至 17.20(51 分位)、MOVE 83.71(93 分位)、OVX 61.73(73 分位)——自满开始修复但尚未破 20。能源冲击延伸至 Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位)，上周设定的「Brent 上破 $100」证伪线已达成。催化剂：9/15-16 FOMC+SEP(已召开，结果尚未进入数据链路)、9/30 的 8 月 PCE(含超级核心)、10/2 的 9 月非农。原型库本次未增删：现有 5 个原型中 inflation_reignite 仍最贴切且被数据进一步确认；「流动性 easy 与长端抛售并存」虽属新组合，但可用的触发维度(disagreement/inflation/growth/breadth)尚不足以支撑一个独立原型，故不新设。",
+    "method": "信号分级框架：主导矛盾(数据自动选原型) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。主导矛盾由 gen_datajs.py 依据实时复合指标(债股背离/通胀压力/增长/流动性/广度)从 archetypes[] 自动选出原型；manualOverride=true 时改回使用下方 dominant 策展文案。锚点状态实时计算；序列缺失回退策展。2026-08-12 刷新：纳入经济 regime(滞胀组合: 劳动力37/通胀68/增长60)、利率熊陡47bp、非农-23K 转负、核心PCE 3.3%/超级核心3.8%、CoreWeave Q2 营收+112%/订单$1040B、WGC 央行购金 Q2 289吨(+62%)、中国央行21连增。 2026-08-19 刷新：核心CPI环比由-0.02%反弹至+0.22%(cpi_accel转on)；流动性由easy转tight(SOFR 3.66%>IORB 3.65%)；10Y-2Y由平重新熊陡至1bp；10Y 4.72距前高4.75仅3bp。 2026-08-27 刷新：主导矛盾仍为 inflation_reignite；disagreement 由 T→F、crypto_divergence/curve_bear_steep 转 off、breadth 由 narrow→broad、yields_high 仍 off(10Y 4.70)。 2026-09-03 刷新：inflation_reignite(score=1, 与 cb_gold 并列但 priority=high 胜出)；yields_high/curve_bear_steep 转 on、nfp_negative 由 unknown→on。 2026-09-10 刷新：inflation_reignite(score=1, 与 growth_rolling 并列, 按遍历顺序保留)；nfp_negative 由 on→off(8月非农+162K, 7月上修至+21K)、yields_high 由 on→off(10Y 4.78 距区间高 4.79 仅 1bp)、liquidity 转 neutral。 2026-09-17 刷新：主导矛盾仍为 inflation_reignite(自动判定 score=1，与 growth_rolling 并列；二者 priority 同为 high，按遍历顺序 + 同分不降级保留 inflation_reignite；calm_goldilocks 得 1 分但按设计仅作全 0 分回退、不参与主竞赛；manualOverride=false，面板由数据自动选原型)。本次是「利率暴力重定价 + 风险资产开始跟上」的一周，三项关键状态变化：(1) yields_high 由 off→on —— 10Y 由 4.78 升至 4.97(月 +34bp / 周 +19bp)，首度上破 4.90 并创 90 日区间新高(4.97 = 区间高)，2Y 同步升至 4.65(月 +50bp)、30Y 5.34，10Y 历史分位 100、实际利率 2.60%(100 分位)；(2) credit_widen 由 off→on —— HY OAS 由 2.68 走阔至 2.71(月 +4bp，21 分位)，CCC 10.81(100 分位，月 +69bp)，分层由最弱环节向 HY 指数层蔓延；(3) cpi_accel 维持 on —— 8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，9/11 已公布的确认点达成，核心 CPI 同比 2.4%、CPI 同比 3.4%、核心 PCE 3.34%。其余：curve_bear_steep 维持 on 但斜率由 41bp 收窄至 32bp(周内 2Y +28bp vs 10Y +19bp，短端领涨 = 近周实为熊平)，liquidity 由 neutral 转 easy(SOFR 3.62% < IORB 3.65%，净流动性 $5.87T/83 分位)，nfp_negative 维持 off，crypto_divergence 维持 off(BTC 60 日 +16.8% vs SPX +1.5%)。价格层面：SPX 7585.73(87 分位，月 -2.57%)、SOX 月 -10.0%、CRWV 月 -23.1%(高杠杆 AI 链条率先破位)、NVDA 月 -5.77%、ORCL 处 9 分位；VIX 由 15.72 升至 17.20(51 分位)、MOVE 83.71(93 分位)、OVX 61.73(73 分位)——自满开始修复但尚未破 20。能源冲击延伸至 Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位)，上周设定的「Brent 上破 $100」证伪线已达成。催化剂：9/15-16 FOMC+SEP(已召开，结果尚未进入数据链路)、9/30 的 8 月 PCE(含超级核心)、10/2 的 9 月非农。原型库本次未增删：现有 5 个原型中 inflation_reignite 仍最贴切且被数据进一步确认；「流动性 easy 与长端抛售并存」虽属新组合，但可用的触发维度(disagreement/inflation/growth/breadth)尚不足以支撑一个独立原型，故不新设。 2026-09-17 逻辑链优化(本版)：(1) 原型判定改为按「条件全部命中 → 命中条数 → 匹配比例 → priority → 策展 rank」排序，跨原型可比(旧版按原始命中数，会令「1 条件全中」与「4 条件中 1」同分，且并列时由遍历顺序决定)；只有在条件全部命中的原型中才产生主导矛盾，部分命中不再降级上位。(2) 情景判定改为按「条件全部满足 → 与主导矛盾同源 → 尾部情景优先于基准 → 匹配比例 → 触发数」排序；只有条件全部满足才判 activeScenario，否则返回空并由前端呈现「未达成 + 最接近者」，修掉旧版「基准情景先于非基准被检查」导致「主导矛盾=通胀再燃 / 情景判定=金发姑娘」的面板自相矛盾。原型与情景路径的对应关系写在各自 archetype 的 scenarioId 字段(如 growth_rolling→growth_weak、calm_goldilocks→goldilocks)，两层判定因此不会互相打脸；多个情景同时达成时经 scenarioMeta.fullIds 显式暴露为「并列」。(3) 各原型与 dominant 新增结构化字段 core(一句话结论)/chain(编号逻辑链)/confirm(确认点)/falsify(证伪点)，前端据此突出重点，长文 body 折叠保留。(4) inflation 复合指标修正二态缺陷(旧 'mod' 分支不可达)，改用核心 CPI 末两点环比与 0.2%/0.15% 阈值判定；composites 另暴露 yieldsHigh/creditStress/cpiAccel 供审计。",
     "dominant": {
       "title": "通胀粘性 + 能源冲击：10Y 破 4.90 创区间新高，2 次加息定价不但没松动还在强化",
       "keyTension": "再通胀(服务粘性 + 能源冲击) vs 政策利率",
-      "body": "该原型本周由「假设」转为「双点确认」，且是本轮唯一被数据持续加固的张力。支点一(服务粘性)：8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%——这正是上周设定的确认标准；核心 PCE 同比 3.34%、超级核心 3.9%、CPI 同比 3.4%，经济 regime 维持「再通胀」高置信(通胀分项 82/100)。支点二(能源)：Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位，月 +24.0%)，上周「Brent 逼近 $100」已完成上破；OVX 61.73(73 分位)为供给冲击定价。支点三(政策定价强化)：短端 3M 4.11 / 6M 4.18 / 1Y 4.37 / 2Y 4.65，隐含未来 12 个月 0 次降息 / 2 次加息，terminal2y 由 4.37 升至 4.65，下次会议加息 25bp 概率 73.7%、维持 22.1%，鹰鸽积分 10(偏鹰)；fed 面板维持「收紧预期(2 次加息定价)」高置信 risk-off，风险评分「政策路径」90/100。传导侧本周首次落到实处：10Y 4.97(100 分位，月 +34bp，创区间新高)、30Y 5.34、实际利率 2.60%(100 分位)；SPX 月 -2.57%、SOX 月 -10.0%、CRWV 月 -23.1%、NVDA 月 -5.77%；VIX 17.20(由 15.72 抬升)、MOVE 83.71(93 分位)；信用端 HY OAS 由 2.68 走阔至 2.71(credit_widen 锚翻 on)、CCC 10.81(100 分位，月 +69bp)。仍未跟随的只有实体读数与指数层面的跌幅：衰退面板 6/100、初请 206K、Sahm 0.03、SPX 仅 87 分位。确认点：9/15-16 FOMC+SEP 点阵图是否坐实 2 次加息(已召开，结果待入数据) → 9/30 的 8 月 PCE(超级核心 <3.5% vs >4%) → 10/2 的 9 月非农。证伪路径：Brent 回落至 $95 下方 + 核心环比回到 0.1% 以下 + 10Y 回落至 4.75 下方，三者同时出现才算该原型退位。"
+      "body": "该原型本周由「假设」转为「双点确认」，且是本轮唯一被数据持续加固的张力。支点一(服务粘性)：8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%——这正是上周设定的确认标准；核心 PCE 同比 3.34%、超级核心 3.9%、CPI 同比 3.4%，经济 regime 维持「再通胀」高置信(通胀分项 82/100)。支点二(能源)：Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位，月 +24.0%)，上周「Brent 逼近 $100」已完成上破；OVX 61.73(73 分位)为供给冲击定价。支点三(政策定价强化)：短端 3M 4.11 / 6M 4.18 / 1Y 4.37 / 2Y 4.65，隐含未来 12 个月 0 次降息 / 2 次加息，terminal2y 由 4.37 升至 4.65，下次会议加息 25bp 概率 73.7%、维持 22.1%，鹰鸽积分 10(偏鹰)；fed 面板维持「收紧预期(2 次加息定价)」高置信 risk-off，风险评分「政策路径」90/100。传导侧本周首次落到实处：10Y 4.97(100 分位，月 +34bp，创区间新高)、30Y 5.34、实际利率 2.60%(100 分位)；SPX 月 -2.57%、SOX 月 -10.0%、CRWV 月 -23.1%、NVDA 月 -5.77%；VIX 17.20(由 15.72 抬升)、MOVE 83.71(93 分位)；信用端 HY OAS 由 2.68 走阔至 2.71(credit_widen 锚翻 on)、CCC 10.81(100 分位，月 +69bp)。仍未跟随的只有实体读数与指数层面的跌幅：衰退面板 6/100、初请 206K、Sahm 0.03、SPX 仅 87 分位。确认点：9/15-16 FOMC+SEP 点阵图是否坐实 2 次加息(已召开，结果待入数据) → 9/30 的 8 月 PCE(超级核心 <3.5% vs >4%) → 10/2 的 9 月非农。证伪路径：Brent 回落至 $95 下方 + 核心环比回到 0.1% 以下 + 10Y 回落至 4.75 下方，三者同时出现才算该原型退位。",
+      "core": "通胀粘性、能源冲击、政策定价强化三点确认；张力已从「资产未跟随」推进到「资产开始跟随，但跟随得极不均匀」。",
+      "chain": [
+        "① 触发(服务粘性)：8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，cpi_accel 维持 on；核心 PCE 同比 3.34%、超级核心 3.9%",
+        "② 放大(能源冲击)：Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位，月 +24.0%)，OVX 61.73 为供给冲击定价",
+        "③ 政策(无回旋余地)：短端 3M 4.11 / 6M 4.18 / 1Y 4.37 / 2Y 4.65，隐含未来 12 个月 0 次降息 / 2 次加息；下次会议加息 25bp 概率 73.7%，鹰鸽积分 10(偏鹰)",
+        "④ 传导(首次落到实处)：10Y 4.97(100 分位，创区间新高) → SOX 月 -10.0%、CRWV 月 -23.1%、NVDA 月 -5.77%；HY OAS 由 2.68 走阔至 2.71(credit_widen 翻 on)、CCC 10.81(100 分位)"
+      ],
+      "confirm": [
+        "9/30 的 8 月 PCE：超级核心 <3.5% 还是 >4%",
+        "10Y 是否上破 5.0；Brent 是否站上 $110",
+        "9/15-16 FOMC+SEP 点阵图是否坐实 2 次加息"
+      ],
+      "falsify": [
+        "Brent 回落至 $95 下方",
+        "核心环比回到 0.1% 以下",
+        "10Y 回落至 4.75 下方",
+        "以上三者同时出现，该原型才退位"
+      ]
     },
     "dominantMeta": {
       "source": "auto",
       "archetypeId": "inflation_reignite",
+      "archetypeTitle": "通胀粘性 + 能源冲击：10Y 破 4.90 创区间新高，2 次加息定价不但没松动还在强化",
+      "priority": "high",
       "composites": {
         "disagreement": false,
         "yldUp": true,
         "eqUp": false,
+        "yieldsHigh": true,
+        "creditStress": true,
+        "cpiAccel": true,
         "inflation": "high",
         "growth": "weak",
         "liquidity": "tight",
         "breadth": "narrow"
       },
       "archetypeScores": {
-        "bond_vs_equity": 0,
-        "inflation_reignite": 1,
-        "growth_rolling": 1,
-        "ai_valuation": 0,
-        "cb_gold": 0,
-        "calm_goldilocks": 1
+        "bond_vs_equity": {
+          "matched": 0,
+          "total": 1,
+          "ratio": 0.0,
+          "matchedKeys": [],
+          "missingKeys": [
+            "disagreement"
+          ],
+          "full": false
+        },
+        "inflation_reignite": {
+          "matched": 1,
+          "total": 1,
+          "ratio": 1.0,
+          "matchedKeys": [
+            "inflation"
+          ],
+          "missingKeys": [],
+          "full": true
+        },
+        "growth_rolling": {
+          "matched": 1,
+          "total": 1,
+          "ratio": 1.0,
+          "matchedKeys": [
+            "growth"
+          ],
+          "missingKeys": [],
+          "full": true
+        },
+        "ai_valuation": {
+          "matched": 0,
+          "total": 1,
+          "ratio": 0.0,
+          "matchedKeys": [],
+          "missingKeys": [
+            "growth"
+          ],
+          "full": false
+        },
+        "cb_gold": {
+          "matched": 0,
+          "total": 1,
+          "ratio": 0.0,
+          "matchedKeys": [],
+          "missingKeys": [
+            "breadth"
+          ],
+          "full": false
+        },
+        "calm_goldilocks": {
+          "matched": 1,
+          "total": 4,
+          "ratio": 0.25,
+          "matchedKeys": [
+            "disagreement"
+          ],
+          "missingKeys": [
+            "inflation",
+            "growth",
+            "breadth"
+          ],
+          "full": false
+        }
+      },
+      "runnerUpId": "growth_rolling",
+      "runnerUpScore": {
+        "matched": 1,
+        "total": 1,
+        "ratio": 1.0,
+        "matchedKeys": [
+          "growth"
+        ],
+        "missingKeys": [],
+        "full": true
       }
+    },
+    "scenarioMeta": {
+      "activeId": "inflation_reignite",
+      "nearestId": "inflation_reignite",
+      "basis": "尾部情景条件全部满足，且与主导矛盾同源；另有 1 个情景同样达成",
+      "sameSourceAsDominant": true,
+      "fullIds": [
+        "inflation_reignite",
+        "growth_weak"
+      ],
+      "ranked": [
+        {
+          "id": "inflation_reignite",
+          "label": "② 通胀再燃(加息尾部风险)",
+          "baseline": false,
+          "triggered": 2,
+          "total": 2,
+          "ratio": 1.0,
+          "full": true,
+          "sameSourceAsDominant": true
+        },
+        {
+          "id": "growth_weak",
+          "label": "① 增长转弱(衰退式降息)",
+          "baseline": false,
+          "triggered": 2,
+          "total": 2,
+          "ratio": 1.0,
+          "full": true,
+          "sameSourceAsDominant": false
+        },
+        {
+          "id": "ai_roll",
+          "label": "③ AI 链条估值修正(盈利兑现缺口)",
+          "baseline": false,
+          "triggered": 0,
+          "total": 1,
+          "ratio": 0.0,
+          "full": false,
+          "sameSourceAsDominant": false
+        },
+        {
+          "id": "goldilocks",
+          "label": "④ 金发姑娘延续(基准)",
+          "baseline": true,
+          "triggered": 1,
+          "total": 2,
+          "ratio": 0.5,
+          "full": false,
+          "sameSourceAsDominant": false
+        }
+      ]
     },
     "consensus": [
       "通胀的两个确认点本周全部兑现，且方向一致：9/11 公布的 8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，cpi_accel 锚维持 on；CPI 同比 3.4%(与预期持平)、核心 CPI 同比 2.4%、核心 PCE 同比 3.34%、超级核心 3.9%(均处 100 分位)。能源侧同步升级：Brent $108.01(92 分位，月 +18.9%)、WTI $104.77(96 分位，月 +24.0%)，「Brent 上破 $100」由上周边际假设变为既成事实，OVX 61.73 已在为供给冲击定价。经济 regime 维持「再通胀」高置信(劳动力 59 / 通胀 82 / 增长 72)。共识表述从「收紧重启」进一步固化为「收紧已在传导」。",
@@ -33158,6 +33302,9 @@ const DATA = {
         ],
         "next": "触发锚由 0/2 变为 1/2：credit_widen 已转 on(HY OAS 由 2.68 走阔至 2.71，21 分位，月 +4bp)，equity_down 仍 off(SPX 7585.73 略高于 60 日均值 7581.73——仅 4 点余量，任一弱交易日即翻)。复合指标 growth=weak 现在同时有市场代理(SPX 月 -2.57%)与信用交叉确认两处支撑，这是该情景本周分量上升的原因。但实体侧没有任何许可：8 月非农 +162K(6 个月累计 +996K)、失业率 4.1%、初请 206K(21 分位)、Sahm 0.03、初请为衰退面板唯一预警项(阈值 325K，当前 206K)、衰退面板 6/100 触发 0 项。观察顺序：HY OAS 是否上穿 3.0(当前 2.71) → SPX 是否跌破 60 日均值使 equity_down 翻 on → 初请 4 周均是否上穿 280K(当前 206K) → 失业率月变是否 >0.1pt。下一个硬数据：10/2 的 9 月非农。",
         "triggeredCount": 2,
+        "triggerTotal": 2,
+        "matchRatio": 1.0,
+        "fullTriggered": true,
         "triggerStatus": {
           "equity_down": "on",
           "credit_widen": "on"
@@ -33173,8 +33320,11 @@ const DATA = {
           "cpi_accel",
           "yields_high"
         ],
-        "next": "两条触发锚本周全部 on，情景达成 2/2，定义中的三个条件已全部落地：核心环比二次抬头(+0.29%，连续第 2 月 >0.2%)、能源冲击(Brent $108.01，月 +18.9%)、10Y 上破 4.90(现 4.97，创区间新高)。定价侧同步确认：terminal2y 由 4.37 抬至 4.65、下次会议加息 25bp 概率 73.7%、隐含未来 12 个月 2 次加息。该情景已由「尾部」实质转为「当期主导」，与自动判定的主导矛盾原型(inflation_reignite)一致。需注意情景层口径：面板 activeScenario 显示为 goldilocks，因基准情景的两条触发锚(equity_up、yields_high)也同时 on，而基准在判定中先于非基准被检查——两者在情景层并存。后续升级观察：9/30 的 8 月 PCE 超级核心是否 >4%、10Y 是否上破 5.0、Brent 是否站上 $110。",
+        "next": "两条触发锚本周全部 on，情景达成 2/2，定义中的三个条件已全部落地：核心环比二次抬头(+0.29%，连续第 2 月 >0.2%)、能源冲击(Brent $108.01，月 +18.9%)、10Y 上破 4.90(现 4.97，创区间新高)。定价侧同步确认：terminal2y 由 4.37 抬至 4.65、下次会议加息 25bp 概率 73.7%、隐含未来 12 个月 2 次加息。该情景已由「尾部」实质转为「当期主导」，与自动判定的主导矛盾原型(inflation_reignite)一致。情景层判定同步修正：基准情景(goldilocks)虽也达成 2/2，但按 2026-09-17 起生效的规则(条件全满足者中尾部情景优先于基准)，activeScenario 判为 inflation_reignite，不再出现「原型与情景互相打脸」的口径冲突。后续升级观察：9/30 的 8 月 PCE 超级核心是否 >4%、10Y 是否上破 5.0、Brent 是否站上 $110。",
         "triggeredCount": 2,
+        "triggerTotal": 2,
+        "matchRatio": 1.0,
+        "fullTriggered": true,
         "triggerStatus": {
           "cpi_accel": "on",
           "yields_high": "on"
@@ -33191,6 +33341,9 @@ const DATA = {
         ],
         "next": "触发锚仍为策展标注、需求端未见减速：四家 hyperscaler FY26e capex 合计约 $735B(FY25 $374B，+96%)，CoreWeave Q2 营收 +112% / 订单积压 $1,040B。但价格侧已给出明确预演，这是本周变化最大的地方：CRWV 月 -23.1%(处 24 分位，自上周月 +10.1% 反转)、SOX 月 -10.0%(半年仍 +43.3%)、ORCL 处 9 分位、NVDA 月 -5.77%、MU 月 -4.53%、TSM 月 -2.96%，仅 META 月 +13.63%。压制变量是贴现率：10Y 4.97(100 分位)、实际利率 2.60%(100 分位)、MOVE 83.71(93 分位)。仓位背景仍极端：CFTC 9/8 数据显示 E-mini S&P 资产管理净持仓占 OI 44%、交易商 33%，杠杆基金本周再加空 2.35 万手。当前状态应表述为「估值修正先行、盈利缺口待验」——若下一轮云厂 capex 指引不下修，本轮会被归类为纯利率事件。观察：10 月下旬云厂季报与 capex 指引、CoreWeave 三季报(11 月)、SK 海力士/美光 HBM 订单、10Y 是否上破 5.0。证伪条件(需求端)：云厂下调 capex 指引、NVDA 指引 miss、订单积压增速放缓。",
         "triggeredCount": 0,
+        "triggerTotal": 1,
+        "matchRatio": 0.0,
+        "fullTriggered": false,
         "triggerStatus": {
           "ai_capex_slow": "curated"
         }
@@ -33204,8 +33357,11 @@ const DATA = {
           "equity_up",
           "yields_high"
         ],
-        "next": "基准情景的两条触发锚本周均由 off 转为 on(equity_up：SPX 7585.73 略高于 60 日均值 7581.73；yields_high：10Y 4.97 创区间新高)，达成 2/2，面板因此把 activeScenario 判为 goldilocks——这是情景判定口径(基准情景先于非基准被检查)，不代表通胀/广度维度支持金发姑娘：实际 inflation=high、breadth=narrow、growth=weak。因此该情景当前应读作「指数尚未破位的技术状态」，而不是「宏观张力已缓解」。需要特别提醒：equity_up 锚只有 4 点余量(7585.73 vs 7581.73)，任一弱交易日即翻 off，届时基准情景会立刻退位。维持基准直到下列任一项出现：10Y 上破 5.0(当前 4.97) / 核心 CPI 环比再 >0.25%(8 月 +0.29%) / Brent 上破 $110(当前 $108.01) / HY OAS 上穿 3.0(当前 2.71) / SPX 跌破 60 日均值。原「10Y 在 4.75-4.90 横盘」的区间描述已因破位失效，本档按现状上移至 4.90-5.10。",
+        "next": "基准情景的两条触发锚本周均由 off 转为 on(equity_up：SPX 7585.73 略高于 60 日均值 7581.73；yields_high：10Y 4.97 创区间新高)，达成 2/2；但 inflation_reignite 情景同样达成 2/2——按 2026-09-17 起生效的规则(条件全满足者中尾部情景优先于基准)，activeScenario 判为 inflation_reignite 而非 goldilocks。这对基准情景是重要的定性：它不代表通胀/广度维度支持金发姑娘——实际 inflation=high、breadth=narrow、growth=weak。因此该情景当前应读作「指数尚未破位的技术状态」，而不是「宏观张力已缓解」。需要特别提醒：equity_up 锚只有 4 点余量(7585.73 vs 7581.73)，任一弱交易日即翻 off，届时基准情景会立刻退位。维持基准直到下列任一项出现：10Y 上破 5.0(当前 4.97) / 核心 CPI 环比再 >0.25%(8 月 +0.29%) / Brent 上破 $110(当前 $108.01) / HY OAS 上穿 3.0(当前 2.71) / SPX 跌破 60 日均值。原「10Y 在 4.75-4.90 横盘」的区间描述已因破位失效，本档按现状上移至 4.90-5.10。",
         "triggeredCount": 1,
+        "triggerTotal": 2,
+        "matchRatio": 0.5,
+        "fullTriggered": false,
         "triggerStatus": {
           "equity_up": "off",
           "yields_high": "on"
@@ -33335,7 +33491,7 @@ const DATA = {
         "detail": "策展标注 (无直接序列)"
       }
     ],
-    "activeScenario": "growth_weak"
+    "activeScenario": "inflation_reignite"
   },
   "marketPositioning": {
     "asOf": "2026-09-17",
