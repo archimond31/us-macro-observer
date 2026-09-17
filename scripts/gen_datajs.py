@@ -472,6 +472,33 @@ def _spread_tf(series, off):
 _sofr_iorb_tf = ({k: _spread_tf(_sofr_iorb_series, o) for k, o in (('d', 1), ('w', 5), ('m', 21), ('h6', 126))}
                  if _sofr_iorb_series else {'d': None, 'w': None, 'm': None, 'h6': None})
 
+# 两条序列各自的"最近观测日": SOFR 由 NY Fed 次日发布, 决议日 IORB 先跳而 SOFR 仍停在决议前,
+# 需要把这个滞后如实交代给用户 (否则卡片上 3.64% vs 3.90% 看起来像利差 -26bp 的假象)。
+_sofr_last_date = s('sofr')[-1][0] if s('sofr') else None
+_iorb_last_date = s('iorb')[-1][0] if s('iorb') else None
+def _md(d):  # '2026-09-17' → '09/17'
+    return (d[5:7] + '/' + d[8:10]) if (d and len(d) >= 10) else (d or '—')
+
+def _spread_pct(series, window=252):
+    """利差序列自身的历史分位 (0-100)。**不可复用 pct('sofr')** —— 那算的是 SOFR 利率水平的分位。"""
+    if not series:
+        return None
+    vals = [v for _, v in series][-window:]
+    if len(vals) < 2:
+        return None
+    cur = vals[-1]
+    return round(100.0 * sum(1 for v in vals if v <= cur) / len(vals))
+
+def _spread_spark(series, n=30):
+    """利差序列最近 n 个观测 (bp)。**不可复用 series30('sofr')** —— 那画的是 SOFR 价格而非利差。"""
+    if not series:
+        return []
+    return [round(v * 100, 1) for _, v in series[-n:]]
+
+# 利差自身的分位 / 迷你走势 (流动性板块 SOFR-IORB 卡片使用)
+_sofr_iorb_pct = _spread_pct(_sofr_iorb_series)
+_sofr_iorb_spark = _spread_spark(_sofr_iorb_series)
+
 # 资产类: tf 已是 % 变化
 def asset_val_str(key, dec=2, money=''):
     return (money + comma(val(key), dec)) if money else comma(val(key), dec)
@@ -1447,11 +1474,14 @@ DATA['assets'] = {
 def rate_metric(label, key, tag, extra_meaning=''):
     v = val(key); t = tfm(key)
     ch = rate_changes(key)
+    _w = t.get('w')
     return {
         'label': label, 'value': rate_val_str(key), 'change': rate_chg_bp(key),
         'dir': dir_of(t.get('d')), 'tag': tag, 'percentile': pct(key),
         'signal': 'bearish' if (t.get('w') or 0) > 0 else ('bullish' if (t.get('w') or 0) < 0 else 'mixed'),
-        'meaning': (extra_meaning or f'近一年 {pct(key)} 分位') + f' | 周 {rate_chg_bp(key, "bp") if False else ""}',
+        # 周变化取 w 尺度并转 bp。旧写法 f'... | 周 {rate_chg_bp(key, "bp") if False else ""}' 是死代码
+        # (恒为空字符串), 且 rate_chg_bp 只接 1 个参数 —— 结果 7 张利率卡都挂着无值的"| 周 "。
+        'meaning': (extra_meaning or f'近一年 {pct(key)} 分位') + f' | 周 {bp(_w*100) if _w is not None else "—"}',
         'changes': {k: (bp(ch[k]) if ch[k] is not None else '—') for k in ('d','w','m','h6')},
         'sparkline': series30(key)
     }
@@ -1791,6 +1821,20 @@ if _PMOVE:
     print(f'[gen_datajs] 目标区间最近变动: {_PMOVE["date"]} {_PMOVE["action"]} {_PMOVE["bp"]}bp '
           f'(距今 {_PMOVE["days_ago"]} 天, {"计入叙事" if _pmove_fresh else "已过叙事窗口"})', file=sys.stderr, flush=True)
 
+# IORB / SOFR 卡片说明 (2026-09-17 加息后新增): IORB 在决议日随目标区间同步跳升, 而 SOFR 由 NY Fed
+# 次一工作日才发布 → 决议后 1-2 天内两者"最近观测日"不同, 若直接拿最新值相减会呈现
+# 3.64% vs 3.90% = -26bp 的假利差。这里把滞后如实写明, 并给出共同交易日口径的利差 (与流动性板块同源)。
+_iorb_d_bp = round((tfm('iorb').get('d') or 0) * 100, 1)
+_iorb_meaning = (f'准备金利率, 已于 {_md(_iorb_last_date)} 随决议同步调整 {bp(_iorb_d_bp)}'
+                 if abs(_iorb_d_bp) > 0.05 else '准备金利率, 与目标区间同步')
+if _sofr_last_date and _iorb_last_date and _sofr_last_date != _iorb_last_date:
+    _sofr_meaning = (f'{_md(_sofr_last_date)} 数据, 未反映 {_md(_iorb_last_date)} 的 IORB 调整; '
+                     f'同交易日口径 {_sofr_iorb_str}')
+else:
+    _sofr_meaning = (('低于' if (_sofr_iorb_gap or 0) < 0 else '高于')
+                     + f' IORB {bp(abs((_sofr_iorb_gap or 0)*100))}, '
+                     + ('融资充裕' if (_sofr_iorb_gap or 0) < 0 else '融资偏紧'))
+
 DATA['fed'] = {
     'regime': {'label':_fed_label,'signal':_fed_signal,'confidence':_confidence(_fed_signal, _ff is not None, _y2_f is not None, v_walcl is not None, v_rrp2 is not None),
         'description':f'政策利率 {f2(val("ffr_lo"))}%-{f2(val("ffr_up"))}% {_pm_regime_txt}, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL {comma(v_walcl/1000000,1)}T, 周 {bp(tfm("walcl")["w"]/1000, "$B")}) 持续推进, RRP 缓冲 (${f2(v_rrp2)}B) 已耗尽, 未来 QT 将更直接影响准备金。'},
@@ -1827,8 +1871,8 @@ DATA['fed'] = {
         {'label':'MBS 持仓','value':f'${comma(val("mbst")/1000000,2)}T','change':wk('mbst'),'dir':'down','tag':'MBST','percentile':pct('mbst'),'signal':_msig(dir_of(tfm("mbst")["w"]), False),'meaning':'提前还款低迷, MBS缩减慢','changes':wk_dict('mbst'),'sparkline':series30('mbst')},
         {'label':'银行准备金','value':f'${comma(v_res/1000000,2)}T','change':f'+${comma(tfm("resbal")["w"]/1000,0)}B/周','dir':'up','tag':'WRESBAL','percentile':pct('resbal'),'signal':_msig(dir_of(tfm("resbal")["w"]), True),'meaning':'充裕区间','changes':wk_dict('resbal'),'sparkline':series30('resbal')},
         {'label':'RRP 余额','value':f'${f2(v_rrp2)}B','change':f'{bp(tfm("rrp")["w"], "$B")}', 'dir':dir_of(tfm("rrp")["w"]),'tag':'RRP','percentile':pct('rrp'),'signal':_msig(dir_of(tfm("rrp")["w"]), False),'meaning':'缓冲耗尽','changes':{k:(bp(tfm("rrp")[k], "$B") if tfm("rrp")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('rrp')},
-        {'label':'IORB','value':f'{f2(val("iorb"))}%','change':rate_chg_bp('iorb'),'dir':dir_of(tfm("iorb")["d"]),'tag':'IORB','percentile':pct('iorb'),'signal':_msig(dir_of(tfm("iorb")["w"]), False),'meaning':'准备金利率, 决议日随目标区间同步调整','changes':{k:(bp(tfm("iorb")[k]*100) if tfm("iorb")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('iorb')},
-        {'label':'SOFR','value':f'{f2(val("sofr"))}%','change':rate_chg_bp('sofr'),'dir':dir_of(tfm("sofr")["d"]),'tag':'SOFR','percentile':pct('sofr'),'signal':_msig(dir_of(tfm("sofr")["d"]), False),'meaning':'低于 IORB, 融资充裕','changes':{k:(bp(tfm("sofr")[k]*100) if tfm("sofr")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('sofr')},
+        {'label':'IORB','value':f'{f2(val("iorb"))}%','change':rate_chg_bp('iorb'),'dir':dir_of(tfm("iorb")["d"]),'tag':'IORB','percentile':pct('iorb'),'signal':_msig(dir_of(tfm("iorb")["w"]), False),'meaning':_iorb_meaning,'changes':{k:(bp(tfm("iorb")[k]*100) if tfm("iorb")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('iorb')},
+        {'label':'SOFR','value':f'{f2(val("sofr"))}%','change':rate_chg_bp('sofr'),'dir':dir_of(tfm("sofr")["d"]),'tag':'SOFR','percentile':pct('sofr'),'signal':_msig(dir_of(tfm("sofr")["d"]), False),'meaning':_sofr_meaning,'changes':{k:(bp(tfm("sofr")[k]*100) if tfm("sofr")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('sofr')},
     ],
     'trendData': [
         {'name':'美联储总资产','unit':'$B','current':f'${comma(v_walcl/1000000,2)}T','changes':{k:(round(tfm("walcl")[k]/1000,1) if tfm("walcl")[k] else None) for k in ('d','w','m','h6')},'meaning':'缩表速度恒定, 净流动性的稳定逆风'},
@@ -2101,7 +2145,18 @@ DATA['liquidity'] = {
         {'label':'RRP 余额','value':f'${f2(v_rrpn)}B','change':bp(tfm("rrp")["w"], "$B"),'dir':dir_of(tfm("rrp")["w"]),'tag':'RRP','percentile':pct('rrp'),'signal':_msig(dir_of(tfm("rrp")["w"]), False),'meaning':'缓冲垫耗尽','changes':{k:(bp(tfm("rrp")[k], "$B") if tfm("rrp")[k] is not None else '—') for k in ('d','w','m','h6')},'sparkline':series30('rrp')},
         {'label':'TGA 余额','value':f'${comma(v_tgan,1)}B' if v_tgan else '—','change':(f'{"-" if tfm("tga")["w"]<0 else "+"}${comma(abs(tfm("tga")["w"]),0)}B' if (v_tgan and tfm("tga")["w"] is not None) else '—'),'dir':dir_of(tfm("tga")["w"]) if v_tgan else 'neutral','tag':'TGA','percentile':pct('tga'),'signal':_msig(dir_of(tfm("tga")["w"]) if v_tgan else None, False),'meaning':'财政部抽水','changes':{k:(f'{"-" if tfm("tga")[k]<0 else "+"}${comma(abs(tfm("tga")[k]),0)}B' if (v_tgan and tfm("tga")[k] is not None) else '—') for k in ('d','w','m','h6')},'sparkline':series30('tga')},
         {'label':'银行准备金','value':f'${comma(v_res/1000000,2)}T','change':f'{"-" if tfm("resbal")["w"]<0 else "+"}${comma(abs(tfm("resbal")["w"]/1000),0)}B/周','dir':dir_of(tfm("resbal")["w"]),'tag':'Reserves','percentile':pct('resbal'),'signal':_msig(dir_of(tfm("resbal")["w"]), True),'meaning':'充裕区间下沿','changes':wk_dict('resbal'),'sparkline':series30('resbal')},
-        {'label':'SOFR-IORB','value':bp(v_sofr_iorb*100),'change':bp((tfm("sofr")["w"]-tfm("iorb")["w"])*100),'dir':dir_of((tfm("sofr")["w"] or 0)-(tfm("iorb")["w"] or 0)),'tag':'Spread','percentile':pct('sofr'),'signal':_msig(dir_of((tfm("sofr")["w"] or 0)-(tfm("iorb")["w"] or 0)), False),'meaning':'负值=充裕','changes':{k:(bp((tfm("sofr")[k]-tfm("iorb")[k])*100) if (tfm("sofr")[k] is not None and tfm("iorb")[k] is not None) else '—') for k in ('d','w','m','h6')},'sparkline':series30('sofr')},
+        {'label':'SOFR-IORB','value':bp(v_sofr_iorb*100),
+         'change': (bp(_sofr_iorb_tf['w']*100) if _sofr_iorb_tf.get('w') is not None else '—'),
+         'dir': dir_of(_sofr_iorb_tf.get('w')),
+         'tag':'Spread',
+         'percentile': (_sofr_iorb_pct if _sofr_iorb_pct is not None else 50),
+         'signal':_msig(dir_of(_sofr_iorb_tf.get('w')), False),
+         'meaning': f'负值=充裕 (共同交易日 {_md(_sofr_iorb_asof)})',
+         # 关键: change/changes/百分位/迷你序列全部取自"共同交易日对齐"的利差序列。
+         # 旧写法用 tfm('sofr')-tfm('iorb') 直接相减 → 决议日 IORB 先跳 25bp 而 SOFR 未动,
+         # 卡片会显示 -25bp 的幻影日变化; 分位与 sparkline 还错用了 SOFR 价格本身。
+         'changes': {k:(bp(_sofr_iorb_tf[k]*100) if _sofr_iorb_tf.get(k) is not None else '—') for k in ('d','w','m','h6')},
+         'sparkline': _sofr_iorb_spark},
     ],
     'trendData': [
         {'name':'净流动性','unit':'$B','current':f'${comma(v_nl/1000,2)}T' if v_nl else '—','changes':{k:(round(tfm("netliq")[k],1) if tfm("netliq")[k] is not None else None) for k in ('d','w','m','h6')},'meaning':'收缩趋势, RRP耗尽后斜率变陡'},
@@ -4772,7 +4827,8 @@ def _ms_status(a):
             return 'unknown', None, '序列缺失'
         sn = v10[-1] - v2[-1]; sp = v10[0] - v2[0]
         on = (sn > sp) and (v10[-1] > v10[0]) and (v2[-1] > v2[0])
-        return ('on' if on else 'off'), round(sn, 1), '10Y-2Y 斜率 %.0fbps' % sn
+        # sn 是百分点(如 0.33), 显示需换算为 bp —— 旧写法 %.0f 直接吃百分点 → 33bp 被显示成 "0bps"
+        return ('on' if on else 'off'), round(sn, 1), '10Y-2Y 斜率 %.0fbps' % (sn * 100)
     return 'unknown', None, ''
 
 _ms_anchors = []
