@@ -2673,6 +2673,153 @@ function renderAiValuePicks(list) {
   return table(headers, rows)
     + '<div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;line-height:1.5">⚠ 跨层排名仅供参考——各层商业模式/估值体系不同（如 15 倍代工厂与 60 倍 SaaS 不可直接比绝对分），价值挖掘更应看「层内分位 P」与基本面质量。</div>';
 }
+// ===== AI 剪刀差：「思考价格」成本曲线 vs 官方价格指数 =====
+// 数据: scripts/ai_scissors.json（成本侧 Epoch AI 成本前沿纪录 / 价格侧 BLS PPI·CPI，均自动拉取）
+// 口径警告: 成本侧 = 达到固定能力水平的最低每题成本（成本前沿记录），不是成交价格。
+//   两侧单位与构造不同，只能比较方向与量级，不可相减，也不构成对官方指数的质量调整。
+var _SC_PRICE_COLOR = {
+  'PCU3344183344189': '#a32d2d',   // PPI 印刷电路组装（硬件投入端）
+  'PCU334112334112':  '#d85a30',   // PPI 计算机存储器件（硬件投入端）
+  'CUUR0000SEEE01':   '#ba7517',   // CPI 个人电脑与外围设备（消费者端）
+  'PCU518210518210':  '#534ab7',   // PPI 数据处理与托管（云服务端）
+  'PCU511210511210':  '#185fa5'    // PPI 软件出版商（软件端）
+};
+var _SC_COST_COLOR = ['#0f6e56', '#5dcaa5'];
+
+function renderAiScissors(s) {
+  if (!s || !s.priceSeries || !s.priceSeries.length) return '';
+  var chains = s.costChains || [], prices = s.priceSeries || [];
+  var c0 = chains[0] || null, top = prices[0] || null, soft = null;
+  prices.forEach(function (p) {
+    if (p.tier === '软件端' || p.tier === '云服务端') {
+      if (!soft || p.changePct < soft.changePct) soft = p;
+    }
+  });
+  var scissor = (c0 && c0.index && top) ? Math.round(top.index / c0.index) : null;
+
+  var h = sectionH('✂️ AI 剪刀差：思考成本 vs 官方价格指数',
+    '同一股 AI 投入潮的两个相反方向。共同起点 ' + s.anchor + ' = 100，纵轴对数。'
+    + '成本侧是「达到固定能力水平的最低成本」（成本前沿记录），价格侧是官方成交价格指数——口径不同，只可比方向与量级。');
+
+  var cards = [];
+  if (c0) cards.push(['思考成本 · ' + c0.benchmark + ' ' + c0.level + ' 固定水平',
+    (c0.index != null ? c0.index.toFixed(2) : '—'),
+    '起点=100 · 已降 ' + c0.multiple + '×，最新 $' + c0.latestCost + '/题']);
+  if (top) cards.push([top.label, String(top.index),
+    '起点=100 · ' + (top.changePct >= 0 ? '+' : '') + top.changePct + '%']);
+  if (soft) cards.push([soft.label, String(soft.index),
+    '起点=100 · ' + (soft.changePct >= 0 ? '+' : '') + soft.changePct + '%']);
+  if (scissor) cards.push(['剪刀差倍数', scissor + '×', '硬件端指数 ÷ 思考成本指数']);
+  h += '<div class="metric-grid">';
+  cards.forEach(function (kv) {
+    h += '<div style="background:var(--bg-card);border:1px solid var(--border-card);border-radius:10px;padding:12px 14px">'
+      + '<div style="font-size:11px;color:var(--text-tertiary)">' + kv[0] + '</div>'
+      + '<div style="font-size:20px;font-weight:700;margin-top:4px">' + kv[1] + '</div>'
+      + '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px">' + kv[2] + '</div></div>';
+  });
+  h += '</div>';
+
+  h += chartCard('✂️ 剪刀差：成本指数 vs 官方价格指数（对数轴）',
+    '蓝绿=Epoch AI 成本前沿纪录（越低=同样能力越便宜）· 暖色/紫=官方价格指数 · 共同起点 ' + s.anchor + ' = 100',
+    'aiScissors', 'tall', null,
+    '成本侧：Epoch AI《The Plunging Price of Thought》配套数据 (CC-BY) · 价格侧：BLS PPI/CPI 经 FRED · 数据截至 ' + (s.asOf || ''));
+
+  var rows = [];
+  chains.forEach(function (c) {
+    rows.push(['<b>' + c.name + '</b>',
+      '<span style="font-size:11px;color:var(--text-tertiary)">成本曲线（非价格）</span>',
+      '100', (c.index != null ? c.index.toFixed(2) : '—'),
+      { text: '↓ ' + c.multiple + '×', dir: 'down' },
+      '<span style="font-size:11px">最新 $' + c.latestCost + '/题 · ' + c.latestModel + '（' + c.latestDate + '）</span>']);
+  });
+  prices.forEach(function (p) {
+    var up = p.changePct >= 0;
+    rows.push(['<b>' + p.label + '</b> <span style="font-size:10px;color:var(--text-tertiary)">' + p.tier + '</span>',
+      '<span style="font-size:11px;color:var(--text-tertiary)">' + p.id + '</span>',
+      '100', String(p.index),
+      { text: (up ? '↑ ' : '↓ ') + Math.abs(p.changePct) + '%', dir: up ? 'up' : 'down' },
+      '<span style="font-size:11px">' + (p.fullTitle || '') + '</span>']);
+  });
+  h += sectionH('📋 起点与最新读数对照', s.anchor + ' = 100 · 价格指数为官方发布原值归一，最新月份 ' + (top ? top.lastMonth : ''));
+  h += table(['序列', '口径 / FRED ID', '起点', '最新', '变化', '说明'], rows);
+
+  if (chains.length) {
+    var ci = '';
+    chains.forEach(function (c) {
+      ci += '<div style="font-size:12px;font-weight:600;margin:12px 0 6px">' + c.name
+        + ' <span style="font-size:11px;color:var(--text-tertiary)">美元/题 · 固定 ' + c.benchmark + ' ' + c.level + ' 准确率水平</span></div>';
+      ci += table(['日期', '模型', '该运行准确率', '成本/题'],
+        c.records.map(function (r) { return [r.date, r.model, r.accuracy, '$' + r.cost]; }));
+    });
+    ci += '<div style="font-size:11px;color:var(--text-tertiary);line-height:1.6;margin-top:10px">'
+      + 'Epoch AI 口径：每个基准/准确率水平上「以更低成本刷新该水平成本纪录」的模型，每发布日期至多一个；'
+      + '成本是跑完一道题的实际总花费（已含推理 token 消耗）。这不是逐月连续报价，而是成本前沿的下台阶记录，'
+      + '所以图上按「纪录在被打破前一直有效」前向填充。</div>';
+    h += _aiCollapse('📉 Epoch 成本纪录明细（' + chains.length + ' 条链）', ci, false);
+  }
+
+  // ---- 口径阶梯: 美联储对"软件分项涨价"的测量误差拆解 ----
+  var fed = s.fed || {};
+  if (fed.qualityLadder && fed.qualityLadder.length) {
+    var src = fed.source || {}, w = fed.weights || {}, qm = fed.qualityMethod || {},
+        mm = fed.mismatch || {}, ub = fed.upcomingBreak || {};
+    h += sectionH('🔬 口径阶梯：软件分项涨价，是真涨价还是测量问题？',
+      '美联储 FEDS Notes（' + (src.date || '') + '，' + (src.authors || '') + '）对「计算机软件及配件」逐层做修正——'
+      + '同一段时间的同一个类别，口径不同可以差出 78 个百分点。年化 4 个月变动率，数据截至 2026-03。');
+    h += chartCard('五种口径下的「计算机软件及配件」年化涨幅',
+      '柱=软件及配件年化涨幅（%，左轴）· 折线=核心 PCE / 核心商品 PCE 4 个月年化（%，右轴）',
+      'aiScissorsLadder', 'tall', null,
+      '来源：Federal Reserve Board — FEDS Notes「' + (src.title || '') + '」' + (src.doi ? ' · DOI ' + src.doi : ''));
+
+    var fi = '';
+    fi += '<div style="font-size:12px;line-height:1.8;color:var(--text-secondary)">'
+      + '<b style="color:var(--text-primary)">权重差 34 倍：</b>' + (w.note || '')
+      + ' 占核心商品 PCE <b>' + w.pceSoftwareShareOfCoreGoodsPct + '%</b>。</div>';
+    if (mm.cause) {
+      fi += '<div style="font-size:12px;line-height:1.8;color:var(--text-secondary);margin-top:10px">'
+        + '<b style="color:var(--text-primary)">错配从哪来：</b>' + mm.cause + '</div>';
+    }
+    if (mm.evidence) {
+      fi += '<div style="font-size:12px;line-height:1.8;color:var(--text-secondary);margin-top:6px">'
+        + '<b style="color:var(--text-primary)">旁证：</b>' + mm.evidence + '</div>';
+    }
+    if (qm.proxy) {
+      var pairs = (qm.pairs || []).map(function (p) {
+        return p.from + ' → ' + p.to + ' <b style="color:var(--text-primary)">+' + p.improvePct + '%</b>';
+      }).join(' · ');
+      fi += '<div style="font-size:12px;line-height:1.8;color:var(--text-secondary);margin-top:10px">'
+        + '<b style="color:var(--text-primary)">质量调整怎么做的：</b>' + qm.proxy + '。'
+        + (pairs ? '<br>' + pairs : '') + '</div>';
+    }
+    if (qm.note) {
+      fi += '<div style="font-size:11px;color:var(--text-tertiary);line-height:1.7;margin-top:8px;padding:8px 10px;border-left:2px solid var(--border);">'
+        + qm.note + '</div>';
+    }
+    if (ub.date) {
+      fi += '<div style="font-size:12px;line-height:1.8;color:var(--text-secondary);margin-top:10px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px">'
+        + '<b style="color:var(--text-primary)">⚠ ' + ub.date + ' 起口径再变一次：</b>' + (ub.event || '')
+        + (ub.softwareChange ? '<br>软件分项：' + ub.softwareChange + '。' : '')
+        + (ub.marketEstimate ? '<br>市场测算：' + ub.marketEstimate + '。' : '')
+        + (ub.note ? '<br>' + ub.note : '') + '</div>';
+    }
+    if (src.url) {
+      fi += '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px">原文：<a href="' + src.url + '" target="_blank" rel="noopener" style="color:var(--accent)">'
+        + (src.title || 'FEDS Notes') + '</a> · ' + (src.org || '') + ' · ' + (src.date || '') + '</div>';
+    }
+    h += sectionCard('🔎 读数差在哪：权重、错配、质量调整', (fed.ladderBasis || ''), fi);
+  }
+
+  if (s.caveat) {
+    h += '<div style="font-size:11px;color:var(--text-tertiary);line-height:1.7;margin-top:16px;padding:10px 12px;border:1px dashed var(--border);border-radius:8px">'
+      + '<b>口径免责：</b>' + s.caveat
+      + '<br>成本侧来源：' + (s.costSource && s.costSource.page
+        ? '<a href="' + s.costSource.page + '" target="_blank" rel="noopener" style="color:var(--accent)">' + s.costSource.org + '《' + s.costSource.title + '》</a>'
+        : 'Epoch AI')
+      + ' · 价格侧来源：' + ((s.priceSource && s.priceSource.org) || 'U.S. BLS') + '</div>';
+  }
+  return h;
+}
+
 function renderAiCycle(cyc) {
   if (!cyc) return '';
   var heat = cyc.heat || 0, hc = _aiColor(heat);
@@ -3111,7 +3258,7 @@ function _renderAiTab(tab, d) {
   var body = document.getElementById('aiTabBody');
   if (!body) return;
   // 销毁可能残留的 AI 图表，避免 canvas 复用冲突
-  ['aiScatter', 'aiQuad', 'aiCapex'].forEach(function (k) { if (charts[k]) { charts[k].destroy(); delete charts[k]; } });
+  ['aiScatter', 'aiQuad', 'aiCapex', 'aiScissors', 'aiScissorsLadder'].forEach(function (k) { if (charts[k]) { charts[k].destroy(); delete charts[k]; } });
   var html;
   if (tab === 'overview') html = _renderAiOverview(d);
   else if (tab === 'china') html = _renderAiChina(d);
@@ -3734,6 +3881,7 @@ function _renderAiFlow(d) {
 function _renderAiOverview(d) {
   var html = '';
   if (d.cycle) html += renderAiCycle(d.cycle);
+  if (d.scissors) html += renderAiScissors(d.scissors);
   html += _renderAiFlow(d);
   html += sectionH('各层价值热力', '各层平均 AI 价值分：越高=该层整体性价比/被低估程度越高');
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">';
@@ -3872,6 +4020,94 @@ function _initAiCharts(tab, d) {
         scales: {
           x: { ticks: { color: COLORS.text }, grid: { display: false } },
           y: { title: { display: true, text: '资本开支 ($B)', color: COLORS.text }, ticks: { color: COLORS.text }, grid: { color: _grid } }
+        }
+      }
+    });
+  }
+
+  // ④ AI 剪刀差: 成本指数(对数) vs 官方价格指数
+  var _sc = d.scissors;
+  if (_sc && _sc.months && _sc.months.length && document.getElementById('aiScissors')) {
+    if (charts.aiScissors) charts.aiScissors.destroy();
+    var _scDS = (_sc.costChains || []).map(function (c, i) {
+      return {
+        label: c.name, data: c.points, yAxisID: 'y',
+        borderColor: _SC_COST_COLOR[i % _SC_COST_COLOR.length],
+        backgroundColor: 'transparent',
+        borderWidth: i === 0 ? 3 : 1.6,
+        borderDash: i === 0 ? [] : [5, 3],
+        stepped: 'before', pointRadius: 0, pointHoverRadius: 3, tension: 0
+      };
+    }).concat((_sc.priceSeries || []).map(function (p) {
+      return {
+        label: p.label, data: p.points, yAxisID: 'y',
+        borderColor: _SC_PRICE_COLOR[p.id] || '#6b7280',
+        backgroundColor: 'transparent', borderWidth: 1.8, pointRadius: 0, tension: 0.2
+      };
+    }));
+    charts.aiScissors = new Chart(document.getElementById('aiScissors'), {
+      type: 'line',
+      data: { labels: _sc.months, datasets: _scDS },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12, padding: 10 } },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                var v = ctx.parsed.y;
+                return ctx.dataset.label + '：' + (v == null ? '—' : (v < 10 ? v.toFixed(2) : v.toFixed(1)));
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: _grid, drawBorder: false }, ticks: { color: COLORS.text, font: { size: 10 }, maxTicksLimit: 10, callback: fmtDate } },
+          y: {
+            type: 'logarithmic', min: 0.1, max: 400,
+            title: { display: true, text: '指数（' + _sc.anchor + ' = 100，对数轴）', color: COLORS.text, font: { size: 11 } },
+            ticks: { color: COLORS.text, font: { size: 10 } },
+            grid: { color: _grid }
+          }
+        }
+      }
+    });
+  }
+
+  // ⑤ 口径阶梯: 美联储对软件分项涨价的质量调整拆解
+  if (_sc && _sc.fed && _sc.fed.qualityLadder && _sc.fed.qualityLadder.length
+      && document.getElementById('aiScissorsLadder')) {
+    if (charts.aiScissorsLadder) charts.aiScissorsLadder.destroy();
+    var _ld = _sc.fed.qualityLadder;
+    charts.aiScissorsLadder = new Chart(document.getElementById('aiScissorsLadder'), {
+      type: 'bar',
+      data: {
+        labels: _ld.map(function (r) { return r.label; }),
+        datasets: [
+          { type: 'bar', label: '软件及配件 年化涨幅 (%)', data: _ld.map(function (r) { return r.softwareAnnualizedPct; }),
+            backgroundColor: '#b5d4f4', borderColor: '#185fa5', borderWidth: 1, yAxisID: 'y', order: 2 },
+          { type: 'line', label: '核心 PCE 4个月年化 (%)', data: _ld.map(function (r) { return r.corePceAnnualizedPct; }),
+            borderColor: '#a32d2d', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 4, tension: 0.25, yAxisID: 'y1', order: 1 },
+          { type: 'line', label: '核心商品 PCE 4个月年化 (%)', data: _ld.map(function (r) { return r.coreGoodsPceAnnualizedPct; }),
+            borderColor: '#ba7517', backgroundColor: 'transparent', borderWidth: 1.8, borderDash: [4, 3], pointRadius: 3, tension: 0.25, yAxisID: 'y1', order: 1 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: true, position: 'top', labels: { color: COLORS.text, font: { size: 11 }, boxWidth: 12, padding: 10 } },
+          tooltip: { callbacks: { label: function (ctx) { return ctx.dataset.label + '：' + ctx.parsed.y + '%'; } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: COLORS.text, font: { size: 10 }, autoSkip: false } },
+          y: { position: 'left', beginAtZero: true,
+               title: { display: true, text: '软件及配件 年化涨幅 (%)', color: COLORS.text, font: { size: 11 } },
+               ticks: { color: COLORS.text, font: { size: 10 } }, grid: { color: _grid } },
+          y1: { position: 'right', min: 0, max: 6, grid: { drawOnChartArea: false },
+                title: { display: true, text: '核心 PCE 年化 (%)', color: COLORS.text, font: { size: 11 } },
+                ticks: { color: COLORS.text, font: { size: 10 } } }
         }
       }
     });

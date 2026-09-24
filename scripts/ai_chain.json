@@ -1911,5 +1911,53 @@
         "detail": "若 AI 收入不及预期，高估值 capex 链面临重估"
       }
     ]
+  },
+  "scissors": {
+    "asOf": "2026-05-22",
+    "purpose": "把「供给侧思考成本暴跌」与「官方价格指数」并排放进 AI 产业链板块，用于观察 AI 通缩为何没有传导到消费价格。成本侧(Epoch AI 成本前沿记录)与价格侧(BLS PPI/CPI)均为自动拉取的真实数据，本块只存放带引用的策展口径说明，不含任何估算值。",
+    "source": {
+      "org": "Federal Reserve Board — FEDS Notes",
+      "title": "Measurement of 'Computer Software and Accessories' Inflation",
+      "authors": "Alessandro Barbarino, Anthony M. Diercks, Stephen Miran",
+      "date": "2026-05-22",
+      "url": "https://www.federalreserve.gov/econres/notes/feds-notes/measurement-of-computer-software-and-accessories-inflation-20260522.html",
+      "doi": "10.17016/2380-7172.4089"
+    },
+    "weights": {
+      "pceSoftwareShareOfCorePcePct": 1.2,
+      "pceSoftwareShareOfCoreGoodsPct": 5.1,
+      "cpiSoftwareShareOfCoreCpiPct": 0.035,
+      "note": "同一个「计算机软件及配件」类别，占核心 PCE 1.2%、占核心 CPI 仅 0.035%，权重差约 34 倍——这是 CPI 与 PCE 读数罕见倒挂的直接原因。"
+    },
+    "qualityLadder": [
+      { "label": "未调整", "softwareAnnualizedPct": 73.14, "corePceAnnualizedPct": 4.38, "coreGoodsPceAnnualizedPct": 5.47 },
+      { "label": "类目错配修正", "softwareAnnualizedPct": 52.0, "corePceAnnualizedPct": 4.22, "coreGoodsPceAnnualizedPct": 4.81 },
+      { "label": "+25% 质量调整", "softwareAnnualizedPct": 22.02, "corePceAnnualizedPct": 3.96, "coreGoodsPceAnnualizedPct": 3.68 },
+      { "label": "+50% 质量调整", "softwareAnnualizedPct": 1.12, "corePceAnnualizedPct": 3.73, "coreGoodsPceAnnualizedPct": 2.73 },
+      { "label": "趋势反事实", "softwareAnnualizedPct": -5.3, "corePceAnnualizedPct": 3.65, "coreGoodsPceAnnualizedPct": 2.39 }
+    ],
+    "ladderBasis": "年化 4 个月变动率 (Annualized 4-month change)，数据截至 2026-03；单一窗口的静态快照，不是时间序列。软件分项长期的趋势增速为 -5.3%/年，2026 年却折年化 +73%，是 25 年来的纪录。",
+    "qualityMethod": {
+      "proxy": "以三个模型家族相邻代际的 117 个基准层面改进估计作为 AI 能力提升的代理，平均改进 +39.4%",
+      "pairs": [
+        { "from": "GPT-5.1", "to": "GPT-5.4", "improvePct": 56.5 },
+        { "from": "Claude Opus 4.5", "to": "Claude Opus 4.6", "improvePct": 38.3 },
+        { "from": "Gemini 3 Pro", "to": "Gemini 3.1 Pro", "improvePct": 25.3 }
+      ],
+      "passthrough": "承认基准改进只是消费者软件质量的不完美(且偏高)代理，故设 25% 与 50% 两档部分传导情景",
+      "note": "口径局限：25% 这个传导率没有客观依据，属美联储自己承认的「上限代理」。Epoch AI 的季度降价率可作为该折扣率的第三方外部锚——但它不能直接替代质量调整率。"
+    },
+    "mismatch": {
+      "cause": "BEA 用 CPI「计算机软件及配件」指数平减 PCE 对应类别，但该 CPI 的底层条目 (ELI EE021『计算机软件与空白媒体』) 同时包含闪存盘、空白 DVD/CD，而 PCE 该类别的空白媒体权重为 0%。AI 拉动的存储涨价因此被算进了『软件』。",
+      "evidence": "闪存盘(20 款最畅销)自 2025-11 上涨约 70%；韩国闪存/DRAM PPI 一年翻倍以上；BLS PPI 印刷电路组装制造、计算机存储器件制造同期暴涨(见本板块主图)。",
+      "cpiNoQualityAdjust": "BLS 对该 CPI 条目(EE021)不做质量调整——现行 hedonic 调整只覆盖服装(季节性)与家电/消费电子(技术变革)，软件与数字订阅不在其列。"
+    },
+    "upcomingBreak": {
+      "date": "2026-09-30",
+      "event": "BEA 对 PCE 价格指数三个分项(计算机软件与配件 / 投资组合管理服务 / 法律服务)的方法论修订生效，并追溯至 2021 年。",
+      "softwareChange": "由单一 CPI 软件分项 → 复合指数(CPI 软件与配件 + PPI 游戏软件出版 + PPI 数据处理/托管/IT 基础设施配置服务)",
+      "marketEstimate": "券商测算核心 PCE 读数下修约 0.2pp(高盛 0.2 / 瑞银单项 0.21 / 工银自测 0.13)",
+      "note": "2021 年以来的历史序列因此存在不可比断点；跨期同比与回测需按此日期分段。"
+    }
   }
 }

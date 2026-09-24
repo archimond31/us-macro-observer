@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-09-24 07:12
+ * 生成时间: 2026-09-24 15:30
  * ============================================================
  */
 const DATA = {
@@ -25889,21 +25889,21 @@ const DATA = {
           "a": "AI 算力核心 (芯片/基础设施)",
           "b": "AI 光模块/网络 (Lumentum、Coherent)",
           "factors": [
-            "rate",
-            "growth"
+            "growth",
+            "rate"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌增长强劲"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行"
         },
         {
           "a": "黄金",
           "b": "AI 高估值标的 (回避)",
           "factors": [
-            "rate",
-            "infl"
+            "infl",
+            "rate"
           ],
           "weight": 4,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌通胀回升, 赌利率下行"
         },
         {
           "a": "AI 算力核心 (芯片/基础设施)",
@@ -29417,6 +29417,487 @@ const DATA = {
         "avgMomentum": 65,
         "avgValuationScore": 41,
         "breadthPct": 48
+      }
+    },
+    "scissors": {
+      "asOf": "2026-09-24",
+      "anchor": "2025-01",
+      "months": [
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "priceSeries": [
+        {
+          "id": "PCU3344183344189",
+          "label": "PPI 印刷电路组装制造",
+          "tier": "硬件投入端",
+          "fullTitle": "Producer Price Index by Industry: Printed Circuit Assembly (Electronic Assembly) Manufacturing",
+          "source": "BLS via FRED",
+          "lastMonth": "2026-08",
+          "index": 277.3,
+          "changePct": 177.3,
+          "points": [
+            100.0,
+            97.0,
+            97.1,
+            95.3,
+            93.0,
+            88.6,
+            88.7,
+            116.2,
+            116.2,
+            117.1,
+            126.1,
+            126.1,
+            126.3,
+            182.5,
+            195.3,
+            244.8,
+            244.8,
+            244.8,
+            244.9,
+            277.3
+          ]
+        },
+        {
+          "id": "PCU334112334112",
+          "label": "PPI 计算机存储器件制造",
+          "tier": "硬件投入端",
+          "fullTitle": "Producer Price Index by Industry: Computer Storage Device Manufacturing (Dec 1980=100, NSA)",
+          "source": "BLS via FRED",
+          "lastMonth": "2026-08",
+          "index": 192.2,
+          "changePct": 92.2,
+          "points": [
+            100.0,
+            100.0,
+            100.4,
+            101.4,
+            101.7,
+            100.0,
+            101.6,
+            102.7,
+            102.6,
+            106.6,
+            106.8,
+            106.8,
+            116.3,
+            118.5,
+            118.5,
+            122.3,
+            129.9,
+            167.9,
+            191.1,
+            192.2
+          ]
+        },
+        {
+          "id": "CUUR0000SEEE01",
+          "label": "CPI 个人电脑与外围设备",
+          "tier": "消费者端",
+          "fullTitle": "CPI-U: Computers, Peripherals, and Smart Home Assistants, U.S. City Average (Dec 2007=100, NSA)",
+          "source": "BLS via FRED",
+          "lastMonth": "2026-08",
+          "index": 111.0,
+          "changePct": 11.0,
+          "points": [
+            100.0,
+            100.7,
+            100.9,
+            101.7,
+            102.8,
+            104.2,
+            103.0,
+            102.4,
+            102.6,
+            null,
+            99.8,
+            98.5,
+            101.6,
+            101.6,
+            103.1,
+            104.0,
+            104.2,
+            103.4,
+            107.0,
+            111.0
+          ]
+        },
+        {
+          "id": "PCU518210518210",
+          "label": "PPI 数据处理与托管",
+          "tier": "云服务端",
+          "fullTitle": "Producer Price Index by Industry: Data Processing, Hosting and Related Services (Dec 2000=100, NSA)",
+          "source": "BLS via FRED",
+          "lastMonth": "2026-08",
+          "index": 103.7,
+          "changePct": 3.7,
+          "points": [
+            100.0,
+            101.2,
+            100.9,
+            101.1,
+            102.8,
+            102.4,
+            104.9,
+            103.4,
+            102.6,
+            103.0,
+            102.0,
+            102.3,
+            102.5,
+            102.4,
+            101.8,
+            101.6,
+            102.2,
+            102.7,
+            103.8,
+            103.7
+          ]
+        },
+        {
+          "id": "PCU511210511210",
+          "label": "PPI 软件出版商",
+          "tier": "软件端",
+          "fullTitle": "Producer Price Index by Industry: Software Publishers (Dec 1997=100, NSA)",
+          "source": "BLS via FRED",
+          "lastMonth": "2026-08",
+          "index": 97.5,
+          "changePct": -2.5,
+          "points": [
+            100.0,
+            99.4,
+            99.3,
+            96.3,
+            96.0,
+            95.6,
+            98.3,
+            99.7,
+            99.5,
+            102.6,
+            100.8,
+            100.4,
+            97.8,
+            98.0,
+            98.4,
+            99.3,
+            99.3,
+            99.4,
+            99.6,
+            97.5
+          ]
+        }
+      ],
+      "costChains": [
+        {
+          "name": "Epoch 成本 · GPQA Diamond 75%",
+          "benchmark": "GPQA Diamond",
+          "level": "75%",
+          "baseMonth": "2025-01",
+          "baseCost": 0.299,
+          "latestCost": 0.000412,
+          "latestModel": "GPT-5.6 Luna (low)",
+          "latestDate": "2026-07-09",
+          "latestAccuracy": "75.3%",
+          "multiple": 726,
+          "index": 0.138,
+          "points": [
+            100.0,
+            100.0,
+            29.799,
+            29.799,
+            29.799,
+            4.314,
+            4.314,
+            4.314,
+            4.314,
+            4.314,
+            4.314,
+            2.95,
+            2.95,
+            0.729,
+            0.729,
+            0.729,
+            0.729,
+            0.405,
+            0.138,
+            0.138
+          ],
+          "records": [
+            {
+              "date": "2025-01-31",
+              "cost": 0.299,
+              "model": "o3 (high)",
+              "accuracy": "75.8%"
+            },
+            {
+              "date": "2025-03-25",
+              "cost": 0.0891,
+              "model": "Gemini 2.5 Pro (Jun 2025)",
+              "accuracy": "80.4%"
+            },
+            {
+              "date": "2025-06-05",
+              "cost": 0.0129,
+              "model": "Gemini 2.5 Pro (Jun 2025)",
+              "accuracy": "77.8%"
+            },
+            {
+              "date": "2025-12-01",
+              "cost": 0.00882,
+              "model": "DeepSeek-V3.2",
+              "accuracy": "77.7%"
+            },
+            {
+              "date": "2026-02-13",
+              "cost": 0.0071,
+              "model": "Qwen3.5 397B-A17B",
+              "accuracy": "79.8%"
+            },
+            {
+              "date": "2026-02-25",
+              "cost": 0.00218,
+              "model": "Qwen 3.5 Flash (hosted 35B-A3B)",
+              "accuracy": "76.2%"
+            },
+            {
+              "date": "2026-06-01",
+              "cost": 0.00121,
+              "model": "MiniMax-M3",
+              "accuracy": "75.1%"
+            },
+            {
+              "date": "2026-07-09",
+              "cost": 0.000412,
+              "model": "GPT-5.6 Luna (low)",
+              "accuracy": "75.3%"
+            }
+          ]
+        },
+        {
+          "name": "Epoch 成本 · AIME 75%",
+          "benchmark": "AIME (OTIS Mock)",
+          "level": "75%",
+          "baseMonth": "2025-01",
+          "baseCost": 0.057,
+          "latestCost": 0.000694,
+          "latestModel": "Qwen3.7 Flash",
+          "latestDate": "2026-07-27",
+          "latestAccuracy": "77.8%",
+          "multiple": 82,
+          "index": 1.218,
+          "points": [
+            100.0,
+            100.0,
+            100.0,
+            17.895,
+            17.895,
+            17.895,
+            17.895,
+            5.544,
+            5.544,
+            5.544,
+            5.544,
+            5.544,
+            5.544,
+            5.544,
+            5.544,
+            3.404,
+            3.404,
+            3.404,
+            1.218,
+            1.218
+          ],
+          "records": [
+            {
+              "date": "2025-01-31",
+              "cost": 0.057,
+              "model": "o3-mini (high)",
+              "accuracy": "75.3%"
+            },
+            {
+              "date": "2025-04-09",
+              "cost": 0.0102,
+              "model": "Grok-3 mini (high)",
+              "accuracy": "77.8%"
+            },
+            {
+              "date": "2025-08-05",
+              "cost": 0.00316,
+              "model": "gpt-oss-120b (high)",
+              "accuracy": "78.9%"
+            },
+            {
+              "date": "2026-04-02",
+              "cost": 0.00194,
+              "model": "Gemma 4 26B A4B (minimal)",
+              "accuracy": "82.2%"
+            },
+            {
+              "date": "2026-07-27",
+              "cost": 0.000694,
+              "model": "Qwen3.7 Flash",
+              "accuracy": "77.8%"
+            }
+          ]
+        }
+      ],
+      "declineRates": [
+        {
+          "benchmark": "AIME (OTIS Mock)",
+          "pctPerQtr": 47.1,
+          "shareRecordsMoved": 0.477
+        },
+        {
+          "benchmark": "Chess Puzzles",
+          "pctPerQtr": 43.0,
+          "shareRecordsMoved": 0.411
+        },
+        {
+          "benchmark": "FrontierMath, tiers 1–3",
+          "pctPerQtr": 53.1,
+          "shareRecordsMoved": 0.622
+        },
+        {
+          "benchmark": "GPQA Diamond",
+          "pctPerQtr": 47.0,
+          "shareRecordsMoved": 0.464
+        },
+        {
+          "benchmark": "Mystery Game Puzzles",
+          "pctPerQtr": 44.0,
+          "shareRecordsMoved": 0.246
+        },
+        {
+          "benchmark": "FrontierMath 2025-02",
+          "pctPerQtr": 43.3,
+          "shareRecordsMoved": 0.377
+        },
+        {
+          "benchmark": "FrontierMath, tier 4 (2025-07)",
+          "pctPerQtr": 26.0,
+          "shareRecordsMoved": 0.465
+        },
+        {
+          "benchmark": "FrontierMath, tier 4 v2",
+          "pctPerQtr": 65.1,
+          "shareRecordsMoved": 0.751
+        }
+      ],
+      "costSource": {
+        "title": "The Plunging Price of Thought",
+        "org": "Epoch AI (Luke Emberson, David Roodman)",
+        "page": "https://epoch.ai/publications/the-plunging-price-of-thought",
+        "data": "https://github.com/droodman/inference-cost (CC-BY)",
+        "unit": "USD / task — 达到固定准确率水平的最低每题成本 (成本前沿记录)"
+      },
+      "priceSource": {
+        "org": "U.S. BLS (PPI / CPI), 经 FRED fredgraph.csv",
+        "unit": "官方价格指数 (各序列基期不同, 前端统一归一为共同起点=100)"
+      },
+      "caveat": "成本侧是\"达到固定能力水平的最低每题花费\"= 成本曲线/影子价格, 不是成交价格; 价格侧是官方成交价格指数。两者口径与单位不同, 只能比较方向与量级, 不可相减, 也不构成对官方指数的质量调整。",
+      "fed": {
+        "asOf": "2026-05-22",
+        "purpose": "把「供给侧思考成本暴跌」与「官方价格指数」并排放进 AI 产业链板块，用于观察 AI 通缩为何没有传导到消费价格。成本侧(Epoch AI 成本前沿记录)与价格侧(BLS PPI/CPI)均为自动拉取的真实数据，本块只存放带引用的策展口径说明，不含任何估算值。",
+        "source": {
+          "org": "Federal Reserve Board — FEDS Notes",
+          "title": "Measurement of 'Computer Software and Accessories' Inflation",
+          "authors": "Alessandro Barbarino, Anthony M. Diercks, Stephen Miran",
+          "date": "2026-05-22",
+          "url": "https://www.federalreserve.gov/econres/notes/feds-notes/measurement-of-computer-software-and-accessories-inflation-20260522.html",
+          "doi": "10.17016/2380-7172.4089"
+        },
+        "weights": {
+          "pceSoftwareShareOfCorePcePct": 1.2,
+          "pceSoftwareShareOfCoreGoodsPct": 5.1,
+          "cpiSoftwareShareOfCoreCpiPct": 0.035,
+          "note": "同一个「计算机软件及配件」类别，占核心 PCE 1.2%、占核心 CPI 仅 0.035%，权重差约 34 倍——这是 CPI 与 PCE 读数罕见倒挂的直接原因。"
+        },
+        "qualityLadder": [
+          {
+            "label": "未调整",
+            "softwareAnnualizedPct": 73.14,
+            "corePceAnnualizedPct": 4.38,
+            "coreGoodsPceAnnualizedPct": 5.47
+          },
+          {
+            "label": "类目错配修正",
+            "softwareAnnualizedPct": 52.0,
+            "corePceAnnualizedPct": 4.22,
+            "coreGoodsPceAnnualizedPct": 4.81
+          },
+          {
+            "label": "+25% 质量调整",
+            "softwareAnnualizedPct": 22.02,
+            "corePceAnnualizedPct": 3.96,
+            "coreGoodsPceAnnualizedPct": 3.68
+          },
+          {
+            "label": "+50% 质量调整",
+            "softwareAnnualizedPct": 1.12,
+            "corePceAnnualizedPct": 3.73,
+            "coreGoodsPceAnnualizedPct": 2.73
+          },
+          {
+            "label": "趋势反事实",
+            "softwareAnnualizedPct": -5.3,
+            "corePceAnnualizedPct": 3.65,
+            "coreGoodsPceAnnualizedPct": 2.39
+          }
+        ],
+        "ladderBasis": "年化 4 个月变动率 (Annualized 4-month change)，数据截至 2026-03；单一窗口的静态快照，不是时间序列。软件分项长期的趋势增速为 -5.3%/年，2026 年却折年化 +73%，是 25 年来的纪录。",
+        "qualityMethod": {
+          "proxy": "以三个模型家族相邻代际的 117 个基准层面改进估计作为 AI 能力提升的代理，平均改进 +39.4%",
+          "pairs": [
+            {
+              "from": "GPT-5.1",
+              "to": "GPT-5.4",
+              "improvePct": 56.5
+            },
+            {
+              "from": "Claude Opus 4.5",
+              "to": "Claude Opus 4.6",
+              "improvePct": 38.3
+            },
+            {
+              "from": "Gemini 3 Pro",
+              "to": "Gemini 3.1 Pro",
+              "improvePct": 25.3
+            }
+          ],
+          "passthrough": "承认基准改进只是消费者软件质量的不完美(且偏高)代理，故设 25% 与 50% 两档部分传导情景",
+          "note": "口径局限：25% 这个传导率没有客观依据，属美联储自己承认的「上限代理」。Epoch AI 的季度降价率可作为该折扣率的第三方外部锚——但它不能直接替代质量调整率。"
+        },
+        "mismatch": {
+          "cause": "BEA 用 CPI「计算机软件及配件」指数平减 PCE 对应类别，但该 CPI 的底层条目 (ELI EE021『计算机软件与空白媒体』) 同时包含闪存盘、空白 DVD/CD，而 PCE 该类别的空白媒体权重为 0%。AI 拉动的存储涨价因此被算进了『软件』。",
+          "evidence": "闪存盘(20 款最畅销)自 2025-11 上涨约 70%；韩国闪存/DRAM PPI 一年翻倍以上；BLS PPI 印刷电路组装制造、计算机存储器件制造同期暴涨(见本板块主图)。",
+          "cpiNoQualityAdjust": "BLS 对该 CPI 条目(EE021)不做质量调整——现行 hedonic 调整只覆盖服装(季节性)与家电/消费电子(技术变革)，软件与数字订阅不在其列。"
+        },
+        "upcomingBreak": {
+          "date": "2026-09-30",
+          "event": "BEA 对 PCE 价格指数三个分项(计算机软件与配件 / 投资组合管理服务 / 法律服务)的方法论修订生效，并追溯至 2021 年。",
+          "softwareChange": "由单一 CPI 软件分项 → 复合指数(CPI 软件与配件 + PPI 游戏软件出版 + PPI 数据处理/托管/IT 基础设施配置服务)",
+          "marketEstimate": "券商测算核心 PCE 读数下修约 0.2pp(高盛 0.2 / 瑞银单项 0.21 / 工银自测 0.13)",
+          "note": "2021 年以来的历史序列因此存在不可比断点；跨期同比与回测需按此日期分段。"
+        }
       }
     },
     "flowData": {

@@ -128,6 +128,27 @@ function load(file) {
 const results = [];
 let failures = 0;
 
+/* 产物冲突标记守卫
+ * 背景: 2026-09-24 rebase origin/main 时 data.js / index.html 冲突, gen_datajs.py 只对
+ *   index.html 做版本号正则替换、不重写整份文件, 于是冲突标记被原样留在产物里并提交。
+ *   冲突标记不会让渲染报错, 只会让页面静默坏掉 —— 必须在这里 fail fast。 */
+try {
+  const dirty = [];
+  for (const f of ['index.html', 'data.js', 'app.js', 'styles.css',
+                   'scripts/ai_chain.json', 'scripts/ai_scissors.json']) {
+    const p = path.join(ROOT, f);
+    if (!fs.existsSync(p)) continue;
+    const txt = fs.readFileSync(p, 'utf8');
+    const hit = (txt.match(/^(<{7}|={7}|>{7})/gm) || []).length;
+    if (hit) dirty.push(f + '(' + hit + ' 处)');
+  }
+  if (dirty.length) throw new Error('文件残留 git 冲突标记: ' + dirty.join(', '));
+  results.push(['产物冲突标记扫描', 'OK']);
+} catch (e) {
+  results.push(['产物冲突标记扫描', 'FAIL: ' + e.message]);
+  failures++;
+}
+
 try {
   load(path.join(ROOT, 'data.js'));
   results.push(['加载 data.js', 'OK']);

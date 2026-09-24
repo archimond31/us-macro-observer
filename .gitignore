@@ -8,3 +8,6 @@ scripts/pipeline.log
 # 本地策展生成的临时清单（由 scripts/ai_curate_check.py 产出，非源文件）
 scripts/ai_curate_todo.json
 scripts/ai_curate_todo.md
+
+# 本地临时工作副本(嵌套 clone)，勿提交
+usm_fresh/

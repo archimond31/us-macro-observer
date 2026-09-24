@@ -4360,6 +4360,120 @@ for _i, _r in enumerate(_ai_flow_raw):
     })
 _ai_flow_sorted = sorted(_ai_flow, key=lambda x: x['flowScore'], reverse=True)
 
+# ====== AI 剪刀差: 「思考价格」成本曲线 vs 官方价格指数 ======
+# 成本侧: Epoch AI 成本前沿纪录 (USD/题, 固定准确率水平的最低成本) → 归一指数
+# 价格侧: BLS PPI/CPI 官方价格指数 → 归一指数
+# 统一锚点 = 2025-01 = 100 (Epoch 主链首个记录月), 两条线只可比方向与量级, 不可相减。
+try:
+    AISC = json.load(open(SCRIPT_DIR / 'ai_scissors.json', encoding='utf-8'))
+    print('[gen_datajs] loaded ai_scissors.json', file=sys.stderr, flush=True)
+except Exception:
+    AISC = None
+    print('[gen_datajs] ai_scissors.json 缺失, 剪刀差卡片留空', file=sys.stderr, flush=True)
+
+_AI_SCISSOR_ANCHOR = '2025-01'
+# 成本链选取: 文章头条案例(GPQA Diamond 75%) + 同起点对照链(AIME 75%)
+_AI_SCISSOR_CHAINS = [
+    ('GPQA Diamond', '75%', 'Epoch 成本 · GPQA Diamond 75%'),
+    ('AIME (OTIS Mock)', '75%', 'Epoch 成本 · AIME 75%'),
+]
+
+def _build_ai_scissors():
+    if not AISC:
+        return None
+    anchor = _AI_SCISSOR_ANCHOR
+    price_raw = AISC.get('priceSeries') or {}
+    # 统一月份轴: 各价格序列月份的并集, 裁到锚点当月及以后
+    ms = set()
+    for _v in price_raw.values():
+        for d, _x in (_v.get('points') or []):
+            if d[:7] >= anchor:
+                ms.add(d[:7])
+    months = sorted(ms)
+    if not months:
+        return None
+    _mi = {m: i for i, m in enumerate(months)}
+
+    price_out = []
+    for sid, v in price_raw.items():
+        bym = {d[:7]: x for d, x in (v.get('points') or [])}
+        base = bym.get(anchor)
+        if not base:
+            continue
+        arr = [None] * len(months)
+        for m, x in bym.items():
+            if m in _mi:
+                arr[_mi[m]] = round(x / base * 100, 1)
+        last_i = max([i for i, x in enumerate(arr) if x is not None], default=None)
+        if last_i is None:
+            continue
+        price_out.append({
+            'id': sid, 'label': v.get('label', sid), 'tier': v.get('tier', ''),
+            'fullTitle': v.get('fullTitle', ''), 'source': v.get('source', 'BLS via FRED'),
+            'lastMonth': months[last_i], 'index': arr[last_i],
+            'changePct': round(arr[last_i] - 100, 1), 'points': arr
+        })
+    # 涨幅高的排前面, 便于图例对照
+    price_out.sort(key=lambda s: -s['changePct'])
+    if not price_out:
+        return None
+
+    chains = []
+    for bench, level, label in _AI_SCISSOR_CHAINS:
+        recs = [r for r in (AISC.get('costRecords') or [])
+                if r.get('benchmark') == bench and r.get('level') == level
+                and r.get('date', '')[:7] >= anchor]
+        if not recs:
+            continue
+        recs.sort(key=lambda r: r['date'])
+        base_cost = recs[0]['cost']
+        base_m = recs[0]['date'][:7]
+        # 成本纪录在被更便宜模型打破前一直有效 → 逐月前向填充
+        arr, cur, ri = [None] * len(months), None, 0
+        for i, m in enumerate(months):
+            if m < base_m:
+                continue
+            while ri < len(recs) and recs[ri]['date'][:7] <= m:
+                cur = recs[ri]
+                ri += 1
+            if cur:
+                arr[i] = round(cur['cost'] / base_cost * 100, 3)
+        last_i = max([i for i, x in enumerate(arr) if x is not None], default=None)
+        last_rec = recs[-1]
+        chains.append({
+            'name': label, 'benchmark': bench, 'level': level, 'baseMonth': base_m,
+            'baseCost': base_cost, 'latestCost': last_rec['cost'],
+            'latestModel': last_rec['model'], 'latestDate': last_rec['date'],
+            'latestAccuracy': last_rec['accuracy'],
+            'multiple': round(base_cost / last_rec['cost']),
+            'index': arr[last_i] if last_i is not None else None,
+            'points': arr,
+            'records': [{'date': r['date'], 'cost': r['cost'], 'model': r['model'],
+                         'accuracy': r['accuracy']} for r in recs]
+        })
+    if not chains:
+        return None
+
+    fed = (AIC.get('scissors') or {}) if isinstance(AIC.get('scissors'), dict) else {}
+    return {
+        'asOf': AISC.get('asOf', ''),
+        'anchor': anchor,
+        'months': months,
+        'priceSeries': price_out,
+        'costChains': chains,
+        'declineRates': (AISC.get('declineRates') or [])[:8],
+        'costSource': AISC.get('costSource') or {},
+        'priceSource': AISC.get('priceSource') or {},
+        'caveat': AISC.get('caveat', ''),
+        'fed': fed,
+    }
+
+_ai_scissors_out = _build_ai_scissors()
+if _ai_scissors_out:
+    print('[gen_datajs] aiScissors: 价格序列 %d 条 / 成本链 %d 条 / 月份 %d'
+          % (len(_ai_scissors_out['priceSeries']), len(_ai_scissors_out['costChains']),
+             len(_ai_scissors_out['months'])), file=sys.stderr, flush=True)
+
 DATA['aiChain'] = {
     'meta': {'asOf': AIC.get('asOf', ''), 'disclaimer': AIC.get('disclaimer', ''),
              'note': '六层(黄仁勋五层蛋糕+网络连接层): 应用→模型→基础设施→网络连接→芯片→能源; 股价动量自动(Yahoo), 基本面/研报/周期叙事为策展种子值(其中 cycle.capex 为公开指引估计)'},
@@ -4368,6 +4482,7 @@ DATA['aiChain'] = {
     'summary': _ai_summary,
     'marketSummary': _ai_market_summary,
     'cycle': _ai_cycle_out,
+    'scissors': _ai_scissors_out,
     'flowData': {
         'asOf': str(datetime.date.today()),
         'layers': _ai_flow_sorted,

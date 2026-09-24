@@ -1,0 +1,1100 @@
+{
+  "asOf": "2026-09-24",
+  "costSource": {
+    "title": "The Plunging Price of Thought",
+    "org": "Epoch AI (Luke Emberson, David Roodman)",
+    "page": "https://epoch.ai/publications/the-plunging-price-of-thought",
+    "data": "https://github.com/droodman/inference-cost (CC-BY)",
+    "unit": "USD / task — 达到固定准确率水平的最低每题成本 (成本前沿记录)"
+  },
+  "priceSource": {
+    "org": "U.S. BLS (PPI / CPI), 经 FRED fredgraph.csv",
+    "unit": "官方价格指数 (各序列基期不同, 前端统一归一为共同起点=100)"
+  },
+  "caveat": "成本侧是\"达到固定能力水平的最低每题花费\"= 成本曲线/影子价格, 不是成交价格; 价格侧是官方成交价格指数。两者口径与单位不同, 只能比较方向与量级, 不可相减, 也不构成对官方指数的质量调整。",
+  "costRecords": [
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "GPT-4 Turbo (Nov 2023)",
+      "accuracy": "28.6%",
+      "date": "2023-11-06",
+      "cost": 0.0197
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "Gemini 1.5 Pro",
+      "accuracy": "25.6%",
+      "date": "2024-02-15",
+      "cost": 0.00194
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "WizardLM-2 8x22B",
+      "accuracy": "25.6%",
+      "date": "2024-04-15",
+      "cost": 0.000623
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "Llama 3.1-70B",
+      "accuracy": "25.0%",
+      "date": "2024-07-23",
+      "cost": 0.000209
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "25%",
+      "model": "o1-mini (medium)",
+      "accuracy": "29.4%",
+      "date": "2024-09-12",
+      "cost": 0.0155
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "Gemini 1.5 Flash",
+      "accuracy": "29.7%",
+      "date": "2024-09-24",
+      "cost": 0.000145
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "25%",
+      "model": "QwQ-32B",
+      "accuracy": "48.6%",
+      "date": "2024-11-28",
+      "cost": 0.00749
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "Phi-4",
+      "accuracy": "38.3%",
+      "date": "2024-12-12",
+      "cost": 0.000108
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "25%",
+      "model": "DeepSeek-R1-Distill-Qwen-14B",
+      "accuracy": "27.8%",
+      "date": "2025-01-20",
+      "cost": 0.0011
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "Mistral Small 3",
+      "accuracy": "25.7%",
+      "date": "2025-01-25",
+      "cost": 8.9e-05
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "75%",
+      "model": "o3-mini (high)",
+      "accuracy": "75.3%",
+      "date": "2025-01-31",
+      "cost": 0.057
+    },
+    {
+      "benchmark": "Chess Puzzles",
+      "level": "25%",
+      "model": "o3 (low)",
+      "accuracy": "27.0%",
+      "date": "2025-01-31",
+      "cost": 0.0709
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "o3 (medium)",
+      "accuracy": "26.3%",
+      "date": "2025-01-31",
+      "cost": 0.553
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "o3 (high)",
+      "accuracy": "75.8%",
+      "date": "2025-01-31",
+      "cost": 0.299
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "25%",
+      "model": "Gemini 2.0 Flash",
+      "accuracy": "27.6%",
+      "date": "2025-02-05",
+      "cost": 0.000605
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "Gemini 2.5 Pro (Jun 2025)",
+      "accuracy": "80.4%",
+      "date": "2025-03-25",
+      "cost": 0.0891
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "75%",
+      "model": "Grok-3 mini (high)",
+      "accuracy": "77.8%",
+      "date": "2025-04-09",
+      "cost": 0.0102
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "o4-mini (medium)",
+      "accuracy": "26.0%",
+      "date": "2025-04-16",
+      "cost": 0.129
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "Gemini 2.5 Pro (Jun 2025)",
+      "accuracy": "77.8%",
+      "date": "2025-06-05",
+      "cost": 0.0129
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "25%",
+      "model": "gpt-oss-20b (low)",
+      "accuracy": "28.3%",
+      "date": "2025-08-05",
+      "cost": 0.000232
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "75%",
+      "model": "gpt-oss-120b (high)",
+      "accuracy": "78.9%",
+      "date": "2025-08-05",
+      "cost": 0.00316
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "25%",
+      "model": "gpt-oss-20b (low)",
+      "accuracy": "33.1%",
+      "date": "2025-08-05",
+      "cost": 8.5e-05
+    },
+    {
+      "benchmark": "Chess Puzzles",
+      "level": "25%",
+      "model": "GPT-5 nano (high)",
+      "accuracy": "27.0%",
+      "date": "2025-08-07",
+      "cost": 0.0137
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "GPT-5 mini (high)",
+      "accuracy": "30.5%",
+      "date": "2025-08-07",
+      "cost": 0.0988
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "DeepSeek-V3.2",
+      "accuracy": "77.7%",
+      "date": "2025-12-01",
+      "cost": 0.00882
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "Qwen3.5 397B-A17B",
+      "accuracy": "25.6%",
+      "date": "2026-02-13",
+      "cost": 0.0924
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "Qwen3.5 397B-A17B",
+      "accuracy": "79.8%",
+      "date": "2026-02-13",
+      "cost": 0.0071
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "Grok 4.20",
+      "accuracy": "28.4%",
+      "date": "2026-02-17",
+      "cost": 0.079
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "Qwen 3.5 Flash (hosted 35B-A3B)",
+      "accuracy": "76.2%",
+      "date": "2026-02-25",
+      "cost": 0.00218
+    },
+    {
+      "benchmark": "Chess Puzzles",
+      "level": "25%",
+      "model": "Gemini 3.1 Flash-Lite (low)",
+      "accuracy": "25.0%",
+      "date": "2026-03-03",
+      "cost": 0.000726
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "75%",
+      "model": "GPT-5.4 (xhigh)",
+      "accuracy": "78.6%",
+      "date": "2026-03-05",
+      "cost": 2.15
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "GPT-5.4 Nano (high)",
+      "accuracy": "28.4%",
+      "date": "2026-03-17",
+      "cost": 0.0742
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "75%",
+      "model": "Gemma 4 26B A4B (minimal)",
+      "accuracy": "82.2%",
+      "date": "2026-04-02",
+      "cost": 0.00194
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "GPT-5.5 Instant",
+      "accuracy": "25.3%",
+      "date": "2026-05-05",
+      "cost": 0.0667
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "MiniMax-M3",
+      "accuracy": "75.1%",
+      "date": "2026-06-01",
+      "cost": 0.00121
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "Qwen3.7-Plus",
+      "accuracy": "28.1%",
+      "date": "2026-06-02",
+      "cost": 0.0463
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "25%",
+      "model": "GPT-5.6 Luna",
+      "accuracy": "25.3%",
+      "date": "2026-07-09",
+      "cost": 0.00147
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "level": "75%",
+      "model": "GPT-5.6 Luna (max)",
+      "accuracy": "82.1%",
+      "date": "2026-07-09",
+      "cost": 0.219
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "level": "75%",
+      "model": "GPT-5.6 Luna (low)",
+      "accuracy": "75.3%",
+      "date": "2026-07-09",
+      "cost": 0.000412
+    },
+    {
+      "benchmark": "Mystery Game Puzzles",
+      "level": "25%",
+      "model": "GPT-5.6 Sol",
+      "accuracy": "26.2%",
+      "date": "2026-07-09",
+      "cost": 0.195
+    },
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "level": "75%",
+      "model": "Qwen3.7 Flash",
+      "accuracy": "77.8%",
+      "date": "2026-07-27",
+      "cost": 0.000694
+    }
+  ],
+  "declineRates": [
+    {
+      "benchmark": "AIME (OTIS Mock)",
+      "pctPerQtr": 47.1,
+      "shareRecordsMoved": 0.477
+    },
+    {
+      "benchmark": "Chess Puzzles",
+      "pctPerQtr": 43.0,
+      "shareRecordsMoved": 0.411
+    },
+    {
+      "benchmark": "FrontierMath, tiers 1–3",
+      "pctPerQtr": 53.1,
+      "shareRecordsMoved": 0.622
+    },
+    {
+      "benchmark": "GPQA Diamond",
+      "pctPerQtr": 47.0,
+      "shareRecordsMoved": 0.464
+    },
+    {
+      "benchmark": "Mystery Game Puzzles",
+      "pctPerQtr": 44.0,
+      "shareRecordsMoved": 0.246
+    },
+    {
+      "benchmark": "FrontierMath 2025-02",
+      "pctPerQtr": 43.3,
+      "shareRecordsMoved": 0.377
+    },
+    {
+      "benchmark": "FrontierMath, tier 4 (2025-07)",
+      "pctPerQtr": 26.0,
+      "shareRecordsMoved": 0.465
+    },
+    {
+      "benchmark": "FrontierMath, tier 4 v2",
+      "pctPerQtr": 65.1,
+      "shareRecordsMoved": 0.751
+    },
+    {
+      "benchmark": "MATH, level 5",
+      "pctPerQtr": 51.8,
+      "shareRecordsMoved": 0.497
+    },
+    {
+      "benchmark": "SimpleQA Verified",
+      "pctPerQtr": 40.5,
+      "shareRecordsMoved": 0.354
+    },
+    {
+      "benchmark": "SWE-Bench Verified",
+      "pctPerQtr": 27.5,
+      "shareRecordsMoved": 0.346
+    }
+  ],
+  "priceSeries": {
+    "PCU334112334112": {
+      "label": "PPI 计算机存储器件制造",
+      "tier": "硬件投入端",
+      "fullTitle": "Producer Price Index by Industry: Computer Storage Device Manufacturing (Dec 1980=100, NSA)",
+      "source": "BLS via FRED",
+      "points": [
+        [
+          "2023-12-01",
+          61.528
+        ],
+        [
+          "2024-01-01",
+          61.528
+        ],
+        [
+          "2024-02-01",
+          61.528
+        ],
+        [
+          "2024-03-01",
+          61.528
+        ],
+        [
+          "2024-04-01",
+          61.528
+        ],
+        [
+          "2024-05-01",
+          60.787
+        ],
+        [
+          "2024-06-01",
+          60.412
+        ],
+        [
+          "2024-07-01",
+          60.412
+        ],
+        [
+          "2024-08-01",
+          60.412
+        ],
+        [
+          "2024-09-01",
+          59.511
+        ],
+        [
+          "2024-10-01",
+          59.511
+        ],
+        [
+          "2024-11-01",
+          60.409
+        ],
+        [
+          "2024-12-01",
+          60.409
+        ],
+        [
+          "2025-01-01",
+          60.998
+        ],
+        [
+          "2025-02-01",
+          60.998
+        ],
+        [
+          "2025-03-01",
+          61.215
+        ],
+        [
+          "2025-04-01",
+          61.878
+        ],
+        [
+          "2025-05-01",
+          62.02
+        ],
+        [
+          "2025-06-01",
+          61.01
+        ],
+        [
+          "2025-07-01",
+          62.002
+        ],
+        [
+          "2025-08-01",
+          62.631
+        ],
+        [
+          "2025-09-01",
+          62.597
+        ],
+        [
+          "2025-10-01",
+          65.005
+        ],
+        [
+          "2025-11-01",
+          65.162
+        ],
+        [
+          "2025-12-01",
+          65.162
+        ],
+        [
+          "2026-01-01",
+          70.918
+        ],
+        [
+          "2026-02-01",
+          72.266
+        ],
+        [
+          "2026-03-01",
+          72.266
+        ],
+        [
+          "2026-04-01",
+          74.574
+        ],
+        [
+          "2026-05-01",
+          79.255
+        ],
+        [
+          "2026-06-01",
+          102.39
+        ],
+        [
+          "2026-07-01",
+          116.548
+        ],
+        [
+          "2026-08-01",
+          117.232
+        ]
+      ]
+    },
+    "PCU3344183344189": {
+      "label": "PPI 印刷电路组装制造",
+      "tier": "硬件投入端",
+      "fullTitle": "Producer Price Index by Industry: Printed Circuit Assembly (Electronic Assembly) Manufacturing",
+      "source": "BLS via FRED",
+      "points": [
+        [
+          "2023-12-01",
+          79.016
+        ],
+        [
+          "2024-01-01",
+          79.484
+        ],
+        [
+          "2024-02-01",
+          79.449
+        ],
+        [
+          "2024-03-01",
+          79.473
+        ],
+        [
+          "2024-04-01",
+          79.067
+        ],
+        [
+          "2024-05-01",
+          78.767
+        ],
+        [
+          "2024-06-01",
+          78.464
+        ],
+        [
+          "2024-07-01",
+          80.345
+        ],
+        [
+          "2024-08-01",
+          80.77
+        ],
+        [
+          "2024-09-01",
+          80.896
+        ],
+        [
+          "2024-10-01",
+          82.694
+        ],
+        [
+          "2024-11-01",
+          90.228
+        ],
+        [
+          "2024-12-01",
+          90.518
+        ],
+        [
+          "2025-01-01",
+          87.742
+        ],
+        [
+          "2025-02-01",
+          85.105
+        ],
+        [
+          "2025-03-01",
+          85.208
+        ],
+        [
+          "2025-04-01",
+          83.606
+        ],
+        [
+          "2025-05-01",
+          81.637
+        ],
+        [
+          "2025-06-01",
+          77.702
+        ],
+        [
+          "2025-07-01",
+          77.858
+        ],
+        [
+          "2025-08-01",
+          101.945
+        ],
+        [
+          "2025-09-01",
+          101.994
+        ],
+        [
+          "2025-10-01",
+          102.745
+        ],
+        [
+          "2025-11-01",
+          110.668
+        ],
+        [
+          "2025-12-01",
+          110.668
+        ],
+        [
+          "2026-01-01",
+          110.836
+        ],
+        [
+          "2026-02-01",
+          160.099
+        ],
+        [
+          "2026-03-01",
+          171.399
+        ],
+        [
+          "2026-04-01",
+          214.755
+        ],
+        [
+          "2026-05-01",
+          214.75
+        ],
+        [
+          "2026-06-01",
+          214.774
+        ],
+        [
+          "2026-07-01",
+          214.894
+        ],
+        [
+          "2026-08-01",
+          243.32
+        ]
+      ]
+    },
+    "CUUR0000SEEE01": {
+      "label": "CPI 个人电脑与外围设备",
+      "tier": "消费者端",
+      "fullTitle": "CPI-U: Computers, Peripherals, and Smart Home Assistants, U.S. City Average (Dec 2007=100, NSA)",
+      "source": "BLS via FRED",
+      "points": [
+        [
+          "2023-12-01",
+          35.773
+        ],
+        [
+          "2024-01-01",
+          36.441
+        ],
+        [
+          "2024-02-01",
+          36.695
+        ],
+        [
+          "2024-03-01",
+          36.528
+        ],
+        [
+          "2024-04-01",
+          36.865
+        ],
+        [
+          "2024-05-01",
+          36.476
+        ],
+        [
+          "2024-06-01",
+          35.778
+        ],
+        [
+          "2024-07-01",
+          35.929
+        ],
+        [
+          "2024-08-01",
+          35.792
+        ],
+        [
+          "2024-09-01",
+          35.406
+        ],
+        [
+          "2024-10-01",
+          34.849
+        ],
+        [
+          "2024-11-01",
+          34.259
+        ],
+        [
+          "2024-12-01",
+          33.942
+        ],
+        [
+          "2025-01-01",
+          34.237
+        ],
+        [
+          "2025-02-01",
+          34.477
+        ],
+        [
+          "2025-03-01",
+          34.547
+        ],
+        [
+          "2025-04-01",
+          34.805
+        ],
+        [
+          "2025-05-01",
+          35.202
+        ],
+        [
+          "2025-06-01",
+          35.685
+        ],
+        [
+          "2025-07-01",
+          35.273
+        ],
+        [
+          "2025-08-01",
+          35.064
+        ],
+        [
+          "2025-09-01",
+          35.141
+        ],
+        [
+          "2025-11-01",
+          34.184
+        ],
+        [
+          "2025-12-01",
+          33.73
+        ],
+        [
+          "2026-01-01",
+          34.773
+        ],
+        [
+          "2026-02-01",
+          34.782
+        ],
+        [
+          "2026-03-01",
+          35.293
+        ],
+        [
+          "2026-04-01",
+          35.601
+        ],
+        [
+          "2026-05-01",
+          35.662
+        ],
+        [
+          "2026-06-01",
+          35.406
+        ],
+        [
+          "2026-07-01",
+          36.641
+        ],
+        [
+          "2026-08-01",
+          38.02
+        ]
+      ]
+    },
+    "PCU511210511210": {
+      "label": "PPI 软件出版商",
+      "tier": "软件端",
+      "fullTitle": "Producer Price Index by Industry: Software Publishers (Dec 1997=100, NSA)",
+      "source": "BLS via FRED",
+      "points": [
+        [
+          "2023-12-01",
+          93.323
+        ],
+        [
+          "2024-01-01",
+          92.945
+        ],
+        [
+          "2024-02-01",
+          92.66
+        ],
+        [
+          "2024-03-01",
+          93.189
+        ],
+        [
+          "2024-04-01",
+          94.741
+        ],
+        [
+          "2024-05-01",
+          95.198
+        ],
+        [
+          "2024-06-01",
+          96.983
+        ],
+        [
+          "2024-07-01",
+          99.81
+        ],
+        [
+          "2024-08-01",
+          99.007
+        ],
+        [
+          "2024-09-01",
+          100.039
+        ],
+        [
+          "2024-10-01",
+          101.06
+        ],
+        [
+          "2024-11-01",
+          101.378
+        ],
+        [
+          "2024-12-01",
+          100.642
+        ],
+        [
+          "2025-01-01",
+          100.215
+        ],
+        [
+          "2025-02-01",
+          99.612
+        ],
+        [
+          "2025-03-01",
+          99.525
+        ],
+        [
+          "2025-04-01",
+          96.537
+        ],
+        [
+          "2025-05-01",
+          96.172
+        ],
+        [
+          "2025-06-01",
+          95.837
+        ],
+        [
+          "2025-07-01",
+          98.514
+        ],
+        [
+          "2025-08-01",
+          99.93
+        ],
+        [
+          "2025-09-01",
+          99.746
+        ],
+        [
+          "2025-10-01",
+          102.853
+        ],
+        [
+          "2025-11-01",
+          101.06
+        ],
+        [
+          "2025-12-01",
+          100.653
+        ],
+        [
+          "2026-01-01",
+          98.009
+        ],
+        [
+          "2026-02-01",
+          98.165
+        ],
+        [
+          "2026-03-01",
+          98.62
+        ],
+        [
+          "2026-04-01",
+          99.516
+        ],
+        [
+          "2026-05-01",
+          99.559
+        ],
+        [
+          "2026-06-01",
+          99.6
+        ],
+        [
+          "2026-07-01",
+          99.767
+        ],
+        [
+          "2026-08-01",
+          97.7
+        ]
+      ]
+    },
+    "PCU518210518210": {
+      "label": "PPI 数据处理与托管",
+      "tier": "云服务端",
+      "fullTitle": "Producer Price Index by Industry: Data Processing, Hosting and Related Services (Dec 2000=100, NSA)",
+      "source": "BLS via FRED",
+      "points": [
+        [
+          "2023-12-01",
+          119.029
+        ],
+        [
+          "2024-01-01",
+          119.403
+        ],
+        [
+          "2024-02-01",
+          119.519
+        ],
+        [
+          "2024-03-01",
+          119.248
+        ],
+        [
+          "2024-04-01",
+          119.662
+        ],
+        [
+          "2024-05-01",
+          120.079
+        ],
+        [
+          "2024-06-01",
+          119.644
+        ],
+        [
+          "2024-07-01",
+          119.863
+        ],
+        [
+          "2024-08-01",
+          119.762
+        ],
+        [
+          "2024-09-01",
+          119.622
+        ],
+        [
+          "2024-10-01",
+          119.637
+        ],
+        [
+          "2024-11-01",
+          119.398
+        ],
+        [
+          "2024-12-01",
+          119.349
+        ],
+        [
+          "2025-01-01",
+          120.806
+        ],
+        [
+          "2025-02-01",
+          122.218
+        ],
+        [
+          "2025-03-01",
+          121.88
+        ],
+        [
+          "2025-04-01",
+          122.102
+        ],
+        [
+          "2025-05-01",
+          124.185
+        ],
+        [
+          "2025-06-01",
+          123.663
+        ],
+        [
+          "2025-07-01",
+          126.753
+        ],
+        [
+          "2025-08-01",
+          124.91
+        ],
+        [
+          "2025-09-01",
+          123.943
+        ],
+        [
+          "2025-10-01",
+          124.462
+        ],
+        [
+          "2025-11-01",
+          123.2
+        ],
+        [
+          "2025-12-01",
+          123.638
+        ],
+        [
+          "2026-01-01",
+          123.808
+        ],
+        [
+          "2026-02-01",
+          123.66
+        ],
+        [
+          "2026-03-01",
+          123.036
+        ],
+        [
+          "2026-04-01",
+          122.695
+        ],
+        [
+          "2026-05-01",
+          123.438
+        ],
+        [
+          "2026-06-01",
+          124.034
+        ],
+        [
+          "2026-07-01",
+          125.345
+        ],
+        [
+          "2026-08-01",
+          125.237
+        ]
+      ]
+    }
+  }
+}

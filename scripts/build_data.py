@@ -1698,5 +1698,165 @@ def update_market_consensus():
     print(f'[TE-consensus] economic_releases.json 更新 {updated} 条 (共 {len(merged)} 条)')
     return updated
 
+# ============================================================
+# AI 剪刀差 (AI Scissors): 「思考价格」成本曲线 vs BLS 官方价格指数
+# ------------------------------------------------------------
+# 动机: 供给侧达到固定能力水平的推理成本正以每季约 47% 崩塌 (Epoch AI, 2026),
+#       但官方价格指数能看到的却是 AI 硬件(存储器件/电路板)制造端暴涨。
+#       两侧真实数据并排, 用于回答"供给侧通缩为何没有传导到消费价格"。
+#
+# 口径警告 (务必保留): 成本侧是"达到某能力水平的最低每题花费"= 成本曲线/影子价格,
+#       价格侧是成交价格指数。二者单位与构造完全不同, 只能看方向与量级, 绝不可相减。
+#
+# 数据源 (全部一手官方, 零估算):
+#   - 成本侧: Epoch AI《The Plunging Price of Thought》配套数据 (CC-BY)
+#             https://github.com/droodman/inference-cost  output/tables/record_timelines.html
+#   - 价格侧: BLS PPI / CPI, 经 FRED fredgraph.csv 免 key 取数
+# 输出: ai_scissors.json
+# ============================================================
+
+# 官方价格指数候选: (FRED series id, 展示名, 侧别, 完整官方标题)
+_AI_SCISSOR_PRICE = [
+    ('PCU334112334112',    'PPI 计算机存储器件制造', '硬件投入端',
+     'Producer Price Index by Industry: Computer Storage Device Manufacturing (Dec 1980=100, NSA)'),
+    ('PCU3344183344189',   'PPI 印刷电路组装制造',   '硬件投入端',
+     'Producer Price Index by Industry: Printed Circuit Assembly (Electronic Assembly) Manufacturing'),
+    ('CUUR0000SEEE01',     'CPI 个人电脑与外围设备', '消费者端',
+     'CPI-U: Computers, Peripherals, and Smart Home Assistants, U.S. City Average (Dec 2007=100, NSA)'),
+    ('PCU511210511210',    'PPI 软件出版商',         '软件端',
+     'Producer Price Index by Industry: Software Publishers (Dec 1997=100, NSA)'),
+    ('PCU518210518210',    'PPI 数据处理与托管',     '云服务端',
+     'Producer Price Index by Industry: Data Processing, Hosting and Related Services (Dec 2000=100, NSA)'),
+]
+
+
+def fetch_epoch_record_timelines():
+    """Epoch AI 成本记录表: 每个(基准, 准确率水平)上"以更低成本刷新该水平成本纪录"的模型。
+    每行 = 一个真实的成本观测点 (发布日期, 最低每题成本, 模型, 该运行的准确率)。
+    注意: 这是成本前沿的下台阶记录, 不是逐月连续序列。"""
+    url = ('https://raw.githubusercontent.com/droodman/inference-cost/main/'
+           'output/tables/record_timelines.html')
+    try:
+        html = http_get(url, timeout=30)
+    except Exception as e:
+        print(f'  [epoch] record_timelines FAIL {e}')
+        return []
+    out = []
+    # 表格首列为 Benchmark 的是表头, 尾注行只有 1 个单元格, 均被 len==7 过滤掉
+    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.S):
+        cells = [unescape(re.sub(r'<[^>]+>', '', c)).strip()
+                 for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', tr, re.S)]
+        if len(cells) != 7 or cells[0] == 'Benchmark':
+            continue
+        if len(cells[5]) != 10 or cells[5][4] != '-':   # 日期格式校验
+            continue
+        try:
+            cost = float(cells[6].replace('$', '').replace(',', ''))
+        except ValueError:
+            continue
+        if cost <= 0:
+            continue
+        out.append({'benchmark': cells[0], 'level': cells[1], 'model': cells[2],
+                    'accuracy': cells[3], 'date': cells[5], 'cost': cost})
+    out.sort(key=lambda x: x['date'])
+    print(f'  [epoch] record_timelines: {len(out)} 个成本记录点, '
+          f'{out[0]["date"] if out else "-"} → {out[-1]["date"] if out else "-"}')
+    return out
+
+
+def fetch_epoch_decline_rates():
+    """Epoch AI 各基准的模型无关季度降价率 (staircase_check.csv)。"""
+    url = ('https://raw.githubusercontent.com/droodman/inference-cost/main/'
+           'output/tables/staircase_check.csv')
+    try:
+        text = http_get(url, timeout=25)
+    except Exception as e:
+        print(f'  [epoch] staircase_check FAIL {e}')
+        return []
+    rows = list(csv.reader(io.StringIO(text)))
+    out = []
+    for r in rows[1:]:
+        if len(r) < 2:
+            continue
+        try:
+            out.append({'benchmark': r[0].strip(),
+                        'pctPerQtr': round(float(r[1]), 1),
+                        'shareRecordsMoved': round(float(r[2]), 3)})
+        except ValueError:
+            continue
+    print(f'  [epoch] staircase_check: {len(out)} 个基准降价率')
+    return out
+
+
+def build_ai_scissors():
+    """整个模块自兜底: 任何未预期异常都不得中断主流水线 (与仓库既有"单点失败静默跳过"约定一致)。"""
+    try:
+        _build_ai_scissors_inner()
+    except Exception as e:
+        print(f'  [scissors] FAIL (已跳过, 主流水线继续) {e}')
+
+
+def _build_ai_scissors_inner():
+    path = SCRIPT_DIR / 'ai_scissors.json'
+    try:
+        prev = json.load(open(path, encoding='utf-8'))
+    except Exception:
+        prev = {}
+
+    cost = fetch_epoch_record_timelines()
+    decline = fetch_epoch_decline_rates()
+    prices = {}
+    for sid, label, tier, full in _AI_SCISSOR_PRICE:
+        pts = fred(sid, days=1000)          # ~33 个月, 覆盖 2024-01 起
+        if pts:
+            prices[sid] = {'label': label, 'tier': tier, 'fullTitle': full,
+                           'source': 'BLS via FRED', 'points': pts}
+            print(f'  [scissors] {label:16s} {sid:18s} {len(pts):3d} 点  '
+                  f'{pts[0][0]}={pts[0][1]} → {pts[-1][0]}={pts[-1][1]}')
+
+    # 容错: 成本侧或全部价格侧抓取失败时保留上一版, 避免把空段写进 data.js
+    if not cost:
+        cost = prev.get('costRecords', [])
+        if cost:
+            print('  [scissors] 成本侧抓取失败 → 沿用上一版 costRecords')
+    if not prices:
+        prices = prev.get('priceSeries', {})
+        if prices:
+            print('  [scissors] 价格侧全部失败 → 沿用上一版 priceSeries')
+    if not decline:
+        decline = prev.get('declineRates', [])
+
+    if not cost or not prices:
+        print('  [scissors] 关键数据缺失且无历史可回退 → 跳过, 保留原文件')
+        return
+
+    out = {
+        'asOf': datetime.now().strftime('%Y-%m-%d'),
+        'costSource': {
+            'title': 'The Plunging Price of Thought',
+            'org': 'Epoch AI (Luke Emberson, David Roodman)',
+            'page': 'https://epoch.ai/publications/the-plunging-price-of-thought',
+            'data': 'https://github.com/droodman/inference-cost (CC-BY)',
+            'unit': 'USD / task — 达到固定准确率水平的最低每题成本 (成本前沿记录)'
+        },
+        'priceSource': {
+            'org': 'U.S. BLS (PPI / CPI), 经 FRED fredgraph.csv',
+            'unit': '官方价格指数 (各序列基期不同, 前端统一归一为共同起点=100)'
+        },
+        'caveat': ('成本侧是"达到固定能力水平的最低每题花费"= 成本曲线/影子价格, '
+                   '不是成交价格; 价格侧是官方成交价格指数。两者口径与单位不同, '
+                   '只能比较方向与量级, 不可相减, 也不构成对官方指数的质量调整。'),
+        'costRecords': cost,
+        'declineRates': decline,
+        'priceSeries': prices,
+    }
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    print(f'  [scissors] ai_scissors.json 写入: 成本记录 {len(cost)} 点 / '
+          f'价格序列 {len(prices)} 条')
+
+
+build_ai_scissors()
+
 update_market_consensus()
 print('完成。下一步: 用 computed.json 重建 data.js')
