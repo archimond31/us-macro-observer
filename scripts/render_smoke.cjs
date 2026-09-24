@@ -153,8 +153,14 @@ const BAD = [/>\s*NaN\s*</, /NaN\s*(bp|%|pt|\$)/, /undefined/, /[^a-zA-Z]null[^a
 function scanHtml(section, html) {
   const hits = [];
   for (const re of BAD) {
-    const m = html.match(re);
-    if (m) hits.push(m[0].slice(0, 40));
+    // 必须用全局匹配计数: String.match(非全局) 只回首个匹配,
+    // 曾因此让 6 处同类问题在日志里只显示成 1 处, 多花了一轮排查。
+    const g = new RegExp(re.source, re.flags.indexOf('g') >= 0 ? re.flags : re.flags + 'g');
+    const all = html.match(g);
+    if (!all) continue;
+    const i = html.search(re);
+    const ctx = html.slice(Math.max(0, i - 50), i + all[0].length + 50).replace(/\s+/g, ' ');
+    hits.push('"' + all[0].trim() + '" ×' + all.length + ' 处 · 位置 ' + i + ' · …' + ctx + '…');
   }
   return hits;
 }
