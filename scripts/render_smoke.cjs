@@ -144,6 +144,11 @@ try {
 }
 
 /* 扫描 HTML 输出中的脏数据 */
+/* 注意: 这里对 null / undefined 做的是「裸词」匹配, 强度刻意保留 —— 目的是宁可误报,
+ * 也不放过任何一个「未渲染值漏进 DOM」。代价是 **策展正文 (macro_signal.json 等) 里
+ * 不得出现裸的 null / undefined / NaN 字样**, 否则会以正确的输出触发失败。
+ * 描述「无激活情景」请写字面中文 (如「未达成」), 与前端 activeScenario 为空时的展示一致。
+ * 2026-09-24: 曾因 scenarios[1].next 写「回落为 null(四条情景无一全命中)」误报过一次。 */
 const BAD = [/>\s*NaN\s*</, /NaN\s*(bp|%|pt|\$)/, /undefined/, /[^a-zA-Z]null[^a-zA-Z]/, />\s*-\s*</];
 function scanHtml(section, html) {
   const hits = [];
