@@ -74,6 +74,9 @@ class El {
 /* ---------- document / Chart 桩 ---------- */
 const SECTIONS = ['assets', 'rates', 'fed', 'liquidity', 'economy', 'credit', 'volatility', 'recession', 'risk',
                   'crypto', 'signal', 'ai', 'tradeRadar', 'positioning'];
+/* getElementById 拿到的元素全部登记在此。
+ * 用途不只是"返回一个元素" —— 逐板块扫描时要靠它回收「二次填充」的容器内容,
+ * 见下方 collectHtml() 的说明。 */
 const idRegistry = {};
 const navItems = SECTIONS.map(s => { const e = new El('a'); e.dataset.section = s; e.classList.add('nav-item'); return e; });
 let domReadyCb = null;
@@ -126,6 +129,9 @@ function load(file) {
 
 /* ---------- 执行 ---------- */
 const results = [];
+/* 非致命观察项。CI 行为变更（新增 fail-fast 判定）先在这里跑一轮观察,
+ * 确认无误报后再提升为 failures —— 避免一个未经观察的新守卫直接卡住无人值守的每日任务。 */
+const warns = [];
 let failures = 0;
 
 /* 产物冲突标记守卫
@@ -200,14 +206,50 @@ try {
   failures++;
 }
 
+/* 组装本板块的「完整页面 HTML」。
+ * 背景 (2026-09-24): ai 板块是两段式渲染 —— switchSection('ai') 只把子导航外壳写进
+ *   #content, 真正的卡片 (总览 / 各层 / 国产替代) 是写进 #aiTabBody 的。旧版只扫
+ *   currentHtml, 于是 AI 全部卡片正文 (含新增的剪刀差卡片) 从来没有被脏数据扫描覆盖
+ *   过 —— 日志一路 [PASS], 实际是假绿灯。这里把 content 之外所有被写入过的容器一并纳入。 */
+function collectHtml() {
+  let out = currentHtml;
+  Object.keys(idRegistry).forEach(k => {
+    if (k === 'content') return;              // currentHtml 已是它的内容
+    const h = idRegistry[k]._innerHTML;
+    if (h) out += '\n' + h;
+  });
+  return out;
+}
+
+/* 图表必须真的落在 HTML 里。
+ * 桩的 getElementById 恒返回元素 (浏览器在"卡片未渲染"时返回 null), 于是
+ * 「卡片没渲染、图表照样创建」这类静默失败在旧版冒烟里完全不可见。
+ * 用 canvas id 是否出现在 HTML 中做交叉校验, 把这个盲区补上。
+ * 现阶段仅记为 WARN (不阻断): 判定依赖"卡片是否条件渲染"与"图表守卫是否带数据判断"
+ * 两者一致, 而各板块写法尚未逐一对齐, 先观察若干轮 CI 再决定是否提升为 FAIL。 */
+function orphanCharts(from, html) {
+  const miss = [];
+  for (let i = from; i < chartInstances.length; i++) {
+    const c = chartInstances[i];
+    const cid = c.canvas && c.canvas.attributes && c.canvas.attributes.id;
+    if (cid && html.indexOf('<canvas id="' + cid + '"') < 0) miss.push(cid);
+  }
+  return miss;
+}
+
 /* 逐板块渲染 */
 for (const sec of SECTIONS) {
+  // 清掉上一板块在各容器里留下的内容, 否则残留会被算进本板块的扫描结果
+  Object.keys(idRegistry).forEach(k => { idRegistry[k]._innerHTML = ''; });
   const chartsBefore = chartInstances.length;
   try {
     sandbox.switchSection(sec);
-    const len = currentHtml.length;
-    const dirty = scanHtml(sec, currentHtml);
+    const html = collectHtml();
+    const len = html.length;
+    const dirty = scanHtml(sec, html);
     const nCharts = chartInstances.length - chartsBefore;
+    const orphan = orphanCharts(chartsBefore, html);
+    if (orphan.length) warns.push(sec + ': 图表已创建但 canvas 不在 HTML 中 → ' + orphan.join(', '));
     if (len < 500) throw new Error('内容过短 (' + len + ' 字符),疑似渲染不完整');
     if (dirty.length) throw new Error('HTML 含脏数据: ' + dirty.join(', '));
     results.push(['渲染 ' + sec, 'OK (' + len + ' 字符, ' + nCharts + ' 图表)']);
@@ -259,6 +301,10 @@ report();
 function report(forceExit) {
   console.log('\n================ 渲染冒烟测试 ================');
   for (const [name, res] of results) console.log((res.startsWith('OK') ? '  [PASS] ' : '  [FAIL] ') + name + (res === 'OK' ? '' : ' — ' + res.replace(/^OK ?/, '')));
+  if (warns.length) {
+    console.log('  ---- 观察项 (不阻断) ----');
+    for (const w of warns) console.log('  [WARN] ' + w);
+  }
   console.log('============================================');
   console.log(failures === 0 ? '结果: 全部通过' : '结果: ' + failures + ' 项失败');
   process.exit(forceExit !== undefined ? forceExit : (failures === 0 ? 0 : 1));
