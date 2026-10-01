@@ -1,7 +1,22 @@
 {
-  "asOf": "2026-09-30",
+  "asOf": "2026-10-01",
   "source": "Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)",
   "releases": [
+    {
+      "indicator": "GDP 环比年化 (实际)",
+      "tag": "GDP",
+      "periodLabel": "Q2",
+      "releaseDate": "2026-09-30",
+      "unit": "%",
+      "actual": 2.2,
+      "consensus": 1.5,
+      "previous": 2.5,
+      "previousLabel": "Q1",
+      "higherIsBetter": true,
+      "tolerance": 0.1,
+      "note": "增速放缓且低于预期；政府支出转负拖累，但私人最终销售加速至3.9%。",
+      "source": "te_auto"
+    },
     {
       "indicator": "CPI 同比",
       "tag": "CPI",
@@ -79,21 +94,6 @@
       "note": "8月回升至 61.6%（+0.2pt），扭转 6-7 月连续下滑（61.8%→61.5%→61.4%）；较年初 62.1% 仍低 0.5pt、较 2025 年高点 62.5% 低 0.9pt，劳动力供给约束仅边际缓解。参与率回升 + 失业率 4.1% 持平 = 就业市场企稳信号。无 8 月彭博一致预期（TE 未发布），consensus 留空。",
       "source": "manual",
       "locked": true
-    },
-    {
-      "indicator": "GDP 环比年化 (实际)",
-      "tag": "GDP",
-      "periodLabel": "Q2",
-      "releaseDate": "2026-08-26",
-      "unit": "%",
-      "actual": 1.5,
-      "consensus": 1.5,
-      "previous": 2.1,
-      "previousLabel": "Q1",
-      "higherIsBetter": true,
-      "tolerance": 0.1,
-      "note": "增速放缓且低于预期；政府支出转负拖累，但私人最终销售加速至3.9%。",
-      "source": "te_auto"
     },
     {
       "indicator": "核心PCE 同比",
