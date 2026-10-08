@@ -155,6 +155,54 @@ try {
   failures++;
 }
 
+/* 策展源文件预检: 从源头拦下裸的 null / undefined / NaN
+ * 背景: 下面的 HTML 脏数据扫描 (BAD) 对 null/undefined 做裸词匹配, 而策展正文会原样进入
+ *   渲染文本 —— 于是「正文里写了 code 字面量」会以正确的输出触发失败, 且报错只能给出
+ *   「渲染结果第 N 个字符」, 定位得人肉翻 JSON。2026-09-24 与 2026-10-08 两次 CI 失败
+ *   都是这一类 (共 7 处, 全部是 activeScenario 为空这一语义)。
+ * 故在读源文件阶段先扫一遍, 直接报出 文件 → JSON 路径 → 上下文。
+ * 描述「无激活情景」请写「未达成」(与前端 activeScenario 为空时的展示同词)。 */
+const CURATED_FILES = ['macro_signal.json', 'ai_chain.json', 'ai_scissors.json',
+                       'crypto_meta.json', 'positioning.json',
+                       'economic_releases.json', 'events.json'];
+const CURATED_BAD = [/NaN/, /undefined/, /[^a-zA-Z]null[^a-zA-Z]/];
+function scanCuratedSources() {
+  const hits = [];
+  for (const f of CURATED_FILES) {
+    let json;
+    try { json = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', f), 'utf8')); }
+    catch (e) { continue; }   // 缺失/未参与本次构建的文件跳过
+    const walk = (o, p) => {
+      if (typeof o === 'string') {
+        for (const re of CURATED_BAD) {
+          const g = new RegExp(re.source, 'g');
+          const all = o.match(g);
+          if (!all) continue;
+          const i = o.search(re);
+          hits.push(f + ' → ' + (p || '(root)') + ' 命中 "' + all[0].trim() + '" ×' + all.length +
+                    ' · …' + o.slice(Math.max(0, i - 40), i + all[0].length + 40).replace(/\s+/g, ' ') + '…');
+        }
+      } else if (o && typeof o === 'object') {
+        for (const k of Object.keys(o)) walk(o[k], p ? p + '.' + k : k);
+      }
+    };
+    walk(json, '');
+  }
+  return hits;
+}
+
+try {
+  const srcDirty = scanCuratedSources();
+  if (srcDirty.length) {
+    throw new Error('策展正文含裸 null/undefined/NaN (会原样进入渲染文本), 请改写为「未达成」等字面中文: '
+                    + srcDirty.join(' | '));
+  }
+  results.push(['策展源文件预检', 'OK (' + CURATED_FILES.length + ' 个文件)']);
+} catch (e) {
+  results.push(['策展源文件预检', 'FAIL: ' + e.message]);
+  failures++;
+}
+
 try {
   load(path.join(ROOT, 'data.js'));
   results.push(['加载 data.js', 'OK']);
