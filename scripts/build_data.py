@@ -17,7 +17,7 @@ build_data.py — 从官方公开数据源拉取真实数据，生成 data.js
 import csv, io, json, os, sys, time, subprocess, re
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from html import unescape
 from pathlib import Path
 
@@ -1590,20 +1590,58 @@ else:
 
 print('完成。下一步: 用 computed.json 重建 data.js')
 
-# ============ 市场预期 (consensus) 自动抓取 ============
-# Trading Economics 各指标页的 Calendar 表含 Actual/Previous/Consensus/TEForecast 四列,
-# 覆盖 CPI/核心CPI/失业率/非农/GDP 等关键发布。抓取后合并进 economic_releases.json
-# (公布值/前值/市场预期全部自动刷新, 避免手工策展滞后导致判断错误)。
-# 抓取失败时保留原文件(手工策展值), 不阻断主流程。
+# ============ 经济数据公布对比 自动刷新 (actual/previous/consensus) ============
+# 职责分工 (2026-10-12 重构, 修掉"公布对比长期停在旧月份"):
+#   actual / previous / periodLabel / previousLabel  ← 本地官方序列 (raw_series.json, 取自 FRED/BEA)
+#   consensus (市场预期) / releaseDate                ← Trading Economics 日历 (一致预期 + 真实发布日)
+#
+# 旧实现的三个死结:
+#   1) TE 同时供 actual, 于是必须用 "locked": true 挡它写错值 (2026-09-03 TE 曾把尚未发布的
+#      8月 NFP 写成 actual=-79K)。但 locked 是**永久锁** —— NFP/UNRATE/LPR 一旦手工确证就
+#      再也不会被刷新, 到 2026-10-12 页面还停在 8月 (而 9月就业三件套 10-02 早已公布)。
+#   2) core-pce-price-index 页没有 Calendar 表 → PCE 走 TE 路径永远返回空, 事实冻结。
+#   3) SuperCore 根本不在抓取列表里 → 纯手工, 必然滞后。
+#
+# 现方案: 官方数值一律由本地序列现算 —— 可复现、无锁、自愈 (FRED/BEA 更新即跟随)。
+#   TE 的 actual 仅在「同期 + 与本地序列交叉校验通过(≤tol)」时采纳, 用途是吸收 BLS/BEA 的
+#   官方四舍五入 (例: CPI 未季调同比 3.3512%, 官方公布 3.4%; 本地原始值比 3.35 略低,
+#   直接 '%.1f' 格式化会得 3.3%)。校验不通过 → 以本地为准并打警告,
+#   从结构上堵死 09-03 那类"TE 写出离谱 actual"的污染路径, 因此 locked 机制不再需要。
+#
+# 抓取失败时保留原文件, 不阻断主流程。
 _TE_CONSENSUS_PAGES = [
-    # (slug, tag, indicator名, unit, 数值是否% )
-    ('inflation-cpi',          'CPI',       'CPI 同比',        '%',  True),
-    ('core-inflation-rate',    'Core',      '核心CPI 同比',    '%',  True),
-    ('unemployment-rate',      'UNRATE',    '失业率',          '%',  True),
-    ('non-farm-payrolls',      'NFP',       '非农就业 (月增)', 'K',  False),
-    ('gdp-growth',             'GDP',       'GDP 环比年化 (实际)', '%', True),
-    ('core-pce-price-index',   'PCE',       '核心PCE 同比',    '%',  True),
+    # (slug, tag, indicator名, unit)
+    ('inflation-cpi',                 'CPI',   'CPI 同比',            '%'),
+    ('core-inflation-rate',           'Core',  '核心CPI 同比',        '%'),
+    ('unemployment-rate',             'UNRATE', '失业率',             '%'),
+    ('non-farm-payrolls',             'NFP',    '非农就业 (月增)',     'K'),
+    ('labor-force-participation-rate', 'LPR',   '劳动参与率',          '%'),
+    ('gdp-growth',                    'GDP',    'GDP 环比年化 (实际)', '%'),
+    ('core-pce-price-index',          'PCE',    '核心PCE 同比',        '%'),
 ]
+
+# tag → TE 页 slug (SuperCore 无 TE 页, 故不在此表 → 只用本地序列)
+_TE_PAGE_BY_TAG = {t: s for s, t, _n, _u in _TE_CONSENSUS_PAGES}
+
+# 本地官方口径: tag → (raw_series key, 变换, 交叉校验容差)
+#   level   直接取水平值
+#   diff    月度差分 (PAYEMS 单位=千人, 差分为非农月增 K)
+#   yoy     同比 % (指数序列取 12 个月前同月)
+#   qoq_ann 环比折年 % ((v/v_prev)^4 - 1)
+# 容差用于判定 TE 同期 actual 是否可信; 取值为"官方四舍五入 + 修订"能造成的最大合理差。
+_ACT_LOCAL = {
+    'NFP':       ('payems',         'diff',    2.0),
+    'UNRATE':    ('unrate',         'level',   0.1),
+    'LPR':       ('participation',  'level',   0.1),
+    'CPI':       ('cpi_nsa',        'yoy',     0.2),   # 官方同比口径用未季调指数
+    'Core':      ('core_cpi_nsa',   'yoy',     0.2),
+    'PCE':       ('core_pce',       'yoy',     0.15),
+    'SuperCore': ('supercore',      'yoy',     0.15),
+    'GDP':       ('gdp_real',       'qoq_ann', 0.25),
+}
+
+# 同日公布时面板内的显示顺序 (就业三件套 → 通胀 → 增长), 其余按 releaseDate 倒序
+_ER_DISPLAY_ORDER = ['NFP', 'UNRATE', 'LPR', 'CPI', 'Core', 'PCE', 'SuperCore', 'GDP']
 
 def _te_consensus_rows(slug):
     """抓取 TE 指标页 Calendar 表 → [(date, event, ref, actual, prev, consensus, tef), ...]
@@ -1633,69 +1671,316 @@ def _te_parse_num(s):
     except Exception:
         return None
 
-def update_market_consensus():
-    """抓取 TE 最新 consensus → 合并更新 economic_releases.json。
-    返回更新条数。失败返回 -1 (保留原文件)。"""
+def _months_back(ym, n):
+    """'2026-09' 往前推 n 个月 → '2026-06'"""
+    y, m = int(ym[:4]), int(ym[5:7])
+    m -= n
+    while m <= 0:
+        m += 12; y -= 1
+    while m > 12:
+        m -= 12; y += 1
+    return f'{y:04d}-{m:02d}'
+
+def _month_end(y, m):
+    """该月最后一个自然日 (不引 calendar 模块, 用 date 算术)"""
+    ny, nm = (y + 1, 1) if m == 12 else (y, m + 1)
+    return date(ny, nm, 1) - timedelta(days=1)
+
+def _ref_key(tag, iso_date):
+    """把参考期 ISO 日期归一成可比键: 月度 'YYYY-MM', 季度 'YYYY-Qn'"""
+    y, m = int(iso_date[:4]), int(iso_date[5:7])
+    if tag == 'GDP':
+        return f'{y:04d}-Q{(m - 1) // 3 + 1}'
+    return f'{y:04d}-{m:02d}'
+
+def _period_label(tag, iso_date):
+    """参考期 → 展示标签 (月度 '9月', 季度 'Q2')"""
+    if tag == 'GDP':
+        return 'Q%d' % ((int(iso_date[5:7]) - 1) // 3 + 1)
+    return '%d月' % int(iso_date[5:7])
+
+def _local_release(tag, series):
+    """从本地官方序列现算最新一期的 (ref, actual, previous)。
+    previous 与 actual 同口径: level→水平值, yoy→同比, diff→环比增量, qoq_ann→环比折年。
+    返回 None = 序列缺失或点数不足。"""
+    cfg = _ACT_LOCAL.get(tag)
+    if not cfg:
+        return None
+    key, kind, _tol = cfg
+    pts = sorted((d, v) for d, v in (series.get(key) or []) if isinstance(v, (int, float)))
+    if len(pts) < 3:
+        return None
+    if kind == 'qoq_ann':
+        q = {}
+        for d, v in pts:
+            q['%sQ%d' % (d[:4], (int(d[5:7]) - 1) // 3 + 1)] = (d, v)
+        ks = sorted(q)
+        if len(ks) < 3:
+            return None
+        (d1, v1), (d0, v0), (dm, vm) = q[ks[-1]], q[ks[-2]], q[ks[-3]]
+        if v0 <= 0 or vm <= 0:
+            return None
+        return {'ref': d1, 'prevRef': d0, 'freq': 'quarterly',
+                'actual': ((v1 / v0) ** 4 - 1) * 100, 'previous': ((v0 / vm) ** 4 - 1) * 100}
+    bym = {}
+    for d, v in pts:
+        bym[d[:7]] = v
+    d, v = pts[-1]
+    ym, pm = d[:7], _months_back(d[:7], 1)
+    prevRef = pm + '-01'
+    if kind == 'level':
+        if pm not in bym or bym[pm] <= 0:
+            return None
+        return {'ref': d, 'prevRef': prevRef, 'freq': 'monthly',
+                'actual': v, 'previous': bym[pm]}
+    if kind == 'diff':
+        if pm not in bym:
+            return None
+        p2 = _months_back(ym, 2)
+        return {'ref': d, 'prevRef': prevRef, 'freq': 'monthly',
+                'actual': v - bym[pm],
+                'previous': (bym[pm] - bym[p2]) if p2 in bym else None}
+    if kind == 'yoy':
+        b1 = _months_back(ym, 12)
+        if b1 not in bym or bym[b1] <= 0:
+            return None
+        prev = None
+        if pm in bym:
+            b2 = _months_back(pm, 12)
+            if b2 in bym and bym[b2] > 0:
+                prev = (bym[pm] / bym[b2] - 1) * 100
+        return {'ref': d, 'prevRef': prevRef, 'freq': 'monthly',
+                'actual': (v / bym[b1] - 1) * 100, 'previous': prev}
+    return None
+
+# -- 发布日规则 (仅在 TE 没有该期发布日时兜底, 如 PCE/SuperCore; GDP 有 TE 日期) --
+_ER_RULE_DAY = {'NFP': 'ff', 'UNRATE': 'ff', 'LPR': 'ff',
+                'CPI': 12, 'Core': 12, 'PCE': 'lbd', 'SuperCore': 'lbd', 'GDP': 'lbd'}
+
+def _release_on(tag, y, m):
+    """某月内的发布日: 'ff'=第一个周五 / 'lbd'=最后一个工作日 / 整数=该日(超月末则取月末)"""
+    rule = _ER_RULE_DAY.get(tag)
+    if rule == 'ff':
+        d = date(y, m, 1)
+        d += timedelta(days=(4 - d.weekday()) % 7)
+    elif rule == 'lbd':
+        d = _month_end(y, m)
+        while d.weekday() >= 5:
+            d -= timedelta(days=1)
+    else:
+        last = _month_end(y, m).day
+        d = date(y, m, min(int(rule or 15), last))
+    return d
+
+def _est_release_date(tag, ref_iso, today):
+    """规则估算发布日, 保证落在参考期之后且不晚于今天 (否则回退到本月内最近一个可用日)。"""
+    y, m = int(ref_iso[:4]), int(ref_iso[5:7])
+    step = 3 if tag == 'GDP' else 1
+    m += step
+    while m > 12:
+        m -= 12; y += 1
+    d = _release_on(tag, y, m)
+    guard = 0
+    while d > today and guard < 4:
+        m -= 1
+        if m <= 0:
+            m = 12; y -= 1
+        d = _release_on(tag, y, m)
+        guard += 1
+    return d.isoformat()
+
+def _te_ref_date(tag, release_iso):
+    """TE 日历行的"参考期"可由发布日反推 (口径稳定, 不依赖 TE 的 ref 文本):
+    月度: 发布月的上一个月; 季度: 发布月所在季的上一季。
+    例: CPI 发布 2026-09-11 → 参考 2026-08; GDP 发布 2026-09-30 → 参考 2026Q2。"""
+    y, m = int(release_iso[:4]), int(release_iso[5:7])
+    if tag == 'GDP':
+        q = (m - 1) // 3 + 1
+        q -= 1
+        if q == 0:
+            q = 4; y -= 1
+        return date(y, (q - 1) * 3 + 1, 1).isoformat()
+    m -= 1
+    if m == 0:
+        m = 12; y -= 1
+    return date(y, m, 1).isoformat()
+
+def _te_rows_for_tag(tag, today_iso):
+    """该 tag 的 TE 日历行, 拆成已发布/未发布两组:
+      past   [{date, ref, row}]  已发布行 (date <= 今天), 用于取 actual/previous/consensus/releaseDate
+      future [date, ...]         未发布行的日期, 用于取"下次公布"官方排期
+    规则推算的发布日经常偏 (例: CPI 实际 10-14, 规则按"每月12日"推成 10-12 → 被顺延到 11-12),
+    官方排期明显更准, 故一并带回。"""
+    slug = _TE_PAGE_BY_TAG.get(tag)
+    if not slug:
+        return {'past': [], 'future': []}
+    past, future = [], []
+    for r in _te_consensus_rows(slug):
+        d = r[0]
+        if not d:
+            continue
+        if d > today_iso:
+            if not (r[4] or '').strip():
+                future.append(d)
+        else:
+            past.append({'date': d, 'ref': _te_ref_date(tag, d), 'row': r})
+    return {'past': past, 'future': sorted(set(future))}
+
+def _row_for_ref(rows, ref_iso, tag):
+    """取参考期与本地一致、且 actual 非空的那行; 同参考期可能有多行
+    (如 GDP 同属 Q2 的初值 08-26 与终值 09-30), 取日期最新的一行 = 最新一次发布。"""
+    want = _ref_key(tag, ref_iso)
+    cand = [x for x in rows if _ref_key(tag, x['ref']) == want and (x['row'][4] or '').strip()]
+    return max(cand, key=lambda x: x['date']) if cand else None
+
+def _fact_sentence(tag, unit, plabel, prev_label, act, prev, consensus, tol):
+    """自动事实句 —— 纯数值陈述, 不含任何推测; 缺值一律写 '—' (绝不放裸 null/NaN)。"""
+    is_k = (unit == 'K')
+    def n(v):
+        if v is None:
+            return '—'
+        if is_k:
+            return ('+' if v >= 0 else '') + ('%.0f' % v)
+        return '%.1f' % v
+    u = 'K' if is_k else '%'
+    s = '%s 公布 %s%s' % (plabel, n(act), u)
+    if consensus is None:
+        s += '(无一致预期)'
+    else:
+        d = (act - consensus) if act is not None else None
+        if d is None or abs(d) <= tol:
+            s += ', 符合市场预期 %s%s' % (n(consensus), u)
+        else:
+            dv = (('+' if d >= 0 else '') + ('%.0fK' % d)) if is_k else (('+' if d >= 0 else '') + ('%.1fpt' % d))
+            s += ', %s市场预期 %s%s(%s)' % ('高于' if d > 0 else '低于', n(consensus), u, dv)
+    if prev is not None:
+        s += '; 前值 %s %s%s' % (prev_label, n(prev), u)
+    return s + '。'
+
+def update_market_consensus(series=None, today=None):
+    """刷新 economic_releases.json: 官方数值取本地序列, 一致预期/发布日取 TE。
+    返回刷新条数。失败返回 -1 (保留原文件)。"""
     path = SCRIPT_DIR / 'economic_releases.json'
-    old = {}
+    if series is None:
+        try:
+            series = json.load(open(SCRIPT_DIR / 'raw_series.json', encoding='utf-8'))
+        except Exception as e:
+            print(f'  [ER-refresh] raw_series.json 读取失败 ({e}) → 跳过刷新, 保留原值')
+            return -1
+    if today is None:
+        today = datetime.now().date()
+    today_iso = today.isoformat()
     try:
         old = json.load(open(path, encoding='utf-8'))
     except Exception:
         old = {'asOf': None, 'source': '', 'releases': []}
     old_releases = {r.get('tag'): r for r in old.get('releases', [])}
-    updated = 0
-    for slug, tag, name, unit, is_pct in _TE_CONSENSUS_PAGES:
-        rows = _te_consensus_rows(slug)
-        if not rows:
-            print(f'  [TE-consensus] {tag} ({slug}) 无日历表/抓取失败 → 保留原值')
+
+    updated, notes_dropped = 0, []
+    for slug, tag, name, unit in _TE_CONSENSUS_PAGES + [('', 'SuperCore', '超级核心PCE 同比', '%')]:
+        loc = _local_release(tag, series)
+        if loc is None:
+            print(f'  [ER-refresh] {tag} 本地序列缺失/点数不足 → 保留原值')
             continue
-        # 找到"最新已发布"行: TE 日历按日期升序, 取日期最大且 actual 非空的行
-        target = None
-        for r in rows:
-            if r[4] and (target is None or r[0] > target[0]):   # actual 非空且日期更新
-                target = r
-        if target is None and rows:
-            target = rows[-1]      # 无已发布行 → 取最后一行 (TEForecast 作 consensus 兜底)
-        if not target:
-            continue
-        # ---- 手工锁定保护: locked=true 的条目免疫 TE 覆盖 ----
-        # 背景: 2026-09-03 TE 日历曾把未发布的 8月 NFP 错写成 actual=-79/prev=-911/
-        #   releaseDate=08-28 (与 FRED PAYEMS 6月=-23K 矛盾), 且自动覆盖冲掉手工纠错。
-        # 约定: 任何手工纠错/策展确证过的条目加 "locked": true, TE 抓取跳过该 tag。
-        _existing = old_releases.get(tag, {})
-        if _existing.get('locked'):
-            print(f'  [TE-consensus] {tag} locked(手工锁定) → 跳过 TE 覆盖, 保留策展值')
-            continue
-        # TE 日历数据行 8 列: [date, time, event, ref, actual, previous, consensus, tef]
-        date, ev, ref, act, prev, con, tef = (target[0], target[2], target[3],
-                                              target[4], target[5], target[6], target[7])
-        # 数值化
-        act_n, con_n, prev_n = (_te_parse_num(x) for x in (act, con, prev))
-        tef_n = _te_parse_num(tef)
-        if con_n is None and tef_n is not None:   # consensus 缺失时用 TEForecast 兜底
-            con_n = tef_n
-        rec = dict(_existing)
+        existing = old_releases.get(tag, {})
+        plabel = _period_label(tag, loc['ref'])
+        prev_label = _period_label(tag, loc['prevRef'])
+
+        # ---- TE: 一致预期 + 真实发布日 (只看参考期与本地一致、且已发布的行) ----
+        _te = _te_rows_for_tag(tag, today_iso)
+        rows = _te['past']
+        nxt_release = _te['future'][0] if _te['future'] else None
+        mine = _row_for_ref(rows, loc['ref'], tag)
+        te_note = ''
+        if rows and not mine:
+            newest = max(rows, key=lambda x: x['date'])
+            if _ref_key(tag, newest['ref']) != _ref_key(tag, loc['ref']):
+                te_note = f"; TE 最新已发布行为 {newest['date']}(参考 {_period_label(tag, newest['ref'])}), " \
+                          f"与本地 {plabel} 不一致 → 本次以本地为准"
+        act, prev, src = loc['actual'], loc['previous'], 'local'
+        tol = _ACT_LOCAL[tag][2]
+        if mine is not None:
+            te_act = _te_parse_num(mine['row'][4])
+            if te_act is not None and abs(te_act - loc['actual']) <= tol:
+                act = te_act
+                te_prev = _te_parse_num(mine['row'][5])
+                if te_prev is not None and (loc['previous'] is None
+                                            or abs(te_prev - loc['previous']) <= tol):
+                    prev = te_prev
+                src = 'local×TE'
+            elif te_act is not None:
+                print(f'  [ER-refresh] !! {tag} TE actual={te_act} 与本地 {loc["actual"]:.2f} '
+                      f'相差 {abs(te_act - loc["actual"]):.2f} > 容差 {tol} → 判定 TE 异常, 以本地为准')
+                src = 'local(TE校验不通过)'
+        consensus, csrc = None, ''
+        if mine is not None:
+            # 只认 TE 的 consensus 列。**不用 TEForecast 兜底** —— 那是 TE 自家模型预测,
+            # 不是彭博/路透一致预期; 且对"已发布"的行毫无意义 (曾因此给劳动参与率编出
+            # 一个 61.4% 的假一致预期, 而 TE 该栏本就为空 = 无人调查该项)。
+            consensus = _te_parse_num(mine['row'][6])
+            if consensus is not None:
+                csrc = 'TE'
+        elif existing.get('consensus') is not None and existing.get('consensusPeriod') == plabel:
+            consensus, csrc = existing['consensus'], '策展(同期)'
+
+        # ---- 发布日: TE 同期行优先, 否则规则估算 ----
+        if mine is not None and mine['date']:
+            rdate, est = mine['date'], False
+        else:
+            rdate, est = _est_release_date(tag, loc['ref'], today), True
+
+        # ---- 解读: 自动事实句 + 策展解读(仅当策展期与当前期一致才保留) ----
+        # 数值收敛到展示精度, 避免把浮点尾数写进 JSON (前端 %.1f/%.2f, 精度够用)
+        _r = (lambda v: None if v is None else round(v, 1)) if unit == 'K' \
+            else (lambda v: None if v is None else round(v, 2))
+        act, prev, consensus = _r(act), _r(prev), _r(consensus)
+        curated = existing.get('noteCurated')
+        cperiod = existing.get('noteCuratedPeriod')
+        if not curated:
+            curated, cperiod = existing.get('note'), existing.get('periodLabel')
+        fact = _fact_sentence(tag, unit, plabel, prev_label, act, prev, consensus,
+                              float(existing.get('tolerance', 0.1)))
+        rec = dict(existing)
         rec.update({
             'indicator': name, 'tag': tag,
-            'periodLabel': ref, 'releaseDate': date,
-            'unit': unit, 'actual': act_n, 'consensus': con_n, 'previous': prev_n,
-            'source': 'te_auto' + (' (TEForecast兜底)' if (con is None or not con) and tef_n is not None else ''),
+            'periodLabel': plabel, 'releaseDate': rdate,
+            'unit': unit, 'actual': act, 'consensus': consensus, 'previous': prev,
+            'previousLabel': prev_label, 'consensusPeriod': plabel if consensus is not None else None,
+            'nextRelease': nxt_release,          # 下次公布日 (TE 官方排期; 无则 None → 前端退回规则推算)
+            'noteFact': fact,
+            'noteCurated': curated, 'noteCuratedPeriod': cperiod,
+            'note': (fact + ' ' + curated.strip()) if (curated and cperiod == plabel) else fact,
+            'source': ('actual/previous: 本地官方序列(FRED/BEA)' + ('×TE校验一致' if src == 'local×TE' else '')
+                       + ('; consensus: ' + csrc if consensus is not None else '; consensus: 无同期可信来源→置空')
+                       + ('; releaseDate: 规则估算' if est else '; releaseDate: TE日历')
+                       + te_note),
         })
-        # 保留手工字段: higherIsBetter / previousLabel / tolerance / locked / note
+        if curated and cperiod != plabel:
+            notes_dropped.append(f'{tag}(策展写于 {cperiod})')
         old_releases[tag] = rec
         updated += 1
-        print(f'  [TE-consensus] {tag:8s} {ref:10s} actual={act_n} consensus={con_n} prev={prev_n} ← TE')
-    # 非 TE 覆盖指标 (SuperCore 等) 保留原样
+        print(f'  [ER-refresh] {tag:9s} {plabel:5s} actual={act} consensus={consensus} '
+              f'prev={prev} release={rdate}{" (估算)" if est else ""} '
+              f'下次={nxt_release or "规则推算"} [{rec["source"].split(";")[0]}]')
+    if not old_releases:
+        print('  [ER-refresh] 无任何条目可用 → 保留原文件')
+        return -1
+
     merged = list(old_releases.values())
-    merged.sort(key=lambda x: x.get('releaseDate', ''), reverse=True)
+    _ord = {t: i for i, t in enumerate(_ER_DISPLAY_ORDER)}
+    merged.sort(key=lambda x: (x.get('releaseDate', ''), -_ord.get(x.get('tag'), 99)), reverse=True)
     out = {
-        'asOf': datetime.now().strftime('%Y-%m-%d'),
-        'source': 'Trading Economics 日历自动抓取 (actual/consensus/previous) + 手工策展兜底 (source=manual)',
+        'asOf': today_iso,
+        'source': ('公布值/前值: 本地官方序列 (FRED/BEA, build_data.py 现算) × TE 日历交叉校验; '
+                   '市场预期: Trading Economics (彭博/路透一致预期中值)'),
         'releases': merged,
     }
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
-    print(f'[TE-consensus] economic_releases.json 更新 {updated} 条 (共 {len(merged)} 条)')
+    print(f'[ER-refresh] economic_releases.json 刷新 {updated} 条 (共 {len(merged)} 条)')
+    if notes_dropped:
+        print(f'  [ER-refresh] !! 以下条目的策展解读已过期, 已从面板撤下(保留在 noteCurated), 请人工刷新: '
+              f'{", ".join(notes_dropped)}')
     return updated
 
 # ============================================================

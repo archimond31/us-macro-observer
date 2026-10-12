@@ -312,6 +312,17 @@ def release_info(tag):
         if nxt > today:
             break
         nxt = _release_on(rule, _add_months(nxt, 1 if freq == 'monthly' else 3))
+    # 官方排期优先: economic_releases.json 由 TE 日历带回的"下一场未发布日"比规则推算准。
+    # 规则的两个已知偏差: (a) CPI 按"每月12日"推 → 10-12 已过而被顺延成 11-12, 官方实为 10-14;
+    # (b) GDP 按"季度+3月"推 → Q2 终值之后直接跳到 12月, 而 Q3 初值官方在 10-29。
+    _nr = _er.get('nextRelease')
+    if _nr:
+        try:
+            _nrd = _iso(_nr)
+            if _nrd > today:
+                nxt = _nrd
+        except Exception:
+            pass
     return {'latest': latest.isoformat(), 'next': nxt.isoformat(), 'estimated': True}
 
 # 实时源覆盖: Yahoo 实时序列优先于 FRED 滞后序列, 缺失时回退原 FRED 序列
