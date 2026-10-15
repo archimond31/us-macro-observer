@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-10-15 05:32
+ * 生成时间: 2026-10-15 06:20
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-10-15 05:32 (官方数据, 自动更新)",
+    "lastUpdated": "2026-10-15 06:19 (官方数据, 自动更新)",
     "dataAsOf": "2026-10-14",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -17,7 +17,7 @@ const DATA = {
     "name": "多空交织",
     "signal": "mixed",
     "confidence": "中等置信",
-    "description": "10Y 美债 5.21% 处于近一年 96 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 12.67% (分位 100), 而 HY 整体 3.16%。油价 (WTI 94.10) 与波动率 (VIX 16.87) 当前处于\"利率驱动的资产分化\"阶段。"
+    "description": "10Y 美债 5.21% 处于近一年 96 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 12.67% (分位 100), 而 HY 整体 3.16%。油价 (WTI 93.93) 与波动率 (VIX 16.87) 当前处于\"利率驱动的资产分化\"阶段。"
   },
   "assets": {
     "keyAlerts": [
@@ -45,7 +45,7 @@ const DATA = {
       },
       {
         "name": "美元/日元",
-        "value": 157.98,
+        "value": 157.99,
         "unit": "",
         "threshold": 160.0,
         "dir": "up",
@@ -56,36 +56,36 @@ const DATA = {
       },
       {
         "name": "WTI 原油",
-        "value": 94.1,
+        "value": 93.93,
         "unit": "$",
         "threshold": 90.0,
         "dir": "up",
         "label": "$90 能源冲击线",
         "meaning": "能源冲击确认, 通胀预期与利率进一步上行",
         "status": "triggered",
-        "distPct": 4.6
+        "distPct": 4.4
       },
       {
         "name": "WTI 原油",
-        "value": 94.1,
+        "value": 93.93,
         "unit": "$",
         "threshold": 100.0,
         "dir": "up",
         "label": "$100 心理大关",
         "meaning": "供给冲击极端化, 全面通胀预期重定价",
         "status": "ok",
-        "distPct": 5.9
+        "distPct": 6.1
       },
       {
         "name": "黄金",
-        "value": 4164.6,
+        "value": 4154.1,
         "unit": "$",
         "threshold": 5000.0,
         "dir": "up",
         "label": "$5,000 整数关口",
         "meaning": "避险/去美元化叙事强化, 实际利率见顶假设验证",
         "status": "ok",
-        "distPct": 16.7
+        "distPct": 16.9
       },
       {
         "name": "VIX",
@@ -122,7 +122,7 @@ const DATA = {
       },
       {
         "name": "美元指数",
-        "value": 102.08,
+        "value": 102.09,
         "unit": "",
         "threshold": 100.0,
         "dir": "up",
@@ -136,7 +136,7 @@ const DATA = {
       "label": "利率定价下的资产分化",
       "signal": "mixed",
       "confidence": "中等置信",
-      "description": "10Y 利率 5.21% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 94.10 波动影响通胀预期, 利率上行压制估值。"
+      "description": "10Y 利率 5.21% 是本周资产重定价的核心变量, 长久期资产 (纳斯达克/长债) 对实际利率最敏感。WTI 93.93 波动影响通胀预期, 利率上行压制估值。"
     },
     "keySignals": [
       {
@@ -145,19 +145,19 @@ const DATA = {
         "direction": "bearish"
       },
       {
-        "title": "WTI 原油周涨 +2.85%",
+        "title": "WTI 原油周涨 +2.67%",
         "meaning": "油价上行推升通胀预期, 与利率上行形成正反馈, 压制风险资产估值。",
         "direction": "bearish"
       },
       {
-        "title": "布伦特原油周涨 +0.09%",
+        "title": "布伦特原油周涨 +0.06%",
         "meaning": "布伦特对地缘与海运风险更敏感, 其溢价反映全球供需而非仅美国库存。",
         "direction": "bearish"
       },
       {
-        "title": "黄金 +0.18% 横盘",
-        "meaning": "黄金上涨通常反映避险需求或滞胀担忧升温, 与风险资产呈替代关系, 对风险偏好构成压力。",
-        "direction": "bearish"
+        "title": "黄金 -0.07% 横盘",
+        "meaning": "黄金回落说明实际利率上行或风险偏好修复, 资金从避险资产回流风险资产。",
+        "direction": "bullish"
       }
     ],
     "metrics": [
@@ -403,18 +403,18 @@ const DATA = {
       },
       {
         "label": "黄金",
-        "value": "$4,164.60",
-        "change": "+1.38%",
+        "value": "$4,154.10",
+        "change": "+1.12%",
         "dir": "up",
         "tag": "GC=F",
-        "percentile": 24,
-        "signal": "up",
-        "meaning": "当前位于近一年 24 分位",
+        "percentile": 23,
+        "signal": "down",
+        "meaning": "当前位于近一年 23 分位",
         "changes": {
-          "d": "+1.38%",
-          "w": "+0.18%",
-          "m": "-5.08%",
-          "h6": "-13.39%"
+          "d": "+1.12%",
+          "w": "-0.07%",
+          "m": "-5.32%",
+          "h6": "-13.61%"
         },
         "sparkline": [
           4539.8999,
@@ -446,23 +446,23 @@ const DATA = {
           4190.6001,
           4177.2998,
           4107.8999,
-          4164.6001
+          4154.1001
         ]
       },
       {
         "label": "WTI原油",
-        "value": "$94.10",
-        "change": "-1.04%",
+        "value": "$93.93",
+        "change": "-1.22%",
         "dir": "down",
         "tag": "CL=F",
         "percentile": 78,
         "signal": "up",
         "meaning": "当前位于近一年 78 分位",
         "changes": {
-          "d": "-1.04%",
-          "w": "+2.85%",
-          "m": "-8.13%",
-          "h6": "-0.62%"
+          "d": "-1.22%",
+          "w": "+2.67%",
+          "m": "-8.30%",
+          "h6": "-0.80%"
         },
         "sparkline": [
           91.3,
@@ -494,23 +494,23 @@ const DATA = {
           93.74,
           94.14,
           95.09,
-          94.1
+          93.93
         ]
       },
       {
         "label": "布伦特原油",
-        "value": "$104.37",
-        "change": "-1.59%",
+        "value": "$104.34",
+        "change": "-1.62%",
         "dir": "down",
         "tag": "BZ=F",
         "percentile": 85,
         "signal": "up",
         "meaning": "当前位于近一年 85 分位",
         "changes": {
-          "d": "-1.59%",
-          "w": "+0.09%",
-          "m": "-1.38%",
-          "h6": "+5.01%"
+          "d": "-1.62%",
+          "w": "+0.06%",
+          "m": "-1.41%",
+          "h6": "+4.98%"
         },
         "sparkline": [
           95.52,
@@ -542,23 +542,23 @@ const DATA = {
           106.65,
           105.69,
           106.06,
-          104.37
+          104.34
         ]
       },
       {
         "label": "铜",
-        "value": "6.57",
-        "change": "-0.55%",
+        "value": "6.56",
+        "change": "-0.73%",
         "dir": "down",
         "tag": "HG=F",
-        "percentile": 86,
+        "percentile": 85,
         "signal": "up",
-        "meaning": "当前位于近一年 86 分位",
+        "meaning": "当前位于近一年 85 分位",
         "changes": {
-          "d": "-0.55%",
-          "w": "+0.86%",
-          "m": "+2.23%",
-          "h6": "+8.38%"
+          "d": "-0.73%",
+          "w": "+0.68%",
+          "m": "+2.05%",
+          "h6": "+8.19%"
         },
         "sparkline": [
           6.577,
@@ -590,12 +590,12 @@ const DATA = {
           6.6985,
           6.678,
           6.6115,
-          6.575
+          6.5635
         ]
       },
       {
         "label": "美元指数",
-        "value": "102.08",
+        "value": "102.09",
         "change": "-0.45%",
         "dir": "down",
         "tag": "DX-Y.NYB",
@@ -606,7 +606,7 @@ const DATA = {
           "d": "-0.45%",
           "w": "-0.05%",
           "m": "+1.77%",
-          "h6": "+3.93%"
+          "h6": "+3.94%"
         },
         "sparkline": [
           99.0,
@@ -638,23 +638,23 @@ const DATA = {
           102.58,
           102.18,
           102.55,
-          102.084
+          102.089
         ]
       },
       {
         "label": "美元/日元",
-        "value": "157.98",
-        "change": "-0.22%",
+        "value": "157.99",
+        "change": "-0.21%",
         "dir": "down",
         "tag": "USDJPY=X",
         "percentile": 49,
         "signal": "down",
         "meaning": "当前位于近一年 49 分位",
         "changes": {
-          "d": "-0.22%",
-          "w": "-0.05%",
-          "m": "+1.75%",
-          "h6": "-0.88%"
+          "d": "-0.21%",
+          "w": "-0.04%",
+          "m": "+1.76%",
+          "h6": "-0.87%"
         },
         "sparkline": [
           155.66,
@@ -686,7 +686,7 @@ const DATA = {
           158.203,
           158.52,
           158.322,
-          157.976
+          157.994
         ]
       },
       {
@@ -994,72 +994,72 @@ const DATA = {
       {
         "name": "黄金",
         "unit": "%",
-        "current": "$4,164.60",
+        "current": "$4,154.10",
         "changes": {
-          "d": 1.38,
-          "w": 0.18,
-          "m": -5.08,
-          "h6": -13.39
+          "d": 1.12,
+          "w": -0.07,
+          "m": -5.32,
+          "h6": -13.61
         },
-        "meaning": "半年 -13% 但近月转弱——底部可能形成"
+        "meaning": "多尺度方向不一, 趋势不明"
       },
       {
         "name": "WTI原油",
         "unit": "%",
-        "current": "$94.10",
+        "current": "$93.93",
         "changes": {
-          "d": -1.04,
-          "w": 2.85,
-          "m": -8.13,
-          "h6": -0.62
+          "d": -1.22,
+          "w": 2.67,
+          "m": -8.3,
+          "h6": -0.8
         },
         "meaning": "半年 -1% 但近月转弱——底部可能形成"
       },
       {
         "name": "布伦特原油",
         "unit": "%",
-        "current": "$104.37",
+        "current": "$104.34",
         "changes": {
-          "d": -1.59,
-          "w": 0.09,
-          "m": -1.38,
-          "h6": 5.01
+          "d": -1.62,
+          "w": 0.06,
+          "m": -1.41,
+          "h6": 4.98
         },
         "meaning": "半年 +5% 但近月转弱——底部可能形成"
       },
       {
         "name": "铜",
         "unit": "%",
-        "current": "6.57",
+        "current": "6.56",
         "changes": {
-          "d": -0.55,
-          "w": 0.86,
-          "m": 2.23,
-          "h6": 8.38
+          "d": -0.73,
+          "w": 0.68,
+          "m": 2.05,
+          "h6": 8.19
         },
         "meaning": "半年 +8% 的上升趋势中, 近月 +2% 仍在加速"
       },
       {
         "name": "美元指数",
         "unit": "%",
-        "current": "102.08",
+        "current": "102.09",
         "changes": {
           "d": -0.45,
           "w": -0.05,
           "m": 1.77,
-          "h6": 3.93
+          "h6": 3.94
         },
         "meaning": "半年 +4% 但近周转弱——顶部预警"
       },
       {
         "name": "美元/日元",
         "unit": "%",
-        "current": "157.98",
+        "current": "157.99",
         "changes": {
-          "d": -0.22,
-          "w": -0.05,
-          "m": 1.75,
-          "h6": -0.88
+          "d": -0.21,
+          "w": -0.04,
+          "m": 1.76,
+          "h6": -0.87
         },
         "meaning": "半年 -1% 但近周转弱——顶部预警"
       },
@@ -1163,43 +1163,43 @@ const DATA = {
       {
         "ticker": "GC=F",
         "name": "黄金",
-        "price": "$4,164.60",
-        "change": "+1.38%",
+        "price": "$4,154.10",
+        "change": "+1.12%",
         "dir": "up"
       },
       {
         "ticker": "CL=F",
         "name": "WTI原油",
-        "price": "$94.10",
-        "change": "-1.04%",
+        "price": "$93.93",
+        "change": "-1.22%",
         "dir": "down"
       },
       {
         "ticker": "BZ=F",
         "name": "布伦特原油",
-        "price": "$104.37",
-        "change": "-1.59%",
+        "price": "$104.34",
+        "change": "-1.62%",
         "dir": "down"
       },
       {
         "ticker": "HG=F",
         "name": "铜",
-        "price": "6.57",
-        "change": "-0.55%",
+        "price": "6.56",
+        "change": "-0.73%",
         "dir": "down"
       },
       {
         "ticker": "DX-Y.NYB",
         "name": "美元指数",
-        "price": "102.08",
+        "price": "102.09",
         "change": "-0.45%",
         "dir": "down"
       },
       {
         "ticker": "USDJPY=X",
         "name": "美元/日元",
-        "price": "157.98",
-        "change": "-0.22%",
+        "price": "157.99",
+        "change": "-0.21%",
         "dir": "down"
       },
       {
@@ -1366,7 +1366,7 @@ const DATA = {
           93.74,
           94.14,
           95.09,
-          94.1
+          93.93
         ],
         "Gold": [
           4539.8999,
@@ -1398,7 +1398,7 @@ const DATA = {
           4190.6001,
           4177.2998,
           4107.8999,
-          4164.6001
+          4154.1001
         ],
         "Copper": [
           6.577,
@@ -1430,7 +1430,7 @@ const DATA = {
           6.6985,
           6.678,
           6.6115,
-          6.575
+          6.5635
         ],
         "BTC": [
           75656.09,
@@ -7936,7 +7936,7 @@ const DATA = {
           -0.26,
           -0.58,
           -2.23,
-          -0.88
+          -1.13
         ],
         "实际利率": [
           0.0,
@@ -8444,7 +8444,7 @@ const DATA = {
           3.84,
           3.43,
           3.81,
-          3.33
+          3.34
         ],
         "避险 VIX": [
           0.0,
@@ -8956,7 +8956,7 @@ const DATA = {
         ]
       },
       "current": {
-        "黄金": "$4,165",
+        "黄金": "$4,154",
         "实际利率": "2.88%",
         "美元指数": "102.1",
         "避险 VIX": "16.9",
@@ -9215,7 +9215,7 @@ const DATA = {
           "$4,191",
           "$4,177",
           "$4,108",
-          "$4,165"
+          "$4,154"
         ],
         "实际利率": [
           "1.76%",
@@ -10487,7 +10487,7 @@ const DATA = {
           4190.60009765625,
           4177.2998046875,
           4107.89990234375,
-          4164.60009765625
+          4154.10009765625
         ],
         "实际利率": [
           1.76,
@@ -10995,7 +10995,7 @@ const DATA = {
           102.58000183105469,
           102.18000030517578,
           102.55000305175781,
-          102.08399963378906
+          102.08899688720703
         ],
         "避险 VIX": [
           20.639999389648438,
@@ -22276,9 +22276,9 @@ const DATA = {
         "source": "actual/previous: 本地官方序列(FRED/BEA)×TE校验一致; consensus: TE; releaseDate: TE日历",
         "consensusPeriod": "9月",
         "noteFact": "9月 公布 2.6%, 高于市场预期 2.5%(+0.1pt); 前值 8月 2.4%。",
-        "noteCurated": "核心同比 2.6%, 高于预期 2.5%; 环比 +0.34% 是 4 月以来最快, 也把连续 >0.2% 的月数推到第 3 个。结构上房租(环比 +0.39%)与核心商品(+0.25%)同时抬价, 商品的通缩红利在退潮。三个月年化回到 3.4% —— 这个口径比同比更贴近美联储看的方向, 而它没有朝下走。",
+        "noteCurated": "核心同比 2.6%, 高于预期 2.5%; 环比 +0.33% 是 4 月以来最快, 也把连续 >0.2% 的月数推到第 3 个。更关键的是三个月年化由 1.97% 跳到 3.41%(六个月 2.85%) —— 两者都已高于同比 2.57%, 上一期「单月热、三个月温和」的口径分歧就此收敛。结构上房租(环比 +0.39%)与核心商品(+0.25%)同时抬价, 商品的通缩红利在退潮。",
         "noteCuratedPeriod": "9月",
-        "note": "9月 公布 2.6%, 高于市场预期 2.5%(+0.1pt); 前值 8月 2.4%。 核心同比 2.6%, 高于预期 2.5%; 环比 +0.34% 是 4 月以来最快, 也把连续 >0.2% 的月数推到第 3 个。结构上房租(环比 +0.39%)与核心商品(+0.25%)同时抬价, 商品的通缩红利在退潮。三个月年化回到 3.4% —— 这个口径比同比更贴近美联储看的方向, 而它没有朝下走。",
+        "note": "9月 公布 2.6%, 高于市场预期 2.5%(+0.1pt); 前值 8月 2.4%。 核心同比 2.6%, 高于预期 2.5%; 环比 +0.33% 是 4 月以来最快, 也把连续 >0.2% 的月数推到第 3 个。更关键的是三个月年化由 1.97% 跳到 3.41%(六个月 2.85%) —— 两者都已高于同比 2.57%, 上一期「单月热、三个月温和」的口径分歧就此收敛。结构上房租(环比 +0.39%)与核心商品(+0.25%)同时抬价, 商品的通缩红利在退潮。",
         "nextRelease": "2026-11-10",
         "actualStr": "2.6%",
         "consensusStr": "2.5%",
@@ -22448,7 +22448,7 @@ const DATA = {
       "asOf": "2026-10-15",
       "source": "公布值/前值: 本地官方序列 (FRED/BEA, build_data.py 现算) × TE 日历交叉校验; 市场预期: Trading Economics (彭博/路透一致预期中值)"
     },
-    "generatedAt": "2026-10-15 05:32",
+    "generatedAt": "2026-10-15 06:19",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -25999,7 +25999,7 @@ const DATA = {
     "priceImplied": {
       "goldRealCorr": -0.2900263903252231,
       "stockBondCorr": 0.40014242331189376,
-      "goldUsdCorr": -0.5265327621190187,
+      "goldUsdCorr": -0.5232620028174744,
       "realizedVol": 8.9,
       "vixImplRealGap": 8.0,
       "curveSlope": 42.0
@@ -26018,32 +26018,32 @@ const DATA = {
           "b": "黄金",
           "factors": [
             "haven",
-            "infl",
-            "rate"
+            "rate",
+            "infl"
           ],
           "weight": 9,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌通胀回升, 赌利率下行"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌利率下行, 赌通胀回升"
         },
         {
           "a": "黄金 / 金矿股",
           "b": "AI 高估值标的 (回避)",
           "factors": [
             "growth",
-            "infl",
-            "rate"
+            "rate",
+            "infl"
           ],
           "weight": 7,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌通胀回升, 赌利率下行"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行, 赌通胀回升"
         },
         {
           "a": "黄金 / 金矿股",
           "b": "纳斯达克 / 长久期成长",
           "factors": [
-            "growth",
-            "haven"
+            "haven",
+            "growth"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌避险升温"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌增长强劲"
         },
         {
           "a": "AI 算力核心 (芯片/基础设施)",
@@ -26643,15 +26643,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "认知大模型 + 行业应用",
             "productDir": "星火大模型、教育/办公/医疗 AI 应用",
-            "price": 36.20000076293945,
+            "price": 36.16999816894531,
             "ch": {
-              "d": -0.3,
-              "w": -1.87,
-              "m": -7.82,
-              "h6": -24.44
+              "d": -0.39,
+              "w": -1.95,
+              "m": -7.89,
+              "h6": -24.5
             },
             "scores": {
-              "momentum": 34.882,
+              "momentum": 34.769,
               "valuation": 21,
               "growth": 50,
               "quality": 17,
@@ -27122,15 +27122,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 PCB",
             "productDir": "高速 PCB、交换机板、AI 服务器主板",
-            "price": 116.4000015258789,
+            "price": 115.0199966430664,
             "ch": {
-              "d": 1.22,
-              "w": 0.45,
-              "m": -6.81,
-              "h6": 38.46
+              "d": 0.02,
+              "w": -0.74,
+              "m": -7.91,
+              "h6": 36.81
             },
             "scores": {
-              "momentum": 55.589,
+              "momentum": 53.628,
               "valuation": 31,
               "growth": 94,
               "quality": 27,
@@ -27252,15 +27252,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器 (代工)",
             "productDir": "AI 服务器 (GB200 机柜)、云计算设备",
-            "price": 46.720001220703125,
+            "price": 46.470001220703125,
             "ch": {
-              "d": -4.26,
-              "w": -16.11,
-              "m": -27.85,
-              "h6": -17.47
+              "d": -4.77,
+              "w": -16.56,
+              "m": -28.23,
+              "h6": -17.91
             },
             "scores": {
-              "momentum": 13.249999999999996,
+              "momentum": 12.595999999999997,
               "valuation": 31,
               "growth": 97,
               "quality": 15,
@@ -27384,22 +27384,22 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 服务器",
             "productDir": "AI 服务器、液冷整机柜",
-            "price": 57.2400016784668,
+            "price": 56.869998931884766,
             "ch": {
-              "d": -3.39,
-              "w": -11.34,
-              "m": -20.85,
-              "h6": -8.68
+              "d": -4.02,
+              "w": -11.91,
+              "m": -21.36,
+              "h6": -9.27
             },
             "scores": {
-              "momentum": 24.095,
+              "momentum": 23.230999999999998,
               "valuation": 31,
               "growth": 48,
               "quality": 7,
               "aiExposure": 66,
               "research": 70,
               "fundamental": 41,
-              "aiValue": 36,
+              "aiValue": 37,
               "lp_valuation": 0,
               "lp_fundamental": 0,
               "lp_momentum": 33,
@@ -27469,7 +27469,7 @@ const DATA = {
           "scarcity": 68,
           "avgFundamental": 61,
           "avgValuation": 39,
-          "avgMomentum": 38,
+          "avgMomentum": 37,
           "avgAiValue": 48,
           "topPick": "CRWV",
           "valuePicks": []
@@ -27497,15 +27497,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "光模块 (800G/1.6T)",
             "productDir": "800G/1.6T 光模块、硅光、LPO",
-            "price": 657.6500244140625,
+            "price": 649.3599853515625,
             "ch": {
-              "d": -5.09,
-              "w": -16.01,
-              "m": -27.12,
-              "h6": -4.43
+              "d": -6.28,
+              "w": -17.07,
+              "m": -28.04,
+              "h6": -5.64
             },
             "scores": {
-              "momentum": 17.858999999999995,
+              "momentum": 16.243999999999996,
               "valuation": 32,
               "growth": 100,
               "quality": 45,
@@ -27625,15 +27625,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "光模块 (800G)",
             "productDir": "800G 光模块、相干光模块",
-            "price": 306.0,
+            "price": 302.239990234375,
             "ch": {
-              "d": -7.5,
-              "w": -19.15,
-              "m": -26.51,
-              "h6": -14.58
+              "d": -8.63,
+              "w": -20.15,
+              "m": -27.42,
+              "h6": -15.63
             },
             "scores": {
-              "momentum": 14.107000000000003,
+              "momentum": 12.572999999999997,
               "valuation": 32,
               "growth": 100,
               "quality": 54,
@@ -27840,7 +27840,7 @@ const DATA = {
           "scarcity": 78,
           "avgFundamental": 70,
           "avgValuation": 37,
-          "avgMomentum": 35,
+          "avgMomentum": 34,
           "avgAiValue": 54,
           "topPick": "300308.SZ",
           "valuePicks": []
@@ -27873,15 +27873,15 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "HBM 存储 (全球领先)",
             "productDir": "HBM3E/4、DRAM、NAND",
-            "price": 1272000.0,
+            "price": 1251000.0,
             "ch": {
-              "d": -10.36,
-              "w": -26.18,
-              "m": -31.35,
-              "h6": 23.14
+              "d": -11.84,
+              "w": -27.39,
+              "m": -32.49,
+              "h6": 21.1
             },
             "scores": {
-              "momentum": 18.254999999999995,
+              "momentum": 16.132999999999996,
               "valuation": 65,
               "growth": 99,
               "quality": 70,
@@ -27959,7 +27959,7 @@ const DATA = {
               "lp_valuation": 92,
               "lp_fundamental": 100,
               "lp_momentum": 69,
-              "lp_aiValue": 92
+              "lp_aiValue": 85
             },
             "tags": [
               "价值股候选",
@@ -27997,7 +27997,7 @@ const DATA = {
             "aiRevGrowth": 55,
             "pricingPower": 95,
             "peHist5y": 72,
-            "layerPct": 92
+            "layerPct": 85
           },
           {
             "ticker": "005930.KS",
@@ -28007,22 +28007,22 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "存储 (HBM) + 代工 + 移动",
             "productDir": "HBM3E/4、DRAM/NAND、Foundry、Exynos",
-            "price": 210750.0,
+            "price": 206500.0,
             "ch": {
-              "d": -9.16,
-              "w": -21.51,
-              "m": -21.65,
-              "h6": 0.12
+              "d": -10.99,
+              "w": -23.09,
+              "m": -23.23,
+              "h6": -1.9
             },
             "scores": {
-              "momentum": 21.947000000000003,
+              "momentum": 19.286999999999995,
               "valuation": 61,
               "growth": 94,
               "quality": 42,
               "aiExposure": 72,
               "research": 75,
               "fundamental": 69,
-              "aiValue": 68,
+              "aiValue": 69,
               "lp_valuation": 85,
               "lp_fundamental": 38,
               "lp_momentum": 15,
@@ -28269,15 +28269,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "AI 训练/推理芯片 (国产)",
             "productDir": "思元系列 AI 芯片、训练/推理卡",
-            "price": 893.3200073242188,
+            "price": 895.030029296875,
             "ch": {
-              "d": -3.84,
-              "w": -8.94,
-              "m": -15.64,
-              "h6": 14.35
+              "d": -3.66,
+              "w": -8.76,
+              "m": -15.48,
+              "h6": 14.57
             },
             "scores": {
-              "momentum": 36.653,
+              "momentum": 36.935,
               "valuation": 20,
               "growth": 98,
               "quality": 34,
@@ -28288,7 +28288,7 @@ const DATA = {
               "lp_valuation": 0,
               "lp_fundamental": 38,
               "lp_momentum": 31,
-              "lp_aiValue": 54
+              "lp_aiValue": 46
             },
             "tags": [],
             "marketCap": 7303.9,
@@ -28323,7 +28323,7 @@ const DATA = {
             "aiRevGrowth": 120,
             "pricingPower": 60,
             "peHist5y": 180,
-            "layerPct": 54
+            "layerPct": 46
           },
           {
             "ticker": "042700.KS",
@@ -28333,22 +28333,22 @@ const DATA = {
             "ccy": "KRW",
             "techRoute": "TC Bonder (HBM 封装设备)",
             "productDir": "TC Bonder、HBM 封装键合设备",
-            "price": 197400.0,
+            "price": 189500.0,
             "ch": {
-              "d": -9.24,
-              "w": -25.37,
-              "m": -21.98,
-              "h6": -29.63
+              "d": -12.87,
+              "w": -28.36,
+              "m": -25.1,
+              "h6": -32.44
             },
             "scores": {
-              "momentum": 11.180999999999997,
+              "momentum": 6.333999999999996,
               "valuation": 49,
               "growth": 34,
               "quality": 45,
               "aiExposure": 72,
               "research": 74,
               "fundamental": 51,
-              "aiValue": 50,
+              "aiValue": 51,
               "lp_valuation": 62,
               "lp_fundamental": 0,
               "lp_momentum": 0,
@@ -28725,15 +28725,15 @@ const DATA = {
             "ccy": "CNY",
             "techRoute": "x86 CPU + DCU (国产)",
             "productDir": "海光 CPU、深算 DCU (GPGPU)",
-            "price": 190.6999969482422,
+            "price": 190.74000549316406,
             "ch": {
-              "d": -5.34,
-              "w": -13.53,
-              "m": -19.5,
-              "h6": -16.54
+              "d": -5.32,
+              "w": -13.51,
+              "m": -19.49,
+              "h6": -16.53
             },
             "scores": {
-              "momentum": 22.076,
+              "momentum": 22.096000000000004,
               "valuation": 20,
               "growth": 94,
               "quality": 27,
@@ -28817,7 +28817,7 @@ const DATA = {
           "scarcity": 88,
           "avgFundamental": 70,
           "avgValuation": 41,
-          "avgMomentum": 48,
+          "avgMomentum": 47,
           "avgAiValue": 55,
           "topPick": "000660.KS",
           "valuePicks": [
@@ -29398,15 +29398,23 @@ const DATA = {
         "layer": "芯片层",
         "aiValue": 76,
         "layerPct": 100,
-        "why": "基本面 81/100、估值便宜度 65/100、动量 18.254999999999995/100(未充分定价), AI价值分 76/100"
+        "why": "基本面 81/100、估值便宜度 65/100、动量 16.132999999999996/100(未充分定价), AI价值分 76/100"
       },
       {
         "ticker": "NVDA",
         "name": "英伟达",
         "layer": "芯片层",
         "aiValue": 69,
-        "layerPct": 92,
+        "layerPct": 85,
         "why": "基本面 84/100、估值便宜度 62/100、动量 54.529999999999994/100(未充分定价), AI价值分 69/100"
+      },
+      {
+        "ticker": "005930.KS",
+        "name": "三星电子",
+        "layer": "芯片层",
+        "aiValue": 69,
+        "layerPct": 85,
+        "why": "基本面 69/100、估值便宜度 61/100、动量 19.286999999999995/100(未充分定价), AI价值分 69/100"
       },
       {
         "ticker": "ADBE",
@@ -29415,14 +29423,6 @@ const DATA = {
         "aiValue": 68,
         "layerPct": 100,
         "why": "基本面 70/100、估值便宜度 72/100、动量 44.904/100(未充分定价), AI价值分 68/100"
-      },
-      {
-        "ticker": "005930.KS",
-        "name": "三星电子",
-        "layer": "芯片层",
-        "aiValue": 68,
-        "layerPct": 85,
-        "why": "基本面 69/100、估值便宜度 61/100、动量 21.947000000000003/100(未充分定价), AI价值分 68/100"
       }
     ],
     "summary": {
@@ -30069,7 +30069,7 @@ const DATA = {
           "topMover": "SNOW",
           "topMoverMomentum": 93.22,
           "flowScore": 69,
-          "flowSharePct": 51.3,
+          "flowSharePct": 51.2,
           "avgMomentum": 62,
           "breadthPct": 43,
           "capWeightedMomentum": 61,
@@ -30085,7 +30085,7 @@ const DATA = {
           "topMoverMomentum": 93.59,
           "flowScore": 31,
           "flowSharePct": 11.8,
-          "avgMomentum": 48,
+          "avgMomentum": 47,
           "breadthPct": 21,
           "capWeightedMomentum": 42,
           "momentumAccel": -9.53,
@@ -30115,10 +30115,10 @@ const DATA = {
           "topMoverMomentum": 95.15,
           "flowScore": 29,
           "flowSharePct": 10.4,
-          "avgMomentum": 38,
+          "avgMomentum": 37,
           "breadthPct": 14,
-          "capWeightedMomentum": 22,
-          "momentumAccel": 1.32,
+          "capWeightedMomentum": 21,
+          "momentumAccel": 1.28,
           "valuationHeat": 61
         },
         {
@@ -30128,8 +30128,8 @@ const DATA = {
           "totalMarketCap": 859.8,
           "topMover": "TLN",
           "topMoverMomentum": 72.66,
-          "flowScore": 28,
-          "flowSharePct": 10.2,
+          "flowScore": 29,
+          "flowSharePct": 10.3,
           "avgMomentum": 45,
           "breadthPct": 12,
           "capWeightedMomentum": 49,
@@ -30145,10 +30145,10 @@ const DATA = {
           "topMoverMomentum": 55.41,
           "flowScore": 19,
           "flowSharePct": 5.0,
-          "avgMomentum": 35,
+          "avgMomentum": 34,
           "breadthPct": 0,
-          "capWeightedMomentum": 17,
-          "momentumAccel": -7.38,
+          "capWeightedMomentum": 16,
+          "momentumAccel": -7.43,
           "valuationHeat": 63
         }
       ],
@@ -33766,33 +33766,33 @@ const DATA = {
   "macroSignal": {
     "asOf": "2026-10-15",
     "curatedDate": "2026-10",
-    "method": "信号分级框架：主导矛盾(数据自动选原型) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。主导矛盾由 gen_datajs.py 依据实时复合指标(债股背离/通胀压力/增长/流动性/广度)从 archetypes[] 自动选出原型；manualOverride=true 时改回使用下方 dominant 策展文案。锚点状态实时计算；序列缺失回退策展。历史沿革(压缩)：2026-08-12 纳入经济 regime(滞胀组合)、利率熊陡 47bp、非农 -23K；08-19 核心 CPI 环比反弹至 +0.22%(cpi_accel 转 on)、流动性转 tight；08-27 disagreement 转 F、breadth 转 broad；09-03 yields_high/curve_bear_steep 转 on、nfp_negative 转 on；09-10 nfp_negative 转 off(+162K)、yields_high 转 off(差 1bp)、liquidity 转 neutral；09-17 yields_high 转 on(4.97 破 4.90 创区间新高)、credit_widen 转 on(HY 2.71)、liquidity 转 easy；09-24 政策被证实、资产反向定价：FOMC(9/15-16)加息至 3.75-4.00%，但 yields_high/credit_widen/curve_bear_steep 三项同时转 off，activeScenario 首次回落为「未达成」；10-08 主导矛盾由 inflation_reignite 切换为新增原型 stagflation_squeeze(滞胀挤压)。 2026-10-15 刷新：(1) 主导矛盾维持 stagflation_squeeze(2/2 全命中，inflation=high + growth=weak)，runner-up 仍为 inflation_reignite；原型库与判定逻辑本次**未做任何增删改动**。(2) 锚点集合与上周完全相同，10 条锚无一转态：on 4 条 = equity_up / cpi_accel / credit_widen / curve_bear_steep；off 4 条 = yields_high / equity_down / nfp_negative / crypto_divergence；curated 2 条 = ai_capex_slow / cb_buying。但锚内读数全部位移：yields_high 10Y 5.27→5.24(区间高 5.31，仍差 7bp)、equity_up 余量 157→141 点、credit_widen HY 3.03→3.11(30 日均值 2.79→2.85)、curve_bear_steep 48bp→44bp。(3) 复合指标十项与上周完全一致(disagreement T / yldUp T / eqUp T / yieldsHigh F / creditStress T / cpiAccel T / inflation high / growth weak / liquidity tight / breadth narrow)——这是本面板首次出现「复合指标连续两期一字不动、而资产层发生实质位移」的组合：本周真正的新闻不在指标层，在价格层。(4) 情景层：activeScenario 连续第三期为「未达成」；growth_weak [equity_down, credit_widen] 1/2、inflation_reignite [cpi_accel, yields_high] 1/2、goldilocks [equity_up, yields_high] 1/2、ai_roll 0/1，展示最接近者 inflation_reignite。(5) 原型库未增删的理由：本周的新变化(半导体与存储链回撤、黄金与工业金属同步反弹)是滞胀挤压**内部的资产轮动**，不是新的宏观组合。可用十维里没有能干净刻画它的键——liquidity 已为 tight、breadth 已为 narrow，二者都已被滞胀档间接占用；再造一个 {creditStress, breadth} 或 {inflation, creditStress} 型原型只会与 2/2 的滞胀档在排序键 (全命中, 命中条数, 比例, priority, -rank) 上撞车，把本来已经依赖 priority 的平局裁决进一步复杂化。故维持 7 条原型(calm_goldilocks 仍仅作全 0 分回退、inflation_reignite 仍仅在 inflation=high 时激活)。(6) 数据质量与口径提示(本期引用时须逐条披露)：① **9 月 CPI 尚未进入数据链路**——core_cpi 序列仍停在 2026-08-01(data_health 标记 STALE、age 74 天)，cpi_accel 锚的证据是 8 月 vintage；同时 `inflationDeepening.annualized3m` 只有 1.97%，单月 +0.29% 与三月年化 2.0% 的分歧必须并列写出，不能只引单月。 ② 上周记录的「economic_releases.json 未刷新 9 月」**已修复**：数据公布侧已更新至 9 月(非农 +29K / 失业率 4.2% / 参与率 61.8%)，并新增 7 月被下修至 -10K 的口径。 ③ 油价两套序列口径不同：面板市场读数一律用 Yahoo 期货(brent_rt $106.21 / wti_rt $94.66)，FRED 现货(brent/wti)另有一套且 10-02 曾出现 135.51 的单日异常跳动，现货口径引用须剔除该点；另外本期 WTI 与 Brent 月内裂开约 $11.5(WTI 月 -10.55% vs Brent 月 -2.34%)，疑与合约换月/期限结构有关，引用须注明。 ④ fed.policyTable 的加息日期仍随数据日期漂移(本期写作「2026-10-13 加息 25bp」，实际为 9/15-16 决议、09-17 生效)。 ⑤ recession 面板 3M-10Y 的 meaning 仍写「当前 +1bp」而 value 为 0.95。 ⑥ tradeRadar 的 policy_gap 文案仍写「非农已转负」，与其自身数值口径(9 月 +29K)不符。 ⑦ 超级核心存在多处口径差异(inflationDeepening 3.34 / releases 3.5% / 策展文本 3.8)。 以上 ①③④⑤⑥⑦ 为已知未修项，本次按任务边界未改动 gen_datajs.py 与任何面板脚本。",
+    "method": "信号分级框架：主导矛盾(数据自动选原型) / 领先确认(触发情景转换的硬指标) / 交叉验证(验证涨势广度与背离)。主导矛盾由 gen_datajs.py 依据实时复合指标(债股背离/通胀压力/增长/流动性/广度)从 archetypes[] 自动选出原型；manualOverride=true 时改回使用下方 dominant 策展文案。锚点状态实时计算；序列缺失回退策展。历史沿革(压缩)：2026-08-12 纳入经济 regime(滞胀组合)、利率熊陡 47bp、非农 -23K；08-19 核心 CPI 环比反弹至 +0.22%(cpi_accel 转 on)、流动性转 tight；08-27 disagreement 转 F、breadth 转 broad；09-03 yields_high/curve_bear_steep 转 on、nfp_negative 转 on；09-10 nfp_negative 转 off(+162K)、yields_high 转 off(差 1bp)、liquidity 转 neutral；09-17 yields_high 转 on(4.97 破 4.90 创区间新高)、credit_widen 转 on(HY 2.71)、liquidity 转 easy；09-24 政策被证实、资产反向定价：FOMC(9/15-16)加息至 3.75-4.00%，但 yields_high/credit_widen/curve_bear_steep 三项同时转 off，activeScenario 首次回落为「未达成」；10-08 主导矛盾由 inflation_reignite 切换为新增原型 stagflation_squeeze(滞胀挤压)。 2026-10-15 刷新(第 2 版；本次纳入 9 月 CPI 落地与 10-13/10-14 收盘)：(1) 主导矛盾维持 stagflation_squeeze(2/2 全命中，inflation=high + growth=weak)，runner-up 仍为 inflation_reignite(1/1)；原型库与判定逻辑本次**未做任何增删改动**。(2) 锚点集合与上一期完全相同，10 条锚无一转态：on 4 条 = equity_up / cpi_accel / credit_widen / curve_bear_steep；off 4 条 = yields_high / equity_down / nfp_negative / crypto_divergence；curated 2 条 = ai_capex_slow / cb_buying。复合指标十项亦与上一期完全一致(disagreement T / yldUp T / eqUp T / yieldsHigh F / creditStress T / cpiAccel T / inflation high / growth weak / liquidity tight / breadth narrow)。(3) **本次实质性更新全部在通胀端——9 月 CPI 已进入数据链路**：cpi_accel 锚的证据由 8 月 vintage 换为 9 月(核心环比 +0.33% vs 前月 +0.29%)，「连续第 3 月 >0.2%」**已达成**；核心 CPI 3 个月年化由 1.97% 跳到 **3.41%**、6 个月年化 2.57%→2.85%，「单月热、三个月温和」的口径分歧已收敛(三月年化现已高于同比)。水平面：CPI 同比 3.4%→**3.7%**(高于预期 3.6%)、核心 CPI 同比 2.4%→**2.6%**(高于预期 2.5%)、能源同比 +16.0%→**+20.4%**、房租 3.03%→**3.23%**、核心服务 3.02%→**3.16%**、核心商品 0.66%→0.71%；唯一放缓的是食品(2.63%→2.45%)。结构上从「能源单点脉冲」转为「涨价基础在变宽」。economy 面板通胀分项由 66 升到 **90**。(4) 资产层同步推进到 10-13/10-14 收盘，指数层不再是「站着不动」：SPX 7718.94(周 -1.06%)、NDX 29950.82(周 -3.88%)、RUT 2729.53(周 -2.28%)，equity_up 余量由 140.7 点收窄到 **50.7 点**；费城半导体周 -10.58%(10-14 单日 -4.30%)，存储端 SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%，再融资端 CRWV 周 -25.63%、OKLO 周 -21.13%；而现金流端仍为正(MSFT 周 +0.74%、META +2.25%、PLTR +3.53%、CRM +5.07%)。VIX 16.87、SKEW 157.30(分位 98)，同时长端周线首次回落(TLT 周 +2.26%、10Y 周 -10bp)——避险买盘出现。(5) 情景层：activeScenario 仍为「未达成」(连续第三期)，growth_weak [equity_down, credit_widen] 1/2、inflation_reignite [cpi_accel, yields_high] 1/2、goldilocks [equity_up, yields_high] 1/2、ai_roll 0/1，展示最接近者 inflation_reignite。需注意 equity_up 余量只剩 50.7 点(距翻 off 仅 0.66%)，growth_weak 情景的 equity_down 一侧正在逼近触发。(6) 数据质量与口径提示(本期引用时须逐条披露)：① 9 月 CPI 已落地(core_cpi last_date=2026-09-01，data_health 仍标 STALE/age 44 天，属月度发布的正常节奏)，但 9 月核心 PCE 与 supercore 尚未发布(停在 2026-08-01、age 75 天)，故「超级核心」的最新读数仍是 8 月 vintage。 ② 油价两套序列口径不同：面板市场读数一律用 Yahoo 期货(brent_rt $104.37 / wti_rt $94.10)，FRED 现货(brent/wti)另有一套且 10-02 曾出现 135.51 的单日异常跳动，现货口径引用须剔除该点。 ③ fed.policyTable 的加息日期仍随数据日期漂移(本期写作「2026-10-14 加息 25bp」，实际为 9/15-16 决议、09-17 生效)。 ④ recession 面板 3M-10Y 的 meaning 仍写「当前 +1bp」而 value 为 0.91。 ⑤ tradeRadar 的 policy_gap 文案仍写「非农已转负」，与其自身数值口径(9 月 +29K)不符。 ⑥ 超级核心存在多处口径差异(inflationDeepening 3.16 / releases 3.5% / 策展文本 3.8)。 以上 ①③④⑤⑥ 为已知未修项，本次按任务边界未改动 gen_datajs.py 与任何面板脚本。",
     "dominant": {
-      "title": "滞胀挤压：通胀高企、就业转弱、信用续裂，本周资产层也加入了裂缝",
-      "keyTension": "滞胀(通胀粘性 + 新增雇佣转弱 + 信用全线走阔) vs 政策继续收紧(10/27 定价加息 91%) + 资产层首次出现实质位移",
-      "body": "本档连续第二期主导，2/2 全命中的结构没有变化(inflation=high + growth=weak)，本周要写的是三条腿各自都更硬了、并且在资产层多出第四条线索。 通胀端：8 月核心 CPI 环比 +0.29%、连续第 2 月 >0.2%，cpi_accel 锚维持 on，CPI 同比 3.4%、核心 CPI 2.4%、核心 PCE 3.0%，能源分项同比 +16.1%、对整体贡献 +1.6pt。但两个口径必须并列摆出：一是 9 月 CPI 尚未进入数据链路(core_cpi 停在 2026-08-01，data_health 标 STALE、age 74 天)，本锚的证据其实是 8 月 vintage；二是核心 CPI 的 3 个月年化只有 1.97%、6 个月年化 2.57%，单月 +0.29% 折年约 3.5% 与三月折年不到 2.0% 差了一倍多。只引单月会把通胀说重，只引三月年化会把通胀说轻。 增长端：9 月非农 +29K 对预期 +90K 差 61K，失业率 4.2% 对预期 4.1%，参与率 61.8%(+0.2pt)，7 月被下修至 -10K，近三月月均仅 +51K。economy 面板同步把劳动分项从 37 降到 21、增长分项从 88 降到 64，通胀分项维持 66，「滞胀风险：就业走弱 + 通胀高企」仍为高置信。政策端不但没让步，还更紧：10/27 FOMC 的加息定价 91%，鹰鸽积分 10，隐含 12 个月 2 次加息，2Y 4.80 高出政策利率上限 4.00% 达 80bp。 政策的不让步直接从长端读出来：10Y 5.24(月 +29bp，区间高 5.31)、30Y 5.56、5Y 5.02，整条中长端仍在 5% 上方；但拆开看，10Y 实际利率 2.91%(月 +36bp)，10Y BEI 只有 2.33%(月 -3bp)，ACM 期限溢价 1.0729，MOVE 101.09——这一段仍然是实际利率与期限溢价的重定价，不是通胀预期脱锚。这一点很重要：它意味着长端抛售的驱动是真实资金成本与久期风险，而不是「通胀交易」，与通胀再燃是两回事。 信用端本周的形态有一处质变：HY OAS 收 3.11%、月 +46bp，30 日均值抬到 2.85；走阔不再只集中在最弱端——IG +3bp、BBB +5bp、BB +38bp、B +37bp、CCC +177bp，指数层的月度走阔幅度已接近中段，而最弱端仍是最极端的那个(CCC 12.53%、历史分位 100%、半年 +338bp)，违约率 TTM 1.9%、分位 94。指数层里含相当比例的贴现率成分，CCC 的裂口才是违约前瞻，本档要盯的正是后者。 本周新出现的是第四条线索，在资产层。费城半导体一周 -7.63%(月仍 +9.68%)、SK 海力士月 -21.17%、三星月 -11.50%、美光周 -8.83%、台积电周 -7.71%、ARM 周 -15.59%、CRWV 周 -15.17%，而 SPX 一周只跌 0.17%、equity_up 的余量从 157 点降到 141 点；VIX 还在 15.27，但 SKEW 已经涨到 154.74(周 +9.58)。把这组读数与「信用走阔 + 实际利率上行」放在一起，滞胀的成本第一次不只体现在利率和利差上，而是开始体现在具体的盈利链上：离资本开支与再融资最近的一端先跌，靠现金流的一端还站着。 但必须同时写下反方向的证据，否则本档就成了单边叙事。黄金一周 +0.93%、月线从 -6.43% 修复到 -3.55%，铜月 +6.34%，Brent 周 +6.00%、WTI 周 +7.23%，天然气月 +13.84%——商品端第一次在「胀」这一侧给出与 BEI 相反的证据。若这组读数延续、10Y BEI 跟随走高，那么本档的「胀」就从「仅为利率定价」升级为「商品再通胀」，性质更硬；若商品只是周线反弹而月线仍为负(当前 WTI 月 -10.55%、Brent 月 -2.34%)、BEI 继续不动，那么这只是熊市反弹，本档维持原判。另外油价口径要注明：面板用 Yahoo 期货，FRED 现货 10-02 有 135.51 的异常点须剔除；本周 WTI 与 Brent 月内裂开约 $11.5，疑与换月有关。 还有一处方向明确的变化是流动性：净流动性月 -43B、TGA 月 +54B 至 $872.5B、RRP 仅 $0.28B(货币基金可搬回美联储的钱已耗尽)、LPI 4.6「中性偏紧」——数量端确实收紧了；但价格端依然平静，SOFR-IORB -3bp 未转正，SRF 也未见放量。这就是「数量已收紧、价格还没反应」的阶段，本档把它列为背景压制项而非触发项。 诚实的边界仍要写明：产出与存量端至今没有一项坏掉——GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强，衰退面板 6/100 低风险、Sahm 0.03 未触发、初请 197K。唯一的新变化是续请 1.716M、月 +17K，由持续下行转为上行——单月、小幅，但方向明确，值得单列。所以本档现在的准确定性是：**滞胀的输入端已经齐了(通胀不退 + 新增雇佣与信用先裂)，产出与存量端刚刚出现第一道细纹，还没有跟随**。把两条前瞻裂缝当成结论，是本档最容易犯的错。 检验点很具体：9 月 CPI(核心环比能否连续第 3 月 >0.2%)、10/30 的 9 月 PCE 超级核心、10/27 FOMC 是否兑现 91% 定价的加息、HY OAS 与 CCC 是否继续走阔、续请是否延续上行、以及商品周线反弹能否延续到月线并带动 BEI。证伪路径：核心 CPI 环比回到 0.15% 以下或三月年化继续低于 2.0%(通胀端解除)；或 9 月非农上修至 +100K 以上、失业率回落至 4.1%、HY OAS 回落至 2.80 下方、续请重回下行(增长端解除)——两端任一解除，本档退位。",
-      "core": "本档维持 2/2 全命中(inflation=high + growth=weak)，连续第二期主导。三条腿都更硬了：通胀端核心 CPI 环比 +0.29% 连续第 2 月 >0.2%(但三月年化仅 1.97%、9 月 CPI 未落地)；增长端 9 月非农 +29K miss 61K、7 月下修至 -10K、economy 劳动 21/增长 64；信用端 HY 3.11、CCC 12.53%(分位 100)、违约率 1.9%(分位 94)。本周新增的第四条线索在资产层：SOX 周 -7.63%、存储链月 -11~-21%。",
+      "title": "滞胀挤压：通胀由能源扩散到房租与服务，就业转弱，资产层从分层走向整体回撤",
+      "keyTension": "滞胀(通胀三个月同向加速 + 新增雇佣转弱 + 信用全线走阔) vs 政策继续收紧(10/27 定价加息 86%) + 资产层由「分层」升级为「整体回撤」",
+      "body": "本档连续第三期主导，2/2 全命中的结构没有变化(inflation=high + growth=weak)，本期要写的是三条腿各自都更硬了、第四条线索(资产层)大幅加深，同时给出两处必须如实写下的反向信息。 通胀端：9 月 CPI 落地后证据等级提升。核心 CPI 环比 +0.33%(前月 +0.29%)、连续第 3 月站在 0.2% 上方(07 +0.22% / 08 +0.29% / 09 +0.33%)，cpi_accel 锚维持 on；CPI 同比 3.7%(高于预期 3.6%)、核心 CPI 同比 2.6%(高于预期 2.5%)、核心 PCE 同比 3.0%(8 月)、能源分项同比 +20.4%(前值 +16.0%)、整体环比 +0.65%(年内次高)。上一期本档最大的保留是「单月 +0.29% 折年约 3.5% 与三个月折年不到 2.0% 差了一倍多，只引单月会把通胀说重，只引三月年化会把通胀说轻」——9 月数据把这个分裂抹平了：3 个月年化由 1.97% 跳到 3.41%、6 个月年化 2.57%→2.85%，两者都已高于同比 2.57%，三口径同向。 更重要的是结构。本期涨价的基础变宽了：房租(环比 +0.39%、同比 3.03%→3.23%)、核心服务(环比 +0.37%、同比 3.02%→3.16%)、核心商品(环比 +0.25%、同比 0.66%→0.71%)同时回头，唯一放缓的是食品(环比 +0.05%、同比 2.63%→2.45%)。房租是 CPI 里最迟钝的一块，它转身通常不是噪音，而是基础在变宽。economy 面板把通胀分项由 66 升到 90，与 9 月 CPI 的口径一致。 增长端：9 月非农 +29K 对预期 +90K 差 61K，失业率 4.2% 对预期 4.1%，参与率 61.8%(+0.2pt)，7 月被下修至 -10K，近三月月均仅 +51K。economy 面板劳动分项 21、增长分项 64，通胀分项 66→90，「滞胀风险：就业走弱 + 通胀高企」仍为高置信。政策端不但没让步，还维持偏鹰：10/27 FOMC 的加息定价 86%(25bp 78.5% + 50bp 7.7%)、维持 12.9%、降息 0.9%，鹰鸽积分 8.2，隐含 12 个月 0 次降息 / 2 次加息，2Y 4.79 高出政策利率上限 4.00% 达 79bp。 政策的不让步直接从长端读出来：10Y 5.21(月 +25bp，区间高 5.31)、30Y 5.56、5Y 5.00，整条中长端仍在 5% 上方；但拆开看，10Y 实际利率 2.88%(月 +28bp)，10Y BEI 只有 2.35%(月 -2bp)，MOVE 99.06——这一段仍然是实际利率与期限溢价的重定价，不是通胀预期脱锚。这一点很重要：它意味着长端抛售的驱动是真实资金成本与久期风险，而不是「通胀交易」。同时必须记下本期第一处反向信息：长端周线首次明显回落(10Y 周 -10bp、30Y 周 -10bp)，TLT 周 +2.26%，避险买盘第一次出现。 信用端：HY OAS 收 3.16%、月 +45bp、周 +13bp，30 日均值抬到 2.87；走阔不再只集中在最弱端——IG +3bp、BBB +5bp、BB +35bp、B +38bp、CCC +186bp，指数层与中段的月度幅度已接近最弱端，而最弱端仍是最极端的那个(CCC 12.67%、历史分位 100%、半年 +354bp)，违约率 TTM 1.86%、分位 94。指数层里含相当比例的贴现率成分，CCC 的裂口才是违约前瞻，本档要盯的正是后者。 第四条线索(资产层)本期大幅加深，而且形态变了。上一期写的是「分层还被指数层盖住」；本期指数层也跟上了：SPX 7718.94(周 -1.06%、日 -1.11%)、NDX 29950.82(周 -3.88%)、RUT 2729.53(周 -2.28%)，equity_up 的余量从 140.7 点腰斩到 50.7 点(距翻 off 只剩 0.66%)；费城半导体周 -10.58%(10-14 单日 -4.30%)，存储端 SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%、美光周 -15.98%，再融资端 CRWV 周 -25.63%、OKLO 周 -21.13%、ORCL 周 -9.06%。而现金流端仍为正但已不再单向：MSFT 周 +0.74%、META 周 +2.25%、PLTR 周 +3.53%、CRM 周 +5.07%，而 SNOW 周 +0.67%、AMZN 周 -2.25%、GOOGL 周 -0.82%。把这组读数与「信用走阔 + 实际利率上行」放在一起，滞胀的成本第一次不只体现在利率和利差上，而是体现在具体的盈利链上：离资本开支与再融资最近的一端先跌，靠现金流的一端最后跌。VIX 还在 16.87，但 SKEW 已经涨到 157.30(分位 98)，机构在低位波动里买着昂贵的尾部保护。 第二处反向信息在商品端，而且方向与上一期相反。上一期这里写「商品端第一次在「胀」这一侧给出与 BEI 相反的证据」(Brent 周 +6.00%、WTI 周 +7.23%、铜月 +6.34%、气月 +13.84%)；本期这组读数分化了：铜月 +2.23%、天然气月 +12.90% 仍为正，但 Brent 月 -1.38%、WTI 月 -8.13%、黄金月 -5.08%、白银月 -12.70% 都是负的。也就是说，「实物再通胀」的旁证强度不如上一期，本档不能顺势加码。若后续商品重新统一上行且 10Y BEI 跟随走高，那么本档的「胀」就从「仅为利率定价」升级为「商品再通胀」，性质更硬；若继续分化且 BEI 不动，本档维持原判。另外油价口径要注明：面板用 Yahoo 期货(brent_rt $104.37 / wti_rt $94.10)，FRED 现货 10-02 有 135.51 的异常点须剔除。 流动性方向明确转紧：净流动性月 -86B、TGA 月 +98B 至 $920.2B、RRP 仅 $0.20B(货币基金可搬回美联储的钱已耗尽)、LPI 5.0「中性偏紧」——数量端确实收紧了；但价格端依然平静，SOFR-IORB -1bp 未转正，SRF 也未见放量。这就是「数量已收紧、价格还没反应」的阶段，本档把它列为背景压制项而非触发项。 诚实的边界仍要写明：产出与存量端至今没有一项坏掉——GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强，衰退面板 6/100 低风险、Sahm 0.00 未触发、初请 197K。唯一的新变化是续请 1.716M、月 +17K，由持续下行转为上行——单月、小幅，但方向明确，值得单列。所以本档现在的准确定性是：**滞胀的输入端已经齐了并且更硬(通胀三个月同向加速 + 涨价面扩散 + 新增雇佣与信用先裂)，价格层也从「分层」走向「整体回撤」，但产出与存量端仍未跟随**。把输入端与价格层当成最终结论，是本档最容易犯的错。 检验点很具体：10/30 的 9 月 PCE 超级核心、10/27 FOMC 是否兑现 86% 定价的加息、HY OAS 与 CCC 是否继续走阔、续请是否延续上行、SPX 是否跌破 60 日均值(7668.21)使 equity_down 转 on、以及商品端能否重新统一上行并带动 BEI。证伪路径：核心 CPI 环比回到 0.15% 以下或三月年化回落至 2.0% 以下(通胀端解除)；或 9 月非农上修至 +100K 以上、失业率回落至 4.1%、HY OAS 回落至 2.80 下方、续请重回下行(增长端解除)——两端任一解除，本档退位。",
+      "core": "本档维持 2/2 全命中(inflation=high + growth=weak)，连续第三期主导。三条腿都更硬了：通胀端 9 月核心 CPI 环比 +0.33% 连续第 3 月 >0.2%、3 个月年化由 1.97% 跳到 3.41%(高于同比)，且涨价由能源扩散到房租(同比 3.23%)与核心服务(3.16%)；增长端 9 月非农 +29K miss 61K、7 月下修至 -10K、economy 劳动 21/增长 64、通胀分项 66→90；信用端 HY 3.16(月 +45bp)、CCC 12.67%(分位 100)、违约率 1.86%(分位 94)。第四条线索(资产层)大幅加深：SOX 周 -10.58%、SPX 距 60 日均值只剩 50.7 点。",
       "chain": [
-        "① 通胀端成立：8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，cpi_accel 锚维持 on；CPI 同比 3.4%、核心 CPI 2.4%、核心 PCE 3.0%，能源同比 +16.1%、贡献 +1.6pt。口径提示：9 月 CPI 尚未进入数据链路，且 3 个月年化仅 1.97%",
-        "② 增长端更实：credit_widen 锚维持 on，growth 复合指标维持 weak；9 月非农 +29K(预期 +90K)、失业率 4.2%(预期 4.1%)、参与率 61.8%，7 月下修至 -10K、近三月月均 +51K；economy 劳动 21/100、增长 64/100、通胀 66/100",
-        "③ 政策没有转向：10/27 FOMC 定价加息 91%，鹰鸽积分 10，隐含 12 个月 2 次加息，terminal2y 4.80 附近，ffr_up 4.00——市场没有把就业转弱读成宽松理由",
-        "④ 定价后果：10Y 5.24(月 +29bp、周 -4bp)、30Y 5.56、实际利率 2.91%(月 +36bp)而 BEI 2.33%(月 -3bp)，ACM 期限溢价 1.0729，MOVE 101.09——涨的是实际利率与期限溢价，不是通胀预期",
-        "⑤ 信用端继续走阔且不再只集中在最弱端：HY 3.11(月 +46bp)、IG 0.83、BBB 1.02、BB 1.88(月 +38bp)、B 3.10(月 +37bp)、CCC 12.53(周 +42bp、月 +177bp、半年 +338bp，分位 100)；违约率 TTM 1.9%(分位 94)",
-        "⑥ 本周新增——资产层加入裂缝：SOX 周 -7.63%、SK 海力士月 -21.17%、三星月 -11.50%、MU 周 -8.83%、CRWV 周 -15.17%、ARM 周 -15.59%，而 SPX 周 -0.17%、equity_up 余量由 157 点降到 141 点；VIX 15.27 但 SKEW 154.74(周 +9.58)",
-        "⑦ 反方向的证据：黄金周 +0.93%(月线由 -6.43% 修复至 -3.55%)、铜月 +6.34%、Brent 周 +6.00%、WTI 周 +7.23%、天然气月 +13.84%——若延续且 BEI 跟随，本档的「胀」将从利率定价转为商品再通胀",
-        "⑧ 流动性方向明确转紧：净流动性月 -43B、TGA 月 +54B 至 $872.5B、RRP 仅 $0.28B(缓冲耗尽)、LPI 4.6「中性偏紧」；但价格端仍平静，SOFR-IORB -3bp 未转正",
+        "① 通胀端成立且证据升级：9 月核心 CPI 环比 +0.33%(前月 +0.29%)，连续第 3 月 >0.2%，cpi_accel 锚维持 on；CPI 同比 3.7%、核心 CPI 同比 2.6%、核心 PCE 3.0%(8 月)、能源同比 +20.4%(前值 +16.0%)。口径分歧已收敛：3 个月年化 1.97%→3.41%、6 个月 2.57%→2.85%，均高于同比。结构上房租(3.03%→3.23%)、核心服务(3.02%→3.16%)、核心商品(0.66%→0.71%)同时回头",
+        "② 增长端更实：credit_widen 锚维持 on，growth 复合指标维持 weak；9 月非农 +29K(预期 +90K)、失业率 4.2%(预期 4.1%)、参与率 61.8%，7 月下修至 -10K、近三月月均 +51K；economy 劳动 21/100、增长 64/100、通胀 66→90/100",
+        "③ 政策没有转向：10/27 FOMC 定价加息 86%(25bp 78.5% + 50bp 7.7%)、维持 12.9%、降息 0.9%，鹰鸽积分 8.2，隐含 12 个月 0 降 2 加，terminal2y 4.79，ffr_up 4.00——市场没有把就业转弱读成宽松理由",
+        "④ 定价后果：10Y 5.21(月 +25bp、周 -10bp)、30Y 5.56、实际利率 2.88%(月 +28bp)而 BEI 2.35%(月 -2bp)，MOVE 99.06——涨的是实际利率与期限溢价，不是通胀预期；但本期长端周线首次回落、TLT 周 +2.26%，避险买盘出现",
+        "⑤ 信用端继续走阔且不再只集中在最弱端：HY 3.16(月 +45bp、周 +13bp)、IG 0.83、BBB 1.03、BB 1.91(月 +35bp)、B 3.17(月 +38bp)、CCC 12.67(周 +53bp、月 +186bp、半年 +354bp，分位 100)；违约率 TTM 1.86%(分位 94)",
+        "⑥ 资产层大幅加深：SOX 周 -10.58%(10-14 单日 -4.30%)、SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%、MU 周 -15.98%、ARM 周 -19.15%、CRWV 周 -25.63%、OKLO 周 -21.13%；SPX 7718.94(周 -1.06%)、NDX 周 -3.88%、RUT 周 -2.28%，equity_up 余量由 140.7 点收窄到 50.7 点；VIX 16.87、SKEW 157.30(周 +15.46%、分位 98)",
+        "⑦ 反方向的证据(强度弱于上一期)：黄金周 +0.18%(月 -5.08%)、铜月 +2.23%、天然气月 +12.90%，但 WTI 月 -8.13%、Brent 月 -1.38%、白银月 -12.70%——商品端本期不再统一上行，「实物再通胀证据」不如上一期",
+        "⑧ 流动性方向明确转紧：净流动性月 -86B、TGA 月 +98B 至 $920.2B、RRP 仅 $0.20B(缓冲耗尽)、LPI 5.0「中性偏紧」；价格端仍平静，SOFR-IORB -1bp 未转正",
         "⑨ 排序结果：本原型 2/2 全命中(两条独立确认)，在排序键「命中条数」一项上压过同为全命中的 inflation_reignite / growth_rolling / bond_vs_equity(各 1/1)，因此维持主导——这是数据与引擎设计(两条独立确认 > 单条)的机械结果，不是 priority 裁决"
       ],
       "confirm": [
-        "9 月 CPI：核心环比能否连续第 3 月 >0.2%（同时检验与三月年化 1.97% 的口径分歧）",
-        "10/30 的 9 月 PCE 超级核心（当前 3.5% / 3.34% 两口径）与 10/27 FOMC 是否兑现 91% 定价的加息",
-        "HY OAS 能否站住 3.1 上方、CCC 是否继续走阔（当前 12.53，分位 100）",
-        "续请失业金能否延续上行（当前 1.716M，月 +17K）——这是从「新增转弱」升级为「周期转弱」的关键",
-        "半导体与存储链的跌幅是否向软件/云厂扩散；商品周线反弹能否延续到月线且 BEI 跟随走高"
+        "10/30 的 9 月 PCE 超级核心(8 月 3.46%)——CPI 侧已确认三个月同向加速，PCE 侧尚未落地",
+        "HY OAS 能否站住 3.1 上方、CCC 是否继续走阔(当前 12.67，分位 100)",
+        "SPX 是否跌破 60 日均值 7668.21——equity_up 只剩 50.7 点余量，跌破则 equity_down 转 on、growth_weak 情景推进到 2/2",
+        "续请失业金能否延续上行(当前 1.716M，月 +17K)——这是从「新增转弱」升级为「周期转弱」的关键",
+        "半导体与存储链的跌幅是否向软件/云厂扩散(当前 MSFT 周 +0.74%、META +2.25%、PLTR +3.53%、CRM +5.07% 仍为正，但 SNOW +0.67%、AMZN -2.25%、GOOGL -0.82% 已转平)"
       ],
       "falsify": [
-        "核心 CPI 环比回到 0.15% 以下，或核心 CPI 3 个月年化继续低于 2.0%（通胀端解除）",
-        "9 月非农被上修至 +100K 以上、失业率回落至 4.1%，且 HY OAS 回落至 2.80 下方、续请重回下行（增长端解除）",
+        "核心 CPI 环比回到 0.15% 以下，或核心 CPI 3 个月年化回落至 2.0% 以下(通胀端解除)",
+        "9 月非农被上修至 +100K 以上、失业率回落至 4.1%，且 HY OAS 回落至 2.80 下方、续请重回下行(增长端解除)",
         "初请 4 周均始终低于 280K 且 GDP/PMI 维持扩张 → 就业转弱被证实为噪音",
         "两端任一解除，本原型即退位并回落到 inflation_reignite 或 growth_rolling"
       ]
@@ -33800,7 +33800,7 @@ const DATA = {
     "dominantMeta": {
       "source": "auto",
       "archetypeId": "stagflation_squeeze",
-      "archetypeTitle": "滞胀挤压：通胀高企、就业转弱、信用续裂，本周资产层也加入了裂缝",
+      "archetypeTitle": "滞胀挤压：通胀由能源扩散到房租与服务，就业转弱，资产层从分层走向整体回撤",
       "priority": "high",
       "composites": {
         "disagreement": true,
@@ -33952,41 +33952,41 @@ const DATA = {
       ]
     },
     "consensus": [
-      "通胀水平没有退，通胀预期也没有动——本周多了一个必须并列写出的口径问题。8 月核心 CPI 环比 +0.29%(前月 +0.22%)，连续第 2 月站在 0.2% 上方，cpi_accel 锚维持 on；CPI 同比 3.4%、核心 CPI 2.4%、核心 PCE 3.0%，能源分项同比 +16.1%、对整体贡献 +1.6pt。但两处口径要同时摆出：一是 9 月 CPI 尚未进入数据链路(core_cpi 序列仍停在 2026-08-01，data_health 标记 STALE、age 74 天)，本锚证据是 8 月 vintage；二是核心 CPI 3 个月年化只有 1.97%、6 个月年化 2.57%，单月 +0.29% 折年约 3.5% 与三月折年不到 2.0% 差了一倍多——只引单月会把通胀说重。预期侧纹丝不动：10Y BEI 2.33%(月 -3bp)、5y5y 2.33%(月持平)。政策侧仍然更鹰：10/27 FOMC 定价加息 91% / 维持 8% / 降息 0%，鹰鸽积分 10(满分偏鹰)，隐含 12 个月 2 次加息，ffr_up 4.00、IORB 3.90、SOFR 3.87。",
-      "利率从「暴力冲高」转入「高位横盘略回」，但商品端第一次在反方向出现证据。10Y 5.24(月 +29bp、周 -4bp，区间内最高 5.31 出现在 10-05)、30Y 5.56(月 +23.4bp、周 -7.8bp)、5Y 5.02、2Y 4.80(月 +24bp)、3M 4.21，10Y-2Y 44bp(由上周的 48bp 略收窄)，curve_bear_steep 锚维持 on。拆解仍是实际利率与期限溢价在动：10Y TIPS 2.91%(月 +36bp、周 -1bp)、10Y BEI 2.33%(月 -3bp)、ACM 期限溢价 1.0729、MOVE 101.09(周 -7.9)。要点有两处：一是 yields_high 锚技术上仍为 off(5.24 距区间高 5.31 差 7bp)，但水平比上上周的 4.96 高出 28bp，「未创区间新高」与「水平系统性抬升」必须分开说；二是商品端本周全线反弹——Brent $106.21(周 +6.00%)、WTI $94.66(周 +7.23%)、铜月 +6.34%、天然气月 +13.84%，若延续且 BEI 跟随走高，本轮长端抛售的性质就要由「实际利率冲击」改回「再通胀」。口径注：面板油价一律用 Yahoo 期货(brent_rt/wti_rt)，FRED 现货 10-02 有 135.51 的异常点须剔除；本周 WTI 与 Brent 月内裂开约 $11.5(WTI 月 -10.55% vs Brent 月 -2.34%)，疑与合约换月有关。",
-      "信用是本周第二处、也是最干净的「压力确认」，且走阔不再只集中在最弱端。HY OAS 3.11%(月 +46bp、周 -1bp)，30 日均值已从 2.79 抬到 2.85，credit_widen 锚维持 on；IG 0.83(月 +3bp)、BBB 1.02(月 +5bp)、BB 1.88(月 +38bp)、B 3.10(月 +37bp)——指数层与中段的月度走阔幅度已接近最弱端。分层结构仍在：CCC 12.53%(周 +42bp、月 +177bp、半年 +338bp，历史分位 100)，违约率 TTM 1.9%(分位 94)。这条读数要分两步读：指数层里含相当比例的贴现率成分(同期实际利率月 +36bp、MOVE 仍在 101)，CCC 的独立走阔才是违约前瞻；但本周指数层自身开始抬升，说明压力已从「最弱端」扩散到「整体水位」。credit 面板判定「信用分层, 低评级承压」risk-off。",
-      "就业第二次由「数据」确认，且存量端第一次出现裂缝。9 月非农 +29K(预期 +90K，miss 61K)、失业率 4.2%(预期 4.1%、+0.1pt)、参与率 61.8%(+0.2pt)；更重要的是 7 月被下修至 -10K、近三月月均仅 +51K(上半年节奏为 +148K/+63K)。economy 面板把劳动分项从 37 降到 21、增长分项从 88 降到 64(通胀 66 持平)，首位驱动仍为带预警标记的「失业率转向回升」。存量与产出端至今没坏：初请 197K(4 周均 198K)、Sahm 0.03 未触发、衰退面板 6/100 低风险；GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强。唯一的新变化是续请失业金 1.716M、月 +17K，由持续下行转为上行——单月、小幅，但方向明确，这是从「新增转弱」升级为「周期转弱」的关键观察点。economy 面板自判仍为「滞胀风险：就业走弱 + 通胀高企」，高置信。",
-      "资产层本周第一次加入裂缝，而指数还站在 60 日均值上方。SPX 7805.45(周 -0.17%、月 +2.43%，较 60 日均值 7664.71 高 140.7 点，equity_up 锚维持 on)，但内部换了位置：SOX 12208.79(周 -7.63%、月仍 +9.68%、半年 +32.36%)、SK 海力士月 -21.17%、三星月 -11.50%、MU 周 -8.83%、TSM 周 -7.71%、ARM 周 -15.59%、CRWV 周 -15.17%，而 MSFT 周 +2.67%、META 周 +3.20%、PLTR 周 +8.64%、SNOW 周 +6.49%、CRM 周 +5.79%——分层从「高杠杆个券」扩到「硬件与存储整条腿」。其余读数：黄金 $4,179.2(周 +0.93%、月 -3.55%，比上周的 -6.43% 明显修复，但铜月 +6.34%、气月 +13.84% 涨得更快 → 修复但未脱钩)、DXY 102.09(月 +2.45%)、美元/日元 158.20(逼近 160 干预线)；VIX 15.27、SKEW 154.74(周 +9.58，机构在买尾部保护)、OVX 48.77、MOVE 101.09；加密由 risk-on 转为震荡——BTC $83,160(月 -3.58%，上周为 +9.23%)、ETH 月 -9.28%、ETH/BTC 0.0300，crypto_divergence 锚仍 off(60 日 BTC +32.0% vs SPX +3.9%)；流动性方向转紧——净流动性月 -43B、TGA $872.5B(月 +54B)、RRP $0.28B(缓冲耗尽)，但 SOFR-IORB -3bp 价格端仍平静，LPI 4.6「中性偏紧」。偏好排序(主观、未经校准)：现金/短端(2Y 4.80%、不受久期伤害) > 黄金(央行购金托底 + 周线转正) > 能源/商品(Brent 106.21、铜月 +6.34%) > 美股(盈利真实但指数靠权重撑、分层已落到半导体) > 长久期国债(TLT 78.37、月 -3.16%) > AI 硬件与存储链(周线 -7~-21%) > 低评级信用(CCC 12.53%、分位 100)。"
+      "通胀水平没有退，而且本期证据从「单月」升级为「三个月同向」——9 月 CPI 已进入数据链路。9 月核心 CPI 环比 +0.33%(前月 +0.29%)，连续第 3 月站在 0.2% 上方，cpi_accel 锚维持 on；CPI 同比 3.7%(高于预期 3.6%)、核心 CPI 同比 2.6%(高于预期 2.5%)、核心 PCE 同比 3.0%(8 月)、能源分项同比 +20.4%(前值 +16.0%)。口径分歧已经收敛：核心 CPI 3 个月年化由 1.97% 跳到 3.41%、6 个月年化 2.85%，两者都高于同比 2.57%——三个月与单月同向，不再需要「只引单月会把通胀说重」的保留。结构上，房租(3.03%→3.23%)与核心服务(3.02%→3.16%)同时回头，核心商品(0.66%→0.71%)也抬价，唯一放缓的是食品(2.63%→2.45%)：涨价的基础在变宽，不再只是能源的单点脉冲。economy 面板通胀分项由 66 升到 90。预期侧仍未跟上：10Y BEI 2.35%(月 -2bp)、5y5y 2.34%(月持平)。政策侧仍然更鹰：10/27 FOMC 定价加息 86%(25bp 78.5% + 50bp 7.7%) / 维持 12.9% / 降息 0.9%，鹰鸽积分 8.2(偏鹰)，隐含 12 个月 0 次降息 / 2 次加息，ffr_up 4.00、IORB 3.90、SOFR 3.89(SOFR-IORB -1bp)。",
+      "利率仍高位横盘略回，但商品端已不再给出统一信号。10Y 5.21(月 +25bp、周 -10bp，区间内最高 5.31 出现在 10-05)、30Y 5.56(月 +21bp、周 -10bp)、5Y 5.00、2Y 4.79(月 +16bp)、3M 4.26，10Y-2Y 42bp(由上一期的 48bp 收窄)，curve_bear_steep 锚维持 on。拆解仍是实际利率在动：10Y TIPS 2.88%(月 +28bp、周 -7bp)、10Y BEI 2.35%(月 -2bp)、MOVE 99.06(周 -6.14)。要点有两处：一是 yields_high 锚技术上仍为 off(5.21 距区间高 5.31 差 10bp)，但水平比一个月前的 4.96 高出 25bp，「未创区间新高」与「水平系统性抬升」必须分开说；二是商品端本期涨跌互现——铜月 +2.23%、天然气月 +12.90%，而 Brent 月 -1.38%、WTI 月 -8.13%、黄金月 -5.08%、白银月 -12.70%，上一期「商品全线反弹」的形态没有延续。口径注：面板油价一律用 Yahoo 期货(brent_rt $104.37 / wti_rt $94.10)，FRED 现货 10-02 有 135.51 的异常点须剔除。",
+      "信用是本期第二处、也是最干净的「压力确认」，且走阔不再只集中在最弱端。HY OAS 3.16%(月 +45bp、周 +13bp)，30 日均值已从 2.79 抬到 2.87，credit_widen 锚维持 on；IG 0.83(月 +3bp)、BBB 1.03(月 +5bp)、BB 1.91(月 +35bp)、B 3.17(月 +38bp)——指数层与中段的月度走阔幅度已接近最弱端。分层结构仍在：CCC 12.67%(周 +53bp、月 +186bp、半年 +354bp，历史分位 100)，违约率 TTM 1.86%(分位 94)。这条读数要分两步读：指数层里含相当比例的贴现率成分(同期实际利率月 +28bp、MOVE 99.06)，CCC 的独立走阔才是违约前瞻；但指数层自身持续抬升，说明压力已从「最弱端」扩散到「整体水位」。credit 面板判定「信用分层, 低评级承压」risk-off。",
+      "就业第二次由「数据」确认，且存量端出现第一处裂缝。9 月非农 +29K(预期 +90K，miss 61K)、失业率 4.2%(预期 4.1%、+0.1pt)、参与率 61.8%(+0.2pt)；更重要的是 7 月被下修至 -10K、近三月月均仅 +51K(上半年节奏为 +148K/+63K)。economy 面板保持劳动分项 21、增长分项 64(通胀分项由 66 升到 90)，首位驱动仍为带预警标记的「失业率转向回升」。存量与产出端至今没坏：初请 197K(4 周均 198K)、Sahm 0.00 未触发、衰退面板 6/100 低风险；GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强。唯一的新变化是续请失业金 1.716M、月 +17K，由持续下行转为上行——单月、小幅，但方向明确，这是从「新增转弱」升级为「周期转弱」的关键观察点。economy 面板自判仍为「滞胀风险：就业走弱 + 通胀高企」，高置信(通胀侧权重因 9 月 CPI 明显加重)。",
+      "资产层本期从「分层」走向「整体回撤」，而避险买盘第一次出现。SPX 7718.94(周 -1.06%、日 -1.11%、月 +1.76%，较 60 日均值 7668.21 只高 50.7 点，equity_up 锚仍 on 但余量已从 140.7 点腰斩)，内部继续换位置：SOX 11684.38(周 -10.58%、10-14 单日 -4.30%、月仍 +4.55%)、SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%、MU 周 -15.98%、TSM 周 -8.94%、ARM 周 -19.15%、CRWV 周 -25.63%，而 MSFT 周 +0.74%、META 周 +2.25%、PLTR 周 +3.53%、CRM 周 +5.07%——分层从「高杠杆个券」扩到「硬件与存储整条腿」，且现金流一侧也开始转平(SNOW +0.67%、AMZN -2.25%、GOOGL -0.82%)。其余读数：黄金 $4,164.6(周 +0.18%、月 -5.08%)、白银月 -12.70%、铜月 +2.23%、天然气月 +12.90%、DXY 102.08(月 +1.77%)、美元/日元 157.98(逼近 160 干预线)；VIX 16.87、SKEW 157.30(周 +15.46%，机构继续买尾部保护)、OVX 48.62、MOVE 99.06；TLT 78.89(周 +2.26%)——长端周线转涨是本期第一处明确避险信号。加密维持震荡——BTC $81,694(月 -3.27%)、ETH $2,424(月 -9.79%)、ETH/BTC 0.0297，crypto_divergence 锚仍 off(60 日 BTC +30.0% vs SPX +2.9%)；流动性方向转紧——净流动性月 -86B、TGA $920.2B(月 +98B)、RRP $0.20B(缓冲耗尽)，SOFR-IORB -1bp 价格端仍平静，LPI 5.0「中性偏紧」。偏好排序(主观、未经校准)：现金/短端(2Y 4.79%、不受久期伤害) > 黄金(央行购金托底) > 美股现金流端(MSFT/META/PLTR) > 能源/铜(铜月 +2.23%) > 长久期国债(TLT 周 +2.26% 但月 -2.25%) > AI 硬件与存储链(周 -6~-26%) > 低评级信用(CCC 12.67%、分位 100)。"
     ],
     "divergence": [
       {
         "id": "cpi_accel_vs_3m_annualized",
-        "label": "核心 CPI 单月 +0.29% 却三个月年化只有 1.97%：是通胀再加速，还是单月基数效应？",
-        "text": "cpi_accel 锚维持 on，是本周四个 on 锚之一，也是滞胀档通胀端的硬证据：8 月核心 CPI 环比由 +0.22% 升至 +0.29%，连续第 2 月站在 0.2% 上方。但同一份数据里的另一个口径给出相反的画面——核心 CPI 的 3 个月年化只有 1.97%(5→8 月，受 6 月 -0.017% 拖累)，6 个月年化 2.57%，而单月折年约 3.5%，两者差了一倍多。支持「一次性」的证据还在通胀预期一侧：10Y BEI 2.33%(月 -3bp)、5y5y 2.33%(月持平)——如果市场真认为通胀要脱锚，breakeven 应当跟着名义利率一起走，实际完全没动；同期核心 CPI 同比从 2.5% 回落到 2.4%，说明环比里含基数与能源传导成分。支持「服务再燃」的证据是核心 PCE 同比 3.0% 与超级核心仍在 3.3%~3.5% 一带(PCE 口径比 CPI 更顽固)，以及能源分项同比 +16.1%、贡献 +1.6pt。还有一个必须先解决的问题：**9 月 CPI 尚未进入数据链路**，core_cpi 序列停在 2026-08-01(data_health 标 STALE、age 74 天)，所以本锚当前引的是 8 月 vintage，任何「连续第 3 月」的判断都还没有数据支撑。裁决点：9 月 CPI 落地后的核心环比，以及 10Y BEI 是否跟随商品反弹走高。",
+        "label": "核心 CPI 单月 +0.33%、三个月年化 3.41%：通胀再加速已经从「单月」变成「三个月同向」",
+        "text": "本期这条分歧基本被数据解决了，这是本次刷新最重要的一处修正。上一期的形态是「单月 +0.29% 折年约 3.5%，三个月年化只有 1.97%」——单月热、三个月温和，两者差一倍多，因此把它列为本节最需披露的口径问题。9 月 CPI 落地后，三个月年化由 1.97% 跳到 3.41%(6→9 月)、六个月年化由 2.57% 升到 2.85%，两者都已高于核心 CPI 同比 2.57%——三个口径同向，原来的背离不再成立。更关键的是结构：本期不是能源单点拉动，而是房租(同比 3.03%→3.23%、环比 +0.39%)、核心服务(3.02%→3.16%、环比 +0.37%)、核心商品(0.66%→0.71%、环比 +0.25%)同时回头，唯一放缓的是食品(2.63%→2.45%)。房租是 CPI 里最迟钝的一块，它转身，说明涨价的基础在变宽。仍站在「一次性」一侧的证据只剩通胀预期：10Y BEI 2.35%(月 -2bp)、5y5y 2.34%(月持平)——若市场真认为通胀要脱锚，breakeven 应跟着名义利率一起走，实际却没动；而 10Y 实际利率月 +28bp，说明长端这波定价的是真实资金成本而非通胀交易。裁决点：10/30 的 9 月 PCE 超级核心(8 月 3.46%)，以及 10Y BEI 是否跟随商品走高。",
         "anchor": "cpi_accel"
       },
       {
         "id": "equity_high_vs_hardware_crack",
-        "label": "SPX 还在 60 日均值上方 141 点，但半导体一周 -7.63%：指数韧性，还是权重换人？",
-        "text": "equity_up 锚维持 on，余量从上周的 157 点小幅回落到 140.7 点(7805.45 vs 60 日均值 7664.71)，周 -0.17%、月 +2.43%——在 10Y 实际利率 2.91%、10/27 加息定价 91%、HY OAS 3.11% 的背景下，这仍是最有说服力的多头事实。但本周的增量在结构里：费城半导体一周 -7.63%、纳斯达克 100 周 -2.10%、罗素 2000 月 -3.76%，存储与 HBM 一条线最惨(SK 海力士月 -21.17%、三星月 -11.50%、美光周 -8.83%)，再融资依赖端继续失血(CRWV 周 -15.17%、ARM 周 -15.59%、OKLO 周 -17.56%)；而微软周 +2.67%、Meta 周 +3.20%、Palantir 周 +8.64%、ServiceNow 周 +6.49%、Salesforce 周 +5.79%。两种解释都站得住：偏多的一侧是盈利与需求——GDP Q2 +2.2%、制造业 PMI 55.7、服务业 PMI 55.0、hyperscaler FY26e capex 约 $735B 无减速证据，企业现金流仍在扩张；偏空的一侧是结构——指数走平是靠权重换人换来的，而 VIX 只有 15.27(波动率目标基金的阈值在 20)，SKEW 却已涨到 154.74(周 +9.58)，说明机构在低位波动里买着昂贵的尾部保护。裁决点：半导体与存储的跌幅是否向软件与云厂扩散、SPX 是否跌破 60 日均值(7664.71)使 equity_up 转 off、以及 10/27 FOMC 前后的利率路径。",
+        "label": "SPX 距 60 日均值只剩 50.7 点，而半导体一周 -10.58%：指数韧性，还是最后一层缓冲？",
+        "text": "equity_up 锚维持 on，但余量从上一期的 140.7 点腰斩到 50.7 点(7718.94 vs 60 日均值 7668.21)，周 -1.06%、日 -1.11%——在 10Y 实际利率 2.88%、10/27 加息定价 86%、HY OAS 3.16% 的背景下，这仍是多头能拿出的最后一块证据，但它已经从「有余量」变成「贴线」。本周的增量在结构里，而且比上一期更宽：费城半导体周 -10.58%(10-14 单日 -4.30%)、纳斯达克 100 周 -3.88%、罗素 2000 周 -2.28%，存储与 HBM 一条线最惨(SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%、美光周 -15.98%)，再融资依赖端继续失血(CRWV 周 -25.63%、ARM 周 -19.15%、OKLO 周 -21.13%、ORCL 周 -9.06%)；而微软周 +0.74%、Meta 周 +2.25%、Palantir 周 +3.53%、Salesforce 周 +5.07%。两种解释都站得住：偏多的一侧是盈利与需求——GDP Q2 +2.2%、制造业 PMI 55.7、服务业 PMI 55.0、hyperscaler FY26e capex 约 $735B 无减速证据，企业现金流仍在扩张；偏空的一侧是结构——指数靠权重换人撑着，且「靠现金流的一端」也开始转平(SNOW +0.67%、AMZN -2.25%、GOOGL -0.82%)，同时 VIX 16.87 而 SKEW 已到 157.30(分位 98)，机构在低位波动里买着昂贵的尾部保护；TLT 周 +2.26% 说明已经有资金先撤到久期上。裁决点：SPX 是否跌破 60 日均值(7668.21)使 equity_up 转 off(只差 0.66%)、半导体跌幅是否向软件与云厂扩散、以及 10/27 FOMC 前后的利率路径。",
         "anchor": "equity_up"
       },
       {
         "id": "credit_broadens_or_not",
-        "label": "HY OAS 3.11%、CCC 12.53% 分位 100：指数层抬升是贴现率成分，还是违约前瞻？",
-        "text": "credit_widen 锚维持 on，且本周形态有一处质变：HY OAS 由 3.03 升到 3.11(月 +46bp、周 -1bp)，30 日均值从 2.79 抬到 2.85；更重要的是走阔不再只集中在最弱端——IG 0.83(月 +3bp)、BBB 1.02(月 +5bp)、BB 1.88(月 +38bp)、B 3.10(月 +37bp)，指数层与中段的月度幅度已经接近；而 CCC 12.53%(周 +42bp、月 +177bp、半年 +338bp、历史分位 100)、违约率 TTM 1.9%(分位 94)仍是最极端的那个。分歧实质是老问题的新版本：利差变动是企业违约前瞻(真弱)还是贴现率与风险溢价重定价(假弱)？偏「真弱」的是 CCC 的独立走阔与违约率分位 94——最弱端不再跟随指数，是典型的违约风险定价；偏「假弱」的是走阔恰发生在 10Y 实际利率月 +36bp、MOVE 仍在 101 的背景下，指数层里含相当比例的贴现率成分。一个可用的分界：如果后续 CCC 继续独立走阔而 IG/BBB 走平，属于分层；如果 IG/BBB 也跟进，则性质变成整体水位抬升，对股票估值的杀伤会更直接——这正是本周开始出现的方向。tradeRadar 给信用做空设的证伪线(周走阔 >10bp)本周为 -1bp(未满足)。观察：HY OAS 能否站住 3.1、CCC 是否跟随收窄、IG/BBB 是否加入走阔、以及 HYG 与 TLT 的相对强弱。",
+        "label": "HY OAS 3.16%、CCC 12.67% 分位 100：指数层抬升是贴现率成分，还是违约前瞻？",
+        "text": "credit_widen 锚维持 on，形态继续是「整体水位抬升」：HY OAS 由 3.03 升到 3.16(月 +45bp、周 +13bp)，30 日均值从 2.79 抬到 2.87；走阔不再只集中在最弱端——IG 0.83(月 +3bp)、BBB 1.03(月 +5bp)、BB 1.91(月 +35bp)、B 3.17(月 +38bp)，指数层与中段的月度幅度已经接近；而 CCC 12.67%(周 +53bp、月 +186bp、半年 +354bp、历史分位 100)、违约率 TTM 1.86%(分位 94)仍是最极端的那个。分歧实质是老问题的新版本：利差变动是企业违约前瞻(真弱)还是贴现率与风险溢价重定价(假弱)？偏「真弱」的是 CCC 的独立走阔与违约率分位 94——最弱端不再跟随指数，是典型的违约风险定价；偏「假弱」的是走阔恰发生在 10Y 实际利率月 +28bp、MOVE 99.06 的背景下，指数层里含相当比例的贴现率成分。一个可用的分界：如果后续 CCC 继续独立走阔而 IG/BBB 走平，属于分层；如果 IG/BBB 也跟进，则性质变成整体水位抬升，对股票估值的杀伤会更直接——这正是最近两期持续出现的方向。tradeRadar 给信用做空设的证伪线(周走阔 >10bp)本期为 +13bp，已满足。观察：HY OAS 能否站住 3.1 上方、CCC 是否跟随收窄、IG/BBB 是否继续加入走阔、以及 HYG 与 TLT 的相对强弱。",
         "anchor": "credit_widen"
       },
       {
-        "id": "curve_bear_steep_44bp",
-        "label": "曲线维持熊陡 44bp、长端周线小幅回落：期限溢价在定价，还是政策定价的延伸？",
-        "text": "curve_bear_steep 锚维持 on——10Y-2Y 斜率由上周的 48bp 略收窄到 44bp(10Y 5.24 vs 2Y 4.80)，「斜率走陡且两期限同向上行」的判定在 60 日窗口内仍成立，但边际上长端本周是回落的(10Y 周 -4bp、30Y 周 -7.8bp)。分歧实质在于这一波长端的驱动来源。偏「政策定价延伸」的一侧：10/27 加息定价 91%、鹰鸽积分 10，2Y 4.80 已高于政策利率上限 4.00% 达 80bp，隐含 2 次加息，短端仍由政策路径驱动。偏「期限溢价」的一侧更有说服力：10Y 月 +29bp 大于 2Y 的 +24bp，实际利率(TIPS)月 +36bp 而 BEI 月 -3bp，ACM 期限溢价 1.0729(10-09)，MOVE 仍在 101——如果只是政策定价，长端不该比短端涨得更多、更不该在通胀预期不动的情况下由实际利率推动。这组读数更像「财政/供给/期限溢价」在长端的集中释放，对高久期资产的伤害也更直接。另需注明一处口径提示：短期均线层面本周长端小幅回落，锚的 on 状态来自 60 日窗口的容忍度，不应被读成「曲线转平」。观察：10Y 能否站上并收在 5.31 上方(则 yields_high 锚将转 on)、2Y 是否维持 4.80 上方、10Y-2Y 是否会继续向 60bp 收敛。",
+        "id": "curve_bear_steep_42bp",
+        "label": "曲线维持熊陡 42bp、两端同周回落：期限溢价在定价，还是政策定价的延伸？",
+        "text": "curve_bear_steep 锚维持 on——10Y-2Y 斜率由上一期的 48bp 收窄到 42bp(10Y 5.21 vs 2Y 4.79)，「斜率走陡且两期限同向上行」的判定在 60 日窗口内仍成立，但边际上两端本周同时回落(10Y 周 -10bp、2Y 周 -5bp)。分歧实质在于这一波长端的驱动来源。偏「政策定价延伸」的一侧：10/27 加息定价 86%、鹰鸽积分 8.2，2Y 4.79 已高于政策利率上限 4.00% 达 79bp，隐含 2 次加息，短端仍由政策路径驱动。偏「期限溢价」的一侧更有说服力：10Y 月 +25bp 大于 2Y 的 +16bp，实际利率(TIPS)月 +28bp 而 BEI 月 -2bp，MOVE 99.06——如果只是政策定价，长端不该比短端涨得更多、更不该在通胀预期不动的情况下由实际利率推动。这组读数更像「财政/供给/期限溢价」在长端的集中释放，对高久期资产的伤害也更直接。另需注明一处口径提示：短期均线层面本周两端同时回落、TLT 周 +2.26%，锚的 on 状态来自 60 日窗口的容忍度，不应被读成「曲线转平」或「长端压力继续升级」。观察：10Y 能否站上并收在 5.31 上方(则 yields_high 锚将转 on)、2Y 是否维持 4.79 上方、10Y-2Y 是否会继续向 60bp 收敛。",
         "anchor": "curve_bear_steep"
       },
       {
         "id": "yields_high_off_but_top",
-        "label": "10Y 5.24 距区间高差 7bp 却仍判 off：锚的机械定义与水平的危险度在打架",
-        "text": "yields_high 锚维持 off——10Y 收 5.24，区间内最高 5.31(10-05)，按「收盘价 ≥ 区间高 ×0.999」(即 ≥ 5.305)的机械定义不成立。但把这条读数与三周前并列看，方向完全不同：09-24 时 10Y 是 4.96、语境是「破位但没站住」；当前 5.24，高出 28bp，整周在 5.22–5.29 之间横盘，30Y 5.56、5Y 5.02 仍在 5% 上方——水平已经系统性抬升了，只是没能再创新高。这一处必须显式写清楚，否则「锚 off」会被误读成「长端压力缓解」，而事实恰好相反：MOVE 仍在 101、实际利率 2.91%(月 +36bp)、tradeRadar 把「10Y 处于历史极端分位(98/100)」列为独立预期差。本周还给这个分歧加了一层：长端周线首次小幅回落(10Y 周 -4bp、30Y 周 -7.8bp)，同时商品端反弹(Brent 周 +6.00%、铜月 +6.34%)。若商品带动 BEI 走高而 10Y 继续回落，那是「实际利率见顶、通胀预期接棒」，性质完全反转；若 10Y 重新上冲并收在 5.31 上方，锚转 on，则本轮定性为利率事件的再升级。观察：10Y 能否收在 5.31 上方(锚将转 on)、能否回落至 4.90 下方(则本轮归为利率事件的缓解)、以及 10Y BEI 是否跟随商品上行。",
+        "label": "10Y 5.21 距区间高差 10bp 却仍判 off：锚的机械定义与水平的危险度在打架",
+        "text": "yields_high 锚维持 off——10Y 收 5.21，区间内最高 5.31(10-05)，按「收盘价 ≥ 区间高 ×0.999」(即 ≥ 5.305)的机械定义不成立。但把这条读数与一个月前并列看，方向完全不同：那时 10Y 是 4.96、语境是「破位但没站住」；当前 5.21，高出 25bp，30Y 5.56、5Y 5.00 仍在 5% 上方——水平已经系统性抬升了，只是没能再创新高。这一处必须显式写清楚，否则「锚 off」会被误读成「长端压力缓解」，而事实恰好相反：MOVE 99.06、实际利率 2.88%(月 +28bp)、tradeRadar 把「10Y 处于历史极端分位(96/100)」列为独立预期差。本期还给这个分歧加了一层反向信息：长端周线回落 10bp、TLT 周 +2.26%，而商品端不再统一上行(铜月 +2.23%、气月 +12.90%，但 WTI 月 -8.13%、黄金月 -5.08%)。若 10Y 回落的同时 BEI 走高，那是「实际利率见顶、通胀预期接棒」，性质完全反转；若 10Y 重新上冲并收在 5.31 上方，锚转 on，则本轮定性为利率事件的再升级。观察：10Y 能否收在 5.31 上方(锚将转 on)、能否回落至 4.90 下方(则本轮归为利率事件的缓解)、以及长端周线回落能否延续并带动 BEI。",
         "anchor": "yields_high"
       }
     ],
@@ -34001,7 +34001,7 @@ const DATA = {
           "equity_down",
           "credit_widen"
         ],
-        "next": "触发锚维持 1/2：credit_widen 维持 on(HY OAS 3.11、30 日均值 2.85，且走阔不再只集中在最弱端——IG +3bp / BBB +5bp / BB +38bp / B +37bp / CCC +177bp)，equity_down 仍为 off(SPX 7805.45 vs 60 日均值 7664.71，余量 140.7 点)。实体侧本周升级：9 月非农 +29K(预期 +90K，miss 61K)、失业率 4.2%(预期 4.1%)、参与率 61.8%，7 月被下修至 -10K、近三月月均仅 +51K；economy 面板劳动分项 37→21、增长分项 88→64，首位驱动仍是带预警标记的「失业率转向回升」。存量端本周第一次出现裂缝：续请失业金 1.716M、月 +17K，由持续下行转为上行(初请 197K、4 周均 198K 仍在低位)；产出一侧反而偏强：GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强。本情景与 stagflation_squeeze 的关系需再次注明：单看「增长转弱」归 growth_rolling 档；当 inflation=high 同时成立时，主导权归滞胀档，本情景成为其子集情形。数值注：本周 SPX 指数层面仍在 60 日均值上方，但内部已位移——SOX 周 -7.63%、NDX 周 -2.10%、RUT 月 -3.76%。观察顺序：HY OAS 能否站住 3.1 → 续请是否继续上行 → SPX 是否跌破 60 日均值(7664.71)使 equity_down 转 on → 失业率是否再抬 0.1pt。下一个硬数据：11-06 的 10 月非农与失业率，以及 9 月数据的修正方向。",
+        "next": "触发锚维持 1/2：credit_widen 维持 on(HY OAS 3.16、30 日均值 2.87，且走阔不再只集中在最弱端——IG +3bp / BBB +5bp / BB +35bp / B +38bp / CCC +186bp)，equity_down 仍为 off(SPX 7718.94 vs 60 日均值 7668.21，余量 50.7 点，上一期 140.7 点)。实体侧维持：9 月非农 +29K(预期 +90K，miss 61K)、失业率 4.2%(预期 4.1%)、参与率 61.8%，7 月被下修至 -10K、近三月月均仅 +51K；economy 面板劳动分项 21、增长分项 64、通胀分项 66→90，首位驱动仍是带预警标记的「失业率转向回升」。存量端出现第一处裂缝：续请失业金 1.716M、月 +17K，由持续下行转为上行(初请 197K、4 周均 198K 仍在低位)；产出一侧反而偏强：GDP Q2 +2.2%(预期 1.5%)、制造业 PMI 55.7、服务业 PMI 55.0、零售环比强。本情景与 stagflation_squeeze 的关系需再次注明：单看「增长转弱」归 growth_rolling 档；当 inflation=high 同时成立时，主导权归滞胀档，本情景成为其子集情形。数值注：本期 SPX 指数层已经跟上内部——周 -1.06%、日 -1.11%、NDX 周 -3.88%、RUT 周 -2.28%、SOX 周 -10.58%，距触发只差 0.66%。观察顺序：SPX 是否跌破 60 日均值(7668.21)使 equity_down 转 on → HY OAS 能否站住 3.1 上方 → 续请是否继续上行 → 失业率是否再抬 0.1pt。下一个硬数据：11-06 的 10 月非农与失业率，以及 9 月数据的修正方向。",
         "triggeredCount": 1,
         "triggerTotal": 2,
         "matchRatio": 0.5,
@@ -34021,7 +34021,7 @@ const DATA = {
           "cpi_accel",
           "yields_high"
         ],
-        "next": "触发锚维持 1/2：cpi_accel 维持 on(8 月核心 CPI 环比 +0.29%，连续第 2 月 >0.2%)，yields_high 维持 off——10Y 收 5.24、区间内最高 5.31，距该锚阈值(≥5.305)只差 7bp，而水平比三周前的 4.96 高出 28bp，整周在 5.22–5.29 横盘，30Y 5.56、5Y 5.02 仍在 5% 上方。「锚 off」在这里只表示「未创区间新高」，不代表压力缓解。定价侧维持推进：10/27 FOMC 定价加息 91%，鹰鸽积分 10，隐含 12 个月 2 次加息。本周新增——商品端第一次给出反方向证据：Brent $106.21(周 +6.00%)、WTI $94.66(周 +7.23%)、铜月 +6.34%、天然气月 +13.84%，而 10Y BEI 只有 2.33%(月 -3bp)。口径必须并列披露：① 9 月 CPI 尚未进入数据链路(core_cpi 停在 8 月、data_health 标 STALE/74 天)，本锚引的是 8 月 vintage；② 核心 CPI 3 个月年化仅 1.97%、6 个月年化 2.57%，单月与三月折年差了一倍多。若商品延续且 BEI 跟随走高，本轮应改称「再通胀」、本情景适用性上升；若商品只是周线反弹(当前 WTI 月 -10.55%、Brent 月 -2.34%)而 BEI 继续不动，则本轮定性为「实际利率/期限溢价冲击」，本情景适用性下降。升级观察：9 月 CPI 能否连续第 3 月 >0.2%、10/30 的 9 月 PCE 超级核心(3.5%/3.34% 两口径)、10/27 FOMC 是否兑现加息、10Y 能否收在 5.31 上方、10Y BEI 是否重新走高。",
+        "next": "触发锚维持 1/2：cpi_accel 维持 on 且证据升级——9 月核心 CPI 环比 +0.33%(前月 +0.29%)，连续第 3 月 >0.2%(上一期尚无数据支撑，现已达成)、3 个月年化由 1.97% 跳到 3.41%；yields_high 维持 off——10Y 收 5.21、区间内最高 5.31，距该锚阈值(≥5.305)只差 10bp，而水平比一个月前的 4.96 高出 25bp。「锚 off」在这里只表示「未创区间新高」，不代表压力缓解。定价侧维持推进：10/27 FOMC 定价加息 86%(25bp 78.5% + 50bp 7.7%)、维持 12.9%、降息 0.9%，鹰鸽积分 8.2，隐含 12 个月 0 降 2 加。本期通胀面最重要的变化是结构：房租(3.03%→3.23%)与核心服务(3.02%→3.16%)同时回头，核心商品(0.66%→0.71%)也抬价，唯一放缓的是食品——涨价基础由「能源单点」转向「面」。但仍需并列披露：商品端本期不再统一上行(铜月 +2.23%、气月 +12.90%，而 WTI 月 -8.13%、黄金月 -5.08%、白银月 -12.70%)，且 10Y BEI 只有 2.35%(月 -2bp)。若 BEI 跟随走高，本情景适用性上升；若商品重新转弱而 BEI 继续不动，则本轮定性为「实际利率/期限溢价冲击」，本情景适用性下降。升级观察：10/30 的 9 月 PCE 超级核心(8 月 3.46%)、10/27 FOMC 是否兑现加息、10Y 能否收在 5.31 上方、10Y BEI 是否重新走高。",
         "triggeredCount": 1,
         "triggerTotal": 2,
         "matchRatio": 0.5,
@@ -34040,7 +34040,7 @@ const DATA = {
         "triggers": [
           "ai_capex_slow"
         ],
-        "next": "触发锚仍为策展标注、维持未触发(0/1)，但本周价格侧给出了本档建立以来最清晰的一次分层——方向与「修正」一致，幅度与广度都还不够：费城半导体一周 -7.63%(月仍 +9.68%、半年 +32.36%)，存储与 HBM 一条线最惨(SK 海力士周 -17.48%/月 -21.17%、三星周 -12.32%/月 -11.50%、美光周 -8.83%)，算力硬件端同步回撤(TSM 周 -7.71%、ARM 周 -15.59%、AMD 周 -6.76%、AVGO 周 -4.92%、NVDA 周 -4.48%)，再融资依赖端继续失血(CRWV 周 -15.17%、OKLO 周 -17.56%、VRT 周 -6.26%、ORCL 月 -1.10%)。而现金流端完全没塌：MSFT 周 +2.67%(月 +7.53%)、META 周 +3.20%(月 +14.56%)、PLTR 周 +8.64%、SNOW 周 +6.49%、CRM 周 +5.79%、AMZN 与 GOOGL 周线小幅为正。需求端仍无减速证据：四家 hyperscaler FY26e capex 约 $735B(FY25 $374B，+96%)，CoreWeave 营收与订单积压增速未见下修。压制变量升级为利率 + 信用双通道：实际利率 2.91%(月 +36bp)、10Y 5.24、MOVE 101.09、HY OAS 3.11；VIX 仅 15.27，但 SKEW 154.74(周 +9.58)显示尾部保护需求已相当贵。当前状态应表述为「分层已在价格上成立、需求端修正尚未发生」。观察：10 月下旬云厂季报与 capex 指引、CoreWeave 三季报(11 月)、SK 海力士/美光 HBM 订单、以及硬件端跌幅是否向软件与云厂扩散。证伪条件(需求端)：云厂下调 capex 指引、NVDA 指引 miss、订单积压增速放缓。",
+        "next": "触发锚仍为策展标注、维持未触发(0/1)，但本期价格侧的分层扩大为整条链的回撤，方向与「修正」一致，幅度与广度都大幅升级：费城半导体周 -10.58%(10-14 单日 -4.30%、月仍 +4.55%)，存储与 HBM 一条线最惨(SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%/月 -21.65%、美光周 -15.98%)，算力硬件端同步回撤(TSM 周 -8.94%、ARM 周 -19.15%、AMD 周 -11.62%、AVGO 周 -8.04%、NVDA 周 -6.81%)，配套与再融资端同样失血(VRT 周 -9.60%、CEG 周 -6.69%、VST 周 -8.96%、CRWV 周 -25.63%、OKLO 周 -21.13%、ORCL 周 -9.06%)。现金流端相对抗跌但已不再单向为正：MSFT 周 +0.74%(月 +7.36%)、META 周 +2.25%(月 +10.04%)、PLTR 周 +3.53%、CRM 周 +5.07%，而 SNOW 周 +0.67%、AMZN 周 -2.25%、GOOGL 周 -0.82%。需求端仍无减速证据：四家 hyperscaler FY26e capex 约 $735B(FY25 $374B，+96%)，CoreWeave 营收与订单积压增速未见下修。压制变量维持利率 + 信用双通道：实际利率 2.88%(月 +28bp)、10Y 5.21、MOVE 99.06、HY OAS 3.16；VIX 16.87、SKEW 157.30(分位 98)显示尾部保护需求已相当贵。当前状态应表述为「分层已在价格上确立、需求端修正尚未发生」。观察：10 月下旬云厂季报与 capex 指引、CoreWeave 三季报(11 月)、SK 海力士/美光 HBM 订单、以及硬件端跌幅是否向软件与云厂扩散。证伪条件(需求端)：云厂下调 capex 指引、NVDA 指引 miss、订单积压增速放缓。",
         "triggeredCount": 0,
         "triggerTotal": 1,
         "matchRatio": 0.0,
@@ -34058,7 +34058,7 @@ const DATA = {
           "equity_up",
           "yields_high"
         ],
-        "next": "触发锚维持 1/2：equity_up 维持 on 且余量小幅收窄(SPX 7805.45 vs 60 日均值 7664.71，差 140.7 点，上周为 157 点)，yields_high 维持 off(10Y 5.24、区间高 5.31，差 7bp——注意这只是「未创新高」，水平比三周前高出 28bp)。口径状态：四条情景(growth_weak / inflation_reignite / ai_roll / goldilocks)仍无一全命中，activeScenario 连续第三期为「未达成」，展示最接近者 inflation_reignite。本档的基准含义仍在最低位：复合指标十项与上周完全一致——disagreement=true、inflation=high、growth=weak、breadth=narrow，四条触发条件 0/4，是自本档建立以来距基准最远的状态。但本周多了一条价格侧的注记：指标层一字未动，资产层却出现实质位移(SOX 周 -7.63%、NDX 周 -2.10%、RUT 月 -3.76%)，而 VIX 仍只有 15.27、SKEW 已涨到 154.74——「高张力 + 低波动」的组合正在被价格侧一点点拆开。维持基准直到下列任一项出现：10Y 回落至 4.90 下方 / 核心 CPI 环比降至 0.15% 以下(或核心 CPI 3 个月年化继续低于 2.0%) / HY OAS 回落至 2.80 下方且 breadth 转 broad / 9 月非农上修至 +100K 以上。",
+        "next": "触发锚维持 1/2：equity_up 维持 on 但余量腰斩(SPX 7718.94 vs 60 日均值 7668.21，差 50.7 点，上一期 140.7 点)，yields_high 维持 off(10Y 5.21、区间高 5.31，差 10bp——注意这只是「未创新高」，水平比一个月前高出 25bp)。口径状态：四条情景(growth_weak / inflation_reignite / ai_roll / goldilocks)仍无一全命中，activeScenario 连续第三期为「未达成」，展示最接近者 inflation_reignite。本档的基准含义仍在最低位：复合指标十项与上一期完全一致——disagreement=true、inflation=high、growth=weak、breadth=narrow，四条触发条件 0/4，是自本档建立以来距基准最远的状态。但本期价格侧给出两条反向注记：一是避险买盘首次出现(TLT 周 +2.26%、10Y 周 -10bp)，二是 SKEW 已到 157.30(分位 98)而 VIX 仍只有 16.87——「高张力 + 低波动」的组合正在被价格侧一点点拆开，而且 equity_up 距翻 off 只剩 0.66%。维持基准直到下列任一项出现：10Y 回落至 4.90 下方 / 核心 CPI 环比降至 0.15% 以下(或核心 CPI 3 个月年化继续低于 2.0%) / HY OAS 回落至 2.80 下方且 breadth 转 broad / 9 月非农上修至 +100K 以上。",
         "triggeredCount": 1,
         "triggerTotal": 2,
         "matchRatio": 0.5,
@@ -34078,7 +34078,7 @@ const DATA = {
         "series2": "dgs2",
         "type": "period_high",
         "window": 250,
-        "note": "10Y 创区间新高(同时参考 2Y)。2026-10-15：锚维持 off。必须把「未创新高」与「水平抬升」分开说——10Y 收 5.24，区间内最高 5.31(10-05)，距该锚阈值(≥区间高×0.999 = 5.305)差 7bp，故判定 off；而水平比三周前的 4.96 高出 28bp，整周在 5.22–5.29 之间横盘。其余读数：月度 +29bp(4.95→5.24)、周 -4bp，近一年 98 分位；30Y 5.56(月 +23.4bp、周 -7.8bp，96 分位)、5Y 5.02、2Y 4.80(月 +24bp、周 -3bp、97 分位)、3M 4.21；10Y-2Y 44bp。拆解表明这轮上行仍主要来自实际利率与期限溢价：10Y TIPS 实际利率 2.91%(月 +36bp、周 -1bp)、10Y BEI 2.33%(月 -3bp)、ACM 期限溢价 1.0729(10-09)、MOVE 101.09(周 -7.9)。该锚的 off 不代表长端压力缓解，方向恰好相反：tradeRadar 把「10Y 处于历史极端分位(98/100)」列为独立预期差。本周新增一处反向观察：长端周线首次小幅回落，同时商品端全线反弹(Brent 周 +6.00%、WTI 周 +7.23%、铜月 +6.34%、气月 +13.84%)——若 BEI 跟随走高而 10Y 继续回落，则「实际利率见顶、通胀预期接棒」，性质反转。",
+        "note": "10Y 创区间新高(同时参考 2Y)。2026-10-15：锚维持 off。必须把「未创新高」与「水平抬升」分开说——10Y 收 5.21，区间内最高 5.31(10-05)，距该锚阈值(≥区间高×0.999 = 5.305)差 10bp，故判定 off；而水平比一个月前的 4.96 高出 25bp。其余读数：月度 +25bp、周 -10bp，近一年 96 分位；30Y 5.56(月 +21bp、周 -10bp，96 分位)、5Y 5.00、2Y 4.79(月 +16bp、周 -5bp、96 分位)、3M 4.26；10Y-2Y 42bp。拆解表明这轮上行仍主要来自实际利率：10Y TIPS 实际利率 2.88%(月 +28bp、周 -7bp)、10Y BEI 2.35%(月 -2bp)、MOVE 99.06(周 -6.14)。该锚的 off 不代表长端压力缓解，方向恰好相反：tradeRadar 把「10Y 处于历史极端分位(96/100)」列为独立预期差。本周新增一处反向观察：长端周线回落 10bp、TLT 周 +2.26%，同时商品端涨跌互现(铜月 +2.23%、天然气月 +12.90%，但 WTI 月 -8.13%、黄金月 -5.08%)——若 BEI 跟随走高而 10Y 继续回落，则「实际利率见顶、通胀预期接棒」，性质反转。",
         "status": "off",
         "value": 5.21,
         "detail": "当前 5.21 / 区间高 5.31"
@@ -34090,7 +34090,7 @@ const DATA = {
         "series": "spx",
         "type": "trend_up",
         "window": 60,
-        "note": "SPX 近 60 交易日趋势向上(软着陆/AI 定价)。2026-10-15：锚维持 on——当前 7805.45 vs 60 日均值 7664.71，余量 140.7 点(上周 157 点，小幅收窄)；周 -0.17%、月 +2.43%、半年 +12.03%，近一年 99 分位。内部本周发生位移(与上周的「权重股撑指数」不同，本周更准确地说是「权重换人」)：SOX 12208.79(周 -7.63%、月 +9.68%、半年 +32.36%)、NDX 30569.48(周 -2.10%、月 +4.95%)、RUT 2783.37(月 -3.76%、54 分位)、DJI 51670.10(月 -1.43%)；存储与 HBM 端跌幅最大(SK 海力士月 -21.17%、三星月 -11.50%、MU 周 -8.83%)，高杠杆端 CRWV 周 -15.17%、ARM 周 -15.59%、OKLO 周 -17.56%；而现金流端仍在涨：MSFT 543.45(周 +2.67%、月 +7.53%)、META 762.50(周 +3.20%、月 +14.56%)、PLTR 周 +8.64%、SNOW 周 +6.49%、CRM 周 +5.79%。伴随读数：VIX 15.27、SKEW 154.74(周 +9.58)、VVIX 85.38、GVZ 22.09、OVX 48.77、MOVE 101.09。eqUp=true 仍是 disagreement 维持 true 的股票一侧；breadth 维持 narrow。",
+        "note": "SPX 近 60 交易日趋势向上(软着陆/AI 定价)。2026-10-15：**锚维持 on 但余量急速收窄**——当前 7718.94 vs 60 日均值 7668.21，仅剩 50.7 点(上一期 140.7 点)；周 -1.06%、月 +1.76%、半年 +9.91%，近一年 91 分位。内部位移本期进一步扩大：SOX 11684.38(周 -10.58%、10-14 单日 -4.30%、月 +4.55%、半年 +26.46%)、NDX 29950.82(周 -3.88%、月 +3.50%)、RUT 2729.53(周 -2.28%、月 -4.90%)、DJI 51621.48(周 +0.86%)；存储与 HBM 端跌幅最重(SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%、MU 周 -15.98%)，高杠杆端 CRWV 周 -25.63%、OKLO 周 -21.13%、ARM 周 -19.15%；而现金流端仍为正：MSFT 533.69(周 +0.74%、月 +7.36%)、META 737.54(周 +2.25%、月 +10.04%)、PLTR 周 +3.53%、CRM 周 +5.07%——但 SNOW 周 +0.67%、AMZN 周 -2.25%、GOOGL 周 -0.82% 已在零轴附近，「靠现金流的一端」也在失去缓冲。伴随读数：VIX 16.87、SKEW 157.30(周 +15.46%、98 分位)、VVIX 94.45、GVZ 22.78、OVX 48.62、MOVE 99.06。eqUp=true 仍是 disagreement 维持 true 的股票一侧；breadth 维持 narrow。要点：本锚距翻 off 只剩约 0.66% 的空间，是四条 on 锚里最脆弱的一条。",
         "status": "on",
         "value": 7718.94,
         "detail": "当前 7718.94 vs 均值 7668.21"
@@ -34102,7 +34102,7 @@ const DATA = {
         "series": "spx",
         "type": "trend_down",
         "window": 60,
-        "note": "SPX 近 60 交易日趋势向下(情景①触发)。2026-10-15：锚维持 off，距翻 on 仍有 140.7 点(当前 7805.45 vs 60 日均值 7664.71)，月度 +2.43% 亦为正。本周需要注明一处「表层与内部脱节」：指数层面还在 60 日均值上方且日变动仅 -0.02%，但内部已经位移——SOX 周 -7.63%、NDX 周 -2.10%、RUT 月 -3.76%，所以本锚的 off 只描述指数层，不代表风险偏好完好。另外 growth=weak 的成因仍是 credit_widen 维持 on，而非本锚——这一点须继续注明，否则会把「市场转弱」与「增长转弱」混为一谈。",
+        "note": "SPX 近 60 交易日趋势向下(情景①触发)。2026-10-15：锚维持 off，但距翻 on 只剩 50.7 点(当前 7718.94 vs 60 日均值 7668.21，即 -0.66%)，月度 +1.76% 仍为正。本周要注明一处变化：「表层与内部脱节」正在收窄——SPX 周 -1.06%、日 -1.11%，NDX 周 -3.88%、RUT 周 -2.28%、SOX 周 -10.58%，指数层已经跟上内部，方向正在朝本锚倾斜(上一期还是「指标层不动、价格层先动」)。另外 growth=weak 的成因仍是 credit_widen 维持 on，而非本锚——这一点须继续注明，否则会把「市场转弱」与「增长转弱」混为一谈。观察：SPX 是否跌破 60 日均值(7668.21)使本锚转 on。",
         "status": "off",
         "value": 7718.94,
         "detail": "当前 7718.94 vs 均值 7668.21"
@@ -34114,7 +34114,7 @@ const DATA = {
         "series": "core_cpi",
         "type": "mom_accel",
         "window": 3,
-        "note": "核心 CPI 最新月环比 > 前月环比(加息 tail 开关)。最新 +0.29%(前月 +0.22%)，连续第 2 月 >0.2%，锚维持 on——是本周四个 on 锚之一，也是滞胀档通胀端的硬证据。两处口径必须并列披露：① **9 月 CPI 尚未进入数据链路**——core_cpi 序列仍停在 2026-08-01(data_health 标记 STALE、age 74 天)，本锚引的是 8 月 vintage，「连续第 3 月」目前没有数据支撑；② 核心 CPI 的 3 个月年化只有 1.97%(5→8 月，受 6 月 -0.017% 拖累)、6 个月年化 2.57%，而单月 +0.29% 折年约 3.5%——只引单月会把通胀说重。水平面：CPI 同比 3.4%(与预期持平)、核心 CPI 同比 2.4%(由 2.5% 回落)、核心 PCE 同比 3.0%、能源分项同比 +16.1%(贡献 +1.6pt)；通胀预期类指标纹丝不动(10Y BEI 2.33，月 -3bp；5y5y 2.33，月 0bp)。下一个验证点：9 月 CPI 落地后的核心环比、10/30 的 9 月 PCE 超级核心(3.5%/3.34% 两口径)，以及 10Y BEI 是否跟随商品反弹走高——BEI 若继续不动而商品上行，则本轮应称「商品驱动的实际利率冲击」而非纯粹的「再通胀」。",
+        "note": "核心 CPI 最新月环比 > 前月环比(加息 tail 开关)。**2026-10-15 更新(9 月 CPI 已落地)**：9 月核心 CPI 环比 **+0.33%**(前月 +0.29%)，连续第 **3** 月站在 0.2% 上方(07 +0.22% / 08 +0.29% / 09 +0.33%)，锚维持 on——是四个 on 锚之一，也是滞胀档通胀端的硬证据，且证据已从 8 月 vintage 切换到 9 月 vintage。「连续第 3 月」上一期尚无数据支撑，现已达成。口径分歧已收敛：核心 CPI 的 3 个月年化由 1.97% 跳到 **3.41%**(6→9 月)、6 个月年化 2.85%，两者都已高于核心 CPI 同比 2.57%——单月、三个月、同比三口径同向，上一期「只引单月会把通胀说重」的保留不再需要。水平面：CPI 同比 **3.7%**(高于预期 3.6%)、核心 CPI 同比 **2.6%**(高于预期 2.5%)、核心 PCE 同比 3.0%(8 月)、能源分项同比 **+20.4%**(前值 +16.0%)。结构变化是本期关键：房租同比 3.03%→**3.23%**、核心服务 3.02%→**3.16%**、核心商品 0.66%→0.71% 同时回头，唯一放缓的是食品(2.63%→2.45%)——涨价基础由「能源单点」转向「面」。通胀预期一侧仍未跟上：10Y BEI 2.35%(月 -2bp)、5y5y 2.34%(月 0bp)。下一个验证点：10/30 的 9 月 PCE 超级核心(8 月 3.46%)，以及 10Y BEI 是否跟随商品走高——BEI 若继续不动而商品上行，则本轮应称「商品驱动的实际利率冲击」而非纯粹的「再通胀」。",
         "status": "on",
         "value": 0.33,
         "detail": "最新环比 0.33% vs 前月 0.29%"
@@ -34137,7 +34137,7 @@ const DATA = {
         "tier": "leading",
         "series": null,
         "type": "curated",
-        "note": "无直接序列，策展标注：微软/谷歌/Meta/亚马逊 capex 指引下修、CoreWeave 订单增长停滞。最新实证：四家 hyperscaler FY26e capex 合计约 $735B(FY25 $374B，+96%)，需求端未见减速证据。但价格侧本周给出了本档建立以来最清晰的一次分层：SOX 周 -7.63%、SK 海力士周 -17.48%/月 -21.17%、三星周 -12.32%/月 -11.50%、MU 周 -8.83%、TSM 周 -7.71%、ARM 周 -15.59%、AMD 周 -6.76%、NVDA 周 -4.48%，CRWV 周 -15.17%、OKLO 周 -17.56%、ORCL 月 -1.10%；而 MSFT 周 +2.67%、META 周 +3.20%、PLTR 周 +8.64%、SNOW 周 +6.49%、CRM 周 +5.79% 仍为正。即资金在链条内部换位置：从「资本开支硬件 + 靠融资活着」换到「手上有现金流」。当前属「分层已在价格上成立、需求端修正尚未发生」。触发条件仍是需求端下修(云厂 capex 指引、CoreWeave 三季报(11 月)、SK 海力士/美光 HBM 订单)。",
+        "note": "无直接序列，策展标注：微软/谷歌/Meta/亚马逊 capex 指引下修、CoreWeave 订单增长停滞。最新实证：四家 hyperscaler FY26e capex 合计约 $735B(FY25 $374B，+96%)，需求端未见减速证据。但价格侧本期的分层已扩大为整条链的回撤：SOX 周 -10.58%、SK 海力士周 -26.18%/月 -31.35%、三星周 -21.51%/月 -21.65%、MU 周 -15.98%、TSM 周 -8.94%、ARM 周 -19.15%、AMD 周 -11.62%、AVGO 周 -8.04%、NVDA 周 -6.81%；配套端 VRT 周 -9.60%、CEG 周 -6.69%、VST 周 -8.96%；再融资依赖端 CRWV 周 -25.63%(月 -18.71%)、OKLO 周 -21.13%、ORCL 周 -9.06%(10-14 单日 -8.83%)。现金流端相对抗跌但已不再单向为正：MSFT 周 +0.74%、META 周 +2.25%、PLTR 周 +3.53%、CRM 周 +5.07%，而 SNOW 周 +0.67%、AMZN 周 -2.25%、GOOGL 周 -0.82%。即资金在链条内部换位置：从「资本开支硬件 + 靠融资活着」换到「手上有现金流」。当前属「分层已在价格上成立、需求端修正尚未发生」。触发条件仍是需求端下修(云厂 capex 指引、CoreWeave 三季报(11 月)、SK 海力士/美光 HBM 订单)。",
         "status": "curated",
         "value": null,
         "detail": "策展标注 (无直接序列)"
@@ -34150,7 +34150,7 @@ const DATA = {
         "vs": "spx",
         "type": "relative_lag",
         "window": 60,
-        "note": "BTC 相对 SPX 落后 = 非确认/广度背离。2026-10-15：锚维持 off，60 日 BTC +32.0% vs SPX +3.9%，BTC 仍大幅领先，未构成非确认。但月度层面本周发生了方向反转，值得单独记录：BTC $83,160(周 +1.84%、月 -3.58%、半年 +34.67%、93 分位，上周月线为 +9.23%)、ETH $2,499(周 +1.06%、月 -9.28%)、ETH/BTC 0.0300(月 -5.91%，62 分位)。crypto 面板 regime 由上周的「风险偏好扩圈(月线确认)」切换为「震荡(趋势与水位背离, 待方向确认)」，叙事为「避险主导：ETH/BTC 走弱, BTC 相对抗跌」。方向差异仍在：加密月线转弱与 credit_widen 维持 on、breadth 维持 narrow 同向，而上周是二者相反；也就是说本周加密、信用、广度三个口径终于指向同一个方向，这是 breadth 维持 narrow 的直接原因之一，也削弱了上周这里写的「加密 risk-on vs 信用 risk-off」的矛盾。",
+        "note": "BTC 相对 SPX 落后 = 非确认/广度背离。2026-10-15：锚维持 off，60 日 BTC +30.0% vs SPX +2.9%，BTC 仍大幅领先，未构成非确认。但月度层面继续走弱：BTC $81,694(周 -1.03%、月 -3.27%、半年 +32.68%、90 分位)、ETH $2,424(周 -2.44%、月 -9.79%)、ETH/BTC 0.0297。crypto 面板 regime 维持「震荡(趋势与水位背离, 待方向确认)」，叙事仍为「避险主导：ETH/BTC 走弱, BTC 相对抗跌」；ETF 侧 BTC ETF 出现净流出(需警惕)。方向一致性方面：加密月线转弱与 credit_widen 维持 on、breadth 维持 narrow 同向，本期又叠加 TLT 周 +2.26%、黄金周 +0.18% 的避险买盘——四个口径(加密/信用/广度/避险资产)指向同一方向，这是 breadth 维持 narrow 的直接原因。",
         "status": "off",
         "value": 27.03,
         "detail": "BTC 30.0% vs SPX 2.9%"
@@ -34162,7 +34162,7 @@ const DATA = {
         "series": "hy",
         "type": "rising",
         "window": 30,
-        "note": "高收益 OAS 走阔 = 风险偏好收窄(情景①交叉确认)。2026-10-15：锚维持 on——HY OAS 由 3.03 升到 3.11(月 +46bp、周 -1bp)，30 日均值由 2.79 抬到 2.85，历史分位 87。本周的形态变化是「走阔不再只集中在最弱端」：IG 0.83(月 +3bp)、BBB 1.02(月 +5bp)、BB 1.88(月 +38bp)、B 3.10(月 +37bp)——指数层与中段的月度幅度已接近最弱端；而 CCC 12.53%(周 +42bp、月 +177bp、半年 +338bp、历史分位 100)仍是最极端的那个，违约率 TTM 1.9%(分位 94)。读法要分两步：指数层里含相当比例的贴现率成分(同期 10Y 实际利率月 +36bp、MOVE 仍在 101)，CCC 的裂口才是违约前瞻；但指数层自身本周开始抬升，说明压力已从「分层」走向「整体水位抬升」。该锚维持 on 使 growth 维持 weak、breadth 维持 narrow，并同时支撑 growth_rolling 与 stagflation_squeeze(2/2 命中)。credit 面板判定「信用分层, 低评级承压」risk-off。",
+        "note": "高收益 OAS 走阔 = 风险偏好收窄(情景①交叉确认)。2026-10-15：锚维持 on——HY OAS 由 3.03 升到 3.16(月 +45bp、周 +13bp)，30 日均值由 2.79 抬到 2.87，历史分位 92。本期形态继续是「整体水位抬升」而非「只压最弱端」：IG 0.83(月 +3bp)、BBB 1.03(月 +5bp)、BB 1.91(月 +35bp)、B 3.17(月 +38bp)——指数层与中段的月度幅度已接近最弱端；而 CCC 12.67%(周 +53bp、月 +186bp、半年 +354bp、历史分位 100)仍是最极端的那个，违约率 TTM 1.86%(分位 94)。读法要分两步：指数层里含相当比例的贴现率成分(同期 10Y 实际利率月 +28bp、MOVE 99.06)，CCC 的裂口才是违约前瞻；但指数层自身持续抬升，说明压力已从「分层」走向「整体水位抬升」。该锚维持 on 使 growth 维持 weak、breadth 维持 narrow，并同时支撑 growth_rolling 与 stagflation_squeeze(2/2 命中)。credit 面板判定「信用分层, 低评级承压」risk-off。",
         "status": "on",
         "value": 3.16,
         "detail": "当前 3.16 vs 均值 2.87"
@@ -34175,7 +34175,7 @@ const DATA = {
         "series2": "dgs2",
         "type": "bear_steep",
         "window": 60,
-        "note": "10Y-2Y 斜率走陡且两期限均上行 = 增长驱动(股可扛)。2026-10-15：锚维持 on——斜率由上周的 48bp 略收窄到 44bp(10Y 5.24 vs 2Y 4.80)，60 日窗口内「斜率走陡 + 两期限同向上行」仍成立。驱动来源维持上周的判断(期限溢价，而非政策路径延伸)：10Y 月 +29bp > 2Y 月 +24bp，实际利率(TIPS)月 +36bp 而 BEI 月 -3bp，ACM 期限溢价 1.0729、MOVE 101.09。解读要点：这更像「财政/供给/期限溢价」在长端的集中释放，对高久期资产的伤害比政策路径本身更直接。2Y 4.80 已高于政策利率上限 4.00% 达 80bp，隐含 2 次加息，与 10/27 的 91% 加息定价一致。口径提示：本锚的 on 来自 60 日窗口的容忍度，但短期均线层面本周长端其实是回落的(10Y 周 -4bp、30Y 周 -7.8bp)，不应被读成「曲线转平」或「长端压力继续升级」，两者都不是本周的事实。",
+        "note": "10Y-2Y 斜率走陡且两期限均上行 = 增长驱动(股可扛)。2026-10-15：锚维持 on——斜率由上一期的 48bp 收窄到 42bp(10Y 5.21 vs 2Y 4.79)，60 日窗口内「斜率走陡 + 两期限同向上行」仍成立，但边际上两端本周同时回落(10Y 周 -10bp、2Y 周 -5bp)。驱动来源维持上一期判断(期限溢价，而非政策路径延伸)：10Y 月 +25bp > 2Y 月 +16bp，实际利率(TIPS)月 +28bp 而 BEI 月 -2bp，MOVE 99.06。解读要点：这更像「财政/供给/期限溢价」在长端的集中释放，对高久期资产的伤害比政策路径本身更直接。2Y 4.79 已高于政策利率上限 4.00% 达 79bp，隐含 12 个月 0 次降息 / 2 次加息，与 10/27 FOMC 的 86% 加息定价一致。口径提示：本锚的 on 来自 60 日窗口的容忍度，但短期均线层面本周两端同时回落，不应被读成「曲线转平」或「长端压力继续升级」，两者都不是本周的事实。",
         "status": "on",
         "value": 0.4,
         "detail": "10Y-2Y 斜率 42bps"
@@ -34186,7 +34186,7 @@ const DATA = {
         "tier": "cross",
         "series": null,
         "type": "curated",
-        "note": "策展标注：WGC 央行购金 2026 Q2(截至 6/30)289 吨、同比 +123 吨，中国央行 21 连增，黄金占全球央行储备 27% 超美债。驱动模型评分 100/100。价格侧本周由「下跌」转为「修复」：金价 $4,179.2(周 +0.93%、月 -3.55%、半年 -13.36%)，月线跌幅比上周的 -6.43% 明显收窄。但把它放进一篮子商品看，方向并不指向避险：铜月 +6.34%、天然气月 +13.84%、Brent 周 +6.00%、WTI 周 +7.23%，均快于黄金；白银月 -6.14% 反而弱于黄金——工业属性强的品种涨得最多、贵金属内部还分化，指向风险偏好与再通胀预期。联动关系：黄金-实际利率滚动相关 -0.286、黄金-美元 -0.499(仍为经典反向联动)；而黄金-BTC 的 30 日滚动相关已从年内高点 0.72 回落到 0.398(一年窗口 0.535)，说明黄金与风险资产的同涨关系在松脱。面板驱动卡仅有「央行购金 100」与「避险 37」两项 active 支撑，实际利率与美元两项未计入支撑。tradeRadar 的证伪规则(金价跌破 6 月低点并持续 2 周 / WGC 季度净购金转负)均未触发，故仍列为待验证候选。本周准确定性：「修复但未脱钩」。",
+        "note": "策展标注：WGC 央行购金 2026 Q2(截至 6/30)289 吨、同比 +123 吨，中国央行 21 连增，黄金占全球央行储备 27% 超美债。驱动模型评分 100/100。价格侧本周横盘、月线仍弱：金价 $4,164.6(周 +0.18%、月 -5.08%、半年 -13.39%)。放进一篮子商品看，方向并不一致指向避险或再通胀：铜月 +2.23%、天然气月 +12.90%、WTI 周 +2.85%，但白银月 -12.70% 大幅弱于黄金，且 Brent 月 -1.38%、WTI 月 -8.13% 仍为负——工业属性品种分化，商品端没有给出统一信号。联动关系：黄金-实际利率滚动相关 -0.286、黄金-美元 -0.499(仍为经典反向联动)；黄金-BTC 的 30 日滚动相关 0.400(90 日 0.521)，说明黄金与风险资产的同涨关系仍在中等水平。面板驱动卡仅有「央行购金 100」与「避险 37」两项 active 支撑，实际利率与美元两项未计入支撑。tradeRadar 的证伪规则(金价跌破 6 月低点并持续 2 周 / WGC 季度净购金转负)均未触发，故仍列为待验证候选。本周准确定性：「横盘，避险买盘首次出现但未成趋势」。",
         "status": "curated",
         "value": null,
         "detail": "策展标注 (无直接序列)"
