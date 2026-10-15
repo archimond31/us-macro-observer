@@ -680,8 +680,11 @@ def infl_annualized(key, months=3):
 
 def wage_inflation_gap():
     """时薪同比 vs 核心服务CPI——工资-通胀螺旋验证"""
-    wage = raw_calc_pct('wage_yoy', 12)
-    svcs_yoy = raw_calc_pct('cpi_core_svcs', 12)
+    # ⚠️ 同比必须用 yoy()(按日期就近匹配), 不能用 raw_calc_pct(k,12)(按索引回退 12 期):
+    #    CPI 系列缺 2025-10(BLS 因政府停摆未发布), 索引回退会落到 2025-08,
+    #    把核心服务同比从真实的 3.16% 抬成 3.40%, 工资-通胀差随之从 -0.14pt 变成 -0.38pt。
+    wage = yoy('wage_yoy')
+    svcs_yoy = yoy('cpi_core_svcs')
     if wage is None or svcs_yoy is None: return None
     return round(wage - svcs_yoy, 2)
 
@@ -998,11 +1001,15 @@ def _build_labor_triangle():
     for d, v in wage_yoy_series_raw:
         if v is not None: wage_m.setdefault(d[:7], v)
     cpi_arr = [(d, v) for d, v in s('cpi_nsa') if v is not None]  # 工资-通胀差: 同比用 NSA 官方口径
+    # ⚠️ 基期必须按"12 个月前同一月"取, 不能用索引 i-12: CPI 系列缺 2025-10(BLS 政府停摆
+    #    未发布), 索引回退会让 2025-11 及之后的每个点都落到再前一个月, 整条序列系统性偏高
+    #    (2026-09 会拿 2025-08 当基期: 3.86% vs 真实 3.74%)。
+    _cpi_by_ym = {d[:7]: v for d, v in cpi_arr}
     cpi_yoy_by_month = {}
-    for i in range(12, len(cpi_arr)):
-        prev = cpi_arr[i - 12][1]
-        if prev:
-            cpi_yoy_by_month[cpi_arr[i][0][:7]] = (cpi_arr[i][1] / prev - 1) * 100
+    for d, v in cpi_arr:
+        _base = _cpi_by_ym.get(f'{int(d[:4]) - 1}-{d[5:7]}')
+        if _base:
+            cpi_yoy_by_month[d[:7]] = (v / _base - 1) * 100
     wage_yoy_monthly = []
     wage_minus = []
     for rd in ref_dates:
@@ -2431,6 +2438,15 @@ def _build_labor_panel():
         'analystNote': f'劳动力市场"需求-供给-价格"三角框架。Sahm Rule 当前 {_sahm["value"]} ({ "触发" if _sahm["triggered"] else "未触发"})。失业率 {unrate:.1f}%' + ('从低点回升' if (unrate_tf.get('m') or 0) > 0 else ('回落' if (unrate_tf.get('m') or 0) < 0 else '走平')) + ', 美联储关注劳动参与率与JOLTS的交叉信号。'
     }
 
+# 通胀深化(通胀温度计)的前置量。
+# ⚠️ 同比一律用 yoy()(按日期就近匹配): CPI 系列缺 2025-10(BLS 政府停摆未发布),
+#    raw_calc_pct(k,12) 按索引回退 12 期会落到 2025-08, 把核心CPI 同比 2.56% 抬成 2.82%、
+#    核心服务 3.16% 抬成 3.40%(超级核心同源)。
+_idp_3m   = infl_annualized('core_cpi', 3)
+_idp_6m   = infl_annualized('core_cpi', 6)
+_idp_yoy  = yoy('core_cpi_nsa')
+_idp_svcs = yoy('cpi_core_svcs')
+
 DATA['economy'] = {
     'regime': {'label':_e_label,'signal':_e_signal,'confidence':_confidence(_e_signal, gdp_qoq is not None, unrate_tf.get('m') is not None, cpi_yoy is not None),
         'description':f'就业消费 (非农月增 {(f"{payems_mom:+.0f}K" if payems_mom is not None else "—")}, 失业率 {f2(unrate)}%) 与通胀 (CPI 同比 {f1(cpi_yoy)}%) 组合决定经济所处阶段。'},
@@ -2503,11 +2519,14 @@ DATA['economy'] = {
     'laborPanel': _build_labor_panel(),
     # Phase2: 通胀深化 (3M/6M年化)
     'inflationDeepening': {
-        'annualized3m': infl_annualized('core_cpi', 3),
-        'annualized6m': infl_annualized('core_cpi', 6),
-        'supercore': raw_calc_pct('cpi_core_svcs', 12),  # 超级核心(核心服务除住房)
+        'annualized3m': _idp_3m,
+        'annualized6m': _idp_6m,
+        'supercore': (round(_idp_svcs, 2) if _idp_svcs is not None else None),  # 超级核心(核心服务除住房)
         'wage_inflation_gap': wage_inflation_gap(),
-        'analystNote': f'核心CPI 3月年化 {infl_annualized("core_cpi", 3):.1f}% (" 高于" if infl_annualized("core_cpi", 3) and infl_annualized("core_cpi", 3) > raw_calc_pct("core_cpi_nsa",12) else " 收敛于")同比的 {raw_calc_pct("core_cpi_nsa",12):.1f}%) — 3月年化是美联储内部最看重的口径。' if infl_annualized('core_cpi', 3) and raw_calc_pct('core_cpi_nsa', 12) else '数据暂缺',
+        'analystNote': (
+            f'核心CPI 3月年化 {_idp_3m:.1f}% ({"高于" if _idp_3m > _idp_yoy else "收敛于"}同比的 {_idp_yoy:.1f}%) '
+            f'— 3月年化是美联储内部最看重的口径。'
+            if (_idp_3m is not None and _idp_yoy is not None) else '数据暂缺'),
     },
     'consumptionTable': [
         {'indicator':'零售销售 (名义)','value':(f'${comma(retail/1000,1)}B' if retail else '—'),'prev':(ret(retail_mom[-1][1])+' 环比' if retail_mom else '—'),'trend':trend_of(retail_mom[-1][1] if retail_mom else None),'note':'消费第一高频指标'},
