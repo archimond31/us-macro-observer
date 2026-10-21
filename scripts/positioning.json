@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-20",
+  "fetched_at": "2026-10-21",
   "cftc": {},
   "cftc_disagg": {
     "E-mini S&P 500": {
@@ -164,8 +164,8 @@
     }
   },
   "termPremium": {
-    "date": "2026-10-09",
-    "value": 1.0729,
+    "date": "2026-10-16",
+    "value": 0.9857,
     "note": "10Y 期限溢价 (ACM 模型), 拆解 10Y = 预期短端路径 + 期限溢价"
   },
   "sloos": {
