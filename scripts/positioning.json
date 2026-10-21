@@ -164,46 +164,46 @@
     }
   },
   "termPremium": {
-    "date": "2026-10-16",
-    "value": 0.9857,
+    "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+    "value": 400.0,
     "note": "10Y 期限溢价 (ACM 模型), 拆解 10Y = 预期短端路径 + 期限溢价"
   },
   "sloos": {
-    "date": "2026-07-01",
-    "value": 0.0,
+    "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+    "value": 400.0,
     "note": "SLOOS 收紧工商业贷款标准净占比 (正=收紧, 领先信用周期 2-4 季)"
   },
   "nfciParts": {
     "leverage": {
-      "date": "2026-10-09",
-      "value": 0.192,
+      "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+      "value": 400.0,
       "label": "杠杆"
     },
     "risk": {
-      "date": "2026-10-09",
-      "value": -0.574,
+      "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+      "value": 400.0,
       "label": "风险市场"
     },
     "credit": {
-      "date": "2026-10-09",
-      "value": -0.036,
+      "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+      "value": 400.0,
       "label": "信贷"
     },
     "nonfinlev": {
-      "date": "2026-10-09",
-      "value": -0.473,
+      "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+      "value": 400.0,
       "label": "非金融杠杆"
     }
   },
   "householdNetWorth": {
-    "date": "2026-04-01",
-    "value": 195.87,
+    "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+    "value": 0.0,
     "unit": "$T",
     "note": "美国家庭净资产 (→万亿美元), 消费与风险偏好锚"
   },
   "bankCredit": {
-    "date": "2026-10-07",
-    "value": 14.18,
+    "date": "    <link href=\"https://fonts.googleapis.com/css?family=Open+Sans:300",
+    "value": 0.4,
     "unit": "$T",
     "note": "美国银行信贷总量 (→万亿美元), 信用创造水位"
   }
