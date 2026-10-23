@@ -754,6 +754,52 @@ DATA['meta'] = {
     'marketNote': '数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None'
 }
 
+# ====== 结构广度 / 资本分配容忍度 (2026-10-23 新增) ======
+# 结构链: 承载「市场结构领先指数」——新高新低 + MA50 广度 + 20日涨跌比 + ROE 质量多空
+# 信用链子信号: 资本分配容忍度——CCC-HY 分层 / BBB-IG / 10Y 成本 / LQD 盈亏
+try:
+    sys.path.insert(0, str(SCRIPT_DIR))
+    import structure as ST
+except Exception as _e:
+    ST = None
+    print(f'[gen_datajs] structure.py 载入失败: {_e}', file=sys.stderr, flush=True)
+
+_QUALITY_MAP = {}
+def _collect_quality(node):
+    if isinstance(node, dict):
+        for _c in (node.get('companies') or []):
+            if isinstance(_c, dict):
+                _k, _roe = _c.get('key'), _c.get('roe')
+                if _k and _roe is not None and _k not in _QUALITY_MAP:
+                    try:
+                        _QUALITY_MAP[_k] = float(_roe)
+                    except Exception:
+                        pass
+        for _v in node.values():
+            _collect_quality(_v)
+    elif isinstance(node, list):
+        for _v in node:
+            _collect_quality(_v)
+_collect_quality(AIC)
+
+if ST:
+    _BREADTH = ST.build_breadth(RAW, _QUALITY_MAP)
+    _CATI = ST.capital_allocation(RAW)
+else:
+    _BREADTH = {'ok': False, 'reason': 'structure.py 未载入', 'score': None, 'legs': {}}
+    _CATI = {'ok': False, 'reason': 'structure.py 未载入', 'score': None, 'legs': {}}
+print(f'[gen_datajs] breadth={_BREADTH.get("score")} cati={_CATI.get("score")}',
+      file=sys.stderr, flush=True)
+
+# 指数压力: 距 252 日高点的回撤, 15% 回撤记满 100 (与 backtest_leadlag.py 同定义)
+_spx_arr = [x[1] for x in (RAW.get('spx') or []) if x[1] is not None]
+if len(_spx_arr) >= 30:
+    _spx_hi = max(_spx_arr[-252:])
+    _spx_dd = (1 - _spx_arr[-1] / _spx_hi) * 100.0 if _spx_hi else 0.0
+    _INDEX_STRESS = max(0.0, min(100.0, _spx_dd / 15.0 * 100.0))
+else:
+    _spx_hi, _spx_dd, _INDEX_STRESS = None, None, None
+
 # 全局 regime (汇总关键真实值)
 v_dgs10 = val('dgs10'); v_wti = val('wti'); v_ccc = val('ccc'); v_hy = val('hy')
 v_vix = val('vix'); v_tga = val('tga'); v_netliq = val('netliq')
@@ -768,13 +814,19 @@ _g_nfci = val('nfci')
 _g_score += 1 if (_g_nfci or 0) > 0 else (-1 if (_g_nfci or 0) < 0 else 0)
 _g_hy_pct = pct('hy')
 _g_score += 1 if (_g_hy_pct or 0) > 70 else (-1 if (_g_hy_pct or 0) < 30 else 0)
+# 结构广度: 内部结构是否确认指数 —— 承载「市场结构领先指数」这一链
+_g_breadth = _BREADTH.get('score')
+if _g_breadth is not None:
+    _g_score += 1 if _g_breadth < 35 else (-1 if _g_breadth >= 60 else 0)
 _g_signal = 'risk-off' if _g_score >= 2 else ('risk-on' if _g_score <= -2 else 'mixed')
 _g_name = '风险规避' if _g_signal == 'risk-off' else ('风险偏好' if _g_signal == 'risk-on' else '多空交织')
 DATA['globalRegime'] = {
     'name': _g_name,
     'signal': _g_signal,
     'confidence': _confidence(_g_signal, _g_spread is not None, v_vix is not None, _g_nfci is not None, v_hy is not None),
+    'breadth': _BREADTH,
     'description': f'10Y 美债 {f2(v_dgs10)}% 处于近一年 {pct("dgs10")} 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 {f2(v_ccc)}% (分位 {pct("ccc")}), 而 HY 整体 {f2(v_hy)}%。油价 (WTI {f2(v_wti)}) 与波动率 (VIX {f2(v_vix)}) 当前处于"利率驱动的资产分化"阶段。'
+                   + (f' 结构广度 {_g_breadth:.0f}/100: {_BREADTH.get("verdict","")}' if _g_breadth is not None else '')
 }
 
 # ====== 大类资产 ======
@@ -2957,6 +3009,8 @@ elif _cr_signal == 'risk-on' and _cr_hy_w > 8:
 _cr_label = '信用分层, 低评级承压' if _cr_signal=='risk-off' else ('利差极窄, 风险偏好' if _cr_signal=='risk-on' else '利差平静但内部分化')
 
 DATA['credit'] = {
+    # 资本分配容忍度子信号 (2026-10-23): 资金对企业「狂热扩张 vs 回报股东」还剩多少容忍
+    'capitalAllocation': _CATI,
     'regime': {'label':_cr_label,'signal':_cr_signal,'confidence':_confidence(_cr_signal, _cr_hy_pct is not None, _cr_nfci is not None, ccc is not None, igv is not None),
         'description':f'HY OAS {f2(hyv)}% (历史分位 {_cr_hy_pct}), CCC 利差 {f2(ccc)}% (分位 {pct("ccc")}), IG {f2(igv)}%。信用市场内部是否分层是风险偏好的关键观察。'},
     'keySignals': [
@@ -3394,7 +3448,7 @@ _risk_factors.append(_risk_factor(_rate_risk, 14, '利率环境', _rate_status))
 _lpi = DATA.get('liquidity', {}).get('lpi', {})
 _lpi_score = _lpi.get('score', 5) * 10
 _lpi_status = 'bearish' if _lpi_score >= TV('risk_high') else ('mixed' if _lpi_score >= TV('risk_mid') else 'bullish')
-_risk_factors.append(_risk_factor(_lpi_score, 16, '流动性压力', _lpi_status))
+_risk_factors.append(_risk_factor(_lpi_score, 14, '流动性压力', _lpi_status))
 
 # 3. 信用市场: 用 credit regime (HY/CCC 分位 + NFCI + 走阔方向), 叠加 CCC 分位修正
 _credit_risk = _RR.get(_cr_signal, 50)
@@ -3430,22 +3484,47 @@ if _n_stress >= 2:
     _asset_risk += 20   # 多资产进入压力区
 _asset_risk = max(0, min(100, _asset_risk))
 _asset_status = 'bearish' if _asset_risk >= TV('risk_high') else ('mixed' if _asset_risk >= TV('risk_mid') else 'bullish')
-_risk_factors.append(_risk_factor(_asset_risk, 8, '跨资产信号', _asset_status))
+_risk_factors.append(_risk_factor(_asset_risk, 6, '跨资产信号', _asset_status))
 
 # 8. 衰退风险: 衰退概率评分 (保留, 已含 10Y-2Y/Sahm/初请/金融压力)
 _rec_risk = _recession_score * 0.7
 _rec_status = 'bearish' if _rec_risk >= TV('recession_bear') else ('mixed' if _rec_risk >= TV('recession_signal_mid') else 'bullish')
-_risk_factors.append(_risk_factor(_rec_risk, 17, '衰退风险', _rec_status))
+_risk_factors.append(_risk_factor(_rec_risk, 13, '衰退风险', _rec_status))
+
+# 9. 结构广度: 市场内部结构 (新高新低/MA50广度/质量多空) —— 「市场结构领先指数」在评分上的落点
+_struct_risk = (100.0 - _BREADTH['score']) if _BREADTH.get('score') is not None else _asset_risk
+_struct_status = 'bearish' if _struct_risk >= TV('risk_high') else ('mixed' if _struct_risk >= TV('risk_mid') else 'bullish')
+_risk_factors.append(_risk_factor(_struct_risk, 8, '结构广度', _struct_status))
+
+# ---- 领先链 → 评分加权: 信用链 / 结构链 先于指数恶化时, riskScore 提前抬升 ----
+if ST and _INDEX_STRESS is not None:
+    _LEAD = ST.lead_lag(_credit_risk, _struct_risk, _INDEX_STRESS)
+else:
+    _LEAD = {'ok': False, 'state': 'unknown', 'label': '数据不足', 'premium': 0.0, 'tilt': 0.0,
+             'gap': None, 'credit_stress': None, 'structure_stress': None, 'index_stress': None,
+             'note': '指数或广度序列不足, 未计算领先缺口', 'enabled': False}
 
 # 加权综合
 _total_weight = sum(f['weight'] for f in _risk_factors)
-_total_score = round(sum(f['score'] * f['weight'] for f in _risk_factors) / _total_weight)
+_base_score = sum(f['score'] * f['weight'] for f in _risk_factors) / _total_weight
+# 领先溢价: 回测未通过前 LEAD_PREMIUM_ENABLED=False —— 只展示, 不进总分
+_applied_premium = float(_LEAD.get('premium') or 0.0) if _LEAD.get('enabled') else 0.0
+_total_score = round(max(0, min(100, _base_score + _applied_premium)))
 _risk_level = '高风险' if _total_score >= TV('total_risk_high') else ('中等风险' if _total_score >= TV('total_risk_mid') else '低风险')
 _risk_color = '#e63946' if _total_score >= TV('total_risk_high') else ('#f59e0b' if _total_score >= TV('total_risk_mid') else '#2a9d8f')
 
+_lead_desc = ''
+if _LEAD.get('ok'):
+    _lead_desc = (f' 领先链({_LEAD["label"]}): 信用 {_LEAD["credit_stress"]:.0f} / 结构 {_LEAD["structure_stress"]:.0f} / '
+                  f'指数 {_LEAD["index_stress"]:.0f}, 领先缺口 {_LEAD["gap"]:.0f} 分, 建议溢价 +{_LEAD["premium"]:.1f} 分'
+                  f'（{"已计入总分" if _applied_premium else "回测未通过 · 仅展示不计入"}）。')
+
 DATA['riskScore'] = {
-    'score': _total_score, 'level': _risk_level, 'color': _risk_color,
-    'description': f'8板块加权聚合风险评分 {_total_score}/100 ({_risk_level})。权重: 流动性16% + 衰退17% + 利率14% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 跨资产8%。',
+    'score': _total_score, 'baseScore': round(_base_score, 1), 'premium': _applied_premium,
+    'level': _risk_level, 'color': _risk_color,
+    'leadLag': _LEAD,
+    'description': (f'9板块加权聚合风险评分 {_total_score}/100 ({_risk_level})。权重: 利率14% + 流动性14% + 衰退13% + '
+                    f'经济13% + 信用12% + 波动率11% + 政策路径9% + 结构广度8% + 跨资产6%。') + _lead_desc,
     'factors': _risk_factors,
     'summary': f'当前宏观风险画像: {"利率+衰退主导" if _rate_risk > 50 or _rec_risk > 40 else ("流动性为主的结构性压力" if _lpi_score > 50 else "风险可控, 关注边际变化")}。核心风险点: ' + 
         (', '.join(f['label'] for f in _risk_factors if f['score'] >= 50) or '无单一板块超警戒线') + '。',

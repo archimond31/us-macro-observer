@@ -33,7 +33,7 @@ const SECTION_CONFIG = {
   tradeRadar: { title: '交易雷达',   subtitle: 'Radar · 预期差扫描 + 全品类映射' },
   positioning: { title: '市场定位',   subtitle: 'Positioning · 谁在动/定价到什么程度' },
   recession:  { title: '衰退信号',   subtitle: 'Recession · 7项先行指标交叉验证' },
-  risk:       { title: '风险总览',   subtitle: 'Risk · 7板块加权聚合风险评分' }
+  risk:       { title: '风险总览',   subtitle: 'Risk · 9板块加权聚合风险评分' }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -772,6 +772,7 @@ function renderAssets(c) {
   // 全局 regime（仅资产页显示全局）
   html += riskScoreBar();
   html += regimeBanner({ label: DATA.globalRegime.name, signal: DATA.globalRegime.signal, confidence: DATA.globalRegime.confidence, description: DATA.globalRegime.description });
+  html += breadthStrip(DATA.globalRegime.breadth);
   html += regimeBanner(d.regime);
   // ===== 关键资产阈值警报 (市场公认关口, 突破 = 宏观信号确认) =====
   const kal = d.keyAlerts || [];
@@ -2331,6 +2332,7 @@ function renderCredit(c) {
   const d = DATA.credit;
   let html = '';
   html += regimeBanner(d.regime);
+  html += capitalAllocCard(d.capitalAllocation);
   html += sectionH('关键信号', '');
   html += signalList(d.keySignals);
   html += metricCardsV3(d.metrics);
@@ -2470,6 +2472,12 @@ function riskScoreBar() {
     '<div class="risk-score-info">' +
       '<div class="risk-score-label">宏观风险: ' + rs.level + ' (' + rs.score + '/100)</div>' +
       '<div class="risk-score-desc">' + rs.summary + '</div>' +
+      (rs.leadLag && rs.leadLag.ok
+        ? '<div class="risk-score-lead" style="margin-top:6px;font-size:12px;color:var(--text-secondary,#6b7688)">领先链 <b style="color:#0b2545">' +
+          rs.leadLag.label + '</b> · 信用 ' + rs.leadLag.credit_stress + ' / 结构 ' + rs.leadLag.structure_stress +
+          ' / 指数 ' + rs.leadLag.index_stress + ' · 缺口 ' + rs.leadLag.gap + ' 分 · 建议溢价 +' + rs.leadLag.premium +
+          (rs.leadLag.enabled ? '（已计入总分）' : '（未计入 · 回测未通过）') + '</div>'
+        : '') +
       '<div class="risk-score-factors">' +
         rs.factors.map(function(f) {
           return '<span class="risk-factor-chip ' + f.status + '">' + f.label + ': ' + f.score + '</span>';
@@ -2517,12 +2525,103 @@ function renderRecession(c) {
 }
 
 /* ================= 9. 风险总览 ================= */
+/* 领先链面板: 信用 / 结构 / 指数 三条链的压力对比与先后次序 */
+function leadLagPanel(ll) {
+  if (!ll || !ll.ok) return '';
+  var rows = [
+    ['信用链', ll.credit_stress, '最早反映再融资与现金流压力', '#c0392b'],
+    ['结构链', ll.structure_stress, '新高新低 / 广度 / 质量因子', '#d08a2c'],
+    ['指数',   ll.index_stress,   '距 252 日高点回撤', '#4a6fa5']
+  ];
+  var html = '<div class="section-h">领先链顺序 <span class="section-h-sub">' + ll.label +
+             ' · 领先缺口 ' + ll.gap + ' 分</span></div>';
+  html += '<div class="chart-card" style="margin-bottom:10px"><div style="padding:6px 4px">';
+  rows.forEach(function (r) {
+    var w = Math.max(2, Math.min(100, r[1]));
+    html += '<div style="display:flex;align-items:center;gap:12px;margin:7px 0">' +
+      '<div style="min-width:58px;font-size:13px;font-weight:600">' + r[0] + '</div>' +
+      '<div style="flex:1"><div style="height:10px;background:#eef0f4;border-radius:5px;overflow:hidden">' +
+      '<div style="height:100%;width:' + w + '%;background:' + r[3] + ';border-radius:5px"></div></div></div>' +
+      '<div style="min-width:40px;text-align:right;font-size:15px;font-weight:700;color:' + r[3] + '">' + r[1] + '</div>' +
+      '<div style="min-width:170px;font-size:11px;color:var(--text-tertiary,#8a94a6)">' + r[2] + '</div>' +
+      '</div>';
+  });
+  html += '</div></div>';
+  html += '<div style="margin:10px 0 18px;font-size:12.5px;line-height:1.7;color:var(--text-secondary,#4a5568);' +
+          'background:#fbfcfe;border:1px dashed #d6dfeb;border-radius:6px;padding:12px 16px">' + ll.note + '</div>';
+  return html;
+}
+
+/* 资本分配容忍度子信号卡 */
+function capitalAllocCard(ca) {
+  if (!ca || !ca.ok) return '';
+  var legs = [
+    ['CCC−HY 分层', ca.legs.ccc_hy, '最弱信用被抛弃'],
+    ['BBB−IG 堕落天使', ca.legs.bbb_ig, '最高档投资级承压'],
+    ['10Y 再融资成本', ca.legs.cost, '新发债成本分位'],
+    ['债券持有人盈亏', ca.legs.bond_pnl, 'LQD 60 日收益分位取反']
+  ];
+  var color = ca.score >= 70 ? '#c0392b' : (ca.score >= 50 ? '#d08a2c' : '#2a9d8f');
+  var html = '<div class="chart-card" style="margin:12px 0;border-left:4px solid ' + color + '">';
+  html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 4px">' +
+    '<div><div style="font-size:11.5px;letter-spacing:.04em;color:#8a94a6;font-weight:600">资本分配容忍度</div>' +
+    '<div style="font-size:28px;font-weight:700;color:' + color + ';line-height:1.2">' + ca.score +
+    '<span style="font-size:13px;font-weight:500;color:#8a94a6">/100 · ' + ca.band + '</span></div></div>' +
+    '<div style="flex:1;min-width:260px;font-size:12.5px;color:var(--text-secondary,#4a5568);line-height:1.65">' +
+    ca.verdict + '</div></div>';
+  html += '<div style="padding:4px 4px 10px">';
+  legs.forEach(function (l) {
+    if (l[1] === null || l[1] === undefined) return;
+    var w = Math.max(2, Math.min(100, l[1]));
+    var c = l[1] >= 70 ? '#c0392b' : (l[1] >= 50 ? '#d08a2c' : '#2a9d8f');
+    html += '<div style="display:flex;align-items:center;gap:10px;margin:6px 0">' +
+      '<div style="min-width:130px;font-size:12px;color:#4a5568">' + l[0] + '</div>' +
+      '<div style="flex:1"><div style="height:8px;background:#eef0f4;border-radius:4px;overflow:hidden">' +
+      '<div style="height:100%;width:' + w + '%;background:' + c + ';border-radius:4px"></div></div></div>' +
+      '<div style="min-width:34px;text-align:right;font-size:12px;font-weight:600;color:' + c + '">' + l[1] + '</div>' +
+      '<div style="min-width:48px;font-size:10.5px;color:#b8c0cc">分位</div></div>';
+  });
+  html += '</div>';
+  if (ca.raw) {
+    html += '<div style="padding:0 4px 10px;font-size:11.5px;color:#8a94a6">' +
+      'CCC−HY 现 ' + ca.raw.ccc_hy_bp + 'bp' +
+      (ca.raw.ccc_hy_chg_1m_bp !== null ? '（近月 ' + (ca.raw.ccc_hy_chg_1m_bp > 0 ? '+' : '') + ca.raw.ccc_hy_chg_1m_bp + 'bp）' : '') +
+      ' · BBB−IG ' + ca.raw.bbb_ig_bp + 'bp · 10Y ' + ca.raw.ust10y + '%' +
+      (ca.raw.lqd_60d_pct !== null ? ' · LQD 60 日 ' + ca.raw.lqd_60d_pct + '%' : '') + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* 结构广度条 */
+function breadthStrip(b) {
+  if (!b || !b.ok) return '';
+  var color = b.score >= 60 ? '#2a9d8f' : (b.score >= 45 ? '#d08a2c' : '#c0392b');
+  var legs = [['站上MA50', b.legs.ma50], ['20日上涨', b.legs.adv20], ['新高/新低', b.legs.hl], ['质量多空', b.legs.quality]];
+  var html = '<div class="chart-card" style="margin:12px 0;border-left:4px solid ' + color + '">';
+  html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 4px">' +
+    '<div><div style="font-size:11.5px;letter-spacing:.04em;color:#8a94a6;font-weight:600">结构广度</div>' +
+    '<div style="font-size:28px;font-weight:700;color:' + color + ';line-height:1.2">' + b.score +
+    '<span style="font-size:13px;font-weight:500;color:#8a94a6">/100 · ' + b.n + ' 只</span></div></div>' +
+    '<div style="flex:1;min-width:240px;font-size:12.5px;color:var(--text-secondary,#4a5568);line-height:1.65">' +
+    b.verdict + '</div></div>';
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;padding:2px 4px 10px">';
+  legs.forEach(function (l) {
+    if (l[1] === null || l[1] === undefined) return;
+    var c = l[1] >= 60 ? '#2a9d8f' : (l[1] >= 40 ? '#d08a2c' : '#c0392b');
+    html += '<span style="display:inline-block;padding:2px 9px;border-radius:10px;background:#f4f6f9;' +
+      'font-size:11.5px;color:#4a5568">' + l[0] + ' <b style="color:' + c + '">' + l[1] + '</b></span>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
 function renderRisk(c) {
   const d = DATA.riskScore;
   if (!d) { c.innerHTML = '<div class="loading">数据加载中...</div>'; return; }
   let html = '';
   html += '<div class="chart-row one-col">' +
-    '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">宏观风险评分仪表盘</div><div class="chart-subtitle">7板块加权聚合 0-100 · ' + d.level + '</div></div></div>' +
+    '<div class="chart-card"><div class="chart-header"><div><div class="chart-title">宏观风险评分仪表盘</div><div class="chart-subtitle">9板块加权聚合 0-100 · ' + d.level + '</div></div></div>' +
     '<div style="text-align:center;padding:20px 0">' +
       '<div style="display:inline-block;width:140px;height:140px;border-radius:50%;background:' + d.color + ';display:flex;flex-direction:column;align-items:center;justify-content:center">' +
         '<div style="font-size:40px;font-weight:700;color:#fff">' + d.score + '</div>' +
@@ -2546,6 +2645,7 @@ function renderRisk(c) {
         '<span class="risk-factor-chip ' + f.status + '">' + statusLabel + ' · 权重' + f.weight + '%</span>' +
       '</div></div>';
   });
+  html += leadLagPanel(d.leadLag);
   html += '<div style="margin:16px 0">' + analystBox(d.summary) + '</div>';
   c.innerHTML = html;
 }

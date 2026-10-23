@@ -3,7 +3,7 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-10-23 04:19
+ * 生成时间: 2026-10-23 13:35
  * ============================================================
  */
 const DATA = {
@@ -17,7 +17,63 @@ const DATA = {
     "name": "多空交织",
     "signal": "mixed",
     "confidence": "中等置信",
-    "description": "10Y 美债 5.13% 处于近一年 94 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 13.07% (分位 99), 而 HY 整体 3.27%。油价 (WTI 100.11) 与波动率 (VIX 19.03) 当前处于\"利率驱动的资产分化\"阶段。"
+    "breadth": {
+      "ok": true,
+      "score": 31.5,
+      "verdict": "结构转弱——指数强于内部结构, 广度未确认",
+      "n": 33,
+      "legs": {
+        "ma50": 21.2,
+        "adv20": 27.3,
+        "hl": 45.5,
+        "quality": 47.4
+      },
+      "weights": {
+        "ma50": 0.4,
+        "adv20": 0.25,
+        "hl": 0.2,
+        "quality": 0.15
+      },
+      "counts": {
+        "above_ma50": 7,
+        "adv20": 9,
+        "new_high": 0,
+        "new_low": 3,
+        "scored": 33
+      },
+      "quality_detail": {
+        "hi": [
+          "nvda",
+          "gev",
+          "mu",
+          "adbe",
+          "dell",
+          "asml",
+          "orcl",
+          "googl",
+          "vrt",
+          "vst",
+          "amat"
+        ],
+        "lo": [
+          "now",
+          "arm",
+          "nee",
+          "amd",
+          "cohr",
+          "lite",
+          "ccj",
+          "oklo",
+          "tln",
+          "crwv",
+          "snow"
+        ],
+        "hi_ret": 1.88,
+        "lo_ret": 2.93,
+        "spread": -1.06
+      }
+    },
+    "description": "10Y 美债 5.13% 处于近一年 94 分位, 长端利率是本周资产重定价的核心变量; 信用市场内部已分层——CCC 利差 13.07% (分位 99), 而 HY 整体 3.27%。油价 (WTI 100.11) 与波动率 (VIX 19.03) 当前处于\"利率驱动的资产分化\"阶段。 结构广度 32/100: 结构转弱——指数强于内部结构, 广度未确认"
   },
   "assets": {
     "keyAlerts": [
@@ -22741,6 +22797,31 @@ const DATA = {
     }
   },
   "credit": {
+    "capitalAllocation": {
+      "ok": true,
+      "score": 86.7,
+      "band": "耗尽",
+      "verdict": "容忍度已耗尽——低评级被系统性重定价, 高评级几乎不动, 是典型的分层而非全面风险",
+      "legs": {
+        "ccc_hy": 99.2,
+        "bbb_ig": 73.0,
+        "cost": 94.0,
+        "bond_pnl": 68.3
+      },
+      "weights": {
+        "ccc_hy": 0.4,
+        "bbb_ig": 0.2,
+        "cost": 0.2,
+        "bond_pnl": 0.2
+      },
+      "raw": {
+        "ccc_hy_bp": 980.0,
+        "ccc_hy_chg_1m_bp": 173.0,
+        "bbb_ig_bp": 21.0,
+        "ust10y": 5.13,
+        "lqd_60d_pct": -2.0
+      }
+    },
     "regime": {
       "label": "信用分层, 低评级承压",
       "signal": "risk-off",
@@ -25155,10 +25236,28 @@ const DATA = {
     ]
   },
   "riskScore": {
-    "score": 63,
-    "level": "中等风险",
-    "color": "#f59e0b",
-    "description": "8板块加权聚合风险评分 63/100 (中等风险)。权重: 流动性16% + 衰退17% + 利率14% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 跨资产8%。",
+    "score": 66,
+    "baseScore": 66.1,
+    "premium": 0.0,
+    "level": "高风险",
+    "color": "#e63946",
+    "leadLag": {
+      "ok": true,
+      "state": "credit_leads_strong",
+      "label": "信用强领先·指数未确认",
+      "gap": 79.7,
+      "credit_gap": 79.7,
+      "structure_gap": 63.2,
+      "credit_vs_structure": 16.5,
+      "premium": 11.8,
+      "tilt": 6.0,
+      "credit_stress": 85,
+      "structure_stress": 68.5,
+      "index_stress": 5.3,
+      "enabled": false,
+      "note": "信用链比指数早 80 分恶化, 结构链早 63 分——两条领先链同时报警而指数尚未下跌, 对应领先溢价 +11.8 分。（未计入总分：回测未通过预设标准, 见 scripts/backtest_leadlag.py）"
+    },
+    "description": "9板块加权聚合风险评分 66/100 (高风险)。权重: 利率14% + 流动性14% + 衰退13% + 经济13% + 信用12% + 波动率11% + 政策路径9% + 结构广度8% + 跨资产6%。 领先链(信用强领先·指数未确认): 信用 85 / 结构 68 / 指数 5, 领先缺口 80 分, 建议溢价 +11.8 分（回测未通过 · 仅展示不计入）。",
     "factors": [
       {
         "label": "利率环境",
@@ -25170,7 +25269,7 @@ const DATA = {
       {
         "label": "流动性压力",
         "score": 51.0,
-        "weight": 16,
+        "weight": 14,
         "status": "mixed",
         "color": "#f59e0b"
       },
@@ -25205,19 +25304,26 @@ const DATA = {
       {
         "label": "跨资产信号",
         "score": 75,
-        "weight": 8,
+        "weight": 6,
         "status": "bearish",
         "color": "#e63946"
       },
       {
         "label": "衰退风险",
         "score": 4.2,
-        "weight": 17,
+        "weight": 13,
         "status": "bullish",
         "color": "#2a9d8f"
+      },
+      {
+        "label": "结构广度",
+        "score": 68.5,
+        "weight": 8,
+        "status": "bearish",
+        "color": "#e63946"
       }
     ],
-    "summary": "当前宏观风险画像: 利率+衰退主导。核心风险点: 利率环境, 流动性压力, 信用市场, 波动率风险, 经济基本面, 政策路径, 跨资产信号。"
+    "summary": "当前宏观风险画像: 利率+衰退主导。核心风险点: 利率环境, 流动性压力, 信用市场, 波动率风险, 经济基本面, 政策路径, 跨资产信号, 结构广度。"
   },
   "tradeRadar": {
     "asOf": "2026-10-23",
@@ -25951,42 +26057,42 @@ const DATA = {
           "b": "黄金",
           "factors": [
             "haven",
-            "rate",
-            "infl"
+            "infl",
+            "rate"
           ],
           "weight": 9,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌利率下行, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌通胀回升, 赌利率下行"
         },
         {
           "a": "黄金 / 金矿股",
           "b": "AI 高估值标的 (回避)",
           "factors": [
-            "growth",
+            "infl",
             "rate",
-            "infl"
+            "growth"
           ],
           "weight": 7,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌通胀回升, 赌利率下行, 赌增长强劲"
         },
         {
           "a": "黄金 / 金矿股",
           "b": "纳斯达克 / 长久期成长",
           "factors": [
-            "growth",
-            "haven"
+            "haven",
+            "growth"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌避险升温"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌增长强劲"
         },
         {
           "a": "AI 算力核心 (芯片/基础设施)",
           "b": "AI 光模块/网络 (Lumentum、Coherent)",
           "factors": [
-            "growth",
-            "rate"
+            "rate",
+            "growth"
           ],
           "weight": 6,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌增长强劲"
         }
       ],
       "portfolioExposure": [
