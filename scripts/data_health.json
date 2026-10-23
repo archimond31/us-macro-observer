@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-23 04:19",
+  "generated_at": "2026-10-23 06:01",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -742,7 +742,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 4025.60009765625,
+      "value": 4037.10009765625,
       "fallback": false
     },
     "silver": {
@@ -750,7 +750,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 53.8650016784668,
+      "value": 54.48500061035156,
       "fallback": false
     },
     "natgas": {
@@ -758,7 +758,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 2.7309999465942383,
+      "value": 2.736999988555908,
       "fallback": false
     },
     "copper": {
@@ -766,7 +766,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 6.431000232696533,
+      "value": 6.460999965667725,
       "fallback": false
     },
     "dxy": {
@@ -774,7 +774,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 101.66799926757812,
+      "value": 101.69100189208984,
       "fallback": false
     },
     "wti_rt": {
@@ -782,7 +782,7 @@
       "source": "Yahoo:CL=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 100.11000061035156,
+      "value": 100.54000091552734,
       "fallback": false
     },
     "brent_rt": {
@@ -790,7 +790,7 @@
       "source": "Yahoo:BZ=F",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 113.72000122070312,
+      "value": 114.13999938964844,
       "fallback": false
     },
     "eurusd": {
@@ -798,7 +798,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 1.1217050552368164,
+      "value": 1.1213276386260986,
       "fallback": false
     },
     "gbpusd": {
@@ -806,7 +806,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 1.3393694162368774,
+      "value": 1.3387597799301147,
       "fallback": false
     },
     "usdjpy": {
@@ -814,7 +814,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 156.9040069580078,
+      "value": 156.87100219726562,
       "fallback": false
     },
     "usdcnh": {
@@ -822,7 +822,7 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 6.672339916229248,
+      "value": 6.67248010635376,
       "fallback": false
     },
     "tlt": {
@@ -942,7 +942,7 @@
       "source": "Yahoo:^TYX",
       "last_date": "2026-10-22",
       "age": 1,
-      "value": 5.286999702453613,
+      "value": 5.2870001792907715,
       "fallback": false
     },
     "msft": {
@@ -1214,7 +1214,7 @@
       "source": "Yahoo:300308.SZ",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 556.1300048828125,
+      "value": 599.1900024414062,
       "fallback": false
     },
     "xys": {
@@ -1222,7 +1222,7 @@
       "source": "Yahoo:300502.SZ",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 237.8300018310547,
+      "value": 254.58999633789062,
       "fallback": false
     },
     "fii": {
@@ -1230,7 +1230,7 @@
       "source": "Yahoo:601138.SS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 46.40999984741211,
+      "value": 48.099998474121094,
       "fallback": false
     },
     "inspur": {
@@ -1238,7 +1238,7 @@
       "source": "Yahoo:000977.SZ",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 55.36000061035156,
+      "value": 57.400001525878906,
       "fallback": false
     },
     "huadian": {
@@ -1246,7 +1246,7 @@
       "source": "Yahoo:002463.SZ",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 100.12000274658203,
+      "value": 104.44999694824219,
       "fallback": false
     },
     "iflytek": {
@@ -1254,7 +1254,7 @@
       "source": "Yahoo:002230.SZ",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 36.7400016784668,
+      "value": 37.709999084472656,
       "fallback": false
     },
     "cambricon": {
@@ -1262,7 +1262,7 @@
       "source": "Yahoo:688256.SS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 837.9299926757812,
+      "value": 908.0,
       "fallback": false
     },
     "hygon": {
@@ -1270,7 +1270,7 @@
       "source": "Yahoo:688041.SS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 189.3000030517578,
+      "value": 196.25,
       "fallback": false
     },
     "ssamsung": {
@@ -1278,7 +1278,7 @@
       "source": "Yahoo:005930.KS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 212250.0,
+      "value": 214250.0,
       "fallback": false
     },
     "skhynix": {
@@ -1286,7 +1286,7 @@
       "source": "Yahoo:000660.KS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 1250000.0,
+      "value": 1268000.0,
       "fallback": false
     },
     "hansmi": {
@@ -1294,7 +1294,7 @@
       "source": "Yahoo:042700.KS",
       "last_date": "2026-10-23",
       "age": 0,
-      "value": 188900.0,
+      "value": 189700.0,
       "fallback": false
     },
     "mfg_pmi": {
