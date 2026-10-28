@@ -151,7 +151,22 @@ _yld_up = _d10 > 0.05
 _eq_up = _spx > 0
 _disagreement = _yld_up and _eq_up
 _cpi_on = _status_map.get('cpi_accel') == 'on'
-_infl_high = _cpi_on or _cpi > 0
+# 核心 CPI 环比%: 用水平序列末两点换算，与 gen_datajs._ms_composites 口径一致。
+# (旧实现取的是「指数点位月度差」直接与 0 比大小 —— 既不是比率，也使 'mod' 分支不可达)
+_cpi_arr = _ms_vals('core_cpi')
+_cpi_mom = round((_cpi_arr[-1] / _cpi_arr[-2] - 1) * 100, 3) if (len(_cpi_arr) >= 2 and _cpi_arr[-2]) else None
+if _cpi_mom is None:
+    _infl_high = _cpi_on
+    _infl = 'high' if _cpi_on else 'low'
+elif _cpi_on or _cpi_mom > 0.20:
+    _infl_high = True
+    _infl = 'high'
+elif _cpi_mom < 0.15:
+    _infl_high = False
+    _infl = 'low'
+else:
+    _infl_high = False
+    _infl = 'mod'
 _eq_down = _spx < 0
 _credit_on = _status_map.get('credit_widen') == 'on'
 _growth_weak = _eq_down or _credit_on
@@ -165,7 +180,12 @@ _breadth_narrow = _crypto_on or _credit_on
 _breadth_broad = (not _breadth_narrow) and _spx > 0
 COMPS = {
     'disagreement': _disagreement, 'yldUp': _yld_up, 'eqUp': _eq_up,
-    'inflation': 'high' if _infl_high else ('low' if not (_cpi_on or _cpi > 0) else 'mod'),
+    # 以下三项 gen_datajs._ms_composites 一直返回；此前本脚本 COMPS 缺失,
+    # 会导致 trigger 里用到它们的原型被静默降分、与面板结论不一致。
+    'yieldsHigh': _status_map.get('yields_high') == 'on',
+    'creditStress': _credit_on,
+    'cpiAccel': _cpi_on,
+    'inflation': _infl,
     'growth': 'weak' if _growth_weak else ('strong' if _growth_strong else 'mod'),
     'liquidity': 'tight' if _liq_tight else ('easy' if _liq_easy else 'neutral'),
     'breadth': 'narrow' if _breadth_narrow else ('broad' if _breadth_broad else 'neutral'),
