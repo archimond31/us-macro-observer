@@ -67,8 +67,10 @@ def batch_quote(symbols):
 
 def quote_summary(sym, crumb, jar):
     """v10/finance/quoteSummary 取 financialData + price/summaryDetail/defaultKeyStatistics
-    (后三者作为 v7 quote 被 Unauthorized 时的回退源, 覆盖 pe/fwdPe/peg/marketCap)。"""
-    modules = 'financialData,valuationMeasures,defaultKeyStatistics,price,summaryDetail'
+    (后三者作为 v7 quote 被 Unauthorized 时的回退源, 覆盖 pe/fwdPe/peg/marketCap)。
+    另取 earningsTrend / recommendationTrend 供研报共识类字段(评级分布/EPS修正)推导。"""
+    modules = ('financialData,defaultKeyStatistics,price,summaryDetail,'
+               'earningsTrend,recommendationTrend')
     for host in ('query1', 'query2'):
         url = (f'https://{host}.finance.yahoo.com/v10/finance/quoteSummary/{sym}'
                f'?modules={modules}&crumb={crumb}')
@@ -112,6 +114,105 @@ def convert_marketcap(mc_raw, currency, market, usdcny, usdkrw):
         return round(mc_usd * usdcny / 1e8, 1)   # 人民币亿元
     return round(mc_usd / 1e9, 1)                 # $B
 
+def spot_price(symbol):
+    """v8/finance/chart 取最新收盘价。用于汇率(USDCNY=X / KRW=X):
+    v7/quote 已对匿名调用返回 Unauthorized, 汇率必须走仍在开放的 chart 接口,
+    否则会退到写死的兜底汇率, 使韩股市值凭空偏移。"""
+    enc = symbol.replace('^', '%5E').replace('=', '%3D')
+    for host in ('query1', 'query2'):
+        url = f'https://{host}.finance.yahoo.com/v8/finance/chart/{enc}?range=5d&interval=1d'
+        txt = http_get(url, use_ua=True)
+        if not txt:
+            continue
+        try:
+            res = json.loads(txt)['chart']['result'][0]
+            closes = [c for c in res['indicators']['quote'][0]['close'] if c is not None]
+            if closes:
+                return float(closes[-1])
+        except Exception:
+            continue
+    return None
+
+
+def _rating_mean(row):
+    """推荐分布行 -> (加权均值 1..5, 分析师家数)。1=强烈买入, 5=卖出。"""
+    if not row:
+        return None, 0
+    sb = num(row.get('strongBuy')) or 0
+    b = num(row.get('buy')) or 0
+    h = num(row.get('hold')) or 0
+    s = num(row.get('sell')) or 0
+    ss = num(row.get('strongSell')) or 0
+    n = sb + b + h + s + ss
+    if n <= 0:
+        return None, 0
+    return (sb * 1 + b * 2 + h * 3 + s * 4 + ss * 5) / n, int(n)
+
+
+def _consensus_label(score):
+    """评级分(1..5, 越高越好) -> 与既有策展词表一致的标签。"""
+    if score is None:
+        return None
+    if score >= 4.0:
+        return '增持'
+    if score >= 3.5:
+        return '中性偏多'
+    if score >= 3.0:
+        return '中性'
+    if score >= 2.5:
+        return '减持'
+    return '卖出'
+
+
+def research_fields(s):
+    """从 quoteSummary 推导研报共识类字段（全部为可复算的真实派生量）。
+      ratingScore      = 6 - 推荐加权均值            (与旧口径同向: 越高越看好)
+      consensus        = ratingScore 分档标签
+      reports          = numberOfAnalystOpinions 优先, 回退推荐分布总家数
+      ratingTrend      = 当期 ratingScore - 3个月前 ratingScore  (净评级变动, 裁到 ±2)
+      ratingDispersion = (目标价最高 - 最低) / 目标价均值 × 100    (目标价分歧度)
+      epsRevision      = FY+1 共识 EPS 相对 90 天前的变动%        (盈利修正动量)
+    """
+    out = {}
+    rt = (s.get('recommendationTrend') or {}).get('trend') or []
+    rows = {r.get('period'): r for r in rt if r.get('period')}
+    mean0, n0 = _rating_mean(rows.get('0m'))
+    mean3, _ = _rating_mean(rows.get('-3m'))
+    if mean0 is not None:
+        score0 = 6 - mean0
+        out['ratingScore'] = round(score0, 1)
+        out['consensus'] = _consensus_label(score0)
+        if mean3 is not None:
+            out['ratingTrend'] = round(max(-2.0, min(2.0, score0 - (6 - mean3))), 1)
+    fd = s.get('financialData') or {}
+    dks = s.get('defaultKeyStatistics') or {}
+    noa = num(fd.get('numberOfAnalystOpinions')) or num(dks.get('numberOfAnalystOpinions'))
+    if noa:
+        out['reports'] = int(noa)
+    elif n0:
+        out['reports'] = n0
+
+    hi, lo, mid = num(fd.get('targetHighPrice')), num(fd.get('targetLowPrice')), num(fd.get('targetMeanPrice'))
+    if hi and lo and mid and mid > 0 and hi >= lo:
+        disp = (hi - lo) / mid * 100
+        if 0 <= disp <= 300:            # 过滤目标价样本极少的失真值
+            out['ratingDispersion'] = round(disp)
+
+    et = (s.get('earningsTrend') or {}).get('trend') or []
+    for want in ('+1y', '0y'):
+        row = next((r for r in et if r.get('period') == want), None)
+        if not row:
+            continue
+        tr = row.get('epsTrend') or {}
+        cur, old = num(tr.get('current')), num(tr.get('90daysAgo'))
+        if cur and old and old != 0:
+            chg = (cur / old - 1) * 100
+            if abs(chg) <= 300:
+                out['epsRevision'] = round(chg, 1)
+                break
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description='AI 产业链基本面刷新 (Yahoo Finance real data)')
     ap.add_argument('--dry-run', action='store_true', help='仅预览改动, 不写文件')
@@ -154,21 +255,15 @@ def main():
     q = batch_quote(tickers)
     print(f'  v7 quote 命中 {len(q)}/{len(tickers)}')
 
-    # 2) 汇率 USDCNY
-    usdcny = None
-    fxq = batch_quote(['USDCNY=X'])
-    if 'USDCNY=X' in fxq:
-        usdcny = num(fxq['USDCNY=X'].get('regularMarketPrice'))
+    # 2) 汇率 USDCNY / USDKRW (v7 quote 已封, 走 chart 接口)
+    usdcny = spot_price('USDCNY=X')
     if not usdcny:
         usdcny = 7.1
-        print('  [warn] 未取到实时 USDCNY, 使用兜底 7.1 (A股市值换算可能偏差)')
+        print('  [warn] 未取到实时 USDCNY, 使用兜底 7.1 (A股市值按人民币原值换算, 不受此影响)')
     else:
         print(f'  USDCNY = {usdcny:.4f}')
 
-    usdkrw = None
-    krwq = batch_quote(['KRW=X'])
-    if 'KRW=X' in krwq:
-        usdkrw = num(krwq['KRW=X'].get('regularMarketPrice'))
+    usdkrw = spot_price('KRW=X')
     if not usdkrw:
         usdkrw = 1400.0
         print('  [warn] 未取到实时 USDKRW, 使用兜底 1400 (韩股市值换算可能偏差)')
@@ -255,8 +350,29 @@ def main():
                 if -100 <= _fcfm <= 100:  # 过滤 OKLO/CRWV 等失真极值(-19778%)
                     c['fcfMargin'] = round(_fcfm, 1); got.append('fcfMargin')
 
-        # 拿到"市值 + 至少一个估值字段"即视为核实
-        if 'marketCap' in got and ('pe' in got or 'fwdPe' in got):
+        # --- 研报共识类字段 (评级分布 / 目标价分歧 / EPS 修正) ---
+        if s:
+            rf = research_fields(s)
+            r = c.get('research')
+            if not isinstance(r, dict):
+                r = {}
+                c['research'] = r
+            for f in ('consensus', 'ratingScore', 'reports'):
+                if f in rf:
+                    r[f] = rf[f]
+                    got.append('rs.' + f)
+            for f in ('epsRevision', 'ratingTrend', 'ratingDispersion'):
+                if f in rf:
+                    v = rf[f]
+                    # 归一整数量级极小的负值(-0.0 会在前端显示成 "-0.0")
+                    if isinstance(v, float) and abs(v) < 0.05:
+                        v = 0.0
+                    c[f] = v
+                    got.append(f)
+
+        # 核实口径: 拿到市值 + (任一估值比 => 盈利型标的; 或 营收增速+毛利率 => 尚未盈利但有真实财务)
+        if 'marketCap' in got and (('pe' in got or 'fwdPe' in got)
+                                   or ('revGrowth' in got and 'grossMargin' in got)):
             c['est'] = False
         if got:
             c['curatedDate'] = today
@@ -275,7 +391,19 @@ def main():
         print(f'  - {name} ({t}): {", ".join(got)}')
 
     if args.dry_run:
-        print('\n[DRY-RUN] 未写入文件。')
+        print('\n[DRY-RUN] 未写入文件。刷新后全表预览:')
+        print(f"  {'ticker':11s}{'mc':>9}{'pe':>7}{'fwd':>7}{'peg':>6}{'rg%':>7}"
+              f"{'gm%':>7}{'fcf%':>7}{'roe%':>7}{'rS':>5}{'rpts':>5}{'epsR%':>7}{'rT':>5}{'rD':>4}")
+        for c in companies:
+            r = c.get('research') or {}
+            def _f(v, n=1):
+                return '—' if v is None else (round(v, n) if isinstance(v, float) else v)
+            print(f"  {c['ticker']:11s}{str(_f(c.get('marketCap'))):>9}{str(_f(c.get('pe'))):>7}"
+                  f"{str(_f(c.get('fwdPe'))):>7}{str(_f(c.get('peg'), 2)):>6}{str(_f(c.get('revGrowth'))):>7}"
+                  f"{str(_f(c.get('grossMargin'))):>7}{str(_f(c.get('fcfMargin'))):>7}"
+                  f"{str(_f(c.get('roe'))):>7}{str(_f(r.get('ratingScore'))):>5}"
+                  f"{str(_f(r.get('reports'))):>5}{str(_f(c.get('epsRevision'))):>7}"
+                  f"{str(_f(c.get('ratingTrend'))):>5}{str(_f(c.get('ratingDispersion'))):>4}")
         return
 
     if not changes:
