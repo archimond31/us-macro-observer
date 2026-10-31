@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-31 05:02",
+  "generated_at": "2026-10-31 16:20",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -124,16 +124,16 @@
     "ffr_up": {
       "status": "OK",
       "source": "FRED:DFEDTARU",
-      "last_date": "2026-10-30",
-      "age": 1,
+      "last_date": "2026-10-31",
+      "age": 0,
       "value": 4.0,
       "fallback": false
     },
     "ffr_lo": {
       "status": "OK",
       "source": "FRED:DFEDTARL",
-      "last_date": "2026-10-30",
-      "age": 1,
+      "last_date": "2026-10-31",
+      "age": 0,
       "value": 3.75,
       "fallback": false
     },
