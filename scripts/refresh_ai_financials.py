@@ -17,7 +17,7 @@ refresh_ai_financials.py — AI 产业链 44 家公司基本面数据刷新工�
   python scripts/refresh_ai_financials.py --no-backup # 不写备份
 注意: 必须在能访问 Yahoo 的机器上运行(本地终端 / CI)。沙箱无外网时字段保持 est=true。
 """
-import subprocess, json, os, sys, time, tempfile, datetime, argparse
+import subprocess, json, os, sys, time, tempfile, datetime, argparse, shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 JSON_PATH = os.path.join(HERE, 'ai_chain.json')
@@ -213,6 +213,25 @@ def research_fields(s):
     return out
 
 
+def norm_neg_zero(o):
+    """递归把 -0.0 归一为 0.0: Python round(-0.04, 1) 会产出 -0.0, 直接 json.dump 会写出
+    "-0.0", 前端渲染成 "-0.0%"。对 float 而言 -0.0 == 0.0 为 True, 故按相等判断即可。"""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if isinstance(v, float):
+                if v == 0.0:
+                    o[k] = 0.0
+            else:
+                norm_neg_zero(v)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            if isinstance(v, float):
+                if v == 0.0:
+                    o[i] = 0.0
+            else:
+                norm_neg_zero(v)
+
+
 def main():
     ap = argparse.ArgumentParser(description='AI 产业链基本面刷新 (Yahoo Finance real data)')
     ap.add_argument('--dry-run', action='store_true', help='仅预览改动, 不写文件')
@@ -379,12 +398,16 @@ def main():
             changes.append((c.get('name', t), t, got))
 
     if changes:
+        # asOf 带日期刷新; disclaimer 是策展口径说明(含 ratingScore/rdispersion 公式与市值单位),
+        # 只在缺失时才写入默认版本 —— 否则每季度刷新都会把人工写好的口径覆盖成通用模板。
         data['asOf'] = (f'{datetime.date.today().isoformat()} '
-                        f'(基本面经 Yahoo Finance 核实 real, est=false; '
-                        f'research 叙事仍为策展; 市值: 美股/韩股 $B, A股 ¥亿 实时 USDCNY={usdcny:.2f})')
-        data['disclaimer'] = ('股价/动量由 Yahoo 自动拉取; 估值(pe/fwdPe/peg)/市值/营收增速/毛利率/'
-                              '自由现金流率/ROE 由本工具经 Yahoo Finance 核实(real, est=false); '
-                              'research 叙事为分析师策展。市值: 美股 $B / A股 ¥亿(实时 USDCNY 换算) / 韩股 $B。')
+                        f'财报季机械刷新 ({len(changes)}/{len(companies)} 家经 Yahoo Finance 核实 real, est=false; '
+                        f'硬财务/估值与研报共识为当期口径; research 叙事仍为策展, 待季报复核; '
+                        f'市值: 美股/韩股 $B, A股 ¥亿 实时 USDCNY={usdcny:.2f})')
+        if not (data.get('disclaimer') or '').strip():
+            data['disclaimer'] = ('股价/动量由 Yahoo 自动拉取; 估值(pe/fwdPe/peg)/市值/营收增速/毛利率/'
+                                  '自由现金流率/ROE 由本工具经 Yahoo Finance 核实(real, est=false); '
+                                  'research 叙事为分析师策展。市值: 美股 $B / A股 ¥亿(实时 USDCNY 换算) / 韩股 $B。')
 
     print(f'\n[refresh] 成功更新 {len(changes)}/{len(companies)} 家公司:')
     for name, t, got in changes:
@@ -411,11 +434,13 @@ def main():
         return
 
     if not args.no_backup:
+        # 原实现把已改写的 data 再 dump 到 .bak, 等于备份了"新版"而非原文件, 回滚时无用。
+        # 此处直接复制磁盘上的原文件(尚未被覆盖), .bak 才是真正的回滚源。
         bak = JSON_PATH + '.bak'
-        with open(bak, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        shutil.copy2(JSON_PATH, bak)
         print(f'\n[backup] 已备份原文件 -> {bak}')
 
+    norm_neg_zero(data)
     with open(JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f'[done] 已写回 {JSON_PATH}')

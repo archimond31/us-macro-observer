@@ -5593,6 +5593,25 @@ HEADER = """/* ============================================================
  * 生成时间: %s
  * ============================================================\n */\n""" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
+# 归一 -0.0 → 0.0: Python 的 round(-0.04, 2) 产生 -0.0, json.dumps 原样写出 "-0.0",
+# 前端渲染成 "-0.0%"/"-0.0bp"。对 float 而言 -0.0 == 0.0 为真, 按相等判断替换即可。
+def _norm_neg_zero(o):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if isinstance(v, float):
+                if v == 0.0:
+                    o[k] = 0.0
+            else:
+                _norm_neg_zero(v)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            if isinstance(v, float):
+                if v == 0.0:
+                    o[i] = 0.0
+            else:
+                _norm_neg_zero(v)
+
+_norm_neg_zero(DATA)
 out = HEADER + 'const DATA = ' + json.dumps(DATA, ensure_ascii=False, indent=2) + ';\n'
 with open(REPO_DIR / 'data.js', 'w', encoding='utf-8', newline='\n') as f:
     f.write(out)
