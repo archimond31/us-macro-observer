@@ -3,12 +3,12 @@
  * 由 scripts/gen_datajs.py 从 FRED / Treasury / NY Fed / Yahoo 真实数据生成
  * signal 字段: bullish=利多风险资产 / bearish=利空 / mixed=中性
  * percentile: 当前值近1年历史分位 (0-100)
- * 生成时间: 2026-11-01 05:33
+ * 生成时间: 2026-11-01 16:16
  * ============================================================
  */
 const DATA = {
   "meta": {
-    "lastUpdated": "2026-11-01 05:33 (官方数据, 自动更新)",
+    "lastUpdated": "2026-11-01 16:16 (官方数据, 自动更新)",
     "dataAsOf": "2026-10-29",
     "dataSource": "FRED / U.S. Treasury FiscalData / NY Fed / Yahoo Finance",
     "marketNote": "数值来自官方公开源, 每日自动重算; 月/半年变化受数据频率限制可能为 None"
@@ -18078,7 +18078,7 @@ const DATA = {
       "label": "收紧预期 (2 次加息定价)",
       "signal": "risk-off",
       "confidence": "高置信",
-      "description": "政策利率 3.75%-4.00% 已于 2026-10-31 加息 25bp, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL 6.7T, 周 -2.1$B) 持续推进, RRP 缓冲 ($4.38B) 已耗尽, 未来 QT 将更直接影响准备金。"
+      "description": "政策利率 3.75%-4.00% 已于 2026-11-01 加息 25bp, 市场通过 2Y 国债定价未来政策路径。缩表 (WALCL 6.7T, 周 -2.1$B) 持续推进, RRP 缓冲 ($4.38B) 已耗尽, 未来 QT 将更直接影响准备金。"
     },
     "keySignals": [
       {
@@ -18782,7 +18782,7 @@ const DATA = {
         "item": "联邦基金利率目标区间",
         "value": "3.75% - 4.00%",
         "change": "+25bp",
-        "note": "2026-10-31 加息 25bp"
+        "note": "2026-11-01 加息 25bp"
       },
       {
         "item": "IORB (准备金利息)",
@@ -22451,7 +22451,7 @@ const DATA = {
       "asOf": "2026-11-01",
       "source": "公布值/前值: 本地官方序列 (FRED/BEA, build_data.py 现算) × TE 日历交叉校验; 市场预期: Trading Economics (彭博/路透一致预期中值)"
     },
-    "generatedAt": "2026-11-01 05:33",
+    "generatedAt": "2026-11-01 16:16",
     "pmi_meta": {
       "is_fallback": true,
       "asof": null,
@@ -25616,8 +25616,8 @@ const DATA = {
       {
         "asset": "AI 高估值标的 (回避)",
         "side": "回避/做空",
-        "thesis": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.92、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
-        "bet": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.92、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
+        "thesis": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.49、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
+        "bet": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.49、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
         "verify": "验证点: ①财报营收增速是否环比回落 ②EPS 上修是否停止 ③板块轮动(资金流向低估值)",
         "falsify": "证伪: ①增速继续超预期(盈利消化估值) ②AI 需求进一步加速 ③重大产品突破(新叙事)",
         "trigger": "验证点: ①财报营收增速是否环比回落 ②EPS 上修是否停止 ③板块轮动(资金流向低估值)",
@@ -25627,7 +25627,7 @@ const DATA = {
           "note": "中性偏负: 做空高估值 AI 赚估值压缩, 但 AI 高景气下\"贵而继续涨\"是常态(动量风险大)——更适合对冲而非裸空"
         },
         "evidenceFor": [
-          "PEG 5.92、3.74 显著高于板块中位 0.9",
+          "PEG 5.49、3.74 显著高于板块中位 0.85",
           "估值分位极端",
           "若增速放缓则戴维斯双杀"
         ],
@@ -25760,11 +25760,11 @@ const DATA = {
       }
     ],
     "aiValuation": {
-      "summary": "AI 链条 44 家公司: 平均远期 PE 25.1x, PEG 中位 0.9, 营收增速中位 37.7%。高估候选 6 家 / 低估候选 20 家。 PEG>2.5 或\"高 PE+低增速\"为高估; PEG<1.2 且增速>30% 为低估。估值预期差须与产业链景气度交叉验证。",
+      "summary": "AI 链条 44 家公司: 平均远期 PE 25.1x, PEG 中位 0.85, 营收增速中位 37.7%。高估候选 6 家 / 低估候选 20 家。 PEG>2.5 或\"高 PE+低增速\"为高估; PEG<1.2 且增速>30% 为低估。估值预期差须与产业链景气度交叉验证。",
       "stats": {
         "count": 44,
         "avgFwdPe": 25.1,
-        "medianPeg": 0.9,
+        "medianPeg": 0.85,
         "medianGrowth": 37.7
       },
       "overvalued": [
@@ -25772,7 +25772,7 @@ const DATA = {
           "name": "Snowflake",
           "ticker": "SNOW",
           "layer": "应用层",
-          "peg": 5.92,
+          "peg": 5.49,
           "fwdPe": 101.1,
           "revGrowth": 35.1
         },
@@ -25805,14 +25805,14 @@ const DATA = {
           "ticker": "CCJ",
           "layer": "能源层",
           "peg": 1.92,
-          "fwdPe": 42.0,
-          "revGrowth": -7.2
+          "fwdPe": 42.1,
+          "revGrowth": 0.7
         },
         {
           "name": "Arm",
           "ticker": "ARM",
           "layer": "芯片层",
-          "peg": 1.88,
+          "peg": 1.69,
           "fwdPe": 67.2,
           "revGrowth": 22.4
         }
@@ -25846,7 +25846,7 @@ const DATA = {
           "name": "英伟达",
           "ticker": "NVDA",
           "layer": "芯片层",
-          "peg": 0.26,
+          "peg": 0.25,
           "fwdPe": 12.9,
           "revGrowth": 105.9
         },
@@ -25854,7 +25854,7 @@ const DATA = {
           "name": "博通",
           "ticker": "AVGO",
           "layer": "芯片层",
-          "peg": 0.34,
+          "peg": 0.32,
           "fwdPe": 16.8,
           "revGrowth": 85.5
         },
@@ -25862,7 +25862,7 @@ const DATA = {
           "name": "Dell",
           "ticker": "DELL",
           "layer": "基础设施层",
-          "peg": 0.48,
+          "peg": 0.43,
           "fwdPe": 14.0,
           "revGrowth": 57.7
         }
@@ -25949,8 +25949,8 @@ const DATA = {
         {
           "asset": "AI 高估值标的 (回避)",
           "side": "回避/做空",
-          "thesis": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.92、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
-          "bet": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.92、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
+          "thesis": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.49、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
+          "bet": "赌估值泡沫修正: Snowflake、Constellation Energy (PEG 5.49、3.74) 隐含的增速预期已远超基本面能兑现的速度——买的是\"预期差回归\", 当盈利兑现速度跟不上估值时估值压缩。",
           "verify": "验证点: ①财报营收增速是否环比回落 ②EPS 上修是否停止 ③板块轮动(资金流向低估值)",
           "falsify": "证伪: ①增速继续超预期(盈利消化估值) ②AI 需求进一步加速 ③重大产品突破(新叙事)",
           "trigger": "验证点: ①财报营收增速是否环比回落 ②EPS 上修是否停止 ③板块轮动(资金流向低估值)",
@@ -25960,7 +25960,7 @@ const DATA = {
             "note": "中性偏负: 做空高估值 AI 赚估值压缩, 但 AI 高景气下\"贵而继续涨\"是常态(动量风险大)——更适合对冲而非裸空"
           },
           "evidenceFor": [
-            "PEG 5.92、3.74 显著高于板块中位 0.9",
+            "PEG 5.49、3.74 显著高于板块中位 0.85",
             "估值分位极端",
             "若增速放缓则戴维斯双杀"
           ],
@@ -26048,23 +26048,23 @@ const DATA = {
           "a": "黄金 / 金矿股",
           "b": "黄金",
           "factors": [
-            "rate",
             "haven",
-            "infl"
+            "infl",
+            "rate"
           ],
           "weight": 9,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌利率下行, 赌避险升温, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌避险升温, 赌通胀回升, 赌利率下行"
         },
         {
           "a": "黄金 / 金矿股",
           "b": "AI 高估值标的 (回避)",
           "factors": [
             "growth",
-            "rate",
-            "infl"
+            "infl",
+            "rate"
           ],
           "weight": 7,
-          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌利率下行, 赌通胀回升"
+          "hint": "同一底层赌注的重复表达——共用因子: 赌增长强劲, 赌通胀回升, 赌利率下行"
         },
         {
           "a": "黄金 / 金矿股",
@@ -26251,7 +26251,7 @@ const DATA = {
   },
   "aiChain": {
     "meta": {
-      "asOf": "2026-11-01 财报季机械刷新 (44/44 家经 Yahoo Finance 核实; 硬财务/估值与研报共识为 2026-11 口径。research.summary / notes / thesis 叙事仍为 2026-10 财报季口径, 待在 Q3 财报复核后更新)",
+      "asOf": "2026-11-02 财报季机械刷新 (44/44 家经 Yahoo Finance 核实 real, est=false; 硬财务/估值与研报共识为当期口径; research 叙事仍为策展, 待季报复核; 市值: 美股/韩股 $B, A股 ¥亿 实时 USDCNY=6.64)",
       "disclaimer": "股价/动量由 Yahoo 自动拉取(CI 每日构建)。硬字段取自 Yahoo Finance quoteSummary 真实值(est=false): pe=trailingPE / fwdPe / peg、市值(marketCap)、营收增速、毛利率、自由现金流率、ROE。市值单位: 美股与韩股 $B(韩股按实时 USDKRW 折算), A股 人民币亿元(原币直接换算, 不经美元)。研报共识为可复算派生量: ratingScore = 6 − 卖方推荐加权均值(1=强买 … 5=卖出); consensus 按 4.0 / 3.5 / 3.0 / 2.5 分档; reports = 覆盖分析师数; ratingTrend = 当期与 3 个月前 ratingScore 之差(截断 ±2); ratingDispersion = (最高目标价 − 最低目标价) / 目标价均值 × 100; epsRevision = 下一财年共识 EPS 相对 90 天前的变动%。peHist5y(5 年 PE 中枢)无公开机械数据源, 由分析师人工核对。research.summary / notes / thesis 为分析师策展叙事, 不随机械刷新变动。",
       "note": "六层(黄仁勋五层蛋糕+网络连接层): 应用→模型→基础设施→网络连接→芯片→能源; 股价动量自动(Yahoo), 基本面/研报/周期叙事为策展种子值(其中 cycle.capex 为公开指引估计)"
     },
@@ -26372,7 +26372,7 @@ const DATA = {
             "marketCap": 442.4,
             "pe": 158.7,
             "fwdPe": 78.3,
-            "peg": 1.7,
+            "peg": 1.67,
             "revGrowth": 92.8,
             "grossMargin": 84.8,
             "fcfMargin": 35.1,
@@ -26499,8 +26499,8 @@ const DATA = {
             "tags": [],
             "marketCap": 109.1,
             "pe": 75.6,
-            "fwdPe": 21.8,
-            "peg": 0.79,
+            "fwdPe": 21.9,
+            "peg": 0.76,
             "revGrowth": 20.5,
             "grossMargin": 73.1,
             "fcfMargin": 37.3,
@@ -26519,7 +26519,7 @@ const DATA = {
             },
             "notes": "质量高、增速稳(Rule of 56)，AI ACV 破 $1B；估值仍反映高增长溢价。 【2026-10 复核】Q3 财报已在 8/28 后窗口披露(或 10/28-10/31 待披露)，本期未取得可核实的原始披露口径，营收/利润/估值字段仍沿用上期并按价格桥缩放，待下期采信。",
             "est": false,
-            "epsRevision": -3.9,
+            "epsRevision": -4.1,
             "ratingTrend": 0.0,
             "ratingDispersion": 125,
             "curatedDate": "2026-11",
@@ -26564,7 +26564,7 @@ const DATA = {
             "marketCap": 3875.8,
             "pe": 27.2,
             "fwdPe": 21.6,
-            "peg": 1.72,
+            "peg": 1.69,
             "revGrowth": 18.8,
             "grossMargin": 67.7,
             "fcfMargin": 0.9,
@@ -26572,7 +26572,7 @@ const DATA = {
             "research": {
               "consensus": "增持",
               "ratingScore": 4.1,
-              "reports": 51,
+              "reports": 52,
               "summary": "Azure 云收入 +43%、Copilot 渗透加速；Q2 营收 +18%、净利 +31%。资本开支 FY26e $175B 仍高，自由现金流边际承压但运营现金流强劲($554亿/+30%)。",
               "sources": [
                 {
@@ -26631,7 +26631,7 @@ const DATA = {
             "marketCap": 108.0,
             "pe": 0,
             "fwdPe": 101.1,
-            "peg": 5.92,
+            "peg": 5.49,
             "revGrowth": 35.1,
             "grossMargin": 67.0,
             "fcfMargin": 32.0,
@@ -26809,7 +26809,7 @@ const DATA = {
             "marketCap": 1572.4,
             "pe": 21.0,
             "fwdPe": 17.3,
-            "peg": 0.82,
+            "peg": 0.8,
             "revGrowth": 26.1,
             "grossMargin": 81.0,
             "fcfMargin": 7.0,
@@ -26924,7 +26924,7 @@ const DATA = {
             "scores": {
               "momentum": 42.795,
               "valuation": 58,
-              "growth": 57,
+              "growth": 58,
               "quality": 30,
               "aiExposure": 82,
               "research": 74,
@@ -26940,7 +26940,7 @@ const DATA = {
             ],
             "marketCap": 2598.9,
             "pe": 19.4,
-            "fwdPe": 22.8,
+            "fwdPe": 22.4,
             "peg": 1.39,
             "revGrowth": 12.1,
             "grossMargin": 51.4,
@@ -26960,9 +26960,9 @@ const DATA = {
             },
             "notes": "云(AWS +37%)与模型入口(Bedrock/Anthropic)俱全，零售现金流支撑 capex；估值受零售拖累偏低(PE~19)。",
             "est": false,
-            "epsRevision": 2.0,
+            "epsRevision": 2.3,
             "ratingTrend": 0.0,
-            "ratingDispersion": 53,
+            "ratingDispersion": 54,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -27178,7 +27178,7 @@ const DATA = {
             "marketCap": 269.8,
             "pe": 24.7,
             "fwdPe": 14.0,
-            "peg": 0.48,
+            "peg": 0.43,
             "revGrowth": 57.7,
             "grossMargin": 19.9,
             "fcfMargin": 4.0,
@@ -27243,7 +27243,7 @@ const DATA = {
             ],
             "marketCap": 8929.8,
             "pe": 16.7,
-            "fwdPe": 12.0,
+            "fwdPe": 12.2,
             "peg": 1.0,
             "revGrowth": 57.7,
             "grossMargin": 7.0,
@@ -27310,7 +27310,7 @@ const DATA = {
             "marketCap": 89.5,
             "pe": 43.5,
             "fwdPe": 23.9,
-            "peg": 0.81,
+            "peg": 0.73,
             "revGrowth": 61.2,
             "grossMargin": 38.1,
             "fcfMargin": 22.6,
@@ -27442,7 +27442,7 @@ const DATA = {
             "marketCap": 396.1,
             "pe": 20.5,
             "fwdPe": 11.8,
-            "peg": 0.78,
+            "peg": 0.73,
             "revGrowth": 29.6,
             "grossMargin": 64.0,
             "fcfMargin": -63.9,
@@ -27461,7 +27461,7 @@ const DATA = {
             },
             "notes": "AI 云订单能见度极高(RPO $6640亿、约半数 36 个月内转收入)，但重资本模式使 FCF 为负、Q1 完成 $200亿 ATM 增发摊薄股本。风险：数据中心交付节奏、融资成本、折旧与 GPU 残值假设。毛利率/FCF 外的字段沿用上期口径。",
             "est": false,
-            "epsRevision": 1.3,
+            "epsRevision": 1.4,
             "ratingTrend": 0.0,
             "ratingDispersion": 123,
             "curatedDate": "2026-11",
@@ -27576,7 +27576,7 @@ const DATA = {
             "est": false,
             "epsRevision": 38.1,
             "ratingTrend": 0.5,
-            "ratingDispersion": 88,
+            "ratingDispersion": 107,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -27619,7 +27619,7 @@ const DATA = {
             "marketCap": 213.0,
             "pe": 53.3,
             "fwdPe": 32.3,
-            "peg": 1.36,
+            "peg": 1.25,
             "revGrowth": 37.7,
             "grossMargin": 63.0,
             "fcfMargin": 36.9,
@@ -27706,7 +27706,7 @@ const DATA = {
             "est": false,
             "epsRevision": 7.2,
             "ratingTrend": 0.0,
-            "ratingDispersion": 166,
+            "ratingDispersion": 170,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -27838,7 +27838,7 @@ const DATA = {
             "est": false,
             "epsRevision": 5.3,
             "ratingTrend": 0.0,
-            "ratingDispersion": 68,
+            "ratingDispersion": 69,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -27936,7 +27936,7 @@ const DATA = {
             "marketCap": 4941.4,
             "pe": 25.9,
             "fwdPe": 12.9,
-            "peg": 0.26,
+            "peg": 0.25,
             "revGrowth": 105.9,
             "grossMargin": 74.7,
             "fcfMargin": 13.8,
@@ -28000,7 +28000,7 @@ const DATA = {
               "价值股候选",
               "高质量"
             ],
-            "marketCap": 749.0,
+            "marketCap": 749.9,
             "pe": 7.9,
             "fwdPe": 7.2,
             "peg": 0.14,
@@ -28119,11 +28119,11 @@ const DATA = {
             "scores": {
               "momentum": 36.14300000000001,
               "valuation": 68,
-              "growth": 93,
+              "growth": 95,
               "quality": 50,
               "aiExposure": 72,
               "research": 75,
-              "fundamental": 71,
+              "fundamental": 72,
               "aiValue": 69,
               "lp_valuation": 77,
               "lp_fundamental": 54,
@@ -28133,7 +28133,7 @@ const DATA = {
             "tags": [
               "价值股候选"
             ],
-            "marketCap": 1097.4,
+            "marketCap": 1098.8,
             "pe": 10.3,
             "fwdPe": 9.4,
             "peg": 0.1,
@@ -28155,7 +28155,7 @@ const DATA = {
             },
             "notes": "存储超级周期+代工减亏双驱动，Q3 初步营收/营业利润均创历史；HBM4 定价权强(单位重量价值约为 SK 海力士 4 倍)。仍为初步业绩口径，净利/ROE/毛利率待 10/29 正式财报，故 est 保持 true；股价较 6 月末跌约 36%、PE 压缩至个位数。",
             "est": false,
-            "epsRevision": 10.7,
+            "epsRevision": 12.5,
             "ratingTrend": 0.0,
             "ratingDispersion": 83,
             "curatedDate": "2026-11",
@@ -28202,7 +28202,7 @@ const DATA = {
             "marketCap": 2106.4,
             "pe": 26.3,
             "fwdPe": 17.4,
-            "peg": 0.78,
+            "peg": 0.73,
             "revGrowth": 50.9,
             "grossMargin": 65.8,
             "fcfMargin": 24.3,
@@ -28266,7 +28266,7 @@ const DATA = {
             "marketCap": 603.5,
             "pe": 38.5,
             "fwdPe": 24.9,
-            "peg": 0.9,
+            "peg": 0.84,
             "revGrowth": 55.2,
             "grossMargin": 54.3,
             "fcfMargin": 26.3,
@@ -28332,7 +28332,7 @@ const DATA = {
             "marketCap": 1556.6,
             "pe": 41.6,
             "fwdPe": 16.8,
-            "peg": 0.34,
+            "peg": 0.32,
             "revGrowth": 85.5,
             "grossMargin": 75.5,
             "fcfMargin": 34.3,
@@ -28428,6 +28428,70 @@ const DATA = {
             "layerPct": 46
           },
           {
+            "ticker": "AMD",
+            "name": "AMD",
+            "key": "amd",
+            "market": "US",
+            "ccy": "USD",
+            "techRoute": "GPU + CPU 双线",
+            "productDir": "Instinct MI 系列、EPYC、ROCm 生态",
+            "price": 504.79998779296875,
+            "ch": {
+              "d": -10.88,
+              "w": -2.32,
+              "m": -18.02,
+              "h6": 40.01
+            },
+            "scores": {
+              "momentum": 44.857,
+              "valuation": 43,
+              "growth": 98,
+              "quality": 39,
+              "aiExposure": 72,
+              "research": 70,
+              "fundamental": 68,
+              "aiValue": 57,
+              "lp_valuation": 31,
+              "lp_fundamental": 38,
+              "lp_momentum": 92,
+              "lp_aiValue": 31
+            },
+            "tags": [],
+            "marketCap": 824.1,
+            "pe": 128.8,
+            "fwdPe": 31.7,
+            "peg": 0.5,
+            "revGrowth": 50.1,
+            "grossMargin": 55.7,
+            "fcfMargin": 21.4,
+            "roe": 10.2,
+            "research": {
+              "consensus": "中性偏多",
+              "ratingScore": 3.9,
+              "reports": 50,
+              "summary": "Q2 2026 营收$11.5B +50%创纪录，数据中心$6.7B +107%(占58%)；下半年EPYC/Instinct/Helios加速，non-GAAP毛利率56%。",
+              "sources": [
+                {
+                  "title": "AMD Investor",
+                  "url": "https://www.amd.com/en/investor-relations.html"
+                }
+              ]
+            },
+            "notes": "第二供应商逻辑，弹性与风险并存。Q2 2026(8/4报)数据中心翻倍，MI308出口管制一次性拖累已消化。",
+            "est": false,
+            "epsRevision": 14.9,
+            "ratingTrend": 0.0,
+            "ratingDispersion": 138,
+            "curatedDate": "2026-11",
+            "stale": false,
+            "thesis": null,
+            "aiRevPct": 70,
+            "aiRevGrowth": 50,
+            "pricingPower": 65,
+            "peHist5y": 75,
+            "layerPct": 31
+          },
+          {
             "ticker": "AMAT",
             "name": "应用材料",
             "key": "amat",
@@ -28451,16 +28515,16 @@ const DATA = {
               "research": 72,
               "fundamental": 62,
               "aiValue": 57,
-              "lp_valuation": 31,
+              "lp_valuation": 23,
               "lp_fundamental": 15,
               "lp_momentum": 31,
-              "lp_aiValue": 38
+              "lp_aiValue": 31
             },
             "tags": [],
             "marketCap": 309.6,
             "pe": 33.7,
             "fwdPe": 21.0,
-            "peg": 0.89,
+            "peg": 0.83,
             "revGrowth": 24.8,
             "grossMargin": 49.4,
             "fcfMargin": 10.0,
@@ -28468,7 +28532,7 @@ const DATA = {
             "research": {
               "consensus": "中性偏多",
               "ratingScore": 4.0,
-              "reports": 36,
+              "reports": 37,
               "summary": "设备龙头，半导体设备业务 2026 预计 >30% 增长；AI 扩产 + 先进封装双驱动。",
               "sources": [
                 {
@@ -28489,71 +28553,7 @@ const DATA = {
             "aiRevGrowth": 30,
             "pricingPower": 75,
             "peHist5y": 36,
-            "layerPct": 38
-          },
-          {
-            "ticker": "AMD",
-            "name": "AMD",
-            "key": "amd",
-            "market": "US",
-            "ccy": "USD",
-            "techRoute": "GPU + CPU 双线",
-            "productDir": "Instinct MI 系列、EPYC、ROCm 生态",
-            "price": 504.79998779296875,
-            "ch": {
-              "d": -10.88,
-              "w": -2.32,
-              "m": -18.02,
-              "h6": 40.01
-            },
-            "scores": {
-              "momentum": 44.857,
-              "valuation": 39,
-              "growth": 98,
-              "quality": 39,
-              "aiExposure": 72,
-              "research": 70,
-              "fundamental": 68,
-              "aiValue": 55,
-              "lp_valuation": 23,
-              "lp_fundamental": 38,
-              "lp_momentum": 92,
-              "lp_aiValue": 15
-            },
-            "tags": [],
-            "marketCap": 824.1,
-            "pe": 128.8,
-            "fwdPe": 31.7,
-            "peg": 0.56,
-            "revGrowth": 50.1,
-            "grossMargin": 55.7,
-            "fcfMargin": 21.4,
-            "roe": 10.2,
-            "research": {
-              "consensus": "中性偏多",
-              "ratingScore": 3.9,
-              "reports": 50,
-              "summary": "Q2 2026 营收$11.5B +50%创纪录，数据中心$6.7B +107%(占58%)；下半年EPYC/Instinct/Helios加速，non-GAAP毛利率56%。",
-              "sources": [
-                {
-                  "title": "AMD Investor",
-                  "url": "https://www.amd.com/en/investor-relations.html"
-                }
-              ]
-            },
-            "notes": "第二供应商逻辑，弹性与风险并存。Q2 2026(8/4报)数据中心翻倍，MI308出口管制一次性拖累已消化。",
-            "est": false,
-            "epsRevision": 14.7,
-            "ratingTrend": 0.0,
-            "ratingDispersion": 138,
-            "curatedDate": "2026-11",
-            "stale": false,
-            "thesis": null,
-            "aiRevPct": 70,
-            "aiRevGrowth": 50,
-            "pricingPower": 65,
-            "peHist5y": 75,
-            "layerPct": 15
+            "layerPct": 31
           },
           {
             "ticker": "688256.SS",
@@ -28675,7 +28675,7 @@ const DATA = {
             "est": false,
             "epsRevision": -11.3,
             "ratingTrend": -0.4,
-            "ratingDispersion": 142,
+            "ratingDispersion": 114,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -28718,7 +28718,7 @@ const DATA = {
             "marketCap": 220.0,
             "pe": 212.3,
             "fwdPe": 67.2,
-            "peg": 1.88,
+            "peg": 1.69,
             "revGrowth": 22.4,
             "grossMargin": 97.5,
             "fcfMargin": 25.9,
@@ -28932,7 +28932,7 @@ const DATA = {
             },
             "notes": "电力设备景气标的，燃气轮机/电网订单爆满；估值偏贵(PE~60)。 【2026-10 复核】Q3 财报已在 8/28 后窗口披露(或 10/28-10/31 待披露)，本期未取得可核实的原始披露口径，营收/利润/估值字段仍沿用上期并按价格桥缩放，待下期采信。",
             "est": false,
-            "epsRevision": 3.6,
+            "epsRevision": 3.4,
             "ratingTrend": 0.1,
             "ratingDispersion": 43,
             "curatedDate": "2026-11",
@@ -29109,7 +29109,7 @@ const DATA = {
             "marketCap": 143.7,
             "pe": 37.6,
             "fwdPe": 22.7,
-            "peg": 2.39,
+            "peg": 2.25,
             "revGrowth": 21.4,
             "grossMargin": 36.0,
             "fcfMargin": 10.3,
@@ -29158,12 +29158,12 @@ const DATA = {
             "scores": {
               "momentum": 45.33,
               "valuation": 43,
-              "growth": 37,
+              "growth": 36,
               "quality": 32,
               "aiExposure": 44,
               "research": 71,
-              "fundamental": 42,
-              "aiValue": 37,
+              "fundamental": 41,
+              "aiValue": 36,
               "lp_valuation": 57,
               "lp_fundamental": 14,
               "lp_momentum": 57,
@@ -29174,7 +29174,7 @@ const DATA = {
             ],
             "marketCap": 46.4,
             "pe": 23.3,
-            "fwdPe": 13.4,
+            "fwdPe": 14.5,
             "peg": 0.39,
             "revGrowth": -5.5,
             "grossMargin": 38.3,
@@ -29194,7 +29194,7 @@ const DATA = {
             },
             "notes": "估值低、电力弹性大，Meta PPA + 投资级上调；价值候选。",
             "est": false,
-            "epsRevision": -5.7,
+            "epsRevision": -6.2,
             "ratingTrend": 0.0,
             "ratingDispersion": 97,
             "curatedDate": "2026-11",
@@ -29241,7 +29241,7 @@ const DATA = {
             "marketCap": 175.6,
             "pe": 15.1,
             "fwdPe": 19.1,
-            "peg": 1.68,
+            "peg": 1.71,
             "revGrowth": 1.6,
             "grossMargin": 60.2,
             "fcfMargin": -73.6,
@@ -29290,12 +29290,12 @@ const DATA = {
             "scores": {
               "momentum": 29.046,
               "valuation": 26,
-              "growth": 41,
-              "quality": 16,
+              "growth": 42,
+              "quality": 18,
               "aiExposure": 44,
               "research": 76,
-              "fundamental": 38,
-              "aiValue": 32,
+              "fundamental": 39,
+              "aiValue": 33,
               "lp_valuation": 14,
               "lp_fundamental": 0,
               "lp_momentum": 14,
@@ -29306,12 +29306,12 @@ const DATA = {
             ],
             "marketCap": 33.5,
             "pe": 116.5,
-            "fwdPe": 42.0,
+            "fwdPe": 42.1,
             "peg": 1.92,
-            "revGrowth": -7.2,
-            "grossMargin": 35.1,
-            "fcfMargin": 1.4,
-            "roe": 5.1,
+            "revGrowth": 0.7,
+            "grossMargin": 33.8,
+            "fcfMargin": 5.4,
+            "roe": 5.7,
             "research": {
               "consensus": "增持",
               "ratingScore": 4.3,
@@ -29326,9 +29326,9 @@ const DATA = {
             },
             "notes": "核燃料上游，间接受益 AI 电力长期叙事；铀价 mid-$90s。",
             "est": false,
-            "epsRevision": -1.1,
+            "epsRevision": -4.4,
             "ratingTrend": 0.1,
-            "ratingDispersion": 70,
+            "ratingDispersion": 71,
             "curatedDate": "2026-11",
             "stale": false,
             "thesis": null,
@@ -29462,7 +29462,7 @@ const DATA = {
         "layer": "芯片层",
         "aiValue": 69,
         "layerPct": 77,
-        "why": "基本面 71/100、估值便宜度 68/100、动量 36.14300000000001/100(未充分定价), AI价值分 69/100"
+        "why": "基本面 72/100、估值便宜度 68/100、动量 36.14300000000001/100(未充分定价), AI价值分 69/100"
       },
       {
         "ticker": "TSM",
@@ -29485,7 +29485,7 @@ const DATA = {
       "companies": 44,
       "layers": 6,
       "valuePicks": 6,
-      "avgAiValue": 54,
+      "avgAiValue": 55,
       "avgMomentum": 33
     },
     "marketSummary": {
@@ -29618,10 +29618,10 @@ const DATA = {
           "detail": "若 AI 收入不及预期，高估值 capex 链面临重估"
         }
       ],
-      "heat": 31,
+      "heat": 30,
       "heatDriver": {
         "avgMomentum": 33,
-        "avgValuationScore": 49,
+        "avgValuationScore": 50,
         "breadthPct": 2
       }
     },
@@ -30151,11 +30151,11 @@ const DATA = {
           "name": "芯片层",
           "id": "chip",
           "companyCount": 14,
-          "totalMarketCap": 23088.4,
+          "totalMarketCap": 23090.7,
           "topMover": "MU",
           "topMoverMomentum": 51.84,
           "flowScore": 33,
-          "flowSharePct": 13.6,
+          "flowSharePct": 13.5,
           "avgMomentum": 32,
           "breadthPct": 0,
           "capWeightedMomentum": 31,
@@ -30170,7 +30170,7 @@ const DATA = {
           "topMover": "AMZN",
           "topMoverMomentum": 42.8,
           "flowScore": 28,
-          "flowSharePct": 10.0,
+          "flowSharePct": 10.1,
           "avgMomentum": 33,
           "breadthPct": 0,
           "capWeightedMomentum": 31,
@@ -33658,15 +33658,15 @@ const DATA = {
       "score": 73,
       "state": "充裕",
       "points": [
-        "稳定币总市值 $252B (USDT 180.0 + USDC 71.7)",
+        "稳定币总市值 $252B (USDT 180.0 + USDC 71.5)",
         ">250B 充裕的场外购买力蓄水池",
         "恐慌贪婪指数 34 (Fear)",
         "中性区间=健康"
       ],
       "stablecoins": {
         "usdt_b": 180.0,
-        "usdc_b": 71.7,
-        "total_b": 251.7
+        "usdc_b": 71.5,
+        "total_b": 251.5
       },
       "fundingRate": null,
       "fng": 34,
