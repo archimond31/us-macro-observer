@@ -197,26 +197,46 @@ def _match(req, comp):
         return req == comp
     return req == comp
 _scores = {}
+_detail = {}
 for _a in MS.get('archetypes', []):
-    s = 0
-    for k, v in _a.get('trigger', {}).items():
-        if k in COMPS and _match(v, COMPS[k]):
-            s += 1
-    _scores[_a['id']] = s
+    _trig = _a.get('trigger', {}) or {}
+    _known = {k: v for k, v in _trig.items() if k in COMPS}
+    _hit = [k for k, v in _known.items() if _match(v, COMPS[k])]
+    _tot = len(_known)
+    _scores[_a['id']] = len(_hit)
+    # 与 gen_datajs._ms_scores 同构: 未被 COMPS 认识的键不计入分母
+    _detail[_a['id']] = {
+        'matched': len(_hit), 'total': _tot,
+        'ratio': round(len(_hit) / _tot, 3) if _tot else 0.0,
+        'missingKeys': [k for k in _known if k not in _hit],
+        'full': bool(_tot and len(_hit) == _tot),
+    }
 _PRIO = {'high': 3, 'normal': 2, 'low': 1}
 # calm 仅作为全 0 分回退, 不参与主竞赛, 避免其宽松条件抢分
 _NON_CALM = [x for x in MS.get('archetypes', []) if x['id'] != 'calm_goldilocks']
-_best = None; _best_s = -1
-for _a in _NON_CALM:
-    s = _scores.get(_a['id'], 0); p = _PRIO.get(_a.get('priority', 'normal'), 2)
-    if s > _best_s or (s == _best_s and _best is not None and p > _PRIO.get(_best.get('priority', 'normal'), 2)):
-        _best = _a; _best_s = s
-if _best_s <= 0:
+
+
+def _arch_rank(a):
+    """排序键必须与 gen_datajs._arch_rank 完全同构:
+    (① 全命中 ② 命中条数 ③ 匹配比例 ④ priority ⑤ -rank)。
+    旧实现只吃「命中条数 + priority」, 不吃 full/ratio/rank ——
+    2026-11-05 因此把 2/3 的 equity_credit_split 报成主导, 而面板实际是 2/2 的
+    stagflation_squeeze(gen 侧先比 full)。此处修正为同构, 保证两侧结论一致。
+    """
+    s = _detail.get(a['id'], {})
+    return (1 if s.get('full') else 0, s.get('matched', 0), s.get('ratio', 0),
+            _PRIO.get(a.get('priority', 'normal'), 2), -int(a.get('rank', 99)))
+
+
+_ranked = sorted(_NON_CALM, key=_arch_rank, reverse=True)
+_best = _ranked[0] if (_ranked and _detail.get(_ranked[0]['id'], {}).get('full')) else None
+_best_s = _scores.get(_best['id'], 0) if _best else 0
+_runner = _ranked[1] if (_best and len(_ranked) > 1) else None
+if _best is None:
     _calm = next((x for x in MS.get('archetypes', []) if x['id'] == 'calm_goldilocks'), None)
-    if _calm:
-        _best = _calm; _best_s = _scores.get('calm_goldilocks', 0)
-    elif MS.get('dominant'):
-        _best = None
+    if _calm and _detail.get('calm_goldilocks', {}).get('full'):
+        _best = _calm
+        _best_s = _scores.get('calm_goldilocks', 0)
 
 # ---------- 输出报告 ----------
 _today = datetime.date.today()
@@ -231,10 +251,14 @@ print('当前 asOf        :', MS.get('asOf'), ' -> 建议:', _suggest_asof)
 print('manualOverride   :', MS.get('manualOverride'))
 print('-' * 64)
 print('【数据自动判定】主导矛盾原型 =', (_best['id'] if _best else '策展默认(dominant)'),
-      ' (score=%d)' % _best_s)
+      ' (%d/%d)' % (_best_s, _detail.get(_best['id'], {}).get('total', 0)) if _best else '')
+if _best and _runner:
+    _rs = _detail.get(_runner['id'], {})
+    print('   runner-up :', _runner['id'], '(%d/%d)' % (_rs.get('matched', 0), _rs.get('total', 0)))
 if _best:
     print('   标题 :', _best.get('title'))
     print('   张力 :', _best.get('keyTension'))
+print('   排序键 : (full, matched, ratio, priority, -rank) —— 与 gen_datajs._arch_rank 同构')
 print('-' * 64)
 print('【复合指标维度】')
 for k, v in COMPS.items():
@@ -245,8 +269,12 @@ for a in _anchors:
     print('   %-18s %-8s %s' % (a['id'], a['status'], a.get('detail', '')))
 print('-' * 64)
 print('【原型得分】')
-for _a in MS.get('archetypes', []):
-    print('   %-18s score=%d  trigger=%s' % (_a['id'], _scores.get(_a['id'], 0), _a.get('trigger', {})))
+for _a in sorted(MS.get('archetypes', []), key=_arch_rank, reverse=True):
+    _d = _detail.get(_a['id'], {})
+    print('   %-20s %d/%d  ratio=%.2f  full=%-5s  prio=%-6s rank=%s  trigger=%s'
+          % (_a['id'], _d.get('matched', 0), _d.get('total', 0), _d.get('ratio', 0),
+             str(_d.get('full')), _a.get('priority', 'normal'), _a.get('rank'),
+             _a.get('trigger', {})))
 print('-' * 64)
 print('【待复核策展字段建议】')
 _on = [a['id'] for a in _anchors if a['status'] == 'on']
