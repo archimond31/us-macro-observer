@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06 06:02",
+  "generated_at": "2026-11-06 16:09",
   "series": {
     "dgs1mo": {
       "status": "OK",
@@ -124,16 +124,16 @@
     "ffr_up": {
       "status": "OK",
       "source": "FRED:DFEDTARU",
-      "last_date": "2026-11-05",
-      "age": 1,
+      "last_date": "2026-11-06",
+      "age": 0,
       "value": 4.0,
       "fallback": false
     },
     "ffr_lo": {
       "status": "OK",
       "source": "FRED:DFEDTARL",
-      "last_date": "2026-11-05",
-      "age": 1,
+      "last_date": "2026-11-06",
+      "age": 0,
       "value": 3.75,
       "fallback": false
     },
@@ -204,73 +204,73 @@
     "ig": {
       "status": "OK",
       "source": "FRED:BAMLC0A0CM",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 0.91,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 0.93,
       "fallback": false
     },
     "bbb": {
       "status": "OK",
       "source": "FRED:BAMLC0A4CBBB",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 1.13,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 1.16,
       "fallback": false
     },
     "hy": {
       "status": "OK",
       "source": "FRED:BAMLH0A0HYM2",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 3.32,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 3.48,
       "fallback": false
     },
     "bb": {
       "status": "OK",
       "source": "FRED:BAMLH0A1HYBB",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 1.99,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 2.13,
       "fallback": false
     },
     "b": {
       "status": "OK",
       "source": "FRED:BAMLH0A2HYB",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 3.51,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 3.67,
       "fallback": false
     },
     "ccc": {
       "status": "OK",
       "source": "FRED:BAMLH0A3HYC",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 12.97,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 13.2,
       "fallback": false
     },
     "aaa": {
       "status": "OK",
       "source": "FRED:BAMLC0A1CAAA",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 0.46,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 0.48,
       "fallback": false
     },
     "aa": {
       "status": "OK",
       "source": "FRED:BAMLC0A2CAA",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 0.67,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 0.69,
       "fallback": false
     },
     "a": {
       "status": "OK",
       "source": "FRED:BAMLC0A3CA",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 0.75,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 0.77,
       "fallback": false
     },
     "nfci": {
@@ -283,10 +283,10 @@
     },
     "spx": {
       "status": "OK",
-      "source": "FRED:SP500+Yahoo:^GSPC (FRED \u672b\u70b9 2026-11-04 \u2192 Yahoo \u8986\u76d6\u81f3 2026-11-05)",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 7353.72998046875,
+      "source": "FRED:SP500+Yahoo:^GSPC (FRED \u672b\u70b9 2026-11-04 \u2192 Yahoo \u8986\u76d6\u81f3 2026-11-06)",
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 7419.06982421875,
       "fallback": false,
       "merged": true
     },
@@ -300,11 +300,12 @@
     },
     "dji": {
       "status": "OK",
-      "source": "FRED:DJIA",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 51523.06,
-      "fallback": false
+      "source": "FRED:DJIA+Yahoo:^DJI (FRED \u672b\u70b9 2026-11-05 \u2192 Yahoo \u8986\u76d6\u81f3 2026-11-06)",
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 51591.6484375,
+      "fallback": false,
+      "merged": true
     },
     "wti": {
       "status": "OK",
@@ -347,19 +348,19 @@
       "fallback": false
     },
     "unrate": {
-      "status": "STALE",
+      "status": "OK",
       "source": "FRED:UNRATE",
-      "last_date": "2026-09-01",
-      "age": 66,
-      "value": 4.2,
+      "last_date": "2026-10-01",
+      "age": 36,
+      "value": 4.1,
       "fallback": false
     },
     "payems": {
-      "status": "STALE",
+      "status": "OK",
       "source": "FRED:PAYEMS",
-      "last_date": "2026-09-01",
-      "age": 66,
-      "value": 159044.0,
+      "last_date": "2026-10-01",
+      "age": 36,
+      "value": 159293.0,
       "fallback": false
     },
     "cpi": {
@@ -531,19 +532,19 @@
       "fallback": false
     },
     "wage_yoy": {
-      "status": "STALE",
+      "status": "OK",
       "source": "FRED:CES0500000003",
-      "last_date": "2026-09-01",
-      "age": 66,
-      "value": 37.81,
+      "last_date": "2026-10-01",
+      "age": 36,
+      "value": 38.0,
       "fallback": false
     },
     "participation": {
-      "status": "STALE",
+      "status": "OK",
       "source": "FRED:CIVPART",
-      "last_date": "2026-09-01",
-      "age": 66,
-      "value": 61.8,
+      "last_date": "2026-10-01",
+      "age": 36,
+      "value": 61.9,
       "fallback": false
     },
     "cont_claims": {
@@ -555,10 +556,10 @@
       "fallback": false
     },
     "sahm_real": {
-      "status": "STALE",
+      "status": "OK",
       "source": "FRED:SAHMREALTIME",
-      "last_date": "2026-09-01",
-      "age": 66,
+      "last_date": "2026-10-01",
+      "age": 36,
       "value": 0.0,
       "fallback": false
     },
@@ -685,9 +686,9 @@
     "sofr": {
       "status": "OK",
       "source": "NYFed:SOFR",
-      "last_date": "2026-11-04",
-      "age": 2,
-      "value": 3.94,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 3.92,
       "fallback": false
     },
     "rrp_api": {
@@ -709,41 +710,41 @@
     "spx_yahoo": {
       "status": "OK",
       "source": "Yahoo:^GSPC",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 7353.72998046875,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 7419.06982421875,
       "fallback": false
     },
     "ndx": {
       "status": "OK",
       "source": "Yahoo:^NDX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 26629.810546875,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 27081.044921875,
       "fallback": false
     },
     "rut": {
       "status": "OK",
       "source": "Yahoo:^RUT",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 2729.889892578125,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 2743.89111328125,
       "fallback": false
     },
     "dji_yahoo": {
       "status": "OK",
       "source": "Yahoo:^DJI",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 51523.05859375,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 51591.6484375,
       "fallback": false
     },
     "sox": {
       "status": "OK",
       "source": "Yahoo:^SOX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 9011.1396484375,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 9344.08984375,
       "fallback": false
     },
     "gold": {
@@ -751,7 +752,7 @@
       "source": "Yahoo:GC=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 4054.89990234375,
+      "value": 4064.800048828125,
       "fallback": false
     },
     "silver": {
@@ -759,7 +760,7 @@
       "source": "Yahoo:SI=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 51.44499969482422,
+      "value": 51.959999084472656,
       "fallback": false
     },
     "natgas": {
@@ -767,7 +768,7 @@
       "source": "Yahoo:NG=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 2.9830000400543213,
+      "value": 2.946000099182129,
       "fallback": false
     },
     "copper": {
@@ -775,7 +776,7 @@
       "source": "Yahoo:HG=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 6.226500034332275,
+      "value": 6.265500068664551,
       "fallback": false
     },
     "dxy": {
@@ -783,7 +784,7 @@
       "source": "Yahoo:DX-Y.NYB",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 101.7770004272461,
+      "value": 102.19999694824219,
       "fallback": false
     },
     "wti_rt": {
@@ -791,7 +792,7 @@
       "source": "Yahoo:CL=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 91.52999877929688,
+      "value": 90.19000244140625,
       "fallback": false
     },
     "brent_rt": {
@@ -799,7 +800,7 @@
       "source": "Yahoo:BZ=F",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 99.69000244140625,
+      "value": 97.06999969482422,
       "fallback": false
     },
     "eurusd": {
@@ -807,7 +808,7 @@
       "source": "Yahoo:EURUSD=X",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 1.1199462413787842,
+      "value": 1.1153244972229004,
       "fallback": false
     },
     "gbpusd": {
@@ -815,7 +816,7 @@
       "source": "Yahoo:GBPUSD=X",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 1.3423539400100708,
+      "value": 1.3363267183303833,
       "fallback": false
     },
     "usdjpy": {
@@ -823,7 +824,7 @@
       "source": "Yahoo:USDJPY=X",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 157.7949981689453,
+      "value": 158.25799560546875,
       "fallback": false
     },
     "usdcnh": {
@@ -831,71 +832,71 @@
       "source": "Yahoo:USDCNH=X",
       "last_date": "2026-11-06",
       "age": 0,
-      "value": 6.665979862213135,
+      "value": 6.670400142669678,
       "fallback": false
     },
     "tlt": {
       "status": "OK",
       "source": "Yahoo:TLT",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 81.93000030517578,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 82.12999725341797,
       "fallback": false
     },
     "ief": {
       "status": "OK",
       "source": "Yahoo:IEF",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 91.97000122070312,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 91.92500305175781,
       "fallback": false
     },
     "lqd": {
       "status": "OK",
       "source": "Yahoo:LQD",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 104.66000366210938,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 104.6050033569336,
       "fallback": false
     },
     "hyg": {
       "status": "OK",
       "source": "Yahoo:HYG",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 77.27999877929688,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 77.30000305175781,
       "fallback": false
     },
     "spy": {
       "status": "OK",
       "source": "Yahoo:SPY",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 733.0,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 739.239990234375,
       "fallback": false
     },
     "qqq": {
       "status": "OK",
       "source": "Yahoo:QQQ",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 647.0499877929688,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 658.77001953125,
       "fallback": false
     },
     "vvix": {
       "status": "OK",
       "source": "Yahoo:^VVIX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 134.99000549316406,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 118.37999725341797,
       "fallback": false
     },
     "move": {
       "status": "OK",
       "source": "Yahoo:^MOVE",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 97.91999816894531,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 92.67479705810547,
       "fallback": false
     },
     "skew": {
@@ -909,401 +910,401 @@
     "vix3m": {
       "status": "OK",
       "source": "Yahoo:^VIX3M",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 25.549999237060547,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 23.389999389648438,
       "fallback": false
     },
     "vix9d": {
       "status": "OK",
       "source": "Yahoo:^VIX9D",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 32.65999984741211,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 26.15999984741211,
       "fallback": false
     },
     "vix": {
       "status": "OK",
       "source": "Yahoo:^VIX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 28.18000030517578,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 24.049999237060547,
       "fallback": false
     },
     "ovx": {
       "status": "OK",
       "source": "Yahoo:^OVX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 60.290000915527344,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 58.77000045776367,
       "fallback": false
     },
     "gvz": {
       "status": "OK",
       "source": "Yahoo:^GVZ",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 25.829999923706055,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 25.760000228881836,
       "fallback": false
     },
     "tyx": {
       "status": "OK",
       "source": "Yahoo:^TYX",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 5.250999927520752,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 5.256999969482422,
       "fallback": false
     },
     "msft": {
       "status": "OK",
       "source": "Yahoo:MSFT",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 535.9299926757812,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 535.7575073242188,
       "fallback": false
     },
     "crm": {
       "status": "OK",
       "source": "Yahoo:CRM",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 222.41000366210938,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 215.39999389648438,
       "fallback": false
     },
     "now": {
       "status": "OK",
       "source": "Yahoo:NOW",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 102.36000061035156,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 103.33000183105469,
       "fallback": false
     },
     "pltr": {
       "status": "OK",
       "source": "Yahoo:PLTR",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 154.99000549316406,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 160.5800018310547,
       "fallback": false
     },
     "adbe": {
       "status": "OK",
       "source": "Yahoo:ADBE",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 246.44000244140625,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 242.86000061035156,
       "fallback": false
     },
     "snow": {
       "status": "OK",
       "source": "Yahoo:SNOW",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 269.5400085449219,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 271.4599914550781,
       "fallback": false
     },
     "googl": {
       "status": "OK",
       "source": "Yahoo:GOOGL",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 282.57000732421875,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 287.20001220703125,
       "fallback": false
     },
     "meta": {
       "status": "OK",
       "source": "Yahoo:META",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 605.0800170898438,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 621.8900146484375,
       "fallback": false
     },
     "amzn": {
       "status": "OK",
       "source": "Yahoo:AMZN",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 260.2099914550781,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 263.7250061035156,
       "fallback": false
     },
     "orcl": {
       "status": "OK",
       "source": "Yahoo:ORCL",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 115.16000366210938,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 116.5199966430664,
       "fallback": false
     },
     "crwv": {
       "status": "OK",
       "source": "Yahoo:CRWV",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 43.65999984741211,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 45.5900993347168,
       "fallback": false
     },
     "anet": {
       "status": "OK",
       "source": "Yahoo:ANET",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 159.16000366210938,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 168.1999969482422,
       "fallback": false
     },
     "vrt": {
       "status": "OK",
       "source": "Yahoo:VRT",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 176.72999572753906,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 181.96009826660156,
       "fallback": false
     },
     "dell": {
       "status": "OK",
       "source": "Yahoo:DELL",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 316.9100036621094,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 332.3500061035156,
       "fallback": false
     },
     "nvda": {
       "status": "OK",
       "source": "Yahoo:NVDA",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 181.60000610351562,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 188.5800018310547,
       "fallback": false
     },
     "amd": {
       "status": "OK",
       "source": "Yahoo:AMD",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 404.3999938964844,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 441.0299987792969,
       "fallback": false
     },
     "avgo": {
       "status": "OK",
       "source": "Yahoo:AVGO",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 291.5299987792969,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 296.6300048828125,
       "fallback": false
     },
     "tsm": {
       "status": "OK",
       "source": "Yahoo:TSM",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 353.1000061035156,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 373.510009765625,
       "fallback": false
     },
     "arm": {
       "status": "OK",
       "source": "Yahoo:ARM",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 166.72000122070312,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 172.23500061035156,
       "fallback": false
     },
     "mrvl": {
       "status": "OK",
       "source": "Yahoo:MRVL",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 133.5500030517578,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 138.38499450683594,
       "fallback": false
     },
     "amat": {
       "status": "OK",
       "source": "Yahoo:AMAT",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 319.25,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 332.2149963378906,
       "fallback": false
     },
     "asml": {
       "status": "OK",
       "source": "Yahoo:ASML",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 1356.6500244140625,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 1418.280029296875,
       "fallback": false
     },
     "mu": {
       "status": "OK",
       "source": "Yahoo:MU",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 656.3900146484375,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 686.75,
       "fallback": false
     },
     "cohr": {
       "status": "OK",
       "source": "Yahoo:COHR",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 169.75999450683594,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 186.77000427246094,
       "fallback": false
     },
     "lite": {
       "status": "OK",
       "source": "Yahoo:LITE",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 509.70001220703125,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 530.0,
       "fallback": false
     },
     "ceg": {
       "status": "OK",
       "source": "Yahoo:CEG",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 239.64999389648438,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 249.13999938964844,
       "fallback": false
     },
     "vst": {
       "status": "OK",
       "source": "Yahoo:VST",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 112.88999938964844,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 122.3499984741211,
       "fallback": false
     },
     "nee": {
       "status": "OK",
       "source": "Yahoo:NEE",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 88.25,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 87.61000061035156,
       "fallback": false
     },
     "gev": {
       "status": "OK",
       "source": "Yahoo:GEV",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 770.510009765625,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 771.3300170898438,
       "fallback": false
     },
     "tln": {
       "status": "OK",
       "source": "Yahoo:TLN",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 316.2250061035156,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 333.42999267578125,
       "fallback": false
     },
     "ccj": {
       "status": "OK",
       "source": "Yahoo:CCJ",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 68.33000183105469,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 69.31500244140625,
       "fallback": false
     },
     "oklo": {
       "status": "OK",
       "source": "Yahoo:OKLO",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 19.200000762939453,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 22.700000762939453,
       "fallback": false
     },
     "etn": {
       "status": "OK",
       "source": "Yahoo:ETN",
-      "last_date": "2026-11-05",
-      "age": 1,
-      "value": 327.0199890136719,
+      "last_date": "2026-11-06",
+      "age": 0,
+      "value": 337.17999267578125,
       "fallback": false
     },
     "zhongji": {
       "status": "OK",
       "source": "Yahoo:300308.SZ",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 449.1000061035156,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 493.3299865722656,
       "fallback": false
     },
     "xys": {
       "status": "OK",
       "source": "Yahoo:300502.SZ",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 171.10000610351562,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 185.61000061035156,
       "fallback": false
     },
     "fii": {
       "status": "OK",
       "source": "Yahoo:601138.SS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 41.130001068115234,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 44.290000915527344,
       "fallback": false
     },
     "inspur": {
       "status": "OK",
       "source": "Yahoo:000977.SZ",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 55.7599983215332,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 56.40999984741211,
       "fallback": false
     },
     "huadian": {
       "status": "OK",
       "source": "Yahoo:002463.SZ",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 73.9000015258789,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 81.0,
       "fallback": false
     },
     "iflytek": {
       "status": "OK",
       "source": "Yahoo:002230.SZ",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 38.47999954223633,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 39.150001525878906,
       "fallback": false
     },
     "cambricon": {
       "status": "OK",
       "source": "Yahoo:688256.SS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 806.6699829101562,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 845.0,
       "fallback": false
     },
     "hygon": {
       "status": "OK",
       "source": "Yahoo:688041.SS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 188.8800048828125,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 192.8000030517578,
       "fallback": false
     },
     "ssamsung": {
       "status": "OK",
       "source": "Yahoo:005930.KS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 192100.0,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 201500.0,
       "fallback": false
     },
     "skhynix": {
       "status": "OK",
       "source": "Yahoo:000660.KS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 1154000.0,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 1264000.0,
       "fallback": false
     },
     "hansmi": {
       "status": "OK",
       "source": "Yahoo:042700.KS",
-      "last_date": "2026-11-06",
-      "age": 0,
-      "value": 163900.0,
+      "last_date": "2026-11-05",
+      "age": 1,
+      "value": 169100.0,
       "fallback": false
     },
     "mfg_pmi": {
