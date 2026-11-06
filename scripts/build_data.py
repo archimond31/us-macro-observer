@@ -893,7 +893,7 @@ S['srf'] = nyfed_srf();        print(f'  NYFED SRF → {len(S["srf"])} pts, late
 S['tga'] = fetch_tga();        print(f'  DTS TGA → {len(S["tga"])} pts, latest {last(S["tga"])}')
 
 YH_IDS = {
-    '^NDX': 'ndx', '^RUT': 'rut', '^DJI': 'dji_yahoo', '^SOX': 'sox',
+    '^GSPC': 'spx_yahoo', '^NDX': 'ndx', '^RUT': 'rut', '^DJI': 'dji_yahoo', '^SOX': 'sox',
     'GC=F': 'gold', 'SI=F': 'silver',
     'NG=F': 'natgas', 'HG=F': 'copper', 'DX-Y.NYB': 'dxy', 'CL=F': 'wti_rt', 'BZ=F': 'brent_rt',
     'EURUSD=X': 'eurusd', 'GBPUSD=X': 'gbpusd', 'USDJPY=X': 'usdjpy', 'USDCNH=X': 'usdcnh',
@@ -930,6 +930,21 @@ if S.get('tyx') and S.get('dgs30') and len(S['tyx']) < len(S['dgs30']):
     _orig_len = len(S['tyx'])
     S['tyx'] = merge_series(S['dgs30'], S['tyx'], min_overlay_len=10)
     print(f'  [TYX回填] ^TYX 原 {_orig_len} pts < DGS30 {len(S["dgs30"])} pts, 已用 DGS30 回填至 {len(S["tyx"])} pts')
+
+# 股指: FRED 的 SP500 / DJIA 是"官方收盘价", 发布滞后 1–2 个交易日 ——
+# CI 在 16:10 UTC 跑时, 前一交易日(21:00 UTC 收盘)的收盘价往往还没进 FRED, 于是资产表会停在 2–3 天前。
+# 2026-11-05 标普单日 -4.36%, 而面板仍显示 11-03 的旧值, 属于该滞后的直接后果。
+# Yahoo ^GSPC / ^DJI 与 FRED 同一交易日的值完全一致(实测 11-03、11-04 逐点相同), 故按 ^TYX 的既有模式:
+# 用 FRED 长历史打底 + Yahoo 最近值覆盖, 既保历史长度又拿到最新收盘。
+# 仅在 Yahoo 末点确实更新时才覆盖, 避免 Yahoo 抓取失败(空序列/短序列)把数据拉回旧值。
+_MERGED_SRC = {}   # 记录"FRED 打底 + Yahoo 覆盖末点"的序列, 供 data_health 诚实标注来源
+for _fr, _yh, _fid, _ysym in (('spx', 'spx_yahoo', 'SP500', '^GSPC'),
+                              ('dji', 'dji_yahoo', 'DJIA', '^DJI')):
+    if S.get(_yh) and S.get(_fr) and len(S[_yh]) >= 10 and last(S[_yh])[0] > last(S[_fr])[0]:
+        _old = last(S[_fr])
+        S[_fr] = merge_series(S[_fr], S[_yh], min_overlay_len=10)
+        _MERGED_SRC[_fr] = f'FRED:{_fid}+Yahoo:{_ysym} (FRED 末点 {_old[0]} → Yahoo 覆盖至 {last(S[_fr])[0]})'
+        print(f'  [{_fr.upper()}合并] FRED 末点 {_old} → 合并后末点 {last(S[_fr])}, 共 {len(S[_fr])} pts')
 
 # AI 公司行情 (与主线行情分开, 便于阅读日志)
 for sym, key in AI_YH_IDS.items():
@@ -1164,6 +1179,12 @@ for k, r in R.items():
     HEALTH[k] = {'status': 'STALE' if r.get('stale') else 'OK', 'source': _src_of(k),
                  'last_date': r['date'], 'age': r.get('age'), 'value': r.get('value'),
                  'fallback': r.get('fallback', False)}
+
+# FRED 打底 + Yahoo 覆盖末点的股指: 来源标注改为双源, 避免 data_health 仍显示 FRED 滞后口径
+for _k, _s in (_MERGED_SRC or {}).items():
+    if HEALTH.get(_k):
+        HEALTH[_k]['source'] = _s
+        HEALTH[_k]['merged'] = True
 
 # IORB 反推的目标区间: 修正来源标注, 便于审计该数值是"官方直出"还是"推导"
 if _FFR_DERIVED:
