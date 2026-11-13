@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-12",
+  "fetched_at": "2026-11-13",
   "cftc": {},
   "cftc_disagg": {
     "E-mini S&P 500": {
@@ -175,23 +175,23 @@
   },
   "nfciParts": {
     "leverage": {
-      "date": "2026-10-30",
-      "value": 0.169,
+      "date": "2026-11-06",
+      "value": 0.086,
       "label": "杠杆"
     },
     "risk": {
-      "date": "2026-10-30",
-      "value": -0.526,
+      "date": "2026-11-06",
+      "value": -0.516,
       "label": "风险市场"
     },
     "credit": {
-      "date": "2026-10-30",
-      "value": 0.002,
+      "date": "2026-11-06",
+      "value": -0.005,
       "label": "信贷"
     },
     "nonfinlev": {
-      "date": "2026-10-30",
-      "value": -0.461,
+      "date": "2026-11-06",
+      "value": -0.455,
       "label": "非金融杠杆"
     }
   },
