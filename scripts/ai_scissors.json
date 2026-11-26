@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-25",
+  "asOf": "2026-11-26",
   "costSource": {
     "title": "The Plunging Price of Thought",
     "org": "Epoch AI (Luke Emberson, David Roodman)",
@@ -407,10 +407,6 @@
       "source": "BLS via FRED",
       "points": [
         [
-          "2024-02-01",
-          61.528
-        ],
-        [
           "2024-03-01",
           61.528
         ],
@@ -546,10 +542,6 @@
       "fullTitle": "Producer Price Index by Industry: Printed Circuit Assembly (Electronic Assembly) Manufacturing",
       "source": "BLS via FRED",
       "points": [
-        [
-          "2024-02-01",
-          79.449
-        ],
         [
           "2024-03-01",
           79.473
@@ -687,10 +679,6 @@
       "source": "BLS via FRED",
       "points": [
         [
-          "2024-02-01",
-          36.695
-        ],
-        [
           "2024-03-01",
           36.528
         ],
@@ -822,10 +810,6 @@
       "fullTitle": "Producer Price Index by Industry: Software Publishers (Dec 1997=100, NSA)",
       "source": "BLS via FRED",
       "points": [
-        [
-          "2024-02-01",
-          92.66
-        ],
         [
           "2024-03-01",
           93.189
@@ -962,10 +946,6 @@
       "fullTitle": "Producer Price Index by Industry: Data Processing, Hosting and Related Services (Dec 2000=100, NSA)",
       "source": "BLS via FRED",
       "points": [
-        [
-          "2024-02-01",
-          119.519
-        ],
         [
           "2024-03-01",
           119.248
